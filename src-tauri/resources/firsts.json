@@ -1,0 +1,310 @@
+{
+  "entries": [
+    {
+      "id": "first-sin",
+      "category": "firsts",
+      "question": "What was the first sin?",
+      "answer": "Eve and then Adam eating the forbidden fruit.",
+      "citations": ["Genesis 3:6"],
+      "note": "Distinct from the first murder/crime of violence (see \"first-murder\"). The serpent's deception (Genesis 3:1-5) precedes this and is sometimes cited as the first act of temptation."
+    },
+    {
+      "id": "first-murder",
+      "category": "firsts",
+      "question": "What was the first murder / first violent crime?",
+      "answer": "Cain kills his brother Abel.",
+      "citations": ["Genesis 4:8"],
+      "note": "If \"crime\" is read broadly to include the first sin rather than specifically violence, see \"first-sin\" (Genesis 3:6) instead."
+    },
+    {
+      "id": "first-death",
+      "category": "firsts",
+      "question": "What was the first death?",
+      "answer": "Abel, killed by his brother Cain.",
+      "citations": ["Genesis 4:8"],
+      "note": "God had earlier warned Adam that eating the forbidden fruit would bring death (Genesis 2:17), but Abel's is the first death actually narrated."
+    },
+    {
+      "id": "first-prophecy",
+      "category": "firsts",
+      "question": "What is the first prophecy in the Bible?",
+      "answer": "God's declaration to the serpent that the offspring of the woman would crush its head -- traditionally read as the first messianic prophecy (the \"protoevangelium\").",
+      "citations": ["Genesis 3:15"]
+    },
+    {
+      "id": "first-marriage",
+      "category": "firsts",
+      "question": "What was the first marriage?",
+      "answer": "Adam and Eve.",
+      "citations": ["Genesis 2:23-24"]
+    },
+    {
+      "id": "first-city",
+      "category": "firsts",
+      "question": "What was the first city built?",
+      "answer": "A city built by Cain, named after his son Enoch.",
+      "citations": ["Genesis 4:17"]
+    },
+    {
+      "id": "first-musical-instruments",
+      "category": "firsts",
+      "question": "Who is credited with the first musical instruments?",
+      "answer": "Jubal, described as father of all who play the harp and organ (flute/pipe); his half-brother Tubal-cain is credited as the first metalworker in bronze and iron.",
+      "citations": ["Genesis 4:21-22"]
+    },
+    {
+      "id": "first-mention-of-stars",
+      "category": "firsts",
+      "question": "What is the first mention of the stars?",
+      "answer": "God making the stars, in the creation account -- \"he made the stars also.\"",
+      "citations": ["Genesis 1:16"],
+      "note": "If the question means the first time a person speaks about the stars (rather than the first narrative mention), see \"first-speech-about-stars\" (Genesis 15:5)."
+    },
+    {
+      "id": "first-speech-about-stars",
+      "category": "firsts",
+      "question": "What is the first time someone speaks about the stars?",
+      "answer": "God tells Abram to look at the stars and count them, as a picture of how numerous his descendants would be.",
+      "citations": ["Genesis 15:5"]
+    },
+    {
+      "id": "first-mention-of-gold",
+      "category": "firsts",
+      "question": "What is the first mention of gold?",
+      "answer": "Gold is named as a resource of the land of Havilah, described while introducing the rivers flowing out of Eden.",
+      "citations": ["Genesis 2:11-12"]
+    },
+    {
+      "id": "first-rainbow",
+      "category": "firsts",
+      "question": "What was the first rainbow?",
+      "answer": "God sets his bow in the clouds as the sign of his covenant with Noah and all living creatures, never again to destroy the earth by flood.",
+      "citations": ["Genesis 9:12-13"]
+    },
+    {
+      "id": "first-war",
+      "category": "firsts",
+      "question": "What was the first war recorded in the Bible?",
+      "answer": "The battle of four kings against five, in the days of Abram, in which Abram's nephew Lot was taken captive.",
+      "citations": ["Genesis 14:1-16"]
+    },
+    {
+      "id": "fact-total-books",
+      "category": "facts",
+      "question": "How many books are in the Bible, and how are they split?",
+      "answer": "66 books: 39 in the Old Testament and 27 in the New Testament.",
+      "citations": [],
+      "note": "A count of the canon bundled in this app, not a single verse citation."
+    },
+    {
+      "id": "fact-longest-shortest-chapter",
+      "category": "facts",
+      "question": "What are the longest and shortest chapters in the Bible?",
+      "answer": "Longest: Psalm 119, with 176 verses. Shortest: Psalm 117, with only 2 verses.",
+      "citations": ["Psalms 119:1-176", "Psalms 117:1-2"],
+      "note": "Verified by counting verses per chapter directly in the bundled KJV text."
+    },
+    {
+      "id": "fact-middle-chapter",
+      "category": "facts",
+      "question": "What is the middle chapter of the Bible?",
+      "answer": "Psalm 117 -- already the shortest chapter -- is also exactly the middle one: it's the 595th of 1,189 total chapters in the KJV, with 594 chapters on either side of it.",
+      "citations": ["Psalms 117:1-2"],
+      "note": "Computed directly from the bundled KJV text (1,189 chapters total), not repeated from a trivia list."
+    },
+    {
+      "id": "fact-longest-shortest-verse",
+      "category": "facts",
+      "question": "What are the longest and shortest verses in the Bible?",
+      "answer": "Longest: Esther 8:9, a single long sentence listing the recipients and scope of a royal decree. Shortest: John 11:35, \"Jesus wept.\"",
+      "citations": ["Esther 8:9", "John 11:35"],
+      "note": "Verified by measuring character length of every verse in the bundled KJV text."
+    },
+    {
+      "id": "fact-middle-verse",
+      "category": "facts",
+      "question": "What is the middle verse of the Bible?",
+      "answer": "By direct count of all 31,102 verses in the KJV, the two central verses are Psalms 103:1 and 103:2 -- not Psalm 118:8, which is widely repeated as \"the middle verse\" but doesn't hold up under a straightforward count of this bundled text (31,102 is even, so there is no single exact middle verse; 118:8 also isn't the nearest match by ordinal position).",
+      "citations": ["Psalms 103:1"],
+      "note": "Computed directly from the bundled KJV text. Included specifically because it corrects a very commonly repeated but unverified claim -- exactly the kind of thing this app double-checks rather than repeats."
+    },
+    {
+      "id": "fact-shortest-longest-book",
+      "category": "facts",
+      "question": "What are the shortest and longest books of the Bible by verse count?",
+      "answer": "Shortest: 2 John, with only 13 verses (the shortest Old Testament book is Obadiah, with 21). Longest: Psalms, with 2,461 verses across 150 chapters.",
+      "citations": ["2 John 1:1", "Psalms 1:1"],
+      "note": "Verified by counting verses per book directly in the bundled KJV text."
+    },
+    {
+      "id": "fact-esther-no-god",
+      "category": "facts",
+      "question": "Which book of the Bible never mentions God by name?",
+      "answer": "Esther. Searching every verse of the book in the bundled KJV text turns up zero occurrences of \"God,\" \"LORD,\" or \"Lord.\"",
+      "citations": [],
+      "note": "Verified by a full-text search of Esther in the bundled KJV text rather than repeated as trivia."
+    },
+    {
+      "id": "fact-longest-name",
+      "category": "facts",
+      "question": "What is the longest personal name in the Bible?",
+      "answer": "Maher-shalal-hash-baz, the symbolic name God tells Isaiah to give his son.",
+      "citations": ["Isaiah 8:1", "Isaiah 8:3"]
+    },
+    {
+      "id": "fact-enoch-elijah-no-death",
+      "category": "facts",
+      "question": "Who are the only two people in the Bible described as never dying?",
+      "answer": "Enoch (\"Enoch walked with God: and he was not; for God took him\") and Elijah, who was taken up to heaven in a chariot of fire in a whirlwind.",
+      "citations": ["Genesis 5:24", "2 Kings 2:11"]
+    },
+    {
+      "id": "promise-noahic-covenant",
+      "category": "promises",
+      "question": "What did God promise Noah after the flood?",
+      "answer": "\"I will establish my covenant with you; neither shall all flesh be cut off any more by the waters of a flood; neither shall there any more be a flood to destroy the earth.\"",
+      "citations": ["Genesis 9:11"]
+    },
+    {
+      "id": "promise-abrahamic-covenant",
+      "category": "promises",
+      "question": "What did God promise Abram (Abraham)?",
+      "answer": "\"I will make of thee a great nation, and I will bless thee, and make thy name great; and thou shalt be a blessing: and I will bless them that bless thee, and curse him that curseth thee: and in thee shall all families of the earth be blessed.\"",
+      "citations": ["Genesis 12:2-3"]
+    },
+    {
+      "id": "promise-never-forsake",
+      "category": "promises",
+      "question": "Where does God promise never to leave or forsake his people?",
+      "answer": "\"Be strong and of a good courage, fear not, nor be afraid of them: for the Lord thy God, he it is that doth go with thee; he will not fail thee, nor forsake thee.\"",
+      "citations": ["Deuteronomy 31:6"],
+      "note": "The same promise is repeated to Joshua (Joshua 1:5) and quoted again in Hebrews 13:5."
+    },
+    {
+      "id": "promise-davidic-covenant",
+      "category": "promises",
+      "question": "What did God promise David about his throne?",
+      "answer": "\"He shall build an house for my name, and I will stablish the throne of his kingdom for ever... And thine house and thy kingdom shall be established for ever before thee: thy throne shall be established for ever.\"",
+      "citations": ["2 Samuel 7:13", "2 Samuel 7:16"]
+    },
+    {
+      "id": "promise-plans-to-prosper",
+      "category": "promises",
+      "question": "What does God promise in Jeremiah 29:11?",
+      "answer": "\"For I know the thoughts that I think toward you, saith the Lord, thoughts of peace, and not of evil, to give you an expected end.\"",
+      "citations": ["Jeremiah 29:11"]
+    },
+    {
+      "id": "promise-new-covenant",
+      "category": "promises",
+      "question": "Where does God promise a new covenant?",
+      "answer": "\"Behold, the days come, saith the Lord, that I will make a new covenant with the house of Israel, and with the house of Judah... I will put my law in their inward parts, and write it in their hearts; and will be their God, and they shall be my people.\"",
+      "citations": ["Jeremiah 31:31", "Jeremiah 31:33"]
+    },
+    {
+      "id": "promise-always-with-you",
+      "category": "promises",
+      "question": "What is Jesus's final promise in the Gospel of Matthew?",
+      "answer": "\"Teaching them to observe all things whatsoever I have commanded you: and, lo, I am with you alway, even unto the end of the world.\"",
+      "citations": ["Matthew 28:20"]
+    },
+    {
+      "id": "promise-prepare-a-place",
+      "category": "promises",
+      "question": "What does Jesus promise his disciples in John 14?",
+      "answer": "\"I go to prepare a place for you. And if I go and prepare a place for you, I will come again, and receive you unto myself; that where I am, there ye may be also.\"",
+      "citations": ["John 14:2-3"]
+    },
+    {
+      "id": "promise-all-things-good",
+      "category": "promises",
+      "question": "What does Romans 8:28 promise?",
+      "answer": "\"And we know that all things work together for good to them that love God, to them who are the called according to his purpose.\"",
+      "citations": ["Romans 8:28"]
+    },
+    {
+      "id": "promise-not-slack",
+      "category": "promises",
+      "question": "What does 2 Peter 3:9 say about God keeping his promises?",
+      "answer": "\"The Lord is not slack concerning his promise, as some men count slackness; but is longsuffering to us-ward, not willing that any should perish, but that all should come to repentance.\"",
+      "citations": ["2 Peter 3:9"]
+    },
+    {
+      "id": "promise-no-more-tears",
+      "category": "promises",
+      "question": "What does God promise for the new heaven and earth in Revelation?",
+      "answer": "\"And God shall wipe away all tears from their eyes; and there shall be no more death, neither sorrow, nor crying, neither shall there be any more pain: for the former things are passed away.\"",
+      "citations": ["Revelation 21:4"]
+    },
+    {
+      "id": "warfare-armor-of-god",
+      "category": "warfare",
+      "question": "What is the \"whole armour of God\"?",
+      "answer": "Paul's central spiritual-warfare passage: \"we wrestle not against flesh and blood, but against principalities, against powers, against the rulers of the darkness of this world, against spiritual wickedness in high places.\" He then lists the armor: truth, righteousness, the gospel of peace, faith, salvation, the word of God, and prayer.",
+      "citations": ["Ephesians 6:12", "Ephesians 6:13-18"]
+    },
+    {
+      "id": "warfare-weapons-not-carnal",
+      "category": "warfare",
+      "question": "What does Paul say about the \"weapons of our warfare\"?",
+      "answer": "\"For though we walk in the flesh, we do not war after the flesh: for the weapons of our warfare are not carnal, but mighty through God to the pulling down of strong holds; casting down imaginations, and every high thing that exalteth itself against the knowledge of God.\"",
+      "citations": ["2 Corinthians 10:3-5"]
+    },
+    {
+      "id": "warfare-resist-the-devil",
+      "category": "warfare",
+      "question": "How does James say to resist the devil?",
+      "answer": "\"Submit yourselves therefore to God. Resist the devil, and he will flee from you.\"",
+      "citations": ["James 4:7"]
+    },
+    {
+      "id": "warfare-roaring-lion",
+      "category": "warfare",
+      "question": "How does Peter describe the devil, and how should believers respond?",
+      "answer": "\"Be sober, be vigilant; because your adversary the devil, as a roaring lion, walketh about, seeking whom he may devour: whom resist stedfast in the faith.\"",
+      "citations": ["1 Peter 5:8-9"]
+    },
+    {
+      "id": "warfare-greater-is-he",
+      "category": "warfare",
+      "question": "What does 1 John 4:4 promise about spiritual opposition?",
+      "answer": "\"Ye are of God, little children, and have overcome them: because greater is he that is in you, than he that is in the world.\"",
+      "citations": ["1 John 4:4"]
+    },
+    {
+      "id": "warfare-authority-over-serpents",
+      "category": "warfare",
+      "question": "What authority does Jesus give in Luke 10:19?",
+      "answer": "\"Behold, I give unto you power to tread on serpents and scorpions, and over all the power of the enemy: and nothing shall by any means hurt you.\"",
+      "citations": ["Luke 10:19"]
+    },
+    {
+      "id": "warfare-not-by-might",
+      "category": "warfare",
+      "question": "What does Zechariah 4:6 say about how victory is won?",
+      "answer": "\"Not by might, nor by power, but by my spirit, saith the Lord of hosts.\"",
+      "citations": ["Zechariah 4:6"]
+    },
+    {
+      "id": "warfare-overcame-by-blood-of-lamb",
+      "category": "warfare",
+      "question": "How does Revelation 12:11 describe the overcomers?",
+      "answer": "\"And they overcame him by the blood of the Lamb, and by the word of their testimony; and they loved not their lives unto the death.\"",
+      "citations": ["Revelation 12:11"]
+    },
+    {
+      "id": "warfare-way-of-escape",
+      "category": "warfare",
+      "question": "What does God promise about temptation in 1 Corinthians 10:13?",
+      "answer": "\"There hath no temptation taken you but such as is common to man: but God is faithful, who will not suffer you to be tempted above that ye are able; but will with the temptation also make a way to escape, that ye may be able to bear it.\"",
+      "citations": ["1 Corinthians 10:13"]
+    },
+    {
+      "id": "warfare-more-than-conquerors",
+      "category": "warfare",
+      "question": "What does Romans 8:37-39 say about being \"more than conquerors\"?",
+      "answer": "\"Nay, in all these things we are more than conquerors through him that loved us... [nothing] shall be able to separate us from the love of God, which is in Christ Jesus our Lord.\"",
+      "citations": ["Romans 8:37", "Romans 8:39"]
+    }
+  ]
+}

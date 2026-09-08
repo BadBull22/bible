@@ -1,0 +1,41 @@
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+  opacity: 1;
+  transition: opacity 400ms ease;
+}
+
+.splash-screen--fading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-image {
+  width: min(72vmin, 680px);
+  height: auto;
+  object-fit: contain;
+
+  /* fade the image's edges to transparent so it bleeds into the surrounding
+     black background instead of showing a hard rectangular edge */
+  -webkit-mask-image: radial-gradient(ellipse 62% 62% at center, #000 55%, transparent 100%);
+  mask-image: radial-gradient(ellipse 62% 62% at center, #000 55%, transparent 100%);
+
+  animation: splash-rise 900ms ease-out;
+}
+
+@keyframes splash-rise {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
