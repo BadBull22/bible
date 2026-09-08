@@ -1,0 +1,102 @@
+mod commands;
+mod db;
+pub mod embeddings;
+mod firsts;
+mod genealogy;
+mod models;
+mod online;
+mod settings;
+
+use db::DbState;
+use embeddings::Embedder;
+use firsts::FirstsData;
+use genealogy::GenealogyData;
+use settings::AppSettings;
+use std::path::PathBuf;
+use std::sync::Mutex;
+use tauri::Manager;
+
+pub struct ConfigDir(pub PathBuf);
+pub struct SettingsState(pub Mutex<AppSettings>);
+pub struct EmbedderState(pub Embedder);
+pub struct GenealogyState(pub GenealogyData);
+pub struct FirstsState(pub FirstsData);
+
+/// Registers the sqlite-vec extension for every connection subsequently opened in this
+/// process (rusqlite's `sqlite3_auto_extension` is process-global, not per-connection).
+/// Must be called once, before any connection that needs the `vec0` virtual table type
+/// is opened -- both the app itself and the offline corpus-indexing tool call this.
+pub fn register_sqlite_vec() {
+    unsafe {
+        rusqlite::ffi::sqlite3_auto_extension(Some(std::mem::transmute(
+            sqlite_vec::sqlite3_vec_init as *const (),
+        )));
+    }
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    register_sqlite_vec();
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            let resource_path = app
+                .path()
+                .resolve("resources/bible.db", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve bible.db resource path");
+            let conn = db::open(resource_path);
+            app.manage(DbState(Mutex::new(conn)));
+
+            let config_dir = app.path().app_config_dir().expect("no app config dir");
+            let loaded = settings::load(&config_dir);
+            app.manage(ConfigDir(config_dir));
+            app.manage(SettingsState(Mutex::new(loaded)));
+
+            let model_dir = app
+                .path()
+                .resolve("resources/model", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve embedding model resource path");
+            let embedder = Embedder::load(&model_dir).expect("failed to load embedding model");
+            app.manage(EmbedderState(embedder));
+
+            let genealogy_path = app
+                .path()
+                .resolve("resources/genealogies.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve genealogies.json resource path");
+            let genealogy = GenealogyData::load(&genealogy_path).expect("failed to load genealogies.json");
+            app.manage(GenealogyState(genealogy));
+
+            let firsts_path = app
+                .path()
+                .resolve("resources/firsts.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve firsts.json resource path");
+            let firsts = FirstsData::load(&firsts_path).expect("failed to load firsts.json");
+            app.manage(FirstsState(firsts));
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            commands::list_versions,
+            commands::list_books,
+            commands::chapter_counts,
+            commands::get_chapter,
+            commands::get_chapter_with_strongs,
+            commands::get_parallel_verse,
+            commands::get_verse_with_strongs,
+            commands::strongs_lookup,
+            commands::strongs_occurrences,
+            commands::search_keyword,
+            commands::word_frequency,
+            commands::cross_references_for,
+            commands::get_settings,
+            commands::save_api_bible_key,
+            commands::list_online_versions,
+            commands::fetch_online_verse,
+            commands::semantic_search,
+            commands::list_genealogy_people,
+            commands::get_lineage,
+            commands::list_firsts,
+            commands::search_firsts,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

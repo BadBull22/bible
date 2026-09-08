@@ -1,0 +1,5 @@
+# Optional, machine-specific: copy to config.toml (gitignored) if the project checkout lives on a
+# network share. Cargo's incremental build directory does huge numbers of small file writes,
+# which is slow and unreliable over SMB, so point it at local disk instead.
+[build]
+target-dir = "C:/Users/<you>/AppData/Local/bible-concordance-build/cargo-target"
