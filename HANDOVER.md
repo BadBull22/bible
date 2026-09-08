@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phase 1 + most of Phase 2 done and working
+## Current status: Phases 1-3 done and working (v1.2.0)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -71,7 +71,10 @@ contents here if you need it from a different machine, since that path is local 
   from the bundled KJV via direct DB queries before writing, not from memory.
 - **Book of Enoch** added as a new, clearly non-canonical section: version code `ENOCH1`, book
   `Enoch` with `testament = 'Apocrypha'`, 108 chapters / 1,059 verses, sourced from Project
-  Gutenberg #77935 (R.H. Charles & W.O.E. Oesterley's 1917 translation, public domain). Sits in
+  Gutenberg #77935 (R.H. Charles & W.O.E. Oesterley's 1917 translation, public domain). This is
+  specifically **1 Enoch** (the Ethiopic Enoch) — not 2 Enoch (the Slavonic "Secrets of Enoch")
+  or 3 Enoch (the later Hebrew Enoch), which are separate works and are not bundled. Confirmed
+  directly from the translators' own introduction in the Gutenberg text, not assumed. Sits in
   its own Sidebar section below OT/NT with a canonicity disclaimer; reading it auto-switches
   `versionCode` to `ENOCH1` and hides the version dropdown (only one translation exists) —
   `navigate()` in `App.tsx` handles the switch both ways. `ChapterView.tsx` shows a collapsible
@@ -84,8 +87,11 @@ contents here if you need it from a different machine, since that path is local 
 - **Installer build works**: `npm run tauri build` succeeds (release compile + NSIS `.exe` +
   WiX `.msi`), output lands in `src-tauri/target/release/bundle/{nsis,msi}/` (actually under
   the redirected local cargo `target-dir`, see gotcha #2 — not literally `src-tauri/target`).
-  Installers were copied to `installer/` at the project root for easy access. Unsigned, so
-  Windows SmartScreen warns on first run — expected, not a bug.
+  Installers were copied to `installer/` at the project root for easy access (this folder is
+  gitignored, not committed — see "Git status" below). App version was bumped from `0.1.0` to
+  `1.2.0` in all three places it's declared (`package.json`, `src-tauri/tauri.conf.json`,
+  `src-tauri/Cargo.toml`) before this build — keep those three in sync on future version bumps.
+  Unsigned, so Windows SmartScreen warns on first run — expected, not a bug.
 
 **Not built yet:** commentaries (Matthew Henry/JFB/Barnes via SWORD modules), local import of
 user-owned NIV/ESV/NKJV modules (e-Sword/MySword), bundle code-splitting (currently one ~730KB
@@ -165,21 +171,45 @@ text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only e
     rerunnable pipeline step. If Enoch ever needs to be rebuilt or extended, redo the same
     careful parse-and-validate process rather than assuming a quick regex will get it right.
 
+## Git status
+
+A git repo now exists (root commit `3085677`, branch `master`, remote: none configured yet).
+**`.gitignore` deliberately excludes several large generated/downloaded artifacts** that are
+still present as plain files on disk right now, just not version-controlled:
+`src-tauri/resources/bible.db` (241MB), `src-tauri/resources/model/` (88MB, the embedding
+model), `data-pipeline/.venv/`, `data-pipeline/sources/` (406MB of downloaded raw texts), and
+`installer/` (the built .exe/.msi). This machine has all of them right now — nothing is
+missing here. The distinction only matters on a **true fresh clone** (a different machine, or
+this repo re-cloned from a future remote): those five things won't come along automatically and
+need to be either copied over directly or regenerated (see below and the data-pipeline docs).
+
+Also note: git initially failed with "detected dubious ownership" against this UNC-resolved
+network path (see gotcha #9 for why `X:` resolves to a UNC form) — every git command in this
+session used a one-off `git -c safe.directory='*' ...` override rather than a persistent
+`git config --global` change, per this project's rule against editing global git config. Do the
+same rather than adding a permanent safe.directory exception, unless the user explicitly asks
+for a persistent fix.
+
 ## Machine-specific things to redo on a new PC
 
 - [ ] Confirm `V:\Code\bible` (or wherever this network share is mapped) is accessible.
 - [ ] `npm install` in the project root.
 - [ ] Check `src-tauri/.cargo/config.toml` — update or remove the hardcoded local `target-dir`
       path (see gotcha #2).
-- [ ] `src-tauri/resources/bible.db` should already be present and complete (including the
-      `verse_embeddings` vec0 table) — **no need to rebuild it** unless you're changing the data
-      pipeline itself. Verify with `PRAGMA integrity_check` if in doubt.
+- [ ] `src-tauri/resources/bible.db` needs to exist and be complete (including the
+      `verse_embeddings` vec0 table and the `ENOCH1` version/Enoch book) for the app to work at
+      all. On this machine it's already there and doesn't need rebuilding. On a genuinely fresh
+      checkout elsewhere, it is **not** in git (see "Git status" above) — copy it from this
+      machine directly, or rebuild via the data pipeline plus redo the Enoch insert (gotcha #10)
+      and the `verse_embeddings`/`index_embeddings` step. Verify with `PRAGMA integrity_check`
+      if in doubt.
+- [ ] `src-tauri/resources/model/` (the bundled embedding model) is likewise not in git — copy
+      it over directly on a fresh checkout, or re-download per whatever step originally sourced
+      it (not documented as a rerunnable script here; check the original plan doc if needed).
 - [ ] `.env` at the project root (gitignored) holds the api.bible key used for live NIV/NKJV
       testing — it will **not** carry over automatically since it's untracked; re-add it if
       needed, or just use the in-app Settings panel instead (that's the real, user-facing path).
-- [ ] `cargo check` then `npm run tauri dev` to launch.
-- [ ] **No git commits exist yet** — everything is uncommitted working-tree state. Consider
-      committing before doing more work, so history isn't lost to any future filesystem hiccup.
+- [ ] `cargo check` then `npm run tauri dev` to launch, or just double-click `dev.bat`.
 
 ## Key file map
 
