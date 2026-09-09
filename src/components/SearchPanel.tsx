@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, SearchHit, Version } from "../api";
+import { CloseIcon } from "./icons";
 
 interface Props {
   versions: Version[];
@@ -11,73 +12,89 @@ interface Props {
 
 type Mode = "phrase" | "frequency" | "topic";
 
+const MODES: { key: Mode; label: string; placeholder: string }[] = [
+  { key: "topic", label: "Topics & themes", placeholder: "e.g. the sacrifice of bulls, forgiveness, the first crime" },
+  { key: "phrase", label: "Exact phrase", placeholder: "e.g. sacrifice of bulls" },
+  { key: "frequency", label: "Word count", placeholder: "e.g. gold" },
+];
+
+const PHRASE_LIMIT = 100;
+const TOPIC_LIMIT = 30;
+
 export function SearchPanel({ versions, versionCode, initialQuery, onJump, onClose }: Props) {
   const [mode, setMode] = useState<Mode>("topic");
   const [query, setQuery] = useState(initialQuery ?? "");
-  const [searchVersion, setSearchVersion] = useState(versionCode);
+  const [searchVersion, setSearchVersion] = useState(versionCode === "ENOCH1" ? "BSB" : versionCode);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [ran, setRan] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [ran, setRan] = useState<{ query: string; mode: Mode; version: string } | null>(null);
+  const requestId = useRef(0);
 
   async function runSearch(q?: string) {
     const effective = (q ?? query).trim();
     if (!effective) return;
+    const id = ++requestId.current;
     setLoading(true);
-    setRan(true);
+    setError(null);
     try {
+      let results: SearchHit[];
+      let total: number | null = null;
       if (mode === "phrase") {
-        const results = await api.searchKeyword(searchVersion, effective, 100);
-        setHits(results);
-        setTotalCount(null);
+        results = await api.searchKeyword(searchVersion, effective, PHRASE_LIMIT);
       } else if (mode === "frequency") {
-        const result = await api.wordFrequency(searchVersion, effective);
-        setHits(result.verses);
-        setTotalCount(result.total_occurrences);
+        const r = await api.wordFrequency(searchVersion, effective);
+        results = r.verses;
+        total = r.total_occurrences;
       } else {
-        const results = await api.semanticSearch(effective, 30);
-        setHits(results);
-        setTotalCount(null);
+        results = await api.semanticSearch(effective, TOPIC_LIMIT);
       }
+      if (id !== requestId.current) return; // a newer search superseded this one
+      setHits(results);
+      setTotalCount(total);
+      setRan({ query: effective, mode, version: searchVersion });
+    } catch (e) {
+      if (id !== requestId.current) return;
+      setError(String(e));
+      setHits([]);
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   }
 
   useEffect(() => {
-    if (initialQuery) runSearch(initialQuery);
+    if (initialQuery) {
+      setQuery(initialQuery);
+      runSearch(initialQuery);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery]);
 
-  const placeholders: Record<Mode, string> = {
-    phrase: "e.g. sacrifice of bulls",
-    frequency: "e.g. gold",
-    topic: "e.g. the sacrifice of bulls, forgiveness, the first crime",
-  };
+  const placeholder = MODES.find((m) => m.key === mode)?.placeholder;
+  const showVersion = mode !== "topic";
 
   return (
     <aside className="side-panel search-panel">
       <div className="side-panel-header">
         <h3>Search</h3>
-        <button onClick={onClose}>✕</button>
+        <button onClick={onClose} aria-label="Close panel">
+          <CloseIcon size={14} />
+        </button>
       </div>
       <div className="search-controls">
-        <div className="mode-toggle">
-          <button className={mode === "topic" ? "active" : ""} onClick={() => setMode("topic")}>
-            Topics &amp; themes
-          </button>
-          <button className={mode === "phrase" ? "active" : ""} onClick={() => setMode("phrase")}>
-            Exact phrase
-          </button>
-          <button className={mode === "frequency" ? "active" : ""} onClick={() => setMode("frequency")}>
-            Word count
-          </button>
+        <div className="mode-toggle" role="tablist" aria-label="Search mode">
+          {MODES.map((m) => (
+            <button key={m.key} role="tab" aria-selected={mode === m.key} className={mode === m.key ? "active" : ""} onClick={() => setMode(m.key)}>
+              {m.label}
+            </button>
+          ))}
         </div>
-        {mode !== "topic" && (
-          <select value={searchVersion} onChange={(e) => setSearchVersion(e.target.value)}>
+        {showVersion && (
+          <select value={searchVersion} onChange={(e) => setSearchVersion(e.target.value)} aria-label="Translation to search">
             {versions.map((v) => (
               <option key={v.code} value={v.code}>
-                {v.code}
+                {v.code} — {v.name}
               </option>
             ))}
           </select>
@@ -88,22 +105,31 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onClo
             runSearch();
           }}
         >
-          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={placeholders[mode]} />
-          <button type="submit">Search</button>
+          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={placeholder} aria-label="Search query" />
+          <button type="submit" disabled={loading || !query.trim()}>
+            {loading ? "Searching…" : "Search"}
+          </button>
         </form>
       </div>
-      {loading && <p>Searching…</p>}
-      {!loading && ran && mode === "frequency" && totalCount !== null && (
+      {error && <p className="status-error">Search failed: {error}</p>}
+      {!loading && ran && ran.mode === "frequency" && totalCount !== null && (
         <p className="frequency-summary">
-          "{query}" appears <strong>{totalCount}</strong> time{totalCount === 1 ? "" : "s"} in {searchVersion}, across {hits.length} verse
-          {hits.length === 1 ? "" : "s"}.
+          "{ran.query}" appears <strong>{totalCount}</strong> time{totalCount === 1 ? "" : "s"} in {ran.version}, across{" "}
+          {hits.length} verse{hits.length === 1 ? "" : "s"}.
         </p>
       )}
-      {!loading && ran && hits.length === 0 && <p>No matches found.</p>}
+      {!loading && ran && ran.mode !== "frequency" && hits.length > 0 && (
+        <p className="result-count">
+          {hits.length}
+          {ran.mode === "phrase" && hits.length >= PHRASE_LIMIT ? "+" : ""} {hits.length === 1 ? "result" : "results"}
+          {ran.mode === "topic" ? " by meaning (BSB)" : ` in ${ran.version}`}
+        </p>
+      )}
+      {!loading && ran && !error && hits.length === 0 && <p className="muted">No matches for "{ran.query}".</p>}
       {!loading && hits.length > 0 && (
         <ul className="xref-list">
-          {hits.map((h, i) => (
-            <li key={i}>
+          {hits.map((h) => (
+            <li key={`${h.book}-${h.chapter}-${h.verse}`}>
               <button className="link-btn" onClick={() => onJump(h.book, h.chapter, h.verse)}>
                 {h.book} {h.chapter}:{h.verse}
               </button>

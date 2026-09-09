@@ -93,9 +93,58 @@ contents here if you need it from a different machine, since that path is local 
   `src-tauri/Cargo.toml`) before this build — keep those three in sync on future version bumps.
   Unsigned, so Windows SmartScreen warns on first run — expected, not a bug.
 
+**Phase 4 (code/UI review pass, 2026-09-09) — done:**
+- **Bug fixes**: `Back` bypassed the Enoch version auto-switch (returning from Enoch left the
+  reader on `ENOCH1` showing an empty chapter) — every book change now goes through
+  `applyLocation()` in `App.tsx`. Chapter loads carry a request token so a slow response can't
+  overwrite a newer one, and a failed load shows the error instead of stale text. Dark mode:
+  the word-count summary box was navy-on-navy. `FirstsPanel` double-fetched on mount and
+  rendered a `<p>` inside a `<ul>`. `ParallelPanel` listed `ENOCH1` against Bible verses (and
+  every Bible version against Enoch verses) as "not available" rows.
+- **Navigation**: Previous/Next chapter buttons at the end of each chapter (cross book
+  boundaries, never cross into/out of the Apocrypha section) plus `←`/`→` keys; `Ctrl+K`
+  focuses search; `Esc` closes the panel. Typing a reference into the top search box
+  (`John 3:16`, `gen 1`, `1 sam 17`, `Jude 3`) navigates directly via `parseReference()` in
+  `api.ts` (unambiguous-prefix book matching); anything else still runs a topic search. The
+  sidebar scrolls the active book into view and can be hidden with the ☰ button. The previous
+  chapter stays visible (dimmed) while the next loads instead of flashing "Loading…".
+- **Appearance**: Unicode glyph icons (⌕ 🖶 ⛓ ⇄ ✕) replaced with inline SVGs in
+  `src/components/icons.tsx` (the glyphs rendered inconsistently on Windows). Cross-reference
+  legend is now swatches instead of a paragraph. Buttons/status text use CSS classes
+  (`.outline-btn`, `.status-ok/.status-error`, `.section-label`) instead of inline styles.
+  Hebrew (WLC) renders right-to-left with `lang`/`dir` set; Greek/Hebrew get a larger size.
+  Keyboard focus rings via `:focus-visible`; tagged words are keyboard-reachable
+  (`role=button`, `tabIndex`).
+- **Word study**: a word carrying several Strong's numbers (Hebrew prefixes) now offers all of
+  them as tabs instead of silently opening only the first.
+- **Bundle**: `CrossRefGraph` and `GenealogyPanel` are `React.lazy`-loaded, so cytoscape
+  (~435KB) is only fetched when a graph panel opens; initial JS went from ~750KB to ~225KB.
+- **Reader renders the real verse text**: previously, any Strong's-tagged translation was
+  rendered from the word tokens alone, which strip all punctuation and quotation marks (and,
+  for WEB, skipped whole words). `src/verseSegments.ts` now reconciles the tokens against the
+  full text (boundary-checked, order-tolerant matching, validated at ~100% of non-empty
+  tokens across BSB/KJV/WEB/ASV/TR) so punctuation is shown and tagged words stay clickable.
+  A display-only `tidyPunctuation()` also removes the pipeline's stray space after opening
+  quotes (`“ Let there be light,”`).
+- **WEB data bug fixed**: 2,069 WEB verses (all red-letter passages) had raw USFM attribute
+  text in `verses.text` (`For|strong="G1063" God|strong="G2316" …`) and were missing those
+  words from `strongs_links`. Cause: `usfm_extract.py` only matched `\w …\w*`, not USFM's
+  nested `\+w …\+w*` form used inside `\wj` (words of Jesus). The regexes now accept both.
+  `bible.db` was repaired in place (WEB rows deleted and reloaded with the fixed parser, then
+  `INSERT INTO verses_fts(verses_fts) VALUES('rebuild')`), on a local-disk copy per gotcha #1,
+  verified with `PRAGMA integrity_check`, then copied back. WEB now has 677,687 Strong's links
+  (was 639,567). A pre-patch backup was left at
+  `%LOCALAPPDATA%\bible-concordance-build\bible-prepatch-backup.db` on the PC
+  used for this session. A full pipeline rebuild would produce the same result.
+- **Rust**: the duplicated Strong's word-grouping in `commands.rs` is one helper
+  (`words_for_verse`); `get_verse_with_strongs` is a single query; `settings.rs` takes `&Path`.
+- Smoke-tested by launching `tauri dev` with
+  `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` and driving the WebView2
+  window over CDP with a small dependency-free Node script (screenshots + clicks) — a handy
+  way to test this app headlessly on Windows without Playwright.
+
 **Not built yet:** commentaries (Matthew Henry/JFB/Barnes via SWORD modules), local import of
-user-owned NIV/ESV/NKJV modules (e-Sword/MySword), bundle code-splitting (currently one ~730KB
-JS chunk — works fine, just a size-warning, not urgent), semantic/keyword search over Enoch's
+user-owned NIV/ESV/NKJV modules (e-Sword/MySword), semantic/keyword search over Enoch's
 text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only ever built for BSB).
 
 ## Critical gotchas discovered this session (don't re-learn these the hard way)

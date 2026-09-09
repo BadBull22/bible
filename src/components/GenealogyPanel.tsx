@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import cytoscape, { Core } from "cytoscape";
 import { api, LineagePerson, PersonSummary, parseCitation } from "../api";
+import { CloseIcon } from "./icons";
 
 interface Props {
   onClose: () => void;
@@ -12,24 +13,35 @@ export function GenealogyPanel({ onClose, onJump }: Props) {
   const [personId, setPersonId] = useState<string>("");
   const [lineage, setLineage] = useState<LineagePerson[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const cyRef = useRef<Core | null>(null);
+  const onJumpRef = useRef(onJump);
+  onJumpRef.current = onJump;
 
   useEffect(() => {
-    api.listGenealogyPeople().then((p) => {
-      setPeople(p);
-      const david = p.find((x) => x.name === "David");
-      setPersonId(david?.id ?? p[0]?.id ?? "");
-    });
+    api
+      .listGenealogyPeople()
+      .then((p) => {
+        setPeople(p);
+        const david = p.find((x) => x.name === "David");
+        setPersonId(david?.id ?? p[0]?.id ?? "");
+      })
+      .catch((e) => setError(String(e)));
   }, []);
 
   useEffect(() => {
     if (!personId) return;
+    let cancelled = false;
     setLoading(true);
+    setError(null);
     api
       .getLineage(personId)
-      .then(setLineage)
-      .finally(() => setLoading(false));
+      .then((l) => !cancelled && setLineage(l))
+      .catch((e) => !cancelled && setError(String(e)))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
   }, [personId]);
 
   const elements = useMemo(() => {
@@ -47,8 +59,7 @@ export function GenealogyPanel({ onClose, onJump }: Props) {
 
   useEffect(() => {
     if (!containerRef.current || elements.length === 0) return;
-    if (cyRef.current) cyRef.current.destroy();
-    const cy = cytoscape({
+    const cy: Core = cytoscape({
       container: containerRef.current,
       elements,
       style: [
@@ -72,27 +83,29 @@ export function GenealogyPanel({ onClose, onJump }: Props) {
       minZoom: 0.3,
       maxZoom: 2,
     });
+    const byId = new Map(lineage.map((l) => [l.id, l]));
     cy.on("tap", "node", (evt) => {
-      const id = evt.target.id();
-      const p = lineage.find((l) => l.id === id);
-      if (p) {
-        const ref = parseCitation(p.citation);
-        if (ref) onJump(ref.book, ref.chapter, ref.verse);
-      }
+      const p = byId.get(evt.target.id());
+      const ref = p && parseCitation(p.citation);
+      if (ref) onJumpRef.current(ref.book, ref.chapter, ref.verse);
     });
-    cyRef.current = cy;
+    // the effect cleanup owns teardown; no manual destroy needed before re-creating
     return () => cy.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [elements]);
+
+  const generations = lineage.length > 0 ? lineage.length - 1 : 0;
 
   return (
     <aside className="side-panel wide">
       <div className="side-panel-header">
         <h3>Genealogy</h3>
-        <button onClick={onClose}>✕</button>
+        <button onClick={onClose} aria-label="Close panel">
+          <CloseIcon size={14} />
+        </button>
       </div>
       <div className="search-controls">
-        <select value={personId} onChange={(e) => setPersonId(e.target.value)}>
+        <select value={personId} onChange={(e) => setPersonId(e.target.value)} aria-label="Person">
           {people.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
@@ -101,10 +114,17 @@ export function GenealogyPanel({ onClose, onJump }: Props) {
         </select>
       </div>
       <p className="search-hint" style={{ marginTop: 0 }}>
-        Traced from Genesis, Ruth, and Matthew 1. Click a node to jump to its citing verse.
+        Traced from Genesis, Ruth, and Matthew 1. Click a node or a name to jump to its citing verse.
+        {generations > 0 && (
+          <>
+            {" "}
+            {generations} generation{generations === 1 ? "" : "s"} back to {lineage[lineage.length - 1].name}.
+          </>
+        )}
       </p>
-      <div ref={containerRef} className="cy-graph" style={{ height: 300 }} />
-      {loading && <p>Loading…</p>}
+      <div ref={containerRef} className="cy-graph" style={{ height: 300 }} role="img" aria-label="Family tree" />
+      {loading && <p className="muted">Loading…</p>}
+      {error && <p className="status-error">Couldn't load genealogy: {error}</p>}
       {!loading && lineage.length > 0 && (
         <ul className="xref-list">
           {lineage.map((p) => {
@@ -114,7 +134,7 @@ export function GenealogyPanel({ onClose, onJump }: Props) {
                 <div className="xref-item-head">
                   <button className="link-btn" onClick={() => ref && onJump(ref.book, ref.chapter, ref.verse)}>
                     {p.name}
-                    {p.alt_names.length > 0 && <span style={{ color: "var(--text-faint)", fontWeight: 400 }}> ({p.alt_names.join(", ")})</span>}
+                    {p.alt_names.length > 0 && <span className="alt-names"> ({p.alt_names.join(", ")})</span>}
                   </button>
                   <span className="votes">{p.citation}</span>
                 </div>
