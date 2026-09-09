@@ -146,3 +146,34 @@ export function parseCitation(citation: string): { book: string; chapter: number
   if (!m) return null;
   return { book: m[1], chapter: parseInt(m[2], 10), verse: parseInt(m[3], 10) };
 }
+
+export interface ParsedReference {
+  book: string;
+  chapter: number;
+  verse: number | null;
+}
+
+/** Interprets free text typed into the search box as a scripture reference, e.g.
+ * "John 3:16", "gen 1", "1 sam 17:4", "Rev 21". Book names match case-insensitively
+ * on either the full name or an unambiguous prefix. Returns null when the text isn't
+ * shaped like a reference or the book can't be identified, in which case the caller
+ * should treat it as an ordinary search query. */
+export function parseReference(input: string, books: BookInfo[]): ParsedReference | null {
+  const m = input.trim().match(/^([1-3]?\s*[a-z][a-z .]*?)\s*(\d+)(?::(\d+))?$/i);
+  if (!m) return null;
+  const rawBook = m[1].replace(/\s+/g, " ").replace(/\./g, "").trim().toLowerCase();
+  if (rawBook.length < 2) return null;
+
+  const norm = (n: string) => n.toLowerCase();
+  let match = books.find((b) => norm(b.name) === rawBook);
+  if (!match) {
+    const candidates = books.filter((b) => norm(b.name).startsWith(rawBook));
+    if (candidates.length !== 1) return null;
+    match = candidates[0];
+  }
+  return {
+    book: match.name,
+    chapter: parseInt(m[2], 10),
+    verse: m[3] ? parseInt(m[3], 10) : null,
+  };
+}

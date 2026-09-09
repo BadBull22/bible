@@ -6,8 +6,13 @@ import re
 
 FOOTNOTE_RE = re.compile(r"\\f\s*\+?.*?\\f\*", re.DOTALL)
 XREF_RE = re.compile(r"\\x\s*\+?.*?\\x\*", re.DOTALL)
-WORD_STRONG_RE = re.compile(r"\\w\s+(.*?)\|strong=\"([^\"]+)\"\s*\\w\*", re.DOTALL)
-WORD_PLAIN_RE = re.compile(r"\\w\s+(.*?)\\w\*", re.DOTALL)
+# USFM nests character markers inside another character style with a `+` prefix, so
+# words inside red-letter (\wj ... \wj*) passages appear as `\+w For|strong="G1063"\+w*`
+# rather than `\w ...\w*`. Both forms must be captured -- missing the nested form used
+# to leave `For|strong="G1063"` in the plain text of ~2,000 NT verses and drop those
+# words from the Strong's links entirely.
+WORD_STRONG_RE = re.compile(r"\\\+?w\s+(.*?)\|strong=\"([^\"]+)\"\s*\\\+?w\*", re.DOTALL)
+WORD_PLAIN_RE = re.compile(r"\\\+?w\s+(.*?)\\\+?w\*", re.DOTALL)
 STRONG_ID_RE = re.compile(r"(H|G)0*(\d+)")
 # Any other backslash marker (with optional trailing *), e.g. \p \q1 \nd \nd* \add \add*
 # (excludes \c and \v themselves, which TOKEN_RE still needs to find below)

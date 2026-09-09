@@ -14,6 +14,28 @@ fn book_id(conn: &rusqlite::Connection, book: &str) -> Result<i64, String> {
         .map_err(|_| format!("unknown book: {book}"))
 }
 
+const WORDS_SQL: &str =
+    "SELECT word_order, surface_text, strongs_number FROM strongs_links WHERE verse_id = ?1 ORDER BY word_order";
+
+/// Groups the flat `strongs_links` rows of one verse into words, merging consecutive
+/// rows that share a `word_order` (one surface word carrying several Strong's numbers,
+/// e.g. a Hebrew word with an inseparable prefix). `stmt` must be prepared from
+/// [`WORDS_SQL`].
+fn words_for_verse(stmt: &mut rusqlite::Statement<'_>, verse_id: i64) -> Result<Vec<StrongsWord>, String> {
+    let rows = stmt
+        .query_map(params![verse_id], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?, r.get::<_, String>(2)?)))
+        .map_err(|e| e.to_string())?;
+    let mut words: Vec<StrongsWord> = Vec::new();
+    for row in rows {
+        let (order, surface, num) = row.map_err(|e| e.to_string())?;
+        match words.last_mut() {
+            Some(last) if last.word_order == order => last.strongs_numbers.push(num),
+            _ => words.push(StrongsWord { word_order: order, surface_text: surface, strongs_numbers: vec![num] }),
+        }
+    }
+    Ok(words)
+}
+
 #[tauri::command]
 pub fn list_versions(state: State<DbState>) -> Result<Vec<Version>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
@@ -117,30 +139,10 @@ pub fn get_chapter_with_strongs(
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
 
-    let mut word_stmt = conn
-        .prepare(
-            "SELECT word_order, surface_text, strongs_number FROM strongs_links
-             WHERE verse_id = ?1 ORDER BY word_order",
-        )
-        .map_err(|e| e.to_string())?;
-
+    let mut word_stmt = conn.prepare(WORDS_SQL).map_err(|e| e.to_string())?;
     let mut out = Vec::with_capacity(verse_rows.len());
     for (verse_id, verse_num, text) in verse_rows {
-        let raw_rows: Vec<(i64, String, String)> = word_stmt
-            .query_map(params![verse_id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
-            .map_err(|e| e.to_string())?
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| e.to_string())?;
-        let mut words: Vec<StrongsWord> = Vec::new();
-        for (order, surface, num) in raw_rows {
-            if let Some(last) = words.last_mut() {
-                if last.word_order == order {
-                    last.strongs_numbers.push(num);
-                    continue;
-                }
-            }
-            words.push(StrongsWord { word_order: order, surface_text: surface, strongs_numbers: vec![num] });
-        }
+        let words = words_for_verse(&mut word_stmt, verse_id)?;
         out.push(VerseWithWords { book: book.clone(), chapter, verse: verse_num, text, words });
     }
     Ok(out)
@@ -191,41 +193,17 @@ pub fn get_verse_with_strongs(
 ) -> Result<VerseWithWords, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let bid = book_id(&conn, &book)?;
-    let verse_id: i64 = conn
+    let (verse_id, text): (i64, String) = conn
         .query_row(
-            "SELECT v.id FROM verses v JOIN versions ver ON v.version_id = ver.id
+            "SELECT v.id, v.text FROM verses v JOIN versions ver ON v.version_id = ver.id
              WHERE ver.code = ?1 AND v.book_id = ?2 AND v.chapter = ?3 AND v.verse = ?4",
             params![version_code, bid, chapter, verse],
-            |r| r.get(0),
+            |r| Ok((r.get(0)?, r.get(1)?)),
         )
-        .map_err(|e| format!("verse not found: {e}"))?;
-    let text: String = conn
-        .query_row("SELECT text FROM verses WHERE id = ?1", params![verse_id], |r| r.get(0))
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| format!("verse not found: {book} {chapter}:{verse} ({version_code})"))?;
 
-    let mut stmt = conn
-        .prepare(
-            "SELECT word_order, surface_text, strongs_number FROM strongs_links
-             WHERE verse_id = ?1 ORDER BY word_order",
-        )
-        .map_err(|e| e.to_string())?;
-    let raw_rows: Vec<(i64, String, String)> = stmt
-        .query_map(params![verse_id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
-        .map_err(|e| e.to_string())?
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())?;
-
-    let mut words: Vec<StrongsWord> = Vec::new();
-    for (order, surface, num) in raw_rows {
-        if let Some(last) = words.last_mut() {
-            if last.word_order == order {
-                last.strongs_numbers.push(num);
-                continue;
-            }
-        }
-        words.push(StrongsWord { word_order: order, surface_text: surface, strongs_numbers: vec![num] });
-    }
-
+    let mut stmt = conn.prepare(WORDS_SQL).map_err(|e| e.to_string())?;
+    let words = words_for_verse(&mut stmt, verse_id)?;
     Ok(VerseWithWords { book, chapter, verse, text, words })
 }
 

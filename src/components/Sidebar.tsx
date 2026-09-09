@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { BookInfo } from "../api";
 
 interface Props {
@@ -8,64 +9,89 @@ interface Props {
   onSelect: (book: string, chapter: number) => void;
 }
 
-export function Sidebar({ books, selectedBook, selectedChapter, chapterCounts, onSelect }: Props) {
-  const ot = books.filter((b) => b.testament === "OT");
-  const nt = books.filter((b) => b.testament === "NT");
-  const apocrypha = books.filter((b) => b.testament === "Apocrypha");
+interface SectionDef {
+  key: string;
+  title: string;
+  note?: string;
+}
 
+const SECTIONS: SectionDef[] = [
+  { key: "OT", title: "Old Testament" },
+  { key: "NT", title: "New Testament" },
+  { key: "Apocrypha", title: "Apocrypha", note: "Not part of the Bible's canon (Genesis–Revelation above) in most traditions." },
+];
+
+export function Sidebar({ books, selectedBook, selectedChapter, chapterCounts, onSelect }: Props) {
   return (
-    <aside className="sidebar">
-      <div className="sidebar-section">
-        <h3>Old Testament</h3>
-        <div className="book-list">
-          {ot.map((b) => (
-            <BookRow key={b.name} book={b} selectedBook={selectedBook} selectedChapter={selectedChapter} chapterCounts={chapterCounts} onSelect={onSelect} />
-          ))}
-        </div>
-      </div>
-      <div className="sidebar-section">
-        <h3>New Testament</h3>
-        <div className="book-list">
-          {nt.map((b) => (
-            <BookRow key={b.name} book={b} selectedBook={selectedBook} selectedChapter={selectedChapter} chapterCounts={chapterCounts} onSelect={onSelect} />
-          ))}
-        </div>
-      </div>
-      {apocrypha.length > 0 && (
-        <div className="sidebar-section">
-          <h3>Apocrypha</h3>
-          <p className="sidebar-note">Not part of the Bible's canon (Genesis–Revelation above) in most traditions.</p>
-          <div className="book-list">
-            {apocrypha.map((b) => (
-              <BookRow key={b.name} book={b} selectedBook={selectedBook} selectedChapter={selectedChapter} chapterCounts={chapterCounts} onSelect={onSelect} />
-            ))}
+    <aside className="sidebar" aria-label="Books">
+      {SECTIONS.map((section) => {
+        const list = books.filter((b) => b.testament === section.key);
+        if (list.length === 0) return null;
+        return (
+          <div className="sidebar-section" key={section.key}>
+            <h3>{section.title}</h3>
+            {section.note && <p className="sidebar-note">{section.note}</p>}
+            <div className="book-list">
+              {list.map((b) => (
+                <BookRow
+                  key={b.name}
+                  book={b}
+                  isOpen={b.name === selectedBook}
+                  selectedChapter={selectedChapter}
+                  chapterCount={chapterCounts[b.name] ?? 0}
+                  onSelect={onSelect}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })}
     </aside>
   );
 }
 
-function BookRow({ book, selectedBook, selectedChapter, chapterCounts, onSelect }: {
+function BookRow({
+  book,
+  isOpen,
+  selectedChapter,
+  chapterCount,
+  onSelect,
+}: {
   book: BookInfo;
-  selectedBook: string;
+  isOpen: boolean;
   selectedChapter: number;
-  chapterCounts: Record<string, number>;
+  chapterCount: number;
   onSelect: (book: string, chapter: number) => void;
 }) {
-  const isOpen = book.name === selectedBook;
-  const count = chapterCounts[book.name] ?? 0;
+  const rowRef = useRef<HTMLDivElement>(null);
+
+  // When the reader lands on a book via search, a cross-reference or paging past a
+  // book boundary, bring it into view so the sidebar always reflects where you are.
+  useEffect(() => {
+    if (isOpen) rowRef.current?.scrollIntoView({ block: "nearest" });
+  }, [isOpen]);
+
   return (
-    <div className="book-row">
-      <button className={"book-btn" + (isOpen ? " active" : "")} onClick={() => onSelect(book.name, 1)}>
+    <div className="book-row" ref={rowRef}>
+      <button
+        className={"book-btn" + (isOpen ? " active" : "")}
+        onClick={() => onSelect(book.name, 1)}
+        aria-expanded={isOpen}
+        aria-current={isOpen ? "true" : undefined}
+      >
         {book.name}
+        <span className="book-count" aria-hidden="true">
+          {chapterCount || ""}
+        </span>
       </button>
-      {isOpen && count > 0 && (
-        <div className="chapter-grid">
-          {Array.from({ length: count }, (_, i) => i + 1).map((c) => (
+      {isOpen && chapterCount > 0 && (
+        <div className="chapter-grid" role="list" aria-label={`${book.name} chapters`}>
+          {Array.from({ length: chapterCount }, (_, i) => i + 1).map((c) => (
             <button
               key={c}
+              role="listitem"
               className={"chapter-btn" + (c === selectedChapter ? " active" : "")}
+              aria-current={c === selectedChapter ? "true" : undefined}
               onClick={() => onSelect(book.name, c)}
             >
               {c}
