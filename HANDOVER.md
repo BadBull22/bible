@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-3 done and working (v1.2.0)
+## Current status: Phases 1-5 done and working (v1.3.0)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -143,7 +143,53 @@ contents here if you need it from a different machine, since that path is local 
   window over CDP with a small dependency-free Node script (screenshots + clicks) — a handy
   way to test this app headlessly on Windows without Playwright.
 
-**Not built yet:** commentaries (Matthew Henry/JFB/Barnes via SWORD modules), local import of
+**Phase 5 (offline commentaries + people/places, ESV online, 2026-09-09) — done:**
+- **Backup first**: commit `a10d47c` plus a full copy (repo bundle, `bible.db`, model, JSON
+  resources, installers — 701MB) at `X:\Code\bible-backups\2026-09-09_before-commentaries\`.
+- **Seven commentaries bundled offline** from the Free Use Bible API (bible.helloao.org, AO
+  Lab; all public domain except Tyndale Open Study Notes, CC BY-SA 4.0): Matthew Henry,
+  Jamieson-Fausset-Brown, Adam Clarke, John Gill, Calvin, Keil & Delitzsch (OT), Tyndale.
+  `data-pipeline/build_commentaries.py` downloads ~7,300 chapter JSONs + ~4,800 entity
+  records (cached under `%LOCALAPPDATA%\bible-concordance-build\helloao-cache\`, so reruns
+  are cheap), builds `commentaries.db` on local disk (gotcha #1), integrity-checks it and
+  copies it to `src-tauri/resources/commentaries.db` (gitignored, bundled via
+  `tauri.conf.json`). Section text is zlib-compressed (`flate2` on the Rust side) with a
+  contentless FTS5 index for full-text search. A handful of chapters 404 at the source
+  (e.g. JFB Mark 15, K&D Numbers 17) and are simply absent. Python 3.13+ needs
+  `VERIFY_X509_STRICT` cleared for helloao's certificate chain — handled in the script.
+- **Theographic Bible Metadata** (CC BY-SA 4.0) bundled in the same DB: 3,067 people, 1,274
+  places (with coordinates), 450 events, each with description, dates, relations
+  (father/mother/children/spouse, locations, participants) and every verse reference.
+- **Rust**: `src-tauri/src/commentaries.rs` (+ commands `list_commentaries`,
+  `get_commentary_chapter`, `search_commentaries`, `chapter_entities`, `get_entity`,
+  `search_entities`). The DB is optional: if `commentaries.db` is missing the app still runs
+  and those commands return a clear error. Note that `tauri-build` refuses to compile while a
+  resource listed in `tauri.conf.json` doesn't exist, so run the pipeline (or drop the entry)
+  before `cargo check` on a fresh machine.
+- **UI**: a third verse action (book icon) opens the **Commentary** panel for that verse; the
+  panel follows the reader's current chapter, remembers the last-used commentary, highlights
+  and scrolls to the section covering the verse, shows book/chapter introductions collapsibly,
+  and every section heading jumps to its passage. A **People & Places** top-bar button opens
+  the per-chapter entity panel (People / Places / Events tabs with verse chips, profile view
+  with relations and all references, and a whole-Bible name search). Search gained a
+  **Commentaries** mode (FTS over all seven; a hit opens the reader at that verse with the
+  commentary beside it).
+- **ESV online provider**: `online.rs` now has a `Provider` enum (api.bible / api.esv.org).
+  Settings has a second key field for a Crossway ESV API key; ESV shows in Compare tagged
+  `online · api.esv.org` with Crossway's required attribution. Untested against a live key in
+  this session (none available) — the request format follows Crossway's v3 passage/text docs.
+  YouVersion Platform was evaluated and deliberately not added: it needs app registration and
+  per-version licence acceptance, and duplicates NIV which api.bible already provides.
+
+- **Resizable layout**: `src/components/ResizeHandle.tsx` adds a 6px drag strip after the
+  sidebar and before any side panel (pointer-capture drag, double-click or Home/Enter to
+  reset, ←/→ keys nudge). Widths persist in `localStorage` (`layout:sidebar`,
+  `layout:panel`) and are clamped both by the viewport (CSS `min(..., 40vw/60vw)`) and by a
+  per-render cap that keeps the reading pane ≥ ~340px. A user-set panel width applies to
+  every panel via the `--panel-width` custom property on `.app-body`; the chapter grid in the
+  sidebar auto-fills columns from the available width.
+
+**Not built yet:** local import of
 user-owned NIV/ESV/NKJV modules (e-Sword/MySword), semantic/keyword search over Enoch's
 text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only ever built for BSB).
 
@@ -265,16 +311,19 @@ for a persistent fix.
 ```
 data-pipeline/          Python ETL (one-time/rerunnable): sources/ + books.py, osis_extract.py,
                          usfm_extract.py, build_db.py -> writes bible.db (schema + all text data)
+  build_commentaries.py  Downloads helloao commentaries + Theographic entities -> commentaries.db
 src-tauri/src/
   lib.rs                 App setup: opens bible.db, loads embedding model, genealogy/firsts JSON,
                           registers sqlite-vec, wires all Tauri commands
   commands.rs             All #[tauri::command] handlers (the whole backend API surface)
+  commentaries.rs         commentaries.db access: sections (zlib), FTS search, people/places/events
   embeddings.rs           candle/BERT wrapper (Embedder::load, Embedder::embed)
   bin/index_embeddings.rs One-time tool: embeds all BSB verses into the vec0 table
   genealogy.rs, firsts.rs  Loaders for the two curated JSON datasets
   online.rs, settings.rs   api.bible live-fetch + local settings persistence
-src-tauri/resources/     bible.db, model/ (MiniLM), genealogies.json, firsts.json — all bundled
-                         into the shipped app via tauri.conf.json's bundle.resources
+src-tauri/resources/     bible.db, commentaries.db, model/ (MiniLM), genealogies.json, firsts.json
+                         — all bundled into the shipped app via tauri.conf.json's bundle.resources
+                         (both .db files and model/ are gitignored: copy or rebuild on a new PC)
 src/                     React frontend; components/ has one file per panel (SearchPanel,
                          CrossRefGraph, GenealogyPanel, FirstsPanel, SettingsPanel, SplashScreen,
                          etc.)

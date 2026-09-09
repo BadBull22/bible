@@ -7,6 +7,7 @@ interface Props {
   selectedChapter: number;
   chapterCounts: Record<string, number>;
   onSelect: (book: string, chapter: number) => void;
+  width: number;
 }
 
 interface SectionDef {
@@ -21,9 +22,9 @@ const SECTIONS: SectionDef[] = [
   { key: "Apocrypha", title: "Apocrypha", note: "Not part of the Bible's canon (Genesis–Revelation above) in most traditions." },
 ];
 
-export function Sidebar({ books, selectedBook, selectedChapter, chapterCounts, onSelect }: Props) {
+export function Sidebar({ books, selectedBook, selectedChapter, chapterCounts, onSelect, width }: Props) {
   return (
-    <aside className="sidebar" aria-label="Books">
+    <aside className="sidebar" aria-label="Books" style={{ width: `min(${width}px, 40vw)` }}>
       {SECTIONS.map((section) => {
         const list = books.filter((b) => b.testament === section.key);
         if (list.length === 0) return null;

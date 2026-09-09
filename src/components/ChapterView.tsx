@@ -1,7 +1,7 @@
 import { KeyboardEvent, useEffect, useRef } from "react";
 import { VerseWithWords } from "../api";
 import { segmentVerse } from "../verseSegments";
-import { ChevronLeftIcon, ChevronRightIcon, CompareIcon, LinkIcon } from "./icons";
+import { BookIcon, ChevronLeftIcon, ChevronRightIcon, CompareIcon, LinkIcon } from "./icons";
 
 // TR (Textus Receptus) and WLC (Westminster Leningrad Codex) are original-language
 // single-testament texts, not full Bibles -- an empty chapter in one of these is
@@ -30,6 +30,7 @@ interface Props {
   onWordClick: (strongsNumbers: string[], surfaceText: string) => void;
   onShowCrossRefs: (verse: number) => void;
   onShowParallel: (verse: number) => void;
+  onShowCommentary: (verse: number) => void;
 }
 
 export function ChapterView({
@@ -46,6 +47,7 @@ export function ChapterView({
   onWordClick,
   onShowCrossRefs,
   onShowParallel,
+  onShowCommentary,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const verseRefs = useRef<Record<number, HTMLElement | null>>({});
@@ -58,12 +60,14 @@ export function ChapterView({
   // stays visible during the load and would otherwise leave the reader mid-page.
   useEffect(() => {
     if (loading) return;
+    // The highlight class is applied imperatively, so React keeps it on a reused <p>
+    // (same verse number in another chapter) unless it is cleared explicitly.
+    rootRef.current?.querySelectorAll(".verse-row--target").forEach((n) => n.classList.remove("verse-row--target"));
     if (targetVerse != null) {
       const el = verseRefs.current[targetVerse];
       el?.scrollIntoView({ behavior: "smooth", block: "start" });
       // retrigger the CSS highlight animation even if the same verse was jumped to
       // again while its previous flash was still fading out
-      el?.classList.remove("verse-row--target");
       void el?.offsetWidth;
       el?.classList.add("verse-row--target");
       lastScrolledLocation.current = locationKey;
@@ -182,6 +186,9 @@ export function ChapterView({
             </button>
             <button title="Compare translations" aria-label={`Compare translations of verse ${v.verse}`} onClick={() => onShowParallel(v.verse)}>
               <CompareIcon size={14} />
+            </button>
+            <button title="Commentary" aria-label={`Commentary on verse ${v.verse}`} onClick={() => onShowCommentary(v.verse)}>
+              <BookIcon size={14} />
             </button>
           </span>
         </p>

@@ -8,7 +8,11 @@ use std::path::{Path, PathBuf};
 /// one baked in, since anything compiled into a distributed binary can be extracted.
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct AppSettings {
+    #[serde(default)]
     pub api_bible_key: Option<String>,
+    /// Crossway ESV API key (api.esv.org) -- separate provider, separate key.
+    #[serde(default)]
+    pub esv_api_key: Option<String>,
 }
 
 fn settings_path(config_dir: &Path) -> PathBuf {
