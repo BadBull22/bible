@@ -31,6 +31,7 @@ __pycache__/
 # (no LFS configured). Rebuild via the data pipeline / tauri build rather than
 # committing these; see HANDOVER.md for exact steps.
 src-tauri/resources/bible.db
+src-tauri/resources/commentaries.db
 src-tauri/resources/model/
 data-pipeline/.venv/
 data-pipeline/sources/

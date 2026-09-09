@@ -1,4 +1,5 @@
 mod commands;
+mod commentaries;
 mod db;
 pub mod embeddings;
 mod firsts;
@@ -72,6 +73,13 @@ pub fn run() {
                 .expect("failed to resolve firsts.json resource path");
             let firsts = FirstsData::load(&firsts_path).expect("failed to load firsts.json");
             app.manage(FirstsState(firsts));
+
+            // Optional: the app still runs without commentaries.db (commands report it missing).
+            let commentaries_path = app
+                .path()
+                .resolve("resources/commentaries.db", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve commentaries.db resource path");
+            app.manage(commentaries::CommentaryState(commentaries::open(&commentaries_path)));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -89,6 +97,7 @@ pub fn run() {
             commands::cross_references_for,
             commands::get_settings,
             commands::save_api_bible_key,
+            commands::save_esv_api_key,
             commands::list_online_versions,
             commands::fetch_online_verse,
             commands::semantic_search,
@@ -96,6 +105,12 @@ pub fn run() {
             commands::get_lineage,
             commands::list_firsts,
             commands::search_firsts,
+            commands::list_commentaries,
+            commands::get_commentary_chapter,
+            commands::search_commentaries,
+            commands::chapter_entities,
+            commands::get_entity,
+            commands::search_entities,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

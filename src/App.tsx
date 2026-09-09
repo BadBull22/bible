@@ -7,8 +7,11 @@ import { ParallelPanel } from "./components/ParallelPanel";
 import { SearchPanel } from "./components/SearchPanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { FirstsPanel } from "./components/FirstsPanel";
+import { CommentaryPanel } from "./components/CommentaryPanel";
+import { EntitiesPanel } from "./components/EntitiesPanel";
+import { ResizeHandle } from "./components/ResizeHandle";
 import { SplashScreen } from "./components/SplashScreen";
-import { BackIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TreeIcon } from "./components/icons";
+import { BackIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TreeIcon, UsersIcon } from "./components/icons";
 import "./App.css";
 
 // The two graph panels pull in cytoscape (+ the cola layout), by far the largest
@@ -32,6 +35,9 @@ type SidePanel =
   | { kind: "settings" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
+  // commentary / entities follow the reader's current book+chapter (so paging keeps them in sync)
+  | { kind: "commentary"; verse: number | null; commentaryId?: string }
+  | { kind: "entities" }
   | null;
 
 interface Location {
@@ -40,6 +46,30 @@ interface Location {
 }
 
 const ENOCH_BOOK = "Enoch";
+
+// Resizable layout: sidebar and side-panel widths are per-viewer conveniences kept in
+// localStorage (with try/catch: storage can be unavailable) and clamped to sane bounds.
+const SIDEBAR = { key: "layout:sidebar", default: 240, min: 160, max: 480 };
+const PANEL = { key: "layout:panel", default: 0, min: 300, max: 900 }; // 0 = use the CSS default
+
+function readStoredWidth(spec: { key: string; default: number; min: number; max: number }): number {
+  try {
+    const v = Number(localStorage.getItem(spec.key));
+    if (v && v >= spec.min && v <= spec.max) return v;
+  } catch {
+    /* fall through */
+  }
+  return spec.default;
+}
+
+function storeWidth(key: string, value: number) {
+  try {
+    if (value) localStorage.setItem(key, String(value));
+    else localStorage.removeItem(key);
+  } catch {
+    /* per-viewer convenience only */
+  }
+}
 const ENOCH_VERSION = "ENOCH1";
 const HISTORY_LIMIT = 50;
 
@@ -60,6 +90,15 @@ function App() {
   const [targetVerse, setTargetVerse] = useState<number | null>(null);
   const [preEnochVersion, setPreEnochVersion] = useState("BSB");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(() => readStoredWidth(SIDEBAR));
+  const [panelWidth, setPanelWidth] = useState(() => readStoredWidth(PANEL));
+  useEffect(() => storeWidth(SIDEBAR.key, sidebarWidth), [sidebarWidth]);
+  useEffect(() => storeWidth(PANEL.key, panelWidth), [panelWidth]);
+  // Drag limits shrink with the window so the reading pane always keeps ~320px.
+  const READER_MIN = 340;
+  const currentPanelWidth = panel ? panelWidth || panelDefaultWidth(panel.kind) : 0;
+  const sidebarMax = Math.max(SIDEBAR.min, Math.min(SIDEBAR.max, window.innerWidth - currentPanelWidth - READER_MIN));
+  const panelMax = Math.max(PANEL.min, Math.min(PANEL.max, window.innerWidth - (sidebarOpen ? sidebarWidth : 0) - READER_MIN));
   const quickSearchRef = useRef<HTMLInputElement>(null);
   // Monotonic token so a slow chapter response can never overwrite a newer one
   // (e.g. rapid Next/Next/Next, or a jump landing while a previous load is in flight).
@@ -307,6 +346,9 @@ function App() {
           <button className="text-btn" onClick={() => setPanel({ kind: "firsts" })} title="Firsts & Milestones" aria-label="Firsts and Milestones">
             <StarIcon size={15} /> <span className="label">Firsts</span>
           </button>
+          <button className="text-btn" onClick={() => setPanel({ kind: "entities" })} title="People, places and events in this chapter" aria-label="People and places">
+            <UsersIcon size={15} /> <span className="label">People &amp; Places</span>
+          </button>
           <button className="text-btn" onClick={() => window.print()} title="Print this view" aria-label="Print">
             <PrintIcon size={15} /> <span className="label">Print</span>
           </button>
@@ -314,15 +356,27 @@ function App() {
             <SettingsIcon size={15} /> <span className="label">Settings</span>
           </button>
         </header>
-        <div className="app-body">
+        <div className="app-body" style={panelWidth ? ({ "--panel-width": `${panelWidth}px` } as React.CSSProperties) : undefined}>
           {sidebarOpen && (
-            <Sidebar
-              books={books}
-              selectedBook={book}
-              selectedChapter={chapter}
-              chapterCounts={chapterCounts}
-              onSelect={goTo}
-            />
+            <>
+              <Sidebar
+                books={books}
+                selectedBook={book}
+                selectedChapter={chapter}
+                chapterCounts={chapterCounts}
+                onSelect={goTo}
+                width={sidebarWidth}
+              />
+              <ResizeHandle
+                side="left"
+                width={sidebarWidth}
+                min={SIDEBAR.min}
+                max={sidebarMax}
+                onResize={setSidebarWidth}
+                onReset={() => setSidebarWidth(SIDEBAR.default)}
+                label="Resize book list"
+              />
+            </>
           )}
           <main className="main-pane">
             <ChapterView
@@ -339,8 +393,20 @@ function App() {
               onWordClick={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
               onShowCrossRefs={(verse) => setPanel({ kind: "xref", book, chapter, verse })}
               onShowParallel={(verse) => setPanel({ kind: "parallel", book, chapter, verse })}
+              onShowCommentary={(verse) => setPanel({ kind: "commentary", verse })}
             />
           </main>
+          {panel && (
+            <ResizeHandle
+              side="right"
+              width={panelWidth || panelDefaultWidth(panel.kind)}
+              min={PANEL.min}
+              max={panelMax}
+              onResize={setPanelWidth}
+              onReset={() => setPanelWidth(0)}
+              label="Resize side panel"
+            />
+          )}
           {panel?.kind === "word" && (
             <WordStudyPanel
               strongsNumbers={panel.strongsNumbers}
@@ -377,9 +443,25 @@ function App() {
               versionCode={versionCode}
               initialQuery={panel.initialQuery}
               onJump={jumpTo}
+              onOpenCommentary={(commentaryId, b, c, v) => {
+                jumpTo(b, c, v);
+                setPanel({ kind: "commentary", verse: v, commentaryId });
+              }}
               onClose={() => setPanel(null)}
             />
           )}
+          {panel?.kind === "commentary" && (
+            <CommentaryPanel
+              book={book}
+              chapter={chapter}
+              focusVerse={panel.verse}
+              verseCount={verses.length}
+              initialCommentaryId={panel.commentaryId}
+              onJump={jumpTo}
+              onClose={() => setPanel(null)}
+            />
+          )}
+          {panel?.kind === "entities" && <EntitiesPanel book={book} chapter={chapter} onJump={jumpTo} onClose={() => setPanel(null)} />}
           {panel?.kind === "settings" && <SettingsPanel onClose={() => setPanel(null)} />}
           {panel?.kind === "genealogy" && (
             <Suspense fallback={<PanelFallback />}>
@@ -391,6 +473,14 @@ function App() {
       </div>
     </>
   );
+}
+
+/** Mirrors the CSS defaults (.side-panel / .side-panel.wide) so the handle's first drag
+ * starts from the width actually on screen. */
+function panelDefaultWidth(kind: NonNullable<SidePanel>["kind"]): number {
+  const wide = kind === "xref" || kind === "genealogy" || kind === "commentary";
+  const vw = window.innerWidth;
+  return wide ? Math.min(640, vw * 0.42) : Math.min(400, vw * 0.36);
 }
 
 export default App;

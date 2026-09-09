@@ -430,7 +430,8 @@ kbd {
 
 .chapter-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  /* as many columns as the (resizable) sidebar width allows */
+  grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr));
   gap: 0.25rem;
   padding: 0.4rem 0.2rem 0.7rem 0.6rem;
 }
@@ -461,7 +462,9 @@ kbd {
 .main-pane {
   flex: 1;
   overflow-y: auto;
-  padding: 2rem 3rem 4rem;
+  overflow-x: hidden;
+  /* side padding shrinks as the pane is squeezed by a wide sidebar/panel */
+  padding: 2rem clamp(1rem, 4vw, 3rem) 4rem;
   min-width: 0;
   background: var(--paper);
 }
@@ -533,9 +536,10 @@ kbd {
 
 .chapter-nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.6rem 1rem;
   margin-top: 2.5rem;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
@@ -569,12 +573,13 @@ kbd {
   font-size: 0.75rem;
   color: var(--text-faint);
   text-align: center;
+  flex: 1 1 8rem;
 }
 
 .verse-row {
   margin: 0 0 0.9rem;
   position: relative;
-  padding-inline-end: 3.75rem;
+  padding-inline-end: 5.9rem; /* room for the three verse action buttons */
   font-family: var(--serif);
   font-size: 1.12rem;
   line-height: 1.75;
@@ -684,7 +689,10 @@ kbd {
 /* ---------- side panels ---------- */
 
 .side-panel {
-  width: 400px;
+  /* clamp to the viewport so the reading pane keeps a usable measure on a 1200px
+     window with the sidebar open (640px + 240px would leave it ~300px); a user-dragged
+     width (--panel-width, set on .app-body) overrides the default */
+  width: min(var(--panel-width, min(400px, 36vw)), 60vw);
   flex-shrink: 0;
   border-left: 1px solid var(--border);
   background: var(--paper-raised);
@@ -695,7 +703,43 @@ kbd {
 }
 
 .side-panel.wide {
-  width: 640px;
+  width: min(var(--panel-width, min(640px, 42vw)), 60vw);
+}
+
+/* ---------- drag handles ---------- */
+
+.resize-handle {
+  flex: 0 0 6px;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  /* overlap the neighbours' borders so the strip doesn't read as a gap */
+  margin: 0 -3px;
+  transition: background 0.15s;
+  touch-action: none;
+}
+
+.resize-handle:hover,
+.resize-handle:focus-visible,
+body.is-resizing .resize-handle {
+  background: var(--accent-500);
+  opacity: 0.6;
+  outline: none;
+}
+
+body.is-resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
+body.is-resizing iframe,
+body.is-resizing .cy-graph {
+  pointer-events: none; /* cytoscape canvases would otherwise swallow the drag */
+}
+
+.main-pane {
+  min-width: 320px;
 }
 
 .cy-graph {
@@ -811,6 +855,151 @@ kbd {
 
 .shortcut-list kbd {
   margin-right: 0.15rem;
+}
+
+/* ---------- commentary + people/places panels ---------- */
+
+.commentary-text {
+  font-family: var(--serif);
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.commentary-text p {
+  margin: 0 0 0.75rem;
+}
+
+.commentary-text p:last-child {
+  margin-bottom: 0;
+}
+
+.commentary-section {
+  padding: 0.75rem 0.9rem;
+  margin: 0 -0.9rem 0.5rem;
+  border-radius: var(--radius-md);
+  border-left: 3px solid transparent;
+  scroll-margin-top: 0.75rem;
+}
+
+.commentary-section.active {
+  background: var(--chrome-bg);
+  border-left-color: var(--accent-500);
+}
+
+.commentary-heading {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.commentary-heading .link-btn {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.apparatus-key .commentary-text {
+  margin-top: 0.5rem;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.verse-chip {
+  border: 1px solid var(--border);
+  background: var(--paper-raised);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.verse-chip:hover {
+  border-color: var(--accent-500);
+  background: var(--accent-100);
+  color: var(--ink-strong);
+}
+
+.entity-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+}
+
+.entity-relations {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+}
+
+.entity-relations > div {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.entity-relations dt {
+  color: var(--text-faint);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-top: 0.15rem;
+}
+
+.entity-relations dd {
+  margin: 0;
+}
+
+.about {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.about p {
+  margin: 0 0 0.7rem;
+}
+
+.about strong {
+  color: var(--ink-strong);
+}
+
+.credits {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+}
+
+.credits li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.credits li .votes {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.icon-btn.inline {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+
+.icon-btn.inline:hover {
+  background: var(--accent-100);
+  color: var(--ink-strong);
 }
 
 .side-panel-header {
@@ -1157,6 +1346,7 @@ kbd {
 @media print {
   .top-bar,
   .sidebar,
+  .resize-handle,
   .verse-actions,
   .side-panel-header button,
   .search-controls,

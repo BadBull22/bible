@@ -79,6 +79,8 @@ pub struct WordFrequencyResult {
 pub struct OnlineVersionInfo {
     pub code: String,
     pub name: String,
+    /// Human-readable provider name ("api.bible", "api.esv.org") for the UI's "online" tag.
+    pub provider: String,
     pub configured: bool,
 }
 

@@ -64,11 +64,13 @@ export interface WordFrequencyResult {
 
 export interface AppSettings {
   api_bible_key: string | null;
+  esv_api_key: string | null;
 }
 
 export interface OnlineVersionInfo {
   code: string;
   name: string;
+  provider: string;
   configured: boolean;
 }
 
@@ -105,6 +107,85 @@ export interface FirstsEntry {
   note: string | null;
 }
 
+export interface CommentaryInfo {
+  id: string;
+  name: string;
+  website: string | null;
+  license_name: string | null;
+  license_url: string | null;
+}
+
+export interface CommentarySection {
+  id: number;
+  verse_start: number;
+  text: string;
+}
+
+export interface CommentaryChapter {
+  commentary_id: string;
+  book: string;
+  chapter: number;
+  book_introduction: string | null;
+  chapter_introduction: string | null;
+  sections: CommentarySection[];
+}
+
+export interface CommentaryHit {
+  commentary_id: string;
+  commentary_name: string;
+  book: string;
+  chapter: number;
+  verse_start: number;
+  snippet: string;
+}
+
+export type EntityKind = "person" | "place" | "event";
+
+export interface EntityRef {
+  book: string;
+  chapter: number;
+  verse: number;
+  end_verse: number | null;
+}
+
+export interface EntitySummary {
+  kind: EntityKind;
+  id: string;
+  name: string;
+  feature_type: string | null;
+  start_date: string | null;
+  reference_count: number;
+  verses: number[];
+}
+
+export interface ChapterEntities {
+  people: EntitySummary[];
+  places: EntitySummary[];
+  events: EntitySummary[];
+}
+
+export interface EntityLink {
+  id: string;
+  type: "people" | "places" | "events" | "groups";
+  name: string;
+}
+
+export interface EntityDetail {
+  kind: EntityKind;
+  id: string;
+  name: string;
+  description: string | null;
+  gender: string | null;
+  birth_year: number | null;
+  death_year: number | null;
+  feature_type: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  start_date: string | null;
+  relations_json: string | null;
+  references: EntityRef[];
+}
+
 export const api = {
   listVersions: () => invoke<Version[]>("list_versions"),
   listBooks: () => invoke<BookInfo[]>("list_books"),
@@ -130,6 +211,7 @@ export const api = {
     invoke<CrossReference[]>("cross_references_for", { book, chapter, verse }),
   getSettings: () => invoke<AppSettings>("get_settings"),
   saveApiBibleKey: (key: string) => invoke<void>("save_api_bible_key", { key }),
+  saveEsvApiKey: (key: string) => invoke<void>("save_esv_api_key", { key }),
   listOnlineVersions: () => invoke<OnlineVersionInfo[]>("list_online_versions"),
   fetchOnlineVerse: (version_code: string, book: string, chapter: number, verse: number) =>
     invoke<OnlineVerseResult>("fetch_online_verse", { versionCode: version_code, book, chapter, verse }),
@@ -137,6 +219,14 @@ export const api = {
   getLineage: (person_id: string) => invoke<LineagePerson[]>("get_lineage", { personId: person_id }),
   listFirsts: () => invoke<FirstsEntry[]>("list_firsts"),
   searchFirsts: (query: string) => invoke<FirstsEntry[]>("search_firsts", { query }),
+  listCommentaries: () => invoke<CommentaryInfo[]>("list_commentaries"),
+  getCommentaryChapter: (commentary_id: string, book: string, chapter: number) =>
+    invoke<CommentaryChapter>("get_commentary_chapter", { commentaryId: commentary_id, book, chapter }),
+  searchCommentaries: (query: string, commentary_id: string | null, limit: number) =>
+    invoke<CommentaryHit[]>("search_commentaries", { query, commentaryId: commentary_id, limit }),
+  chapterEntities: (book: string, chapter: number) => invoke<ChapterEntities>("chapter_entities", { book, chapter }),
+  getEntity: (kind: EntityKind, id: string) => invoke<EntityDetail | null>("get_entity", { kind, id }),
+  searchEntities: (query: string, limit: number) => invoke<EntitySummary[]>("search_entities", { query, limit }),
 };
 
 /** Parses a citation like "Genesis 4:8" or "Genesis 4:21-22" into book/chapter/verse

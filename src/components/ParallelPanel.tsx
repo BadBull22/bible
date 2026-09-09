@@ -106,7 +106,7 @@ export function ParallelPanel({ book, chapter, verse, versions, onClose }: Props
                 <div className="parallel-version" title={v.name}>
                   {v.code}
                   <span className="parallel-version-name">{v.name}</span>
-                  <span className="xref-tag">online</span>
+                  <span className="xref-tag" title={`Fetched live from ${v.provider}`}>online · {v.provider}</span>
                 </div>
                 {entry === "loading" && <div className="parallel-text muted">Fetching…</div>}
                 {entry === "error" && <div className="parallel-text status-error">Couldn't fetch (check connection/key).</div>}
@@ -120,7 +120,10 @@ export function ParallelPanel({ book, chapter, verse, versions, onClose }: Props
             );
           })}
           {!isEnoch && onlineVersions.length > 0 && configuredOnline.length === 0 && (
-            <p className="search-hint">Add an api.bible key in Settings to also compare against NIV and NKJV here.</p>
+            <p className="search-hint">
+              Add your own api.bible key (NIV, NKJV) or ESV API key in Settings to also compare those translations here.
+              They are fetched live and marked <span className="xref-tag">online</span>.
+            </p>
           )}
         </div>
       )}

@@ -6,7 +6,9 @@ Offline-first Bible study and concordance desktop app: Tauri 2 + Rust backend, R
 - Strong's-number word study from any tagged word, with exact occurrence counts
 - Keyword, word-frequency and local semantic (meaning-based) search
 - Interactive cross-reference graph, curated genealogies, and a "Firsts & Milestones" index
-- Optional live NIV/NKJV comparison via the user's own api.bible key
+- Seven public-domain / CC commentaries offline (Matthew Henry, JFB, Clarke, Gill, Calvin, Keil & Delitzsch,
+  Tyndale Open Study Notes) with full-text search, plus a per-chapter people, places and events index
+- Optional **online** comparison against NIV/NKJV (api.bible) and ESV (api.esv.org) with the user's own keys
 - 1 Enoch (Charles & Oesterley, 1917) in a clearly labelled non-canonical section
 
 ## Running

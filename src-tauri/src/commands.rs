@@ -1,3 +1,6 @@
+use crate::commentaries::{
+    self, ChapterEntities, CommentaryChapter, CommentaryHit, CommentaryInfo, CommentaryState, EntityDetail, EntitySummary,
+};
 use crate::db::DbState;
 use crate::firsts::FirstsEntry;
 use crate::genealogy::{LineagePerson, PersonSummary};
@@ -355,6 +358,11 @@ pub fn get_settings(state: State<SettingsState>) -> Result<AppSettings, String> 
     Ok(s.clone())
 }
 
+fn clean_key(key: String) -> Option<String> {
+    let k = key.trim();
+    if k.is_empty() { None } else { Some(k.to_string()) }
+}
+
 #[tauri::command]
 pub fn save_api_bible_key(
     config_dir: State<ConfigDir>,
@@ -362,17 +370,39 @@ pub fn save_api_bible_key(
     key: String,
 ) -> Result<(), String> {
     let mut s = state.0.lock().map_err(|e| e.to_string())?;
-    s.api_bible_key = if key.trim().is_empty() { None } else { Some(key.trim().to_string()) };
+    s.api_bible_key = clean_key(key);
     settings::save(&config_dir.0, &s).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn save_esv_api_key(
+    config_dir: State<ConfigDir>,
+    state: State<SettingsState>,
+    key: String,
+) -> Result<(), String> {
+    let mut s = state.0.lock().map_err(|e| e.to_string())?;
+    s.esv_api_key = clean_key(key);
+    settings::save(&config_dir.0, &s).map_err(|e| e.to_string())
+}
+
+fn key_for(settings: &AppSettings, provider: online::Provider) -> Option<String> {
+    match provider {
+        online::Provider::ApiBible { .. } => settings.api_bible_key.clone(),
+        online::Provider::Esv => settings.esv_api_key.clone(),
+    }
 }
 
 #[tauri::command]
 pub fn list_online_versions(state: State<SettingsState>) -> Result<Vec<OnlineVersionInfo>, String> {
     let s = state.0.lock().map_err(|e| e.to_string())?;
-    let configured = s.api_bible_key.is_some();
     Ok(online::ONLINE_VERSIONS
         .iter()
-        .map(|(code, _id, name)| OnlineVersionInfo { code: code.to_string(), name: name.to_string(), configured })
+        .map(|v| OnlineVersionInfo {
+            code: v.code.to_string(),
+            name: v.name.to_string(),
+            provider: online::provider_label(v.provider).to_string(),
+            configured: key_for(&s, v.provider).is_some(),
+        })
         .collect())
 }
 
@@ -384,17 +414,20 @@ pub async fn fetch_online_verse(
     chapter: i64,
     verse: i64,
 ) -> Result<OnlineVerseResult, String> {
+    let version = online::ONLINE_VERSIONS
+        .iter()
+        .find(|v| v.code == version_code)
+        .ok_or_else(|| format!("unknown online version: {version_code}"))?;
     let api_key = {
         let s = state.0.lock().map_err(|e| e.to_string())?;
-        s.api_bible_key.clone().ok_or_else(|| "No api.bible key configured in Settings".to_string())?
+        key_for(&s, version.provider)
+            .ok_or_else(|| format!("No {} key configured in Settings", online::provider_label(version.provider)))?
     };
-    let bible_id = online::ONLINE_VERSIONS
-        .iter()
-        .find(|(code, _, _)| *code == version_code)
-        .map(|(_, id, _)| *id)
-        .ok_or_else(|| format!("unknown online version: {version_code}"))?;
     let reference = format!("{book} {chapter}:{verse}");
-    let (text, copyright) = online::fetch_verse(&api_key, bible_id, &reference).await?;
+    let (text, copyright) = match version.provider {
+        online::Provider::ApiBible { bible_id } => online::fetch_api_bible(&api_key, bible_id, &reference).await?,
+        online::Provider::Esv => online::fetch_esv(&api_key, &reference).await?,
+    };
     Ok(OnlineVerseResult { version_code, book, chapter, verse, text, copyright })
 }
 
@@ -455,6 +488,62 @@ pub fn list_genealogy_people(state: State<GenealogyState>) -> Vec<PersonSummary>
 #[tauri::command]
 pub fn get_lineage(state: State<GenealogyState>, person_id: String) -> Vec<LineagePerson> {
     state.0.ancestors_of(&person_id)
+}
+
+// ---------- offline commentaries + people/places/events (commentaries.db) ----------
+
+fn commentary_conn(state: &CommentaryState) -> Result<std::sync::MutexGuard<'_, rusqlite::Connection>, String> {
+    let m = state
+        .0
+        .as_ref()
+        .ok_or_else(|| "Commentaries are not bundled in this build (resources/commentaries.db is missing).".to_string())?;
+    m.lock().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn list_commentaries(state: State<CommentaryState>) -> Result<Vec<CommentaryInfo>, String> {
+    let conn = commentary_conn(&state)?;
+    commentaries::list(&conn)
+}
+
+#[tauri::command]
+pub fn get_commentary_chapter(
+    state: State<CommentaryState>,
+    commentary_id: String,
+    book: String,
+    chapter: i64,
+) -> Result<CommentaryChapter, String> {
+    let conn = commentary_conn(&state)?;
+    commentaries::chapter(&conn, &commentary_id, &book, chapter)
+}
+
+#[tauri::command]
+pub fn search_commentaries(
+    state: State<CommentaryState>,
+    query: String,
+    commentary_id: Option<String>,
+    limit: i64,
+) -> Result<Vec<CommentaryHit>, String> {
+    let conn = commentary_conn(&state)?;
+    commentaries::search(&conn, &query, commentary_id.as_deref(), limit)
+}
+
+#[tauri::command]
+pub fn chapter_entities(state: State<CommentaryState>, book: String, chapter: i64) -> Result<ChapterEntities, String> {
+    let conn = commentary_conn(&state)?;
+    commentaries::chapter_entities(&conn, &book, chapter)
+}
+
+#[tauri::command]
+pub fn get_entity(state: State<CommentaryState>, kind: String, id: String) -> Result<Option<EntityDetail>, String> {
+    let conn = commentary_conn(&state)?;
+    commentaries::entity(&conn, &kind, &id)
+}
+
+#[tauri::command]
+pub fn search_entities(state: State<CommentaryState>, query: String, limit: i64) -> Result<Vec<EntitySummary>, String> {
+    let conn = commentary_conn(&state)?;
+    commentaries::search_entities(&conn, &query, limit)
 }
 
 #[tauri::command]
