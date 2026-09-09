@@ -208,8 +208,8 @@ text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only e
    `src-tauri/.cargo/config.toml` (untracked, machine-specific; copy `config.toml.example` and set
    `target-dir` to a local folder such as `%LOCALAPPDATA%\bible-concordance-build\cargo-target`)
    for the same reason (SMB is slow and flaky for the huge number of small build artifacts).
-   **This absolute path is tied to this PC/user.** On a new machine, either update that path or
-   delete the file to let Cargo use the default (slower but fine on local disk; re-test if the
+   **The file is gitignored because the path is tied to one PC/user.** On a new machine, either create it from the
+   example or skip it to let Cargo use the default (slower but fine on local disk; re-test if the
    new machine's project checkout is itself local, in which case you can remove this override
    entirely).
 3. **`node_modules` could not be symlinked off the network drive** — Windows/SMB doesn't support
@@ -242,8 +242,7 @@ text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only e
    module) loads fine. Cause: Vite's internal `fs.realpath`-based root resolution follows the
    `X:` drive's network mapping back to its UNC form and mangles it — confirmed via
    `DEBUG=vite:resolve npx vite`, which showed `index.html -> X:/<SERVER>/<SHARE>/Code/bible/index.html`
-   instead of the real `X:/Code/bible/index.html` (`PRIVATE`/`OTHER` being this share's SMB host
-   alias/share name). Fixed by adding `resolve: { preserveSymlinks: true }` in `vite.config.ts`,
+   instead of the real `X:/Code/bible/index.html` (the SMB host alias and share name). Fixed by adding `resolve: { preserveSymlinks: true }` in `vite.config.ts`,
    which stops Vite from resolving paths through `fs.realpath`. If this project ever moves to a
    local (non-network) drive, both this and gotcha #8's `usePolling` fix become unnecessary but
    are harmless to leave in place.
