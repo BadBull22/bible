@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-5 done and working (v1.3.0)
+## Current status: Phases 1-6 done and working (v1.4.0)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -189,6 +189,55 @@ contents here if you need it from a different machine, since that path is local 
   every panel via the `--panel-width` custom property on `.app-body`; the chapter grid in the
   sidebar auto-fills columns from the available width.
 
+**Phase 6 (Map panel + opening search screen, 2026-09-10) — done:**
+- **Map panel** (`src/components/MapPanel.tsx`, lazy-loaded like the graph panels since it
+  pulls in Leaflet): a fully offline interactive map, opened via a new top-bar **Map** button.
+  - **Basemap**: Natural Earth 1:50m coastlines/countries, rivers, lakes, and a curated set of
+    seas — clipped to a lon/lat box wide enough to cover every bundled place's real coordinates
+    (Spain/Tarshish to India/Ophir, not just the Levant core; see the comment above `MIN_LON` in
+    `build_map_data.py` if a future place ever plots with no basemap under it) and bundled as
+    small JSON under `public/map/` (~650KB total, public domain, no attribution needed).
+  - **Places**: all 1,252 geocoded Theographic places already in `commentaries.db`, plotted via
+    a new `map_places` Rust command (`commentaries.rs`/`commands.rs`) that returns the whole
+    table at once (the panel isn't chapter-scoped like People & Places). Places sharing an exact
+    fallback coordinate (74 different Jerusalem sites collapse to one point in the source data)
+    are fanned out in a sunflower-spiral jitter so they're individually clickable — pure zoom
+    doesn't help there since the underlying points are bit-for-bit identical.
+  - **Ancient/Modern toggle**: `data-pipeline/build_map_data.py` links bundled place names to
+    OpenBible.info's Bible-Geocoding-Data (CC BY 4.0) by normalized-name matching, keeping only
+    confidently-scored identifications (186 places matched, e.g. Zoan→Tanis, Ararat→Urartu).
+    Modern mode repositions/relabels matched markers to their real modern coordinates, restyles
+    the basemap as a plain political map with country borders/labels, and fades markers with no
+    confident modern identification rather than hiding them.
+  - **Historical-era timeline**: a slider (starts at "No overlay") over five hand-drawn,
+    schematic kingdom/empire outlines — Conquest & Judges, Divided Monarchy, Assyrian Empire,
+    Babylonian & Persian Empire, Roman/NT — built in `data-pipeline/build_territories.py` from
+    this app's own place coordinates as anchor points (there's no free ready-made GIS dataset
+    for ancient Near Eastern political boundaries). Explicitly labeled schematic/approximate in
+    the UI, not presented as a scholarly reconstruction. The fill layer lives in its own Leaflet
+    pane stacked below the marker pane (`territoryPane`, z-index 350) and is non-interactive —
+    without that, every timeline drag re-inserts fresh polygons *after* the already-placed
+    markers, which silently made them unclickable (draw/hit-test order follows insertion time,
+    not logical layer grouping — see the comment at `map.createPane` in `MapPanel.tsx`).
+  - **Cross-panel focus**: `App.tsx` lifts `focusedPlaceId` so picking a place in People &
+    Places and then opening the Map (or vice versa) lands on the same place already selected.
+  - Eden has no coordinates in Theographic (location is genuinely disputed) but is plotted
+    anyway at the most commonly cited traditional site (Tigris-Euphrates confluence near
+    Al-Qurnah, Iraq), labeled "(estimated)" everywhere it appears — see
+    `COORDINATE_OVERRIDES` in `build_commentaries.py`, applied automatically on every rebuild.
+- **Opening search screen** (`src/components/HomeScreen.tsx`): the app now opens on a centered
+  "What wonder of God do you want to find today?" prompt instead of straight into Genesis 1
+  (which also means it no longer fetches Genesis 1 just to hide it — `App.tsx`'s chapter-load
+  effect is gated on a new `homeActive` state). Typing a reference shows a direct "Go to..."
+  button; typing a theme runs the same topic search as elsewhere. Landing anywhere — a result,
+  an example chip, or even just using the ordinary top-bar search instead — retires the screen
+  for the rest of the session (centralized in `applyLocation()`, not duplicated per entry
+  point). The reference-parsing logic itself was extracted into a shared `resolveReference()` in
+  `api.ts` so the top bar and the new screen can't drift apart.
+- Version bumped `1.3.0` -> `1.4.0` in the three usual places (`package.json`,
+  `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) plus `package-lock.json` (via
+  `npm install`, no dependency changes -- just resyncs the lockfile's version fields).
+
 **Not built yet:** local import of
 user-owned NIV/ESV/NKJV modules (e-Sword/MySword), semantic/keyword search over Enoch's
 text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only ever built for BSB).
@@ -264,18 +313,59 @@ text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only e
     directly against a local copy of `bible.db` (see gotcha #1's local-disk-write rule), not a
     rerunnable pipeline step. If Enoch ever needs to be rebuilt or extended, redo the same
     careful parse-and-validate process rather than assuming a quick regex will get it right.
+11. **Leaflet needs `map.setView()` called before anything else touches the view** (`fitBounds`,
+    `invalidateSize`) — skipping it throws deep inside Leaflet's internal bounds math
+    ("Cannot read properties of undefined (reading 'min')") the first time `fitBounds` runs, not
+    at map creation, which makes it a confusing one-liner to trace back. `MapPanel.tsx` always
+    calls `setView()` immediately after `L.map(...)`, before adding any layer.
+12. **Leaflet layer stacking follows insertion *time*, not logical layer grouping** — a
+    LayerGroup added to the map early, then later `clearLayers()` + repopulated (exactly what
+    the era timeline slider does on every drag), gets its fresh children inserted *after*
+    whatever else was added to the map in between, i.e. on top of it, even though it was
+    logically "added first." This silently broke marker clicks under the territory-fill layer
+    after the first timeline drag. Fixed with a dedicated Leaflet pane (`map.createPane(...)`,
+    explicit `zIndex`) for anything that must always stay visually and click-wise below the
+    place markers, rather than relying on add-order.
+13. **A bounding-box test using a geometry's naive min/max longitude falsely matches everything**
+    for any country whose polygon set crosses the antimeridian (Russia's Far East, the USA via
+    Alaska/Hawaii) — the naive box spans nearly the whole globe. `build_map_data.py`'s
+    `any_point_in_box()` tests whether *any single point* falls in the target region instead.
+14. A background `npm run tauri dev` from an earlier session can leave a `node` process holding
+    port 1420 after the window is closed, so the next launch fails with `Port 1420 is already in
+    use`. Find and kill it first: `Get-NetTCPConnection -LocalPort 1420 -State Listen | ForEach
+    { Stop-Process -Id $_.OwningProcess -Force }` (PowerShell).
+15. **Force-killing a background MSYS2/Git Bash process (e.g. `Stop-Process -Force` on a `tauri
+    dev` you started from bash) can orphan a `.msys<hex>` marker directory** in whatever was the
+    shell's working directory at the time — MSYS creates these as a near-zero-permission lock
+    and normally self-deletes them on clean exit, but an abrupt external kill skips that. Over
+    this project's SMB share those Unix permission bits are enforced server-side, so **no**
+    client-side Windows tool can remove it — Explorer, `rm`, PowerShell `Remove-Item`, `takeown`,
+    `icacls`, even robocopy's own directory creation all fail with "Access is denied." If one
+    lands in `public/`, it silently breaks `npm run build`: Vite's public-dir copy is a plain
+    recursive copy that aborts the whole build the instant it hits one unreadable entry
+    (`EPERM ... copyfile`). Worked around permanently in `vite.config.ts` — `copyPublicDir:
+    false` plus a `closeBundle` plugin hook that copies `public/` to `dist/` via `robocopy ...
+    /XD .msys*` instead, which both tolerates unreadable entries and excludes the pattern
+    outright. Don't bother trying to delete an orphaned one from Windows; it's not fixable
+    client-side (would need direct NAS access). Avoid causing new ones: let a background
+    `tauri dev`/build process exit on its own (close the app window, or `TaskStop`) rather than
+    force-killing the wrapping shell when you can help it.
 
 ## Git status
 
 A git repo now exists (root commit `3085677`, branch `master`, remote: none configured yet).
 **`.gitignore` deliberately excludes several large generated/downloaded artifacts** that are
 still present as plain files on disk right now, just not version-controlled:
-`src-tauri/resources/bible.db` (241MB), `src-tauri/resources/model/` (88MB, the embedding
-model), `data-pipeline/.venv/`, `data-pipeline/sources/` (406MB of downloaded raw texts), and
-`installer/` (the built .exe/.msi). This machine has all of them right now — nothing is
-missing here. The distinction only matters on a **true fresh clone** (a different machine, or
-this repo re-cloned from a future remote): those five things won't come along automatically and
-need to be either copied over directly or regenerated (see below and the data-pipeline docs).
+`src-tauri/resources/bible.db` (241MB), `src-tauri/resources/commentaries.db` (Phase 5;
+commentaries + Theographic people/places/events), `src-tauri/resources/model/` (88MB, the
+embedding model), `data-pipeline/.venv/`, `data-pipeline/sources/` (406MB of downloaded raw
+texts), and `installer/` (the built .exe/.msi). This machine has all of them right now —
+nothing is missing here. The distinction only matters on a **true fresh clone** (a different
+machine, or this repo re-cloned from a future remote): those things won't come along
+automatically and need to be either copied over directly or regenerated (see below and the
+data-pipeline docs). `public/map/` (Phase 6's basemap/territory JSON) is *not* in this list —
+it's small and meant to be committed normally; regenerate it with
+`data-pipeline/build_map_data.py` and `build_territories.py` only if it needs to change.
 
 Also note: git initially failed with "detected dubious ownership" against this UNC-resolved
 network path (see gotcha #9 for why `X:` resolves to a UNC form) — every git command in this
@@ -311,6 +401,8 @@ for a persistent fix.
 data-pipeline/          Python ETL (one-time/rerunnable): sources/ + books.py, osis_extract.py,
                          usfm_extract.py, build_db.py -> writes bible.db (schema + all text data)
   build_commentaries.py  Downloads helloao commentaries + Theographic entities -> commentaries.db
+  build_map_data.py      Natural Earth basemap + seas + OpenBible.info modern-name links -> public/map/
+  build_territories.py   Hand-authored, schematic kingdom outlines (5 eras) -> public/map/territories.geojson
 src-tauri/src/
   lib.rs                 App setup: opens bible.db, loads embedding model, genealogy/firsts JSON,
                           registers sqlite-vec, wires all Tauri commands
@@ -325,8 +417,10 @@ src-tauri/resources/     bible.db, commentaries.db, model/ (MiniLM), genealogies
                          (both .db files and model/ are gitignored: copy or rebuild on a new PC)
 src/                     React frontend; components/ has one file per panel (SearchPanel,
                          CrossRefGraph, GenealogyPanel, FirstsPanel, SettingsPanel, SplashScreen,
-                         etc.)
+                         MapPanel, HomeScreen, etc.)
 public/splashscreen.jpg  User-supplied launch-screen image (see Phase 3)
+public/map/              Basemap/territory/modern-name JSON for the Map panel (see Phase 6) --
+                         small, committed normally (not gitignored like the .db files)
 installer/               Built .exe (NSIS) and .msi (WiX) installers, copied here for convenience
                          after `npm run tauri build` (see Phase 3) -- not auto-regenerated
 dev.bat                  Double-click dev launcher: `cargo check` then `npm run tauri dev`

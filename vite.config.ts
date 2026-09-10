@@ -1,12 +1,50 @@
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 // @ts-expect-error type error without @types/node package
 import process from "node:process";
+// @ts-expect-error type error without @types/node package
+import { execFileSync } from "node:child_process";
 const host = process.env.TAURI_DEV_HOST;
+
+// This project's public/ directory can end up with a stray `.msys<hex>` marker dir --
+// MSYS2/Git Bash creates these as a near-zero-permission lock file and normally
+// self-deletes them on clean process exit, but an abruptly-killed background shell (e.g.
+// a dev server force-stopped from outside bash) can orphan one. Over this project's SMB
+// network share, those Unix permission bits are enforced by the actual server (not just
+// cosmetic on the Windows side), so *no* client-side tool -- Explorer, rm, PowerShell,
+// takeown, even robocopy's own directory creation -- can remove it; "Access is denied"
+// across the board. Vite's normal public-dir copy (a plain recursive file copy) aborts
+// the whole build the moment it hits one unreadable entry, so public/ is copied with
+// robocopy instead, in its own build step: robocopy skips what it can't touch and keeps
+// going, and its /XD flag excludes the marker pattern outright rather than merely
+// tolerating it.
+function copyPublicDirWithRobocopy(): Plugin {
+  return {
+    name: "robocopy-public-dir",
+    apply: "build",
+    closeBundle() {
+      try {
+        execFileSync("robocopy", ["public", "dist", "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/XD", ".msys*"], { stdio: "inherit" });
+      } catch (e: unknown) {
+        // robocopy's exit code is a bitmask, not a Unix-style 0/nonzero: 0-7 all mean
+        // some success (1 = files copied, 2 = extras, etc.); only 8+ is a real failure.
+        const status = (e as { status?: number }).status ?? 0;
+        if (status >= 8) throw e;
+      }
+    },
+  };
+}
 
 // https://vite.dev/config/
 export default defineConfig(() => ({
-  plugins: [react()],
+  plugins: [react(), copyPublicDirWithRobocopy()],
+
+  build: {
+    // see copyPublicDirWithRobocopy() above -- Vite's own copy can't skip the one
+    // unreadable entry that sometimes ends up in public/, so it's disabled here and
+    // done via robocopy (in its own plugin hook) instead.
+    copyPublicDir: false,
+  },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

@@ -10,6 +10,9 @@ Offline-first Bible study and concordance desktop app: Tauri 2 + Rust backend, R
   Tyndale Open Study Notes) with full-text search, plus a per-chapter people, places and events index
 - Optional **online** comparison against NIV/NKJV (api.bible) and ESV (api.esv.org) with the user's own keys
 - 1 Enoch (Charles & Oesterley, 1917) in a clearly labelled non-canonical section
+- Interactive offline **Map** of every geocoded place, with an Ancient/Modern name toggle and a
+  five-era historical-kingdom timeline
+- Opens on a **search prompt** ("What wonder of God do you want to find today?") instead of a fixed starting passage
 
 ## Running
 

@@ -76,6 +76,16 @@ pub struct ChapterEntities {
 }
 
 #[derive(Serialize, Clone)]
+pub struct MapPlace {
+    pub id: String,
+    pub name: String,
+    pub feature_type: Option<String>,
+    pub latitude: f64,
+    pub longitude: f64,
+    pub reference_count: i64,
+}
+
+#[derive(Serialize, Clone)]
 pub struct EntityDetail {
     pub kind: String,
     pub id: String,
@@ -317,6 +327,31 @@ pub fn entity(conn: &Connection, kind: &str, id: &str) -> Result<Option<EntityDe
         .map_err(err)?;
     detail.references = rows.collect::<Result<Vec<_>, _>>().map_err(err)?;
     Ok(Some(detail))
+}
+
+/// Every place with known coordinates, for the Map panel -- plotted all at once rather
+/// than per-chapter like `chapter_entities`, since the map shows the whole Bible at a glance.
+pub fn map_places(conn: &Connection) -> Result<Vec<MapPlace>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, name, feature_type, latitude, longitude, reference_count
+             FROM entities WHERE kind = 'place' AND latitude IS NOT NULL AND longitude IS NOT NULL
+             ORDER BY reference_count DESC",
+        )
+        .map_err(err)?;
+    let rows = stmt
+        .query_map([], |r| {
+            Ok(MapPlace {
+                id: r.get(0)?,
+                name: r.get(1)?,
+                feature_type: r.get(2)?,
+                latitude: r.get(3)?,
+                longitude: r.get(4)?,
+                reference_count: r.get(5)?,
+            })
+        })
+        .map_err(err)?;
+    rows.collect::<Result<Vec<_>, _>>().map_err(err)
 }
 
 pub fn search_entities(conn: &Connection, query: &str, limit: i64) -> Result<Vec<EntitySummary>, String> {

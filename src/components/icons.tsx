@@ -118,6 +118,14 @@ export const BookIcon = (p: IconProps) => (
   </svg>
 );
 
+export const MapIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M9 18 3 21V6l6-3 6 3 6-3v15l-6 3-6-3Z" />
+    <path d="M9 3v15" />
+    <path d="M15 6v15" />
+  </svg>
+);
+
 export const UsersIcon = (p: IconProps) => (
   <svg {...base(p.size, p.className)}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
