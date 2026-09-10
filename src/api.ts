@@ -186,6 +186,15 @@ export interface EntityDetail {
   references: EntityRef[];
 }
 
+export interface MapPlace {
+  id: string;
+  name: string;
+  feature_type: string | null;
+  latitude: number;
+  longitude: number;
+  reference_count: number;
+}
+
 export const api = {
   listVersions: () => invoke<Version[]>("list_versions"),
   listBooks: () => invoke<BookInfo[]>("list_books"),
@@ -227,6 +236,7 @@ export const api = {
   chapterEntities: (book: string, chapter: number) => invoke<ChapterEntities>("chapter_entities", { book, chapter }),
   getEntity: (kind: EntityKind, id: string) => invoke<EntityDetail | null>("get_entity", { kind, id }),
   searchEntities: (query: string, limit: number) => invoke<EntitySummary[]>("search_entities", { query, limit }),
+  mapPlaces: () => invoke<MapPlace[]>("map_places"),
 };
 
 /** Parses a citation like "Genesis 4:8" or "Genesis 4:21-22" into book/chapter/verse
@@ -266,4 +276,20 @@ export function parseReference(input: string, books: BookInfo[]): ParsedReferenc
     chapter: parseInt(m[2], 10),
     verse: m[3] ? parseInt(m[3], 10) : null,
   };
+}
+
+/** parseReference() plus chapter-count validation and the "Jude 3" -> Jude 1:3
+ * single-chapter-book special case every caller needs. Returns null when the text isn't a
+ * valid in-range reference, in which case the caller should treat it as a search query. */
+export function resolveReference(input: string, books: BookInfo[], chapterCounts: Record<string, number>): ParsedReference | null {
+  const ref = parseReference(input, books);
+  if (!ref) return null;
+  const count = chapterCounts[ref.book] ?? 0;
+  if (count === 1 && ref.verse === null && ref.chapter > 1) {
+    return { book: ref.book, chapter: 1, verse: ref.chapter };
+  }
+  if (ref.chapter >= 1 && ref.chapter <= count) {
+    return { book: ref.book, chapter: ref.chapter, verse: ref.verse };
+  }
+  return null;
 }

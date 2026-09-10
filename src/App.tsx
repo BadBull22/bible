@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { api, BookInfo, parseReference, Version, VerseWithWords } from "./api";
+import { api, BookInfo, resolveReference, Version, VerseWithWords } from "./api";
 import { Sidebar } from "./components/Sidebar";
 import { ChapterView } from "./components/ChapterView";
+import { HomeScreen } from "./components/HomeScreen";
 import { WordStudyPanel } from "./components/WordStudyPanel";
 import { ParallelPanel } from "./components/ParallelPanel";
 import { SearchPanel } from "./components/SearchPanel";
@@ -11,13 +12,15 @@ import { CommentaryPanel } from "./components/CommentaryPanel";
 import { EntitiesPanel } from "./components/EntitiesPanel";
 import { ResizeHandle } from "./components/ResizeHandle";
 import { SplashScreen } from "./components/SplashScreen";
-import { BackIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TreeIcon, UsersIcon } from "./components/icons";
+import { BackIcon, MapIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TreeIcon, UsersIcon } from "./components/icons";
 import "./App.css";
 
-// The two graph panels pull in cytoscape (+ the cola layout), by far the largest
-// dependency; loading them on first use keeps the initial bundle small.
+// The two graph panels pull in cytoscape (+ the cola layout), and the map panel pulls
+// in Leaflet -- by far the largest dependencies; loading them on first use keeps the
+// initial bundle small.
 const CrossRefGraph = lazy(() => import("./components/CrossRefGraph").then((m) => ({ default: m.CrossRefGraph })));
 const GenealogyPanel = lazy(() => import("./components/GenealogyPanel").then((m) => ({ default: m.GenealogyPanel })));
+const MapPanel = lazy(() => import("./components/MapPanel").then((m) => ({ default: m.MapPanel })));
 
 function PanelFallback() {
   return (
@@ -35,6 +38,7 @@ type SidePanel =
   | { kind: "settings" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
+  | { kind: "map" }
   // commentary / entities follow the reader's current book+chapter (so paging keeps them in sync)
   | { kind: "commentary"; verse: number | null; commentaryId?: string }
   | { kind: "entities" }
@@ -85,6 +89,12 @@ function App() {
   const [loadingChapter, setLoadingChapter] = useState(true);
   const [chapterError, setChapterError] = useState<string | null>(null);
   const [panel, setPanel] = useState<SidePanel>(null);
+  // The app opens on a search prompt instead of straight into Genesis 1 -- this flips to
+  // false the moment the reader picks somewhere to go, and never flips back this session.
+  const [homeActive, setHomeActive] = useState(true);
+  // The place last opened in People & Places or the Map, so switching between the two
+  // panels lands on the same place instead of losing your spot.
+  const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(null);
   const [quickQuery, setQuickQuery] = useState("");
   const [history, setHistory] = useState<Location[]>([]);
   const [targetVerse, setTargetVerse] = useState<number | null>(null);
@@ -118,6 +128,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (homeActive) return; // nothing chosen yet -- don't fetch Genesis 1 just to hide it
     const id = ++chapterRequest.current;
     setLoadingChapter(true);
     setChapterError(null);
@@ -138,7 +149,7 @@ function App() {
           setLoadingChapter(false);
         },
       );
-  }, [versionCode, book, chapter]);
+  }, [versionCode, book, chapter, homeActive]);
 
   // Neighbouring chapters for Previous/Next, crossing book boundaries (Genesis 50 ->
   // Exodus 1, Malachi 4 -> Matthew 1) but never crossing between the biblical canon
@@ -178,6 +189,9 @@ function App() {
     }
     setBook(b);
     setChapter(c);
+    // Every path that lands somewhere real (sidebar, top search, cross-refs, the opening
+    // prompt itself) should retire the opening screen, not just its own search box.
+    setHomeActive(false);
   }
 
   function navigate(b: string, c: number, keepPanel: boolean) {
@@ -200,6 +214,13 @@ function App() {
   function jumpTo(b: string, c: number, v: number) {
     setTargetVerse(v);
     navigate(b, c, true);
+  }
+
+  // From the opening search prompt: no history entry (there's nothing to go "back" to
+  // before it) and no panel to preserve, just land on the chosen passage.
+  function startFromHome(b: string, c: number, v: number | null) {
+    setTargetVerse(v);
+    applyLocation(b, c);
   }
 
   // Previous/Next keep whatever panel is open: paging through chapters while a
@@ -229,24 +250,15 @@ function App() {
     if (!q) return;
     // A typed reference ("John 3:16", "gen 1", "Jude 3") navigates directly instead
     // of being sent to search -- the most common thing people type into a Bible app.
-    const ref = parseReference(q, books);
-    if (ref) {
-      const count = chapterCounts[ref.book] ?? 0;
-      if (count === 1 && ref.verse === null && ref.chapter > 1) {
-        // Single-chapter books: "Jude 3" almost certainly means Jude 1:3.
-        jumpTo(ref.book, 1, ref.chapter);
-        setQuickQuery("");
-        return;
+    const resolved = resolveReference(q, books, chapterCounts);
+    if (resolved) {
+      if (resolved.verse !== null) jumpTo(resolved.book, resolved.chapter, resolved.verse);
+      else {
+        setTargetVerse(null);
+        navigate(resolved.book, resolved.chapter, true);
       }
-      if (ref.chapter >= 1 && ref.chapter <= count) {
-        if (ref.verse !== null) jumpTo(ref.book, ref.chapter, ref.verse);
-        else {
-          setTargetVerse(null);
-          navigate(ref.book, ref.chapter, true);
-        }
-        setQuickQuery("");
-        return;
-      }
+      setQuickQuery("");
+      return;
     }
     setPanel({ kind: "search", initialQuery: q });
   }
@@ -349,6 +361,9 @@ function App() {
           <button className="text-btn" onClick={() => setPanel({ kind: "entities" })} title="People, places and events in this chapter" aria-label="People and places">
             <UsersIcon size={15} /> <span className="label">People &amp; Places</span>
           </button>
+          <button className="text-btn" onClick={() => setPanel({ kind: "map" })} title="Map of biblical places" aria-label="Map">
+            <MapIcon size={15} /> <span className="label">Map</span>
+          </button>
           <button className="text-btn" onClick={() => window.print()} title="Print this view" aria-label="Print">
             <PrintIcon size={15} /> <span className="label">Print</span>
           </button>
@@ -379,22 +394,26 @@ function App() {
             </>
           )}
           <main className="main-pane">
-            <ChapterView
-              book={book}
-              chapter={chapter}
-              versionCode={versionCode}
-              verses={verses}
-              loading={loadingChapter}
-              error={chapterError}
-              targetVerse={targetVerse}
-              prev={adjacent.prev}
-              next={adjacent.next}
-              onNavigate={flipChapter}
-              onWordClick={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
-              onShowCrossRefs={(verse) => setPanel({ kind: "xref", book, chapter, verse })}
-              onShowParallel={(verse) => setPanel({ kind: "parallel", book, chapter, verse })}
-              onShowCommentary={(verse) => setPanel({ kind: "commentary", verse })}
-            />
+            {homeActive ? (
+              <HomeScreen books={books} chapterCounts={chapterCounts} onGo={startFromHome} />
+            ) : (
+              <ChapterView
+                book={book}
+                chapter={chapter}
+                versionCode={versionCode}
+                verses={verses}
+                loading={loadingChapter}
+                error={chapterError}
+                targetVerse={targetVerse}
+                prev={adjacent.prev}
+                next={adjacent.next}
+                onNavigate={flipChapter}
+                onWordClick={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
+                onShowCrossRefs={(verse) => setPanel({ kind: "xref", book, chapter, verse })}
+                onShowParallel={(verse) => setPanel({ kind: "parallel", book, chapter, verse })}
+                onShowCommentary={(verse) => setPanel({ kind: "commentary", verse })}
+              />
+            )}
           </main>
           {panel && (
             <ResizeHandle
@@ -461,7 +480,15 @@ function App() {
               onClose={() => setPanel(null)}
             />
           )}
-          {panel?.kind === "entities" && <EntitiesPanel book={book} chapter={chapter} onJump={jumpTo} onClose={() => setPanel(null)} />}
+          {panel?.kind === "entities" && (
+            <EntitiesPanel
+              book={book}
+              chapter={chapter}
+              onJump={jumpTo}
+              onClose={() => setPanel(null)}
+              onFocusPlace={setFocusedPlaceId}
+            />
+          )}
           {panel?.kind === "settings" && <SettingsPanel onClose={() => setPanel(null)} />}
           {panel?.kind === "genealogy" && (
             <Suspense fallback={<PanelFallback />}>
@@ -469,6 +496,16 @@ function App() {
             </Suspense>
           )}
           {panel?.kind === "firsts" && <FirstsPanel onClose={() => setPanel(null)} onJump={jumpTo} />}
+          {panel?.kind === "map" && (
+            <Suspense fallback={<PanelFallback />}>
+              <MapPanel
+                onClose={() => setPanel(null)}
+                onJump={jumpTo}
+                initialFocusId={focusedPlaceId}
+                onFocusPlace={setFocusedPlaceId}
+              />
+            </Suspense>
+          )}
         </div>
       </div>
     </>
@@ -478,7 +515,7 @@ function App() {
 /** Mirrors the CSS defaults (.side-panel / .side-panel.wide) so the handle's first drag
  * starts from the width actually on screen. */
 function panelDefaultWidth(kind: NonNullable<SidePanel>["kind"]): number {
-  const wide = kind === "xref" || kind === "genealogy" || kind === "commentary";
+  const wide = kind === "xref" || kind === "genealogy" || kind === "commentary" || kind === "map";
   const vw = window.innerWidth;
   return wide ? Math.min(640, vw * 0.42) : Math.min(400, vw * 0.36);
 }

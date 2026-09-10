@@ -1,5 +1,5 @@
 use crate::commentaries::{
-    self, ChapterEntities, CommentaryChapter, CommentaryHit, CommentaryInfo, CommentaryState, EntityDetail, EntitySummary,
+    self, ChapterEntities, CommentaryChapter, CommentaryHit, CommentaryInfo, CommentaryState, EntityDetail, EntitySummary, MapPlace,
 };
 use crate::db::DbState;
 use crate::firsts::FirstsEntry;
@@ -544,6 +544,12 @@ pub fn get_entity(state: State<CommentaryState>, kind: String, id: String) -> Re
 pub fn search_entities(state: State<CommentaryState>, query: String, limit: i64) -> Result<Vec<EntitySummary>, String> {
     let conn = commentary_conn(&state)?;
     commentaries::search_entities(&conn, &query, limit)
+}
+
+#[tauri::command]
+pub fn map_places(state: State<CommentaryState>) -> Result<Vec<MapPlace>, String> {
+    let conn = commentary_conn(&state)?;
+    commentaries::map_places(&conn)
 }
 
 #[tauri::command]

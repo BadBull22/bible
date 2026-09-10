@@ -7,6 +7,7 @@ interface Props {
   chapter: number;
   onJump: (book: string, chapter: number, verse: number) => void;
   onClose: () => void;
+  onFocusPlace: (id: string) => void;
 }
 
 type Tab = "people" | "places" | "events";
@@ -46,7 +47,7 @@ function lifespan(d: EntityDetail): string | null {
   return `${b ?? "?"} – ${dd ?? "?"}`;
 }
 
-export function EntitiesPanel({ book, chapter, onJump, onClose }: Props) {
+export function EntitiesPanel({ book, chapter, onJump, onClose, onFocusPlace }: Props) {
   const [tab, setTab] = useState<Tab>("people");
   const [data, setData] = useState<ChapterEntities | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,6 +82,7 @@ export function EntitiesPanel({ book, chapter, onJump, onClose }: Props) {
   }, [query]);
 
   async function open(kind: EntityKind, id: string) {
+    if (kind === "place") onFocusPlace(id);
     setDetailLoading(true);
     try {
       const d = await api.getEntity(kind, id);

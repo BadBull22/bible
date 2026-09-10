@@ -111,6 +111,7 @@ pub fn run() {
             commands::chapter_entities,
             commands::get_entity,
             commands::search_entities,
+            commands::map_places,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

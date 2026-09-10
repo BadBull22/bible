@@ -302,6 +302,28 @@ def build_entities(cur: sqlite3.Cursor) -> None:
     print(f"  {n_refs} entity references")
 
 
+# Theographic leaves a handful of well-known places uncoordinated because their location
+# is disputed rather than unknown-and-irrelevant. For these, plot the most commonly cited
+# traditional identification so the map isn't missing them -- the Map panel marks them
+# "(estimated)" rather than presenting the guess as settled.
+COORDINATE_OVERRIDES = {
+    # Eden: no consensus; this is the Tigris-Euphrates confluence near Al-Qurnah, Iraq,
+    # the most frequently cited traditional guess (see the place's own description for
+    # the range of competing theories).
+    "eden_354": (31.0, 47.43),
+}
+
+
+def apply_coordinate_overrides(cur: sqlite3.Cursor) -> None:
+    for entity_id, (lat, lon) in COORDINATE_OVERRIDES.items():
+        cur.execute(
+            "UPDATE entities SET latitude = ?, longitude = ? WHERE kind = 'place' AND id = ?",
+            (lat, lon, entity_id),
+        )
+        if cur.rowcount == 0:
+            print(f"  WARNING: coordinate override for {entity_id!r} matched no row (id changed upstream?)")
+
+
 def main() -> None:
     copy = "--no-copy" not in sys.argv
     LOCAL_BUILD_DIR.mkdir(parents=True, exist_ok=True)
@@ -318,6 +340,7 @@ def main() -> None:
     con.commit()
     print("== entities ==")
     build_entities(cur)
+    apply_coordinate_overrides(cur)
     cur.execute("INSERT INTO meta VALUES ('source', 'Free Use Bible API (bible.helloao.org), AO Lab')")
     cur.execute("INSERT INTO meta VALUES ('built_at', ?)", (time.strftime("%Y-%m-%d"),))
     con.commit()
