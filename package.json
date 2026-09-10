@@ -1,7 +1,7 @@
 {
   "name": "bible-concordance",
   "private": true,
-  "version": "1.3.0",
+  "version": "1.4.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "cytoscape": "^3.34.3",
     "cytoscape-cola": "^2.5.1",
+    "leaflet": "^1.9.4",
     "react": "^19.1.0",
     "react-cytoscapejs": "^2.0.0",
     "react-dom": "^19.1.0"
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@tauri-apps/cli": "^2",
     "@types/cytoscape": "^3.21.9",
+    "@types/leaflet": "^1.9.22",
     "@types/react": "^19.1.8",
     "@types/react-cytoscapejs": "^1.2.6",
     "@types/react-dom": "^19.1.6",

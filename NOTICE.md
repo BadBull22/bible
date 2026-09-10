@@ -28,6 +28,9 @@ user's own key from the publisher's platform, and remain the property of their p
 | Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke, John Gill, Calvin, Keil & Delitzsch commentaries | Free Use Bible API (bible.helloao.org, AO Lab) | Public domain (CC PDM 1.0) |
 | Tyndale Open Study Notes | Free Use Bible API (bible.helloao.org, AO Lab) | CC BY-SA 4.0 |
 | Theographic Bible Metadata (people, places, events) | `robertrouse/theographic-bible-metadata`, via Free Use Bible API | CC BY-SA 4.0 |
+| Coastline, river and lake basemap (Map panel) | Natural Earth (`naturalearthdata.com`), 1:50m cultural/physical vectors | Public domain |
+| Ancient-to-modern place name links (Map panel "Modern names" mode) | OpenBible.info Bible-Geocoding-Data | CC BY 4.0 |
+| Kingdom/nation outlines, Divided Monarchy period (Map panel) | Hand-drawn for this app from its own bundled place coordinates; schematic, not a scholarly reconstruction | Original work |
 | all-MiniLM-L6-v2 sentence-embedding model (topic search) | sentence-transformers | Apache 2.0 |
 
 Word-level Strong's-number tagging for BSB/KJV/ASV/WEB comes from the OSIS/USFM markup

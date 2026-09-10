@@ -1,6 +1,6 @@
 [package]
 name = "bible-concordance"
-version = "1.3.0"
+version = "1.4.0"
 description = "Offline Bible concordance and research app"
 authors = ["you"]
 edition = "2021"

@@ -474,6 +474,80 @@ kbd {
   margin: 0 auto;
 }
 
+.home-screen {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-box {
+  width: 100%;
+  max-width: 640px;
+  text-align: center;
+}
+
+.home-box h1 {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.4rem, 3.2vw, 2rem);
+  line-height: 1.3;
+  margin: 0 0 1.5rem;
+  color: var(--ink-strong);
+}
+
+.home-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.85rem 1.4rem;
+  box-shadow: var(--shadow-md);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.home-search-box:focus-within {
+  border-color: var(--accent-500);
+  box-shadow: var(--shadow-lg);
+}
+
+.home-search-box .icon {
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.home-search-box input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.home-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.home-result-reference {
+  display: block;
+  width: fit-content;
+  margin: 1.25rem auto 0.5rem;
+}
+
+.home-screen .xref-list {
+  text-align: left;
+  margin-top: 1rem;
+}
+
 .apparatus-key {
   background: var(--chrome-bg);
   border: 1px solid var(--border);
@@ -734,8 +808,9 @@ body.is-resizing {
 }
 
 body.is-resizing iframe,
-body.is-resizing .cy-graph {
-  pointer-events: none; /* cytoscape canvases would otherwise swallow the drag */
+body.is-resizing .cy-graph,
+body.is-resizing .leaflet-container {
+  pointer-events: none; /* cytoscape/leaflet would otherwise swallow the drag */
 }
 
 .main-pane {
@@ -748,6 +823,61 @@ body.is-resizing .cy-graph {
   background: var(--navy-900);
   border-radius: var(--radius-md);
   margin-bottom: 0.75rem;
+}
+
+.map-view {
+  width: 100%;
+  height: 480px;
+  background: #cfe0e8; /* sea, where the land/lake geojson doesn't cover */
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.map-view .leaflet-control-zoom a {
+  color: var(--text);
+}
+
+.country-label {
+  font: 600 11px/1 var(--sans);
+  color: #33403d;
+  text-shadow:
+    0 0 3px #fff,
+    0 0 3px #fff,
+    0 0 5px #fff;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.region-label {
+  font-style: italic;
+  color: #6e4a25;
+  text-shadow:
+    0 0 3px #fbf3e2,
+    0 0 3px #fbf3e2,
+    0 0 5px #fbf3e2;
+}
+
+.territory-label {
+  font: 700 12px/1 var(--sans);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #3a2c18;
+  text-shadow:
+    0 0 3px #fbf3e2,
+    0 0 3px #fbf3e2,
+    0 0 5px #fbf3e2;
+}
+
+.water-label {
+  font: italic 500 11px/1 var(--serif);
+  color: #2c4a72;
+  text-shadow:
+    0 0 3px #fff,
+    0 0 3px #fff,
+    0 0 5px #fff;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .graph-selection {
@@ -1176,6 +1306,23 @@ body.is-resizing .cy-graph {
   box-shadow: var(--shadow-sm);
 }
 
+.timeline-control {
+  background: var(--chrome-bg);
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-md);
+  margin: 0.5rem 0 1rem;
+}
+
+.timeline-control input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent-500);
+}
+
+.timeline-label {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
 .search-controls select {
   padding: 0.4rem 0.6rem;
   border-radius: var(--radius-sm);
@@ -1351,7 +1498,9 @@ body.is-resizing .cy-graph {
   .side-panel-header button,
   .search-controls,
   .mode-toggle,
+  .timeline-control,
   .cy-graph,
+  .map-view,
   .graph-legend,
   .graph-selection,
   .chapter-nav,
