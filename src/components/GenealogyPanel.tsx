@@ -6,9 +6,12 @@ import { CloseIcon } from "./icons";
 interface Props {
   onClose: () => void;
   onJump: (book: string, chapter: number, verse: number) => void;
+  /** Opens the Timeline with this person selected, so a name in the line can be seen
+   * against everyone alive at the same time rather than only as a node in a tree. */
+  onShowTimeline?: (personId: string) => void;
 }
 
-export function GenealogyPanel({ onClose, onJump }: Props) {
+export function GenealogyPanel({ onClose, onJump, onShowTimeline }: Props) {
   const [people, setPeople] = useState<PersonSummary[]>([]);
   const [personId, setPersonId] = useState<string>("");
   const [lineage, setLineage] = useState<LineagePerson[]>([]);
@@ -139,6 +142,11 @@ export function GenealogyPanel({ onClose, onJump }: Props) {
                   <span className="votes">{p.citation}</span>
                 </div>
                 {p.note && <div className="snippet">{p.note}</div>}
+                {onShowTimeline && (
+                  <button className="link-btn timeline-link" onClick={() => onShowTimeline(p.id)}>
+                    See on the timeline →
+                  </button>
+                )}
               </li>
             );
           })}

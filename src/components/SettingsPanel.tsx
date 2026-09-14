@@ -17,6 +17,10 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke, John Gill, Calvin, Keil & Delitzsch (via Free Use Bible API, AO Lab)", licence: "Public domain" },
   { name: "Tyndale Open Study Notes (via Free Use Bible API)", licence: "CC BY-SA 4.0" },
   { name: "Theographic Bible Metadata — people, places, events", licence: "CC BY-SA 4.0" },
+  { name: "Natural Earth 1:50m coastlines, rivers and lakes (Map)", licence: "Public domain" },
+  { name: "Ancient-to-modern place names, OpenBible.info Bible-Geocoding-Data (Map)", licence: "CC BY 4.0" },
+  { name: "Kingdom/nation outlines (Map) — hand-drawn for this app, schematic", licence: "Original work" },
+  { name: "Adams' Synchronological Chart or Map of History, Sebastian C. Adams 1871 (Timeline facsimile)", licence: "Public domain" },
   { name: "all-MiniLM-L6-v2 embedding model (topic search)", licence: "Apache 2.0" },
 ];
 

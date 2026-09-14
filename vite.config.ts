@@ -24,7 +24,15 @@ function copyPublicDirWithRobocopy(): Plugin {
     apply: "build",
     closeBundle() {
       try {
-        execFileSync("robocopy", ["public", "dist", "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/XD", ".msys*"], { stdio: "inherit" });
+        // /XF excludes the Adams chart source scan: it is a single 218MB JPEG that the app
+        // never loads (the Timeline panel reads the ~25MB tile pyramid under public/chart
+        // instead), and copying it here would put all 218MB into dist/ and from there into
+        // the installer. It stays in public/ only as the tiler's input.
+        execFileSync(
+          "robocopy",
+          ["public", "dist", "/E", "/NFL", "/NDL", "/NJH", "/NJS", "/XD", ".msys*", "/XF", "Adams_Synchronological_Chart,_1881.jpg"],
+          { stdio: "inherit" },
+        );
       } catch (e: unknown) {
         // robocopy's exit code is a bitmask, not a Unix-style 0/nonzero: 0-7 all mean
         // some success (1 = files copied, 2 = extras, etc.); only 8+ is a real failure.

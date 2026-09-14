@@ -21,7 +21,7 @@ const MODES: { key: Mode; label: string; placeholder: string }[] = [
 ];
 
 const PHRASE_LIMIT = 100;
-const TOPIC_LIMIT = 30;
+const TOPIC_LIMIT = 50;
 const COMMENTARY_LIMIT = 60;
 
 export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onClose }: Props) {
@@ -83,6 +83,25 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialQuery]);
+
+  // Picking a different mode or translation invalidates whatever is on screen. Without
+  // this the previous mode's hits stay put under the new mode's heading, which reads as
+  // "the search you just switched to found these" -- e.g. topic results for "greater
+  // things" sitting under Exact phrase, looking like the phrase search had missed the
+  // verse it actually finds. Clear first, then re-run whatever is in the box.
+  const modeSettled = useRef(false);
+  useEffect(() => {
+    if (!modeSettled.current) {
+      modeSettled.current = true; // skip the initial render; nothing to invalidate yet
+      return;
+    }
+    setHits([]);
+    setCommentaryHits([]);
+    setTotalCount(null);
+    setRan(null);
+    if (query.trim()) runSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, searchVersion]);
 
   const placeholder = MODES.find((m) => m.key === mode)?.placeholder;
   const showVersion = mode === "phrase" || mode === "frequency";
