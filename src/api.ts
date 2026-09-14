@@ -88,12 +88,58 @@ export interface PersonSummary {
   name: string;
 }
 
+export interface DateOverride {
+  birthYear: number | null;
+  deathYear: number | null;
+  reason: string;
+}
+
 export interface LineagePerson {
   id: string;
   name: string;
   alt_names: string[];
   citation: string;
   note: string | null;
+  theographic_id: string | null;
+  age_at_heir_birth: number | null;
+  age_citation: string | null;
+  lifespan: number | null;
+  lifespan_citation: string | null;
+  chain_note: string | null;
+  date_override: DateOverride | null;
+}
+
+/** How a ribbon's years were arrived at. "uncertain" is rendered with Adams' own `?`
+ * convention rather than a guessed date. */
+export type DateSource = "scripture" | "corrected" | "dataset" | "uncertain";
+
+export interface TimelineRibbon {
+  id: string;
+  name: string;
+  citation: string;
+  birth_year: number | null;
+  death_year: number | null;
+  lifespan: number | null;
+  lifespan_citation: string | null;
+  age_at_heir_birth: number | null;
+  age_citation: string | null;
+  date_source: DateSource;
+  note: string | null;
+  date_note: string | null;
+}
+
+export interface TimelineEvent {
+  id: string;
+  name: string;
+  year: number;
+  book: string;
+  chapter: number;
+  verse: number;
+}
+
+export interface TimelineData {
+  ribbons: TimelineRibbon[];
+  events: TimelineEvent[];
 }
 
 export type FirstsCategory = "firsts" | "facts" | "promises" | "warfare";
@@ -226,6 +272,7 @@ export const api = {
     invoke<OnlineVerseResult>("fetch_online_verse", { versionCode: version_code, book, chapter, verse }),
   listGenealogyPeople: () => invoke<PersonSummary[]>("list_genealogy_people"),
   getLineage: (person_id: string) => invoke<LineagePerson[]>("get_lineage", { personId: person_id }),
+  timelineData: () => invoke<TimelineData>("timeline_data"),
   listFirsts: () => invoke<FirstsEntry[]>("list_firsts"),
   searchFirsts: (query: string) => invoke<FirstsEntry[]>("search_firsts", { query }),
   listCommentaries: () => invoke<CommentaryInfo[]>("list_commentaries"),
@@ -237,6 +284,9 @@ export const api = {
   getEntity: (kind: EntityKind, id: string) => invoke<EntityDetail | null>("get_entity", { kind, id }),
   searchEntities: (query: string, limit: number) => invoke<EntitySummary[]>("search_entities", { query, limit }),
   mapPlaces: () => invoke<MapPlace[]>("map_places"),
+  /** Actually quits. The close button is intercepted in Rust so the farewell verse can
+   * be shown first; this is what ends the process afterwards. */
+  exitApp: () => invoke<void>("exit_app"),
 };
 
 /** Parses a citation like "Genesis 4:8" or "Genesis 4:21-22" into book/chapter/verse

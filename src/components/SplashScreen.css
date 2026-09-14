@@ -29,6 +29,35 @@
   animation: splash-rise 900ms ease-out;
 }
 
+/* Farewell splash: same black ground and rise animation as the launch splash, but
+   carrying the verse instead of the title image. */
+.closing-splash {
+  padding: 8vmin;
+}
+
+.closing-splash-inner {
+  max-width: min(46rem, 82vw);
+  text-align: center;
+  animation: splash-rise 900ms ease-out;
+}
+
+.closing-verse {
+  margin: 0 0 1.25rem;
+  font-size: clamp(1.05rem, 2.6vmin, 1.6rem);
+  line-height: 1.7;
+  font-style: italic;
+  color: #f3ead6;
+  text-wrap: pretty;
+}
+
+.closing-ref {
+  margin: 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c8963e;
+}
+
 @keyframes splash-rise {
   from {
     opacity: 0;

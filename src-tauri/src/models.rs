@@ -1,4 +1,35 @@
+use crate::commentaries::TimelineEvent;
 use serde::Serialize;
+
+/// One person's lifespan bar on the Timeline -- Adams' chart draws every patriarch as a
+/// horizontal ribbon whose length is the years they lived, and this carries exactly what
+/// is needed to place and caption one.
+#[derive(Serialize, Clone)]
+pub struct TimelineRibbon {
+    pub id: String,
+    pub name: String,
+    /// Verse this person is cited from, so a ribbon can jump to scripture.
+    pub citation: String,
+    pub birth_year: Option<i64>,
+    pub death_year: Option<i64>,
+    pub lifespan: Option<i64>,
+    pub lifespan_citation: Option<String>,
+    pub age_at_heir_birth: Option<i64>,
+    pub age_citation: Option<String>,
+    /// How the years were arrived at: "scripture" (length from a cited lifespan),
+    /// "corrected" (a curated override of a bad dataset record), "dataset", or
+    /// "uncertain" -- which the UI marks with Adams' own `?` rather than a guess.
+    pub date_source: String,
+    pub note: Option<String>,
+    /// Why a date was corrected, or why the chain arithmetic shifts here.
+    pub date_note: Option<String>,
+}
+
+#[derive(Serialize, Clone)]
+pub struct TimelineData {
+    pub ribbons: Vec<TimelineRibbon>,
+    pub events: Vec<TimelineEvent>,
+}
 
 #[derive(Serialize, Clone)]
 pub struct Version {

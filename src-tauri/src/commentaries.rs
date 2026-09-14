@@ -354,6 +354,94 @@ pub fn map_places(conn: &Connection) -> Result<Vec<MapPlace>, String> {
     rows.collect::<Result<Vec<_>, _>>().map_err(err)
 }
 
+#[derive(Serialize, Clone)]
+pub struct TimelineEvent {
+    pub id: String,
+    pub name: String,
+    pub year: i64,
+    /// First verse that records the event, for the Timeline's jump-to-scripture pins.
+    pub book: String,
+    pub chapter: i64,
+    pub verse: i64,
+}
+
+/// Theographic's `start_date` is usually a plain (often negative) year, but ~50 New
+/// Testament events carry an ISO-ish `YYYY-MM-DD` instead -- and one of those, Feast of
+/// Tabernacles, is malformed as `0029-10-9`. Only the year is ever plotted, so take the
+/// leading signed integer and ignore whatever follows rather than requiring a valid date.
+pub fn parse_event_year(raw: &str) -> Option<i64> {
+    let raw = raw.trim();
+    let (sign, digits) = match raw.strip_prefix('-') {
+        Some(rest) => (-1, rest),
+        None => (1, raw),
+    };
+    let head: String = digits.chars().take_while(char::is_ascii_digit).collect();
+    if head.is_empty() {
+        return None;
+    }
+    head.parse::<i64>().ok().map(|y| sign * y)
+}
+
+/// Every dated event, paired with the earliest verse referencing it. The correlated
+/// subquery picks that verse explicitly rather than leaning on a bare-column GROUP BY,
+/// which SQLite does not promise to resolve in any particular order.
+pub fn dated_events(conn: &Connection) -> Result<Vec<TimelineEvent>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT e.id, e.name, e.start_date, r.book, r.chapter, r.verse
+             FROM entities e
+             JOIN entity_refs r ON r.kind = 'event' AND r.entity_id = e.id
+             WHERE e.kind = 'event' AND e.start_date IS NOT NULL
+               AND r.rowid = (SELECT r2.rowid FROM entity_refs r2
+                              WHERE r2.kind = 'event' AND r2.entity_id = e.id
+                              ORDER BY r2.book_order, r2.chapter, r2.verse LIMIT 1)",
+        )
+        .map_err(err)?;
+    let rows = stmt
+        .query_map([], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, String>(2)?,
+                r.get::<_, String>(3)?,
+                r.get::<_, i64>(4)?,
+                r.get::<_, i64>(5)?,
+            ))
+        })
+        .map_err(err)?;
+    let mut out = Vec::new();
+    for row in rows {
+        let (id, name, start_date, book, chapter, verse) = row.map_err(err)?;
+        // An unparseable date is skipped rather than failing the whole panel.
+        if let Some(year) = parse_event_year(&start_date) {
+            out.push(TimelineEvent { id, name, year, book, chapter, verse });
+        }
+    }
+    out.sort_by(|a, b| a.year.cmp(&b.year).then(a.name.cmp(&b.name)));
+    Ok(out)
+}
+
+/// Birth/death years for every person who has either, keyed by entity id. Only ~75 of
+/// the 3,067 people are dated at all, so this is small enough to hand back whole and
+/// join against in memory.
+pub fn person_dates(conn: &Connection) -> Result<std::collections::HashMap<String, (Option<i64>, Option<i64>)>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, birth_year, death_year FROM entities
+             WHERE kind = 'person' AND (birth_year IS NOT NULL OR death_year IS NOT NULL)",
+        )
+        .map_err(err)?;
+    let rows = stmt
+        .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, Option<i64>>(1)?, r.get::<_, Option<i64>>(2)?)))
+        .map_err(err)?;
+    let mut out = std::collections::HashMap::new();
+    for row in rows {
+        let (id, b, d) = row.map_err(err)?;
+        out.insert(id, (b, d));
+    }
+    Ok(out)
+}
+
 pub fn search_entities(conn: &Connection, query: &str, limit: i64) -> Result<Vec<EntitySummary>, String> {
     let pattern = format!("%{}%", query.trim());
     let mut stmt = conn

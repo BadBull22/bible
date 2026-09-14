@@ -35,6 +35,11 @@ Thumbs.db
 src-tauri/resources/bible.db
 src-tauri/resources/commentaries.db
 src-tauri/resources/model/
+# Adams' Synchronological Chart: the source scan is a 218MB single JPEG, and the tile
+# pyramid the Timeline panel actually loads is generated from it. Neither is source --
+# regenerate the tiles with data-pipeline/build_chart_tiles.py; see HANDOVER.md.
+public/Adams_Synchronological_Chart,_1881.jpg
+public/chart/
 data-pipeline/.venv/
 data-pipeline/sources/
 data-pipeline/output/
