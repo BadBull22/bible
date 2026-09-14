@@ -10,6 +10,7 @@ use crate::settings::{self, AppSettings};
 use crate::{ConfigDir, EmbedderState, FirstsState, GenealogyState, SettingsState};
 use regex::RegexBuilder;
 use rusqlite::params;
+use std::collections::{HashMap, HashSet};
 use tauri::State;
 
 fn book_id(conn: &rusqlite::Connection, book: &str) -> Result<i64, String> {
@@ -436,10 +437,86 @@ fn embedding_to_sql_literal(v: &[f32]) -> String {
     format!("[{joined}]")
 }
 
-/// Thematic/topical search: embeds the query with the same local model used to index
-/// the corpus (BSB only, for now) and finds the nearest verses by meaning rather than
-/// exact wording -- this is what lets "sacrifice of bulls" surface "burnt offering of
-/// bulls" even though no words match literally.
+/// Connector words carry no retrieval signal of their own, so they're dropped before
+/// the lexical half of topical search builds its FTS expressions. That's what lets a
+/// connector the reader happened to type still find a literal match: "sacrifice of
+/// bulls" matches Hosea 12:11 ("Do they sacrifice bulls in Gilead?") only once "of" is
+/// out of the way. A query made of nothing but connectors keeps them all, rather than
+/// searching for nothing.
+const LEXICAL_STOPWORDS: &[&str] = &[
+    "the", "a", "an", "of", "in", "on", "and", "or", "to", "is", "was", "that", "this", "for", "with", "his", "her",
+    "my", "me", "you", "it", "be", "are", "i", "he", "she", "they", "them",
+];
+
+/// Reduces a free-text query to its lowercase content words. Every character that isn't
+/// a letter, digit or apostrophe is discarded, which doubles as FTS5 injection
+/// protection: nothing FTS5 would read as query syntax can survive into a MATCH.
+fn content_words(query: &str) -> Vec<String> {
+    let all: Vec<String> = query
+        .to_lowercase()
+        .split(|c: char| !(c.is_alphanumeric() || c == '\''))
+        .filter(|w| !w.is_empty())
+        .map(str::to_string)
+        .collect();
+    let kept: Vec<String> = all.iter().filter(|w| !LEXICAL_STOPWORDS.contains(&w.as_str())).cloned().collect();
+    if kept.is_empty() {
+        all
+    } else {
+        kept
+    }
+}
+
+/// BSB verse ids matching an FTS5 expression, best-scoring first. A malformed
+/// expression isn't an error here -- it simply means "no lexical evidence", leaving
+/// topical search to fall back on the embedding ranking alone.
+fn fts_verse_ids(conn: &rusqlite::Connection, expr: &str, limit: i64) -> Vec<i64> {
+    // Per the aliasing gotcha, `verses_fts` is named in full inside MATCH/bm25() even
+    // though it's aliased for the join.
+    let mut stmt = match conn.prepare(
+        "SELECT v.id
+         FROM verses_fts f
+         JOIN verses v ON v.id = f.rowid
+         JOIN versions ver ON v.version_id = ver.id
+         WHERE verses_fts MATCH ?1 AND ver.code = 'BSB'
+         ORDER BY bm25(verses_fts)
+         LIMIT ?2",
+    ) {
+        Ok(s) => s,
+        Err(_) => return Vec::new(),
+    };
+    // Bound to a local rather than left as the tail expression: the MappedRows temporary
+    // borrows `stmt`, and dropping it at the end of the block would outlive `stmt` itself.
+    let ids: Vec<i64> = match stmt.query_map(params![expr, limit], |r| r.get::<_, i64>(0)) {
+        Ok(rows) => rows.filter_map(Result::ok).collect(),
+        Err(_) => Vec::new(),
+    };
+    ids
+}
+
+/// How deep into the embedding ranking to reach before fusing. The verse a reader
+/// half-remembers can sit far outside the handful of results they'll actually be shown
+/// -- "greater things" ranked John 14:12 at #110 -- so the dense side has to offer the
+/// fusion many more candidates than the caller asked for.
+const DENSE_FUSION_DEPTH: i64 = 500;
+/// Both lexical tiers are high-precision and normally tiny (the whole BSB contains two
+/// verses with the phrase "greater things"), so a small cap costs nothing.
+const LEXICAL_FUSION_CAP: i64 = 50;
+/// Standard Reciprocal Rank Fusion damping constant.
+const RRF_K: f64 = 60.0;
+
+/// Thematic/topical search over the BSB, combining two independent rankings:
+///
+/// * **lexical** -- FTS5, as an exact phrase first and then as an all-words match.
+/// * **dense** -- nearest neighbours of the query embedding, which is what lets
+///   "sacrifice of bulls" surface "burnt offering of bulls" with no shared wording.
+///
+/// The embedding alone ranks a long verse poorly when the remembered words are only a
+/// small part of it: mean-pooling dilutes them, so short verses stuffed with the
+/// query's words win instead. Pinning exact-phrase hits on top and fusing the rest by
+/// Reciprocal Rank Fusion fixes that without touching genuine paraphrase search -- when
+/// neither lexical tier matches (e.g. "the prodigal son", wording that appears nowhere
+/// in the BSB) both lists are empty and the output is exactly the embedding ranking it
+/// has always been.
 #[tauri::command]
 pub fn semantic_search(
     db_state: State<DbState>,
@@ -459,17 +536,52 @@ pub fn semantic_search(
     let mut knn_stmt = conn
         .prepare("SELECT rowid FROM verse_embeddings WHERE embedding MATCH ?1 ORDER BY distance LIMIT ?2")
         .map_err(|e| e.to_string())?;
-    let rowids: Vec<i64> = knn_stmt
-        .query_map(params![literal, limit], |r| r.get(0))
+    let dense: Vec<i64> = knn_stmt
+        .query_map(params![literal, DENSE_FUSION_DEPTH.max(limit)], |r| r.get(0))
         .map_err(|e| e.to_string())?
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
 
+    let words = content_words(&query);
+    let phrase: Vec<i64> = if words.is_empty() {
+        Vec::new()
+    } else {
+        fts_verse_ids(&conn, &format!("\"{}\"", words.join(" ")), LEXICAL_FUSION_CAP)
+    };
+    let pinned: HashSet<i64> = phrase.iter().copied().collect();
+    let all_words: Vec<i64> = if words.len() < 2 {
+        Vec::new()
+    } else {
+        let expr = words.iter().map(|w| format!("\"{w}\"")).collect::<Vec<_>>().join(" AND ");
+        fts_verse_ids(&conn, &expr, LEXICAL_FUSION_CAP).into_iter().filter(|id| !pinned.contains(id)).collect()
+    };
+
+    // Reciprocal Rank Fusion across the dense and all-words rankings, with exact-phrase
+    // hits pinned above the result: nothing should outrank the reader's literal wording.
+    let mut score: HashMap<i64, f64> = HashMap::new();
+    for list in [&dense, &all_words] {
+        for (rank, id) in list.iter().enumerate() {
+            *score.entry(*id).or_insert(0.0) += 1.0 / (RRF_K + rank as f64 + 1.0);
+        }
+    }
+    let mut fused: Vec<i64> = score.keys().copied().filter(|id| !pinned.contains(id)).collect();
+    // Verse id ascending is a deterministic tie-break, so equal scores can't reorder
+    // between identical searches.
+    fused.sort_by(|a, b| score[b].partial_cmp(&score[a]).unwrap_or(std::cmp::Ordering::Equal).then(a.cmp(b)));
+
+    let ordered: Vec<i64> = phrase.into_iter().chain(fused).take(limit.max(0) as usize).collect();
+
     let mut verse_stmt = conn
-        .prepare("SELECT v.chapter, v.verse, v.text, b.name FROM verses v JOIN books b ON v.book_id = b.id WHERE v.id = ?1")
+        .prepare(
+            "SELECT v.chapter, v.verse, v.text, b.name
+             FROM verses v
+             JOIN books b ON v.book_id = b.id
+             JOIN versions ver ON v.version_id = ver.id
+             WHERE v.id = ?1 AND ver.code = 'BSB'",
+        )
         .map_err(|e| e.to_string())?;
-    let mut hits = Vec::with_capacity(rowids.len());
-    for id in rowids {
+    let mut hits = Vec::with_capacity(ordered.len());
+    for id in ordered {
         let hit = verse_stmt
             .query_row(params![id], |r| {
                 Ok(SearchHit { version_code: "BSB".to_string(), book: r.get(3)?, chapter: r.get(0)?, verse: r.get(1)?, text: r.get(2)? })
@@ -550,6 +662,72 @@ pub fn search_entities(state: State<CommentaryState>, query: String, limit: i64)
 pub fn map_places(state: State<CommentaryState>) -> Result<Vec<MapPlace>, String> {
     let conn = commentary_conn(&state)?;
     commentaries::map_places(&conn)
+}
+
+/// Everything the Timeline panel plots: a lifespan ribbon per curated genealogy person,
+/// plus every dated event with the first verse recording it.
+///
+/// Dates resolve in a fixed order of trust. A `dateOverride` in genealogies.json wins,
+/// since it exists only where the dataset contradicts the verse the person is cited from
+/// (Seth's record implies a 1182-year life against Genesis 5:8's 912; Jehoram's has him
+/// dying 42 years before he was born). Otherwise Theographic's own years are used. The
+/// ribbon's END then prefers the lifespan scripture actually states over the dataset's
+/// arithmetic -- that is what makes Abraham's ribbon 175 years per Genesis 25:7 rather
+/// than the 176 the dataset's inclusive counting implies.
+#[tauri::command]
+pub fn timeline_data(
+    commentary_state: State<CommentaryState>,
+    genealogy_state: State<GenealogyState>,
+) -> Result<TimelineData, String> {
+    let conn = commentary_conn(&commentary_state)?;
+    let events = commentaries::dated_events(&conn)?;
+    let dates = commentaries::person_dates(&conn)?;
+
+    let mut ribbons = Vec::new();
+    for p in genealogy_state.0.all_people() {
+        let over = p.date_override.as_ref();
+        let dataset = p.theographic_id.as_ref().and_then(|id| dates.get(id)).copied().unwrap_or((None, None));
+        let birth = match over {
+            Some(o) => o.birth_year,
+            None => dataset.0,
+        };
+        let mut death = match over {
+            Some(o) => o.death_year,
+            None => dataset.1,
+        };
+        let mut date_source = if over.is_some() { "corrected" } else { "dataset" };
+        if let (Some(b), Some(span)) = (birth, p.lifespan) {
+            death = Some(b + span);
+            if over.is_none() {
+                date_source = "scripture";
+            }
+        }
+        if birth.is_none() {
+            date_source = "uncertain";
+        }
+        ribbons.push(TimelineRibbon {
+            id: p.id,
+            name: p.name,
+            citation: p.citation,
+            birth_year: birth,
+            death_year: death,
+            lifespan: p.lifespan,
+            lifespan_citation: p.lifespan_citation,
+            age_at_heir_birth: p.age_at_heir_birth,
+            age_citation: p.age_citation,
+            date_source: date_source.to_string(),
+            note: p.note,
+            date_note: over.map(|o| o.reason.clone()).or(p.chain_note),
+        });
+    }
+    Ok(TimelineData { ribbons, events })
+}
+
+/// Closes the app for real. The window's close button is intercepted in `lib.rs` so the
+/// farewell verse can be shown first; the frontend calls this once it has finished.
+#[tauri::command]
+pub fn exit_app(app: tauri::AppHandle) {
+    app.exit(0);
 }
 
 #[tauri::command]

@@ -126,6 +126,17 @@ export const MapIcon = (p: IconProps) => (
   </svg>
 );
 
+// A time axis with Adams' century pillars standing on it -- the chart's own visual motif.
+export const TimelineIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M2 14h20" />
+    <path d="M6 14V9" />
+    <path d="M12 14V5" />
+    <path d="M18 14v-7" />
+    <path d="M4 18h16" />
+  </svg>
+);
+
 export const UsersIcon = (p: IconProps) => (
   <svg {...base(p.size, p.className)}>
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />

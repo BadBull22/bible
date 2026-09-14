@@ -12,7 +12,9 @@ import { CommentaryPanel } from "./components/CommentaryPanel";
 import { EntitiesPanel } from "./components/EntitiesPanel";
 import { ResizeHandle } from "./components/ResizeHandle";
 import { SplashScreen } from "./components/SplashScreen";
-import { BackIcon, MapIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TreeIcon, UsersIcon } from "./components/icons";
+import { ClosingSplash } from "./components/ClosingSplash";
+import { listen } from "@tauri-apps/api/event";
+import { BackIcon, MapIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import "./App.css";
 
 // The two graph panels pull in cytoscape (+ the cola layout), and the map panel pulls
@@ -21,6 +23,9 @@ import "./App.css";
 const CrossRefGraph = lazy(() => import("./components/CrossRefGraph").then((m) => ({ default: m.CrossRefGraph })));
 const GenealogyPanel = lazy(() => import("./components/GenealogyPanel").then((m) => ({ default: m.GenealogyPanel })));
 const MapPanel = lazy(() => import("./components/MapPanel").then((m) => ({ default: m.MapPanel })));
+// The timeline draws its own SVG, but its facsimile view of Adams' chart is a Leaflet
+// tile layer -- same reason as the map panel for keeping it out of the initial bundle.
+const TimelinePanel = lazy(() => import("./components/TimelinePanel").then((m) => ({ default: m.TimelinePanel })));
 
 function PanelFallback() {
   return (
@@ -39,6 +44,7 @@ type SidePanel =
   | { kind: "genealogy" }
   | { kind: "firsts" }
   | { kind: "map" }
+  | { kind: "timeline"; focusPersonId?: string }
   // commentary / entities follow the reader's current book+chapter (so paging keeps them in sync)
   | { kind: "commentary"; verse: number | null; commentaryId?: string }
   | { kind: "entities" }
@@ -79,6 +85,10 @@ const HISTORY_LIMIT = 50;
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+  // The close button is intercepted in Rust, which emits `app-close-requested` instead of
+  // closing; the farewell verse then shows for three seconds and calls exit_app.
+  const [closing, setClosing] = useState(false);
+  const [farewellVerse, setFarewellVerse] = useState<string | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
   const [books, setBooks] = useState<BookInfo[]>([]);
   const [chapterCounts, setChapterCounts] = useState<Record<string, number>>({});
@@ -125,6 +135,24 @@ function App() {
         setChapterCounts(map);
       })
       .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    // Read the farewell verse up front so pressing the close button shows it instantly
+    // rather than waiting on a query. It comes from the bundled text like everything else,
+    // so there's no second copy of the verse in the source to drift out of step.
+    api
+      .getVerseWithStrongs("BSB", "John", 3, 16)
+      .then((v) => setFarewellVerse(v.text))
+      .catch(console.error);
+
+    let unlisten: (() => void) | undefined;
+    listen("app-close-requested", () => setClosing(true))
+      .then((fn) => {
+        unlisten = fn;
+      })
+      .catch(console.error);
+    return () => unlisten?.();
   }, []);
 
   useEffect(() => {
@@ -293,6 +321,7 @@ function App() {
   return (
     <>
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+      {closing && <ClosingSplash verse={farewellVerse} onDone={() => api.exitApp().catch(() => undefined)} />}
       <div className="app-shell">
         <header className="top-bar">
           <button
@@ -363,6 +392,14 @@ function App() {
           </button>
           <button className="text-btn" onClick={() => setPanel({ kind: "map" })} title="Map of biblical places" aria-label="Map">
             <MapIcon size={15} /> <span className="label">Map</span>
+          </button>
+          <button
+            className="text-btn"
+            onClick={() => setPanel({ kind: "timeline" })}
+            title="Timeline of lifespans and events"
+            aria-label="Timeline"
+          >
+            <TimelineIcon size={15} /> <span className="label">Timeline</span>
           </button>
           <button className="text-btn" onClick={() => window.print()} title="Print this view" aria-label="Print">
             <PrintIcon size={15} /> <span className="label">Print</span>
@@ -492,7 +529,11 @@ function App() {
           {panel?.kind === "settings" && <SettingsPanel onClose={() => setPanel(null)} />}
           {panel?.kind === "genealogy" && (
             <Suspense fallback={<PanelFallback />}>
-              <GenealogyPanel onClose={() => setPanel(null)} onJump={jumpTo} />
+              <GenealogyPanel
+                onClose={() => setPanel(null)}
+                onJump={jumpTo}
+                onShowTimeline={(personId) => setPanel({ kind: "timeline", focusPersonId: personId })}
+              />
             </Suspense>
           )}
           {panel?.kind === "firsts" && <FirstsPanel onClose={() => setPanel(null)} onJump={jumpTo} />}
@@ -506,6 +547,11 @@ function App() {
               />
             </Suspense>
           )}
+          {panel?.kind === "timeline" && (
+            <Suspense fallback={<PanelFallback />}>
+              <TimelinePanel focusPersonId={panel.focusPersonId} onClose={() => setPanel(null)} onJump={jumpTo} />
+            </Suspense>
+          )}
         </div>
       </div>
     </>
@@ -515,7 +561,7 @@ function App() {
 /** Mirrors the CSS defaults (.side-panel / .side-panel.wide) so the handle's first drag
  * starts from the width actually on screen. */
 function panelDefaultWidth(kind: NonNullable<SidePanel>["kind"]): number {
-  const wide = kind === "xref" || kind === "genealogy" || kind === "commentary" || kind === "map";
+  const wide = kind === "xref" || kind === "genealogy" || kind === "commentary" || kind === "map" || kind === "timeline";
   const vw = window.innerWidth;
   return wide ? Math.min(640, vw * 0.42) : Math.min(400, vw * 0.36);
 }

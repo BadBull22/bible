@@ -14,8 +14,19 @@ use firsts::FirstsData;
 use genealogy::GenealogyData;
 use settings::AppSettings;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager, WindowEvent};
+
+/// Set once the close button has been pressed, so the farewell splash is only triggered
+/// once no matter how many times the button is hit.
+static CLOSING: AtomicBool = AtomicBool::new(false);
+
+/// How long the frontend gets to show the farewell verse and call `exit_app` before the
+/// process leaves anyway. A watchdog matters here because the close button is *prevented*
+/// from working: if the frontend never answered (a JS error, a missing event permission),
+/// without this the window would refuse to close at all.
+const CLOSE_WATCHDOG: std::time::Duration = std::time::Duration::from_secs(6);
 
 pub struct ConfigDir(pub PathBuf);
 pub struct SettingsState(pub Mutex<AppSettings>);
@@ -40,6 +51,26 @@ pub fn run() {
     register_sqlite_vec();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                // Second press skips the farewell and leaves immediately: returning here
+                // without calling prevent_close() lets the close proceed normally.
+                if CLOSING.swap(true, Ordering::SeqCst) {
+                    return;
+                }
+                api.prevent_close();
+                // Emitted from the AppHandle, not from `window`. A Window-scoped emit does
+                // not reach the webview's JS `listen()`, which is what left the farewell
+                // splash never showing and the 6s watchdog doing the closing instead
+                // (measured: the process lived exactly 6020ms and no verse appeared).
+                let app = window.app_handle().clone();
+                let _ = app.emit("app-close-requested", ());
+                std::thread::spawn(move || {
+                    std::thread::sleep(CLOSE_WATCHDOG);
+                    app.exit(0);
+                });
+            }
+        })
         .setup(|app| {
             let resource_path = app
                 .path()
@@ -103,6 +134,7 @@ pub fn run() {
             commands::semantic_search,
             commands::list_genealogy_people,
             commands::get_lineage,
+            commands::timeline_data,
             commands::list_firsts,
             commands::search_firsts,
             commands::list_commentaries,
@@ -112,6 +144,7 @@ pub fn run() {
             commands::get_entity,
             commands::search_entities,
             commands::map_places,
+            commands::exit_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

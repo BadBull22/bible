@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-6 done and working (v1.4.0)
+## Current status: Phases 1-7 done (v1.4.0; Phase 7 is not yet runtime-tested)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -238,9 +238,89 @@ contents here if you need it from a different machine, since that path is local 
   `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`) plus `package-lock.json` (via
   `npm install`, no dependency changes -- just resyncs the lockfile's version fields).
 
+**Phase 7 (search accuracy + Adams' Synchronological Chart timeline, 2026-09-14) — done:**
+
+- **Topic search was missing verses that literally contain the phrase.** Reported case: "greater
+  things" never surfaced John 14:12. Two separate faults. (a) The Exact-phrase tab never ran —
+  see gotcha #16; the FTS backend was correct all along and returns exactly John 1:50 and John
+  14:12 for that phrase. (b) Topic search ranked John 14:12 at **#110 of 31,086** while the panel
+  showed 30 results. Neither index was broken: FTS5 is in sync with `verses`, and all 31,086
+  embedding rowids map exactly onto the BSB verse-id set.
+- **`semantic_search` is now hybrid** (`commands.rs`): exact-phrase FTS hits are pinned on top,
+  then the dense ranking and an all-words FTS match are fused by Reciprocal Rank Fusion (k=60).
+  Measured before → after: greater things #110 → **#2**, love your enemies #17 → **#1**, be still
+  and know #7 → **#1**, a thorn in the flesh #15 → **#1**. Paraphrase queries are untouched *by
+  construction* — "prodigal" appears zero times in the BSB, so both lexical tiers come back empty
+  and the output is byte-identical to the old dense ranking (verified on the top 20). See gotcha
+  #17 for the OR-tier trap. `TOPIC_LIMIT` also went 30 → 50.
+- **New Timeline panel** (`src/components/TimelinePanel.tsx`, lazy-loaded like the Map/graph
+  panels because its facsimile view pulls in Leaflet), built in Adams' own visual grammar: one
+  horizontal axis with black century pillars and red decade lines, a lifespan ribbon per person,
+  450 event pins that jump to the verse recording them, and era bands read from
+  `public/map/territories.geojson` — the *same* file the Map panel reads, so the two can never
+  drift (numeric `start`/`end` were added to its `eras` block, parsed from the labels already
+  shown; no new chronology is asserted). Selecting a ribbon shows the synchronism the original
+  chart exists to teach: **Adam knew Methuselah 243 years, Methuselah knew Noah 600, Shem knew
+  Abraham 151**, plus every dated event inside that lifetime.
+- **Genealogy → Timeline**: every name in the Genealogy panel gained "See on the timeline →",
+  which opens the Timeline with that person selected and scrolled into view. Undated people
+  resolve too (they'd otherwise select nothing — 25 of the 60 have no year scripture can fix).
+- **`genealogies.json` gained curated `theographicId`, `ageAtHeirBirth` and `lifespan`** with a
+  citation for each, sourced by querying the bundled BSB and cross-checking KJV rather than from
+  memory (the same bar Phase 4's "Facts" tab set). This is what links the curated line to
+  Theographic's dates — and it must stay curated, see gotcha #18.
+- **Dates resolve in a fixed order of trust**: a `dateOverride` wins, else Theographic's years;
+  then a ribbon's *length* prefers the lifespan scripture states over the dataset's arithmetic,
+  which is what makes Abraham 175 (Genesis 25:7) rather than the dataset's inclusive-counted 176.
+  Result: 35 people placed on the axis, 25 honestly undated; 21 scripture-dated, 13 dataset-dated,
+  1 corrected. Unknown years render with Adams' own `?` rather than a guess.
+- **Adams' chart itself is bundled as a pan/zoom facsimile**: `build_chart_tiles.py` slices the
+  50,195 × 5,347 scan into 1,504 tiles (~25MB, z=0..7) served to a Leaflet `CRS.Simple` layer.
+  The chart's own Ussher caveat is carried into the UI from `chart.json`.
+- **Credits**: the chart was added to `NOTICE.md` *and* to `BUNDLED_SOURCES` in `SettingsPanel.tsx`
+  (Settings → About → "Bundled sources & licences"). Four entries that had drifted out of the
+  in-app list — Natural Earth, OpenBible geocoding, the hand-drawn kingdom outlines — were added
+  back at the same time. Keep those two lists in step.
+- **Timeline facsimile fills the panel, with a windowed full-screen toggle.** It first shipped
+  at a fixed 460px with dead space beneath; the facsimile view now makes the panel a flex
+  column so the Leaflet viewer claims whatever height is left, and a "Full screen" button
+  covers the app window (Esc collapses it — captured *before* App's global Esc handler, which
+  would otherwise close the panel outright). Leaflet caches container size, so the toggle also
+  calls `invalidateSize()`. Confirmed on screen by the user.
+- **Farewell splash on exit**: pressing the window's close button now shows John 3:16 for three
+  seconds and then quits. The close is intercepted in Rust (`lib.rs` `on_window_event` →
+  `prevent_close`), which emits `app-close-requested`; `ClosingSplash.tsx` shows the verse and
+  calls the new `exit_app` command. The verse is read from the bundled BSB at startup rather
+  than hardcoded, so there is no second copy of scripture in the source to drift. Pressing close
+  a second time skips the splash, and a 6-second Rust watchdog quits regardless — see gotcha #22
+  for why that watchdog is load-bearing and for the emit bug it caught.
+- **Version bumped `1.4.0` -> `1.5.0`** in the three usual places plus `package-lock.json`, and
+  both bundles built and copied to `installer/` (~341MB NSIS, ~384MB MSI — about +24MB over
+  1.4.0, which is the chart tiles; a +218MB jump would have meant the raw scan leaked in).
+- **Verified**: `cargo check`, `tsc --noEmit` (app + vite config) and `npm run build` all clean;
+  `dist/` is 29MB with the 1,504 tiles present and the 218MB scan correctly excluded. The
+  Adams facsimile and the Synchronology view were confirmed rendering in the running app by the
+  user. The farewell splash was verified by measurement, not by eye: send the window a real
+  `WM_CLOSE` via PowerShell `(Get-Process bible-concordance).CloseMainWindow()` and time
+  `WaitForExit` — ~3,400ms means the verse showed and exit followed, ~6,000ms means only the
+  watchdog fired, and under 1,000ms means the close was never intercepted. That timing harness
+  is the cheapest way to re-test this path without a human watching the screen.
+
 **Not built yet:** local import of
 user-owned NIV/ESV/NKJV modules (e-Sword/MySword), semantic/keyword search over Enoch's
 text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only ever built for BSB).
+From Phase 7: Adams' **book spans** (`JUDGES 271`, `1st SAMUEL 115` printed along his axis) are
+deliberately absent — deriving them from event references was tried and fails, e.g. 1 Chronicles
+comes out as −3873..−3678 because its chapter-1 genealogies reference Adam-era events; Adams'
+figures are editorial and would need curating by hand. Adams' dozens of **nation streams** are
+also absent: only the five schematic Map-panel eras exist to drive bands. Also still missing:
+roughly **40 dated people have no ribbon** — the Timeline draws only the 60 curated genealogy
+names, while `entities` holds ~75 dated people (Job, Rachel, Joseph son of Jacob, Samson, Hagar,
+Ishmael, Esau, the twelve sons all have years sitting unused). That is the cheapest high-value
+follow-up: a backend-only change to feed the extra ribbons in. The Timeline also has no "you are
+here" marker while reading, and does not drive the Map panel's era slider. **The hybrid search
+ranking has still never been confirmed by eye in the running app** — it is measured and
+build-verified only.
 
 ## Critical gotchas discovered this session (don't re-learn these the hard way)
 
@@ -350,10 +430,62 @@ text is FTS-only (no embeddings — the `verse_embeddings` vec0 table was only e
     client-side (would need direct NAS access). Avoid causing new ones: let a background
     `tauri dev`/build process exit on its own (close the app window, or `TaskStop`) rather than
     force-killing the wrapping shell when you can help it.
+16. **Switching a search mode did not re-run the search** (fixed in Phase 7). `SearchPanel`'s
+    mode tabs only called `setMode`, so the previous mode's hits stayed on screen *under the new
+    mode's heading* — topic results for "greater things" sat under "Exact phrase" looking exactly
+    like a phrase search that had missed the verse, when no phrase search had run at all. Any new
+    result surface needs to invalidate on every input that changes its meaning, not just on submit.
+17. **Never add an any-word (OR) tier to the lexical half of topical search.** Pure-dense search
+    buries literal phrases: "greater things" put John 14:12 at rank **#110 of 31,086** while the
+    panel showed 30, because mean-pooling dilutes a two-word phrase inside a 165-character verse.
+    The fix is phrase-pinning + Reciprocal Rank Fusion. The *tempting* extra step — also fusing an
+    "any of these words" match — was measured and **destroys paraphrase search**: it dropped "the
+    prodigal son" out of the results entirely and filled its top five with genealogy filler ("son
+    of Jeroham, the son of Pashhur"), because 300 verses containing "son" flooded the fusion. Only
+    the exact-phrase and all-words tiers are safe; when neither matches, the lexical list is empty
+    and the ranking falls through to pure dense, which is what keeps paraphrase queries untouched.
+18. **Do not match Theographic people by name — ever.** Curate `theographicId` by the cited verse
+    instead (see `genealogies.json`). Name matching picks the wrong person for at least a dozen of
+    the 60 curated names: there are two Enochs and two Lamechs (Cain's line in Genesis 4 vs Seth's
+    in Genesis 5), a "Noah" who is Zelophehad's daughter (Numbers 26:33), Abraham's *brother*
+    Nahor vs his grandfather, Judah's son Shelah vs Salah, ten Josephs, eight Eleazars, and a plain
+    "Jesus" who is Jesus called Justus (Colossians 4:11), not Christ. Worse, "pick the most
+    referenced" fails too — the wrong Manasseh has 84 references to the right one's 19, and
+    Matthew's Eleazar is the 8th of eight by reference count.
+19. **Four Theographic date records are wrong** and are corrected or dropped in `genealogies.json`
+    rather than in the database (which is generated and gitignored). Seth is recorded −3874 to
+    −2692, a 1182-year life against Genesis 5:8's 912 (−2692 looks like a transposition of −2962);
+    and Ahaziah, Jehoram and Samson each have a death year *before* their birth year. Sweep for
+    this class of error with a span/inversion check before trusting any new dated field.
+20. **A large file in `public/` ships inside the installer, and `.gitignore` will not stop it.**
+    `vite.config.ts` robocopies `public/` into `dist/` wholesale and Tauri bundles `dist/`, so the
+    218MB Adams source scan would have added 218MB to the installer while being invisible to git.
+    It is excluded with robocopy's `/XF` flag. Gitignoring a build input is not the same as
+    excluding it from the build.
+21. **`sqlite3` in Python: never call `cur.execute()` inside a live iteration of that same cursor.**
+    It resets the cursor and the outer loop silently ends after one row — no error, just truncated
+    results. This produced a confidently wrong conclusion mid-session ("only one Eleazar exists")
+    until the same query was re-run with a second cursor and returned eight. Materialise with
+    `.fetchall()` first, or use a separate cursor for nested lookups.
+22. **`Window::emit` does not reach the webview's JS `listen()` — emit from the `AppHandle`.**
+    This cost a full debug cycle on the farewell splash. Rust intercepted the close correctly and
+    emitted `app-close-requested` via `window.emit(...)`, the frontend's `listen()` never fired,
+    so no verse appeared and the app sat for six seconds until the watchdog quit it. Permissions
+    were *not* the problem (`core:default` → `core:event:default` → `allow-listen`, verified in
+    `gen/schemas/acl-manifests.json`); the emit target was. `window.app_handle().emit(...)` fixed
+    it, measured 6020ms → 3469ms. Two lessons beyond the API detail: (a) **always pair a
+    `prevent_close()` with a watchdog** — this failure mode would otherwise have been a window
+    that could never be closed, rather than a slow one; (b) a frontend `listen()` that silently
+    never fires leaves *no trace in the Rust log*, so don't debug this class of bug by reading
+    stdout — measure the observable behaviour instead (see the `CloseMainWindow` timing harness
+    in Phase 7).
 
 ## Git status
 
-A git repo now exists (root commit `3085677`, branch `master`, remote: none configured yet).
+A git repo exists on branch `master`, tracking `origin/master` at
+`https://github.com/BadBull22/bible.git` (this doc previously said no remote was configured —
+that is out of date). Note that git refuses to operate on this UNC-resolved network path without
+`-c safe.directory='*'`; see the note below.
 **`.gitignore` deliberately excludes several large generated/downloaded artifacts** that are
 still present as plain files on disk right now, just not version-controlled:
 `src-tauri/resources/bible.db` (241MB), `src-tauri/resources/commentaries.db` (Phase 5;
@@ -366,6 +498,14 @@ automatically and need to be either copied over directly or regenerated (see bel
 data-pipeline docs). `public/map/` (Phase 6's basemap/territory JSON) is *not* in this list —
 it's small and meant to be committed normally; regenerate it with
 `data-pipeline/build_map_data.py` and `build_territories.py` only if it needs to change.
+
+Phase 7 adds two more gitignored entries, both under `public/`:
+`public/Adams_Synchronological_Chart,_1881.jpg` (the 218MB source scan of Adams' chart) and
+`public/chart/` (the ~25MB / 1,504-file tile pyramid generated from it). Neither is source, and
+there is no LFS here. On a fresh clone the Timeline's **Synchronology** view works normally
+(it is driven by `commentaries.db` + `genealogies.json`), but its **Adams' chart** tab shows a
+build instruction instead of the facsimile until you re-download the scan to that path and run
+`python data-pipeline/build_chart_tiles.py`.
 
 Also note: git initially failed with "detected dubious ownership" against this UNC-resolved
 network path (see gotcha #9 for why `X:` resolves to a UNC form) — every git command in this
@@ -403,6 +543,8 @@ data-pipeline/          Python ETL (one-time/rerunnable): sources/ + books.py, o
   build_commentaries.py  Downloads helloao commentaries + Theographic entities -> commentaries.db
   build_map_data.py      Natural Earth basemap + seas + OpenBible.info modern-name links -> public/map/
   build_territories.py   Hand-authored, schematic kingdom outlines (5 eras) -> public/map/territories.geojson
+  build_chart_tiles.py   Slices the 218MB Adams chart scan into public/chart/ as a Leaflet tile
+                          pyramid (1,504 tiles, ~25MB). Both input and output are gitignored.
 src-tauri/src/
   lib.rs                 App setup: opens bible.db, loads embedding model, genealogy/firsts JSON,
                           registers sqlite-vec, wires all Tauri commands
@@ -417,10 +559,13 @@ src-tauri/resources/     bible.db, commentaries.db, model/ (MiniLM), genealogies
                          (both .db files and model/ are gitignored: copy or rebuild on a new PC)
 src/                     React frontend; components/ has one file per panel (SearchPanel,
                          CrossRefGraph, GenealogyPanel, FirstsPanel, SettingsPanel, SplashScreen,
-                         MapPanel, HomeScreen, etc.)
+                         MapPanel, TimelinePanel, HomeScreen, etc.)
 public/splashscreen.jpg  User-supplied launch-screen image (see Phase 3)
 public/map/              Basemap/territory/modern-name JSON for the Map panel (see Phase 6) --
-                         small, committed normally (not gitignored like the .db files)
+                         small, committed normally (not gitignored like the .db files). Its `eras`
+                         block also drives the Timeline's era bands (Phase 7).
+public/chart/            Adams chart tile pyramid for the Timeline facsimile (Phase 7) --
+                         GITIGNORED and generated; rebuild with build_chart_tiles.py
 installer/               Built .exe (NSIS) and .msi (WiX) installers, copied here for convenience
                          after `npm run tauri build` (see Phase 3) -- not auto-regenerated
 dev.bat                  Double-click dev launcher: `cargo check` then `npm run tauri dev`
