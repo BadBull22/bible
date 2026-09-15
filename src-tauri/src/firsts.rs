@@ -4,8 +4,8 @@ use std::path::Path;
 #[derive(Deserialize, Serialize, Clone)]
 pub struct FirstsEntry {
     pub id: String,
-    /// One of "firsts", "facts", "promises", "warfare" -- lets the UI group entries
-    /// into tabs. Defaults to "firsts" for backward compatibility with older data.
+    /// One of "firsts", "facts", "promises", "warfare", "prophecy" -- lets the UI group
+    /// entries into tabs. Defaults to "firsts" for backward compatibility with older data.
     #[serde(default = "default_category")]
     pub category: String,
     pub question: String,
@@ -14,6 +14,16 @@ pub struct FirstsEntry {
     pub citations: Vec<String>,
     #[serde(default)]
     pub note: Option<String>,
+    /// For the "prophecy" category only: the New Testament reference(s) recording the
+    /// fulfilment, while `citations` holds the Old Testament prophecy. Kept as a separate
+    /// field rather than merged into `citations` so the UI can draw the two sides as a
+    /// linked prophecy -> fulfilment pair instead of one undifferentiated list.
+    #[serde(default)]
+    pub fulfillment: Vec<String>,
+    /// For the "prophecy" category only: which part of Christ's life the prophecy concerns
+    /// ("His Ancestry", "His Birth", "His Life", "His Death", "His Reign").
+    #[serde(default)]
+    pub section: Option<String>,
 }
 
 fn default_category() -> String {

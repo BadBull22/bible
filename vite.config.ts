@@ -47,6 +47,19 @@ function copyPublicDirWithRobocopy(): Plugin {
 export default defineConfig(() => ({
   plugins: [react(), copyPublicDirWithRobocopy()],
 
+  // Vite rebuilds its optimised-dependency cache by renaming node_modules/.vite/deps to a
+  // temp directory, and that rename fails with EPERM on this project's SMB share. The
+  // failure is vicious because it is almost silent: the optimised deps are left broken, so
+  // every pre-bundled bare import (e.g. `@tauri-apps/api/window`) is served as a 504, the
+  // entry module never executes, and the whole React tree silently fails to mount while the
+  // Rust side runs on perfectly happily -- no panic, no type error, nothing in the terminal
+  // except one "error while updating dependencies" line. Keeping the cache on local disk
+  // avoids the rename entirely, for the same reason the cargo target-dir (gotcha #2) and the
+  // database build directory (gotcha #1) are redirected off the share.
+  cacheDir: process.env.LOCALAPPDATA
+    ? `${process.env.LOCALAPPDATA}/bible-concordance-build/vite-cache`
+    : undefined,
+
   build: {
     // see copyPublicDirWithRobocopy() above -- Vite's own copy can't skip the one
     // unreadable entry that sometimes ends up in public/, so it's disabled here and
