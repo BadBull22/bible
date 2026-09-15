@@ -723,8 +723,9 @@ pub fn timeline_data(
     Ok(TimelineData { ribbons, events })
 }
 
-/// Closes the app for real. The window's close button is intercepted in `lib.rs` so the
-/// farewell verse can be shown first; the frontend calls this once it has finished.
+/// Closes the app for real. The frontend's close-button handler normally calls
+/// `Window::destroy()` directly; this is the fallback for the rare case that permission
+/// is somehow missing (see the `onCloseRequested` handler in App.tsx).
 #[tauri::command]
 pub fn exit_app(app: tauri::AppHandle) {
     app.exit(0);

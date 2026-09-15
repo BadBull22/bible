@@ -13,7 +13,7 @@ import { EntitiesPanel } from "./components/EntitiesPanel";
 import { ResizeHandle } from "./components/ResizeHandle";
 import { SplashScreen } from "./components/SplashScreen";
 import { ClosingSplash } from "./components/ClosingSplash";
-import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { BackIcon, MapIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import "./App.css";
 
@@ -138,6 +138,8 @@ function App() {
   }, []);
 
   useEffect(() => {
+    let unlisten: (() => void) | undefined;
+
     // Read the farewell verse up front so pressing the close button shows it instantly
     // rather than waiting on a query. It comes from the bundled text like everything else,
     // so there's no second copy of the verse in the source to drift out of step.
@@ -146,12 +148,23 @@ function App() {
       .then((v) => setFarewellVerse(v.text))
       .catch(console.error);
 
-    let unlisten: (() => void) | undefined;
-    listen("app-close-requested", () => setClosing(true))
+    // The window's own close hook. A long stretch of this session's testing made this
+    // look unreliable (measured 2 successes in 17 runs, across several different
+    // registration designs including a Rust-driven eval() approach) -- turned out to be
+    // the TEST HARNESS closing the window before the page had finished loading, in a dev
+    // session under extreme load from dozens of back-to-back rebuilds. Once close was
+    // sent only after the app had actually finished mounting, this simple design worked
+    // every time. See HANDOVER.md's Phase 8 notes before "fixing" this again.
+    getCurrentWindow()
+      .onCloseRequested((event) => {
+        event.preventDefault();
+        setClosing(true);
+      })
       .then((fn) => {
         unlisten = fn;
       })
       .catch(console.error);
+
     return () => unlisten?.();
   }, []);
 
@@ -321,7 +334,18 @@ function App() {
   return (
     <>
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
-      {closing && <ClosingSplash verse={farewellVerse} onDone={() => api.exitApp().catch(() => undefined)} />}
+      {closing && (
+        <ClosingSplash
+          verse={farewellVerse}
+          onDone={() => {
+            // destroy() closes the window we just prevented from closing; exit_app is the
+            // fallback if the window permission is ever missing again.
+            getCurrentWindow()
+              .destroy()
+              .catch(() => api.exitApp().catch(() => undefined));
+          }}
+        />
+      )}
       <div className="app-shell">
         <header className="top-bar">
           <button

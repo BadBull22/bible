@@ -142,15 +142,20 @@ export interface TimelineData {
   events: TimelineEvent[];
 }
 
-export type FirstsCategory = "firsts" | "facts" | "promises" | "warfare";
+export type FirstsCategory = "firsts" | "facts" | "promises" | "warfare" | "prophecy";
 
 export interface FirstsEntry {
   id: string;
   category: FirstsCategory;
   question: string;
   answer: string;
+  /** For "prophecy" entries this holds the Old Testament reference(s). */
   citations: string[];
   note: string | null;
+  /** "prophecy" only: the New Testament reference(s) recording the fulfilment. */
+  fulfillment: string[];
+  /** "prophecy" only: "His Ancestry" | "His Birth" | "His Life" | "His Death" | "His Reign". */
+  section: string | null;
 }
 
 export interface CommentaryInfo {
