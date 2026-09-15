@@ -28,9 +28,32 @@ const CATEGORIES: { key: FirstsCategory; label: string; hint: string }[] = [
     label: "Warfare",
     hint: "Passages explicitly about spiritual warfare, not thematically inferred ones.",
   },
+  {
+    key: "prophecy",
+    label: "Prophecies",
+    hint: "Old Testament prophecies of the Messiah paired with the New Testament passage recording the fulfilment — foretold on the left, fulfilled on the right. Both sides are clickable. Every reference was checked against the bundled text.",
+  },
 ];
 
 const DEBOUNCE_MS = 200;
+
+/** A row of citation buttons; a reference that can't be parsed is shown but disabled
+ * rather than hidden, so a bad citation is visible instead of silently dropped. */
+function RefRow({ refs, onJump }: { refs: string[]; onJump: Props["onJump"] }) {
+  if (refs.length === 0) return null;
+  return (
+    <div className="citation-row">
+      {refs.map((c) => {
+        const ref = parseCitation(c);
+        return (
+          <button key={c} className="link-btn" disabled={!ref} onClick={() => ref && onJump(ref.book, ref.chapter, ref.verse)}>
+            {c}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function FirstsPanel({ onClose, onJump }: Props) {
   const [entries, setEntries] = useState<FirstsEntry[]>([]);
@@ -91,19 +114,33 @@ export function FirstsPanel({ onClose, onJump }: Props) {
         {shown.map((e) => (
           <li key={e.id}>
             <strong>{e.question}</strong>
-            <div className="snippet">{e.answer}</div>
-            {e.note && <div className="snippet note">{e.note}</div>}
-            {e.citations.length > 0 && (
-              <div className="citation-row">
-                {e.citations.map((c) => {
-                  const ref = parseCitation(c);
-                  return (
-                    <button key={c} className="link-btn" disabled={!ref} onClick={() => ref && onJump(ref.book, ref.chapter, ref.verse)}>
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
+            {e.category === "prophecy" ? (
+              <>
+                {e.section && <span className="prophecy-section">{e.section}</span>}
+                {/* Foretold -> fulfilled, kept as two labelled sides so the link between the
+                    testaments is the thing you actually see, not a flat list of references. */}
+                <div className="prophecy-pair">
+                  <div className="prophecy-side">
+                    <span className="prophecy-label">Foretold</span>
+                    <RefRow refs={e.citations} onJump={onJump} />
+                  </div>
+                  <span className="prophecy-arrow" aria-hidden="true">
+                    →
+                  </span>
+                  <div className="prophecy-side">
+                    <span className="prophecy-label">Fulfilled</span>
+                    <RefRow refs={e.fulfillment} onJump={onJump} />
+                  </div>
+                </div>
+                {e.answer && <div className="snippet">{e.answer}</div>}
+                {e.note && <div className="snippet note">{e.note}</div>}
+              </>
+            ) : (
+              <>
+                <div className="snippet">{e.answer}</div>
+                {e.note && <div className="snippet note">{e.note}</div>}
+                <RefRow refs={e.citations} onJump={onJump} />
+              </>
             )}
           </li>
         ))}

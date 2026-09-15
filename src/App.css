@@ -940,6 +940,60 @@ body.is-resizing .leaflet-container {
   font-style: italic;
 }
 
+/* ---------- prophecy -> fulfilment pairs (Firsts & Milestones) ---------- */
+
+.prophecy-section {
+  display: inline-block;
+  margin: 0.2rem 0 0.1rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--chrome-bg);
+  color: var(--text-faint);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Two labelled sides with the arrow between them: the point of the tab is to make the
+   OT -> NT link visible, so the layout carries that rather than a single citation list.
+   Wraps to stacked sides in a narrow panel. */
+.prophecy-pair {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.35rem 0 0.2rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--radius-sm);
+  background: var(--chrome-bg);
+  border-left: 2px solid var(--accent-500);
+}
+
+.prophecy-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 7.5rem;
+  flex: 1;
+}
+
+.prophecy-label {
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.prophecy-arrow {
+  align-self: center;
+  color: var(--accent-500);
+  font-weight: 700;
+}
+
+.prophecy-pair .citation-row {
+  margin-top: 0;
+}
+
 .alt-names {
   color: var(--text-faint);
   font-weight: 400;

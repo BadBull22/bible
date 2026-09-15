@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-7 done (v1.4.0; Phase 7 is not yet runtime-tested)
+## Current status: Phases 1-8 done (v1.5.0)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -322,6 +322,111 @@ here" marker while reading, and does not drive the Map panel's era slider. **The
 ranking has still never been confirmed by eye in the running app** — it is measured and
 build-verified only.
 
+**Phase 8 (Prophecies tab + a close-splash saga that ends in a working, simple fix, 2026-09-15
+— done, v1.5.0):**
+
+- **New "Prophecies" tab in Firsts & Milestones** (`src/components/FirstsPanel.tsx`,
+  `src-tauri/resources/firsts.json`): 42 Messianic prophecy -> fulfilment pairs across five
+  sections (Ancestry, Birth, Life, Death, Reign), rendered as a Foretold/Fulfilled split card
+  with both sides clickable. Selection and grouping are credited to *FULFILLED*, a Tableau
+  Public visualisation by "thecfelix" and Kevin Flerlage
+  (`public.tableau.com/app/profile/thecfelix/viz/.../Fulfilled`) — the references and section
+  groupings came from opening their `.twbx` workbook's `.hyper` data extracts directly with the
+  `tableauhyperapi` Python package (61 rows recovered, deduped to 42 distinct prophecies). Their
+  bundled verse text was NIV and was **not** used, per this project's no-copyrighted-text rule
+  (see NOTICE.md) — every verse is rendered from the bundled public-domain translations instead.
+  Credited in both `NOTICE.md` and the in-app "Bundled sources & licences" list in Settings.
+  Several of their pairings were corrected rather than imported verbatim, each with the reason
+  recorded in the entry's `note` field: Psalm 22:1 (forsaken) had been mis-paired to 22:18 (the
+  casting of lots); Isaiah 53:9 (buried with the rich) to 53:12 (crucified with criminals); and
+  "numbered with the transgressors" is commonly cited as **Mark 15:28**, which does not exist in
+  this app's BSB (the critical text it follows omits that verse) -- repointed to Mark 15:27 /
+  Luke 22:37. `firsts.rs`'s `FirstsEntry` gained `fulfillment: Vec<String>` and
+  `section: Option<String>`, both defaulted so older-shaped entries deserialize unchanged.
+- **The farewell splash (added in Phase 7) turned out to be genuinely broken by an `AppHandle`
+  vs `Window` emit-target bug, was "fixed" through several increasingly complex redesigns that
+  were each independently measured unreliable, and the actual root cause was never any of the
+  redesigns at all -- it was the test harness.** Full account, because the failure pattern (flaky
+  at a low, code-independent rate) is exactly the kind of thing worth not re-diagnosing from
+  scratch:
+  1. Phase 7 shipped Rust `prevent_close()` + `Window::emit()` + JS `listen()`. First-ever
+     measurement: worked (verse showed, ~3469ms). Next three: failed, ~6020-6037ms (a 6s
+     Rust-side watchdog quitting instead). Traced with `eprintln!` marks on both sides: the
+     event was emitted (`Ok(())`) but never reached the frontend's `listen()` handler.
+  2. Switched to `Window::emit` -> `AppHandle::emit` (the documented fix for that exact
+     Tauri gap). Measured clean once (3464ms) -- but that positive result later turned out to
+     be confounded (see below).
+  3. Rewrote to a frontend-owned design (`getCurrentWindow().onCloseRequested()`, no Rust
+     interception at all, `core:window:allow-destroy` added to `capabilities/default.json`).
+     Failed 3 straight runs at ~40ms (the "close fell through untrapped" signature) -- which
+     led to discovering a real, unrelated, and worth-keeping bug: **vite's dependency-optimiser
+     cache was failing with `EPERM` on this project's SMB share**
+     (`node_modules/.vite/deps` -> a temp dir rename, same class of problem as gotchas #1/#2),
+     which silently killed the ENTIRE frontend (no panic, nothing in the Rust log -- Rust runs
+     on unaffected) while leaving every symptom of "the close handler doesn't work." Fixed for
+     good in `vite.config.ts` by moving `cacheDir` off the share, mirroring the cargo
+     target-dir and DB-build-dir treatment. This fix is real and should stay regardless of
+     anything else in this list.
+  4. With EPERM fixed, retested the frontend-owned design: still flaky (2 successes measured
+     against 15 failures across five different code shapes -- a StrictMode-safe rewrite, the
+     hook sequenced after another `invoke()` call via `.finally()`, a plain `setTimeout` delay,
+     and an unrelated second `invoke()` call added purely to see if extra IPC traffic helped).
+     Each hypothesis was plausible, each was tested 2-3x, each failed identically to the others.
+     One measurement (in step 2, and again later) was invalidated after the fact: editing
+     `src-tauri` files while `tauri dev`'s watcher had an app already running silently
+     restarts the binary mid-test, so a `CloseMainWindow()` sent moments later targets a
+     stale, already-dead PID -- don't touch `src-tauri` while a launched instance is being
+     timed, even for an "unrelated" cleanup edit.
+  5. Tried a structurally different mechanism: Rust drives delivery directly via
+     `WebviewWindow::eval()` (raw WebView2 script execution) calling a plain global JS function
+     (`window.__triggerFarewellSplash`, assigned with zero Tauri API calls, so nothing on the
+     JS side could race). This failed **consistently** (3/3 runs hit the Rust-side 6s
+     watchdog) rather than intermittently -- a different, more diagnosable signature. Root-caused
+     with `eprintln!` on the Rust side (`eval()` reported `Ok(())`, dispatch genuinely
+     succeeded) and a file-based ping on the JS side, writing outside any IPC/stdout path that
+     had already been implicated: **the JS effect that assigns `window.__triggerFarewellSplash`
+     did not run until 16-20 seconds after process start**, not milliseconds, confirmed by
+     polling the ping file every few seconds through a 25-second window.
+  6. That is the actual root cause, and it retroactively explains every step above: every test
+     script in this saga used a **fixed 12-second settle time** before sending
+     `CloseMainWindow()`. In this specific dev session -- dozens of consecutive
+     `cargo build`/`npm run tauri dev` cycles in a row, on an SMB-backed project directory,
+     via `npm run dev`'s vite transform pipeline -- the webview was intermittently taking
+     15-20+ seconds just to finish loading and start running React, an artifact of extreme,
+     self-inflicted session load, not a defect in Tauri, WebView2, or any of the six designs
+     tried. The two prior "successes" were not caused by their code differences at all: one
+     happened to run several `curl` probes (adding real seconds of delay) before closing, the
+     other explicitly used a 30-second settle -- both simply waited long enough by accident.
+  7. **Resolution:** reverted all the way back to the simple, idiomatic design from step 3
+     (`getCurrentWindow().onCloseRequested()`, no Rust interception, no watchdog, no `eval()`)
+     and retested against the **actual compiled release binary** launched directly (no vite, no
+     dev server, no `tauri dev` overhead) rather than through `npm run tauri dev`. Three
+     consecutive runs: 3460ms, 3462ms, 3453ms -- tight, clean, and exactly the expected 3000ms
+     verse + 400ms fade + overhead signature every time. The feature was correct for most of
+     this saga; only the dev-mode test methodology was ever actually broken.
+  - **Takeaways for next time:** (a) when a Tauri close/window-event handler looks
+    intermittently broken in `npm run tauri dev` specifically, suspect the dev server and the
+    settle time in the test before suspecting the handler -- prefer testing against the
+    compiled release binary directly, which starts in ~2s with no vite/HMR path at all; (b) a
+    silently dead frontend (EPERM dep-cache failure, or any other cause) looks IDENTICAL to a
+    broken event handler from the Rust side -- the Rust log stays clean either way, so "the
+    Rust side is fine" proves nothing about the JS side; (c) `Window::emit()` not reaching a
+    webview's `listen()` while `AppHandle::emit()` does is real and documented Tauri behaviour,
+    worth keeping in mind for any future Rust-to-frontend event; (d) don't edit `src-tauri`
+    while a `tauri dev`-launched instance is mid-test, it silently restarts and invalidates
+    the timing.
+  - The re-test harness (`CloseMainWindow()` + `WaitForExit()` timing, described in Phase 7's
+    entry above) is still the right tool, but point it at the release binary, and give a dev-mode
+    instance 20-30s to settle before trusting a negative result.
+- **Version bumped `1.4.0` -> `1.5.0`** stayed as-is from Phase 7 (already at 1.5.0 when this
+  phase started); both installers rebuilt from the final, reverted close-handling code and
+  copied to `installer/` (NSIS 340,868,609 bytes; MSI 383,516,672 bytes), replacing two earlier
+  1.5.0 builds made mid-saga that shipped a design later proven unreliable in dev-mode testing
+  (never confirmed broken in a release build, but superseded before being trusted either way).
+- **Verified**: `cargo check` and `tsc --noEmit` clean throughout; the release build's actual
+  close behaviour confirmed by direct measurement (3/3 clean runs, see above) rather than by
+  eye -- nobody has watched this specific build's window on screen, only timed it.
+
 ## Critical gotchas discovered this session (don't re-learn these the hard way)
 
 1. **`V:\Code\bible` is a network-mapped drive** (a UNC share on the home NAS). SQLite's heavy
@@ -478,7 +583,41 @@ build-verified only.
     that could never be closed, rather than a slow one; (b) a frontend `listen()` that silently
     never fires leaves *no trace in the Rust log*, so don't debug this class of bug by reading
     stdout — measure the observable behaviour instead (see the `CloseMainWindow` timing harness
-    in Phase 7).
+    in Phase 7). **Update, Phase 8: the "fixed" state here didn't hold** — see gotcha #23. The
+    `emit`-vs-`AppHandle::emit` distinction is still real and still worth knowing, but the single
+    3469ms measurement that seemed to confirm the fix was, in hindsight, a lucky settle-time
+    accident, not proof the design was sound. Both this design and the frontend-owned
+    `onCloseRequested` redesign that replaced it were abandoned; the shipped v1.5.0 design is
+    `onCloseRequested` alone, no Rust interception, no watchdog.
+23. **When a Tauri close/window-event handler looks intermittently broken specifically under
+    `npm run tauri dev`, suspect the dev server and your test's settle time before suspecting the
+    handler.** A farewell-splash-on-close feature went through six structurally different
+    designs across a full session (Rust-emit, `AppHandle`-emit, frontend-owned
+    `onCloseRequested`, that same design re-sequenced after another `invoke()` call, a plain
+    `setTimeout` delay, and Rust driving delivery via `WebviewWindow::eval()` against a plain
+    global JS function) chasing a failure that looked code-dependent (2 successes against 15+
+    failures, no code difference found between them) but wasn't. Root cause, found only by
+    polling a file-based ping every few seconds through a 25-second window: in this session's
+    dev instance — dozens of consecutive `cargo build`/`npm run tauri dev` cycles back to back,
+    on an SMB-backed project directory — the webview was intermittently taking **15-20+ seconds**
+    just to finish loading and start running React, against a fixed 12-second settle time in
+    every test script. The two prior "successes" weren't caused by their code at all: one
+    incidentally ran several `curl` probes (real added seconds) before closing, the other
+    explicitly used a 30-second settle — both just happened to wait long enough. The actual fix
+    needed was the simplest design tried (step 3 above), tested against the **compiled release
+    binary** launched directly instead of through `npm run tauri dev` (no vite/dev-server
+    overhead, starts in ~2s): 3 clean runs, 3460/3462/3453ms, tight and consistent. Two
+    unrelated, real bugs were found and fixed along the way and are worth keeping regardless:
+    editing `src-tauri` while a `tauri dev`-launched instance is mid-test silently restarts the
+    binary and invalidates the measurement (don't); and vite's dependency-optimiser cache
+    (`node_modules/.vite/deps`) was failing with `EPERM` on this SMB share exactly like gotchas
+    #1/#2's SQLite/cargo cases, silently killing the entire frontend with zero trace in the Rust
+    log — fixed via `cacheDir` in `vite.config.ts`, redirected off the share the same way.
+    **The general lesson**: a silently dead frontend and a genuinely broken event handler are
+    indistinguishable from the Rust side (the Rust log stays clean either way), so before
+    concluding a Tauri event mechanism itself is unreliable, first rule out (a) the dev server,
+    by testing the release binary, and (b) insufficient settle time, by giving a dev instance
+    20-30s and polling for a liveness signal rather than trusting a single fixed wait.
 
 ## Git status
 
