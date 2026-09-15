@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-8 done (v1.5.0)
+## Current status: Phases 1-9 done (v1.5.1)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -426,6 +426,22 @@ build-verified only.
 - **Verified**: `cargo check` and `tsc --noEmit` clean throughout; the release build's actual
   close behaviour confirmed by direct measurement (3/3 clean runs, see above) rather than by
   eye -- nobody has watched this specific build's window on screen, only timed it.
+
+**Phase 9 (version-only rebuild, 2026-09-15 — done, v1.5.1):** No code changes. Bumped
+`1.5.0` -> `1.5.1` in the three usual places (`package.json`, `src-tauri/tauri.conf.json`,
+`src-tauri/Cargo.toml`) plus `package-lock.json` via `npm install`, then `npm run tauri build`.
+Both bundles copied to `installer/` and byte-verified against their build source (NSIS
+340,868,336 bytes; MSI 383,467,520 bytes). This is the exact source confirmed working at the
+end of Phase 8 (the close-splash fix, the Prophecies tab) -- nothing functional differs from
+the 1.5.0 build, only the version string. **The installer files themselves are deliberately
+NOT committed to git** -- both are 300+MB, well over GitHub's 100MB hard per-file limit for a
+normal push (this was confirmed and flagged to the user before proceeding, rather than
+attempting a push that would fail after a long upload); `installer/` stays gitignored, same
+convention as the `.db` files. `git-lfs` happens to be installed on this machine but the repo
+itself has never been configured to use it -- if committing installers through git is ever
+wanted, that setup (and checking GitHub LFS's free-tier storage/bandwidth quota) needs to
+happen first, deliberately, not as a side effect of "add the installer file" being read too
+literally.
 
 ## Critical gotchas discovered this session (don't re-learn these the hard way)
 
