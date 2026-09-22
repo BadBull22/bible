@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api, BookInfo, HomeStats, resolveReference, SearchHit } from "../api";
+import { addSearchHistory, getSearchHistory } from "../searchHistory";
 import { SearchIcon } from "./icons";
 
 interface Props {
@@ -90,6 +91,9 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<HomeStats | null>(null);
+  // Lazy init: reads localStorage once, synchronously, on first render -- so "Recent"
+  // is already there on the very first paint rather than popping in after an effect.
+  const [history, setHistory] = useState<string[]>(() => getSearchHistory());
   const inputRef = useRef<HTMLInputElement>(null);
   const requestId = useRef(0);
 
@@ -134,9 +138,17 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
+  // Records the term that was actually typed at the moment a search leads somewhere real
+  // (a resolved reference, or a clicked result) -- not every debounced keystroke, which
+  // would fill history with half-typed fragments instead of things worth returning to.
+  function goAndRemember(book: string, chapter: number, verse: number | null) {
+    setHistory(addSearchHistory(query));
+    onGo(book, chapter, verse);
+  }
+
   function submit() {
-    if (reference) onGo(reference.book, reference.chapter, reference.verse);
-    else if (results.length > 0) onGo(results[0].book, results[0].chapter, results[0].verse);
+    if (reference) goAndRemember(reference.book, reference.chapter, reference.verse);
+    else if (results.length > 0) goAndRemember(results[0].book, results[0].chapter, results[0].verse);
   }
 
   return (
@@ -165,6 +177,16 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
             aria-label="Find a passage to begin reading"
           />
         </form>
+        {!query.trim() && history.length > 0 && (
+          <div className="home-examples">
+            <span className="muted">Recent:</span>
+            {history.map((term) => (
+              <button key={term} className="outline-btn" onClick={() => setQuery(term)}>
+                {term}
+              </button>
+            ))}
+          </div>
+        )}
         {!query.trim() && (
           <div className="home-examples">
             <span className="muted">Try:</span>
@@ -176,7 +198,7 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
           </div>
         )}
         {reference && (
-          <button className="pill-btn home-result-reference" onClick={() => onGo(reference.book, reference.chapter, reference.verse)}>
+          <button className="pill-btn home-result-reference" onClick={() => goAndRemember(reference.book, reference.chapter, reference.verse)}>
             Go to {reference.book} {reference.chapter}
             {reference.verse ? `:${reference.verse}` : ""}
           </button>
@@ -188,7 +210,7 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
           <ul className="xref-list">
             {results.map((h) => (
               <li key={`${h.book}-${h.chapter}-${h.verse}`}>
-                <button className="link-btn" onClick={() => onGo(h.book, h.chapter, h.verse)}>
+                <button className="link-btn" onClick={() => goAndRemember(h.book, h.chapter, h.verse)}>
                   {h.book} {h.chapter}:{h.verse}
                 </button>
                 <div className="snippet">{h.text}</div>

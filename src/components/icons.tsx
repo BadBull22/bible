@@ -30,6 +30,13 @@ export const SearchIcon = (p: IconProps) => (
   </svg>
 );
 
+export const HomeIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="m3 11 9-8 9 8" />
+    <path d="M5 10v10h14V10" />
+  </svg>
+);
+
 export const BackIcon = (p: IconProps) => (
   <svg {...base(p.size, p.className)}>
     <path d="M19 12H5" />
