@@ -264,6 +264,16 @@ function App() {
     applyLocation(b, c);
   }
 
+  // Same as startFromHome, but also opens a side panel -- used by the opening screen's
+  // stat tiles that demonstrate a feature live (e.g. "Cross-references" jumps to a
+  // richly-linked verse with the cross-reference graph already open) rather than just
+  // stating a number with nowhere to go.
+  function startFromHomeWithPanel(b: string, c: number, v: number, panel: SidePanel) {
+    setTargetVerse(v);
+    applyLocation(b, c);
+    setPanel(panel);
+  }
+
   // Previous/Next keep whatever panel is open: paging through chapters while a
   // comparison or word study is up is a normal reading pattern.
   function flipChapter(to: Location | null) {
@@ -456,7 +466,13 @@ function App() {
           )}
           <main className="main-pane">
             {homeActive ? (
-              <HomeScreen books={books} chapterCounts={chapterCounts} onGo={startFromHome} />
+              <HomeScreen
+                books={books}
+                chapterCounts={chapterCounts}
+                onGo={startFromHome}
+                onOpenCrossRefs={(b, c, v) => startFromHomeWithPanel(b, c, v, { kind: "xref", book: b, chapter: c, verse: v })}
+                onOpenParallel={(b, c, v) => startFromHomeWithPanel(b, c, v, { kind: "parallel", book: b, chapter: c, verse: v })}
+              />
             ) : (
               <ChapterView
                 book={book}

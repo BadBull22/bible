@@ -23,6 +23,7 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "Adams' Synchronological Chart or Map of History, Sebastian C. Adams 1871 (Timeline facsimile)", licence: "Public domain" },
   { name: "Messianic prophecy pairings (Prophecies tab) — selection from \"FULFILLED\" by thecfelix & Kevin Flerlage", licence: "References credited; verses shown from bundled public-domain texts" },
   { name: "all-MiniLM-L6-v2 embedding model (topic search)", licence: "Apache 2.0" },
+  { name: "Poppins Regular font (the \"Gospel\" wordmark, opening screen)", licence: "SIL Open Font License 1.1" },
 ];
 
 interface Props {

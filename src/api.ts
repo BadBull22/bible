@@ -246,10 +246,31 @@ export interface MapPlace {
   reference_count: number;
 }
 
+/** The opening screen's stat tiles. Every field is counted live against the bundled
+ * data on the Rust side -- never hardcoded -- so these can't drift out of sync. */
+export interface HomeStats {
+  books: number;
+  ot_books: number;
+  nt_books: number;
+  chapters: number;
+  ot_chapters: number;
+  nt_chapters: number;
+  verses: number;
+  cross_references: number;
+  translations: number;
+  strongs_hebrew: number;
+  strongs_greek: number;
+  people: number;
+  places: number;
+  events: number;
+  commentaries: number;
+}
+
 export const api = {
   listVersions: () => invoke<Version[]>("list_versions"),
   listBooks: () => invoke<BookInfo[]>("list_books"),
   chapterCounts: () => invoke<[string, number][]>("chapter_counts"),
+  homeStats: () => invoke<HomeStats>("home_stats"),
   getChapter: (version_code: string, book: string, chapter: number) =>
     invoke<Verse[]>("get_chapter", { versionCode: version_code, book, chapter }),
   getChapterWithStrongs: (version_code: string, book: string, chapter: number) =>

@@ -94,6 +94,7 @@ pub fn run() {
             commands::list_versions,
             commands::list_books,
             commands::chapter_counts,
+            commands::home_stats,
             commands::get_chapter,
             commands::get_chapter_with_strongs,
             commands::get_parallel_verse,
