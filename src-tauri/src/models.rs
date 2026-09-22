@@ -1,6 +1,32 @@
 use crate::commentaries::TimelineEvent;
 use serde::Serialize;
 
+/// The opening screen's "Inside this Bible" stat tiles -- every field is a live count
+/// against the bundled data (never a hardcoded figure), so these can't drift out of sync
+/// with whatever the data pipeline actually ships. The `entities`-derived fields
+/// (people/places/events/commentaries) default to 0 rather than failing the whole
+/// struct if commentaries.db happens to be missing from a build, since it's optional.
+#[derive(Serialize, Clone)]
+pub struct HomeStats {
+    pub books: i64,
+    pub ot_books: i64,
+    pub nt_books: i64,
+    pub chapters: i64,
+    pub ot_chapters: i64,
+    pub nt_chapters: i64,
+    /// Verse count per the KJV, the traditionally-cited 31,102 figure.
+    pub verses: i64,
+    pub cross_references: i64,
+    /// Bundled Bible translations, excluding 1 Enoch (not a translation of the Bible).
+    pub translations: i64,
+    pub strongs_hebrew: i64,
+    pub strongs_greek: i64,
+    pub people: i64,
+    pub places: i64,
+    pub events: i64,
+    pub commentaries: i64,
+}
+
 /// One person's lifespan bar on the Timeline -- Adams' chart draws every patriarch as a
 /// horizontal ribbon whose length is the years they lived, and this carries exactly what
 /// is needed to place and caption one.

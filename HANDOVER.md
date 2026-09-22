@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-9 done (v1.5.1)
+## Current status: Phases 1-10 done (v2.0.0)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -442,6 +442,65 @@ itself has never been configured to use it -- if committing installers through g
 wanted, that setup (and checking GitHub LFS's free-tier storage/bandwidth quota) needs to
 happen first, deliberately, not as a side effect of "add the installer file" being read too
 literally.
+
+**Phase 10 (Gospel wordmark + opening-screen stats, 2026-09-22 — done, v2.0.0):**
+
+- **"Gospel" wordmark** on the opening screen (`HomeScreen.tsx`), replacing the old
+  "What wonder of God do you want to find today?" tagline -- styled after Google's own
+  homepage: a colorful wordmark with nothing else, directly above the search box.
+  Per-letter colors follow Google's *actual* positional pattern for their 6-letter name
+  (blue/red/yellow/blue/green/red), applied identically to this word's 6 letters, not an
+  arbitrary reuse of "Google colors". Font is Poppins **Regular** (not bold -- the first
+  pass used ExtraBold and was corrected on request, to sit closer to Google's own
+  wordmark weight), downloaded from `google/fonts` (SIL OFL 1.1, verified genuine and
+  bundled locally at `public/fonts/`, offline-first like everything else here -- Google's
+  actual logo font, Product Sans, is proprietary and was never an option). Credited in
+  both `NOTICE.md` and the in-app Settings source list.
+- **"Inside this Bible" stat tiles** below the search box: a new Rust command
+  `home_stats()` (`commands.rs`, `HomeStats` in `models.rs`) computes all six numbers
+  live against the bundled databases -- books, chapters, verses (KJV), cross-references,
+  translations, and Strong's/entity counts held in reserve -- the same pattern
+  `chapter_counts()` already uses, so these can never go stale independent of the data
+  pipeline. Every number was hand-verified against the actual bundled DB before shipping
+  (66 books / 1,189 chapters / 31,102 verses / 432,955 cross-references / 7
+  translations). **Authors (~40) is the one tile not backed by the database** -- there is
+  no authorship field anywhere in the schema, biblical authorship being a matter of
+  tradition/scholarship rather than something machine-countable -- shown as a footnoted
+  traditional estimate per explicit user sign-off, not silently presented as computed.
+- **Only 3 of the 6 tiles are clickable**, each jumping into the reader and opening the
+  relevant panel to demonstrate the stat live, rather than a plain "here's a number":
+  Books -> Genesis 1 (start reading); Cross-references -> Genesis 1:1 (68 outgoing
+  cross-refs, the richest opening verse of any book, verified not guessed) with the
+  graph panel open; Translations -> John 3:16 with the Parallel Compare panel open, all
+  7 translations visible at once. Chapters/Verses/Authors stay plain, undecorated
+  figures -- each would either duplicate the Books tile's destination or point at a
+  feature that doesn't exist, so they were deliberately left non-interactive rather than
+  padded with a button that goes nowhere. Wired through a new `startFromHomeWithPanel`
+  helper in `App.tsx` (navigate + `setPanel` in one call), alongside the existing
+  `startFromHome`.
+- A live HTML mockup was built and iterated with the user before implementation (bold ->
+  regular weight; "recommend what each would expand to" -> the interactive/static split
+  above), republished in place across two rounds rather than treated as disposable.
+- **Verified**: `cargo check` and `tsc --noEmit` clean; `npm run build` confirms
+  `dist/fonts/Poppins-Regular.ttf` lands correctly (and that the old ExtraBold file is
+  gone, not just unreferenced); every `home_stats` SQL query re-run standalone against
+  the real bundled DB and confirmed to produce the exact numbers shipped; a dev-mode
+  launch confirmed no panic and correct bundle wiring. **Not confirmed by eye** -- nobody
+  has looked at the rendered opening screen in the actual running window.
+- **Version bumped `1.5.1` -> `2.0.0`** (major, given the accumulated scope since 1.x --
+  hybrid search, Timeline + Adams facsimile, Prophecies tab, and now this) in the three
+  usual places plus `package-lock.json`; both bundles built and copied to `installer/`
+  (NSIS 340,938,782 bytes; MSI 383,680,512 bytes, byte-verified against build source).
+  Same not-committed-to-git treatment as every prior installer, per Phase 9's reasoning.
+- **A `check/` folder appeared in the project root this session** (untracked, still
+  present): three PDFs (ESV, NIV, Amplified Bible) the user downloaded hoping they might
+  be usable despite earlier copyright trouble with those same translations. Confirmed
+  still fully copyrighted -- the ESV PDF carries Crossway's own copyright notice
+  verbatim (capped, attribution-gated quoting only, not a redistribution license); NIV
+  and Amplified lack notices entirely, which is a worse sign, not a better one (absence
+  of a notice isn't evidence of public domain -- copyright is automatic). Nothing was
+  added to the app or the data pipeline; the user was told to delete the folder
+  themselves, not deleted by this session.
 
 ## Critical gotchas discovered this session (don't re-learn these the hard way)
 

@@ -81,6 +81,88 @@ pub fn list_books(state: State<DbState>) -> Result<Vec<BookInfo>, String> {
 /// number across *any* version rather than pinning to one version, since a book that
 /// exists in only one version (e.g. Enoch, which has no KJV translation) would
 /// otherwise be silently dropped.
+/// Stat tiles for the opening screen. Every number is counted live against the bundled
+/// databases rather than hardcoded, so a future data-pipeline change (more cross
+/// -references, another commentary) can never leave these silently stale. See
+/// `HomeStats` in models.rs for what each field means and why entity counts default to 0.
+#[tauri::command]
+pub fn home_stats(db_state: State<DbState>, commentary_state: State<CommentaryState>) -> Result<HomeStats, String> {
+    let conn = db_state.0.lock().map_err(|e| e.to_string())?;
+
+    let (books, ot_books, nt_books) = {
+        let q = |testament: Option<&str>| -> Result<i64, String> {
+            match testament {
+                None => conn.query_row("SELECT COUNT(*) FROM books WHERE testament != 'Apocrypha'", [], |r| r.get(0)),
+                Some(t) => conn.query_row("SELECT COUNT(*) FROM books WHERE testament = ?1", params![t], |r| r.get(0)),
+            }
+            .map_err(|e| e.to_string())
+        };
+        (q(None)?, q(Some("OT"))?, q(Some("NT"))?)
+    };
+
+    let (chapters, ot_chapters, nt_chapters) = {
+        let q = |testament: Option<&str>| -> Result<i64, String> {
+            let sql = "SELECT COUNT(*) FROM (SELECT DISTINCT v.book_id, v.chapter FROM verses v
+                JOIN books b ON v.book_id = b.id JOIN versions ver ON v.version_id = ver.id
+                WHERE ver.code = 'BSB' AND (?1 IS NULL OR b.testament = ?1))";
+            conn.query_row(sql, params![testament], |r| r.get(0)).map_err(|e| e.to_string())
+        };
+        (q(None)?, q(Some("OT"))?, q(Some("NT"))?)
+    };
+
+    let verses: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM verses v JOIN versions ver ON v.version_id = ver.id WHERE ver.code = 'KJV'",
+            [],
+            |r| r.get(0),
+        )
+        .map_err(|e| e.to_string())?;
+    let cross_references: i64 =
+        conn.query_row("SELECT COUNT(*) FROM cross_references", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+    let translations: i64 = conn
+        .query_row("SELECT COUNT(*) FROM versions WHERE code != 'ENOCH1'", [], |r| r.get(0))
+        .map_err(|e| e.to_string())?;
+    let strongs_hebrew: i64 = conn
+        .query_row("SELECT COUNT(*) FROM strongs_dict WHERE language = 'Hebrew'", [], |r| r.get(0))
+        .map_err(|e| e.to_string())?;
+    let strongs_greek: i64 = conn
+        .query_row("SELECT COUNT(*) FROM strongs_dict WHERE language = 'Greek'", [], |r| r.get(0))
+        .map_err(|e| e.to_string())?;
+    drop(conn);
+
+    // Optional: commentaries.db may not be bundled in every build (see commentary_conn).
+    // Missing it shouldn't fail the whole tile row, just leave these four at 0.
+    let (people, places, events, commentaries) = match commentary_state.0.as_ref() {
+        None => (0, 0, 0, 0),
+        Some(m) => {
+            let conn = m.lock().map_err(|e| e.to_string())?;
+            let count_kind = |kind: &str| -> i64 {
+                conn.query_row("SELECT COUNT(*) FROM entities WHERE kind = ?1", params![kind], |r| r.get(0)).unwrap_or(0)
+            };
+            let commentaries: i64 = conn.query_row("SELECT COUNT(*) FROM commentaries", [], |r| r.get(0)).unwrap_or(0);
+            (count_kind("person"), count_kind("place"), count_kind("event"), commentaries)
+        }
+    };
+
+    Ok(HomeStats {
+        books,
+        ot_books,
+        nt_books,
+        chapters,
+        ot_chapters,
+        nt_chapters,
+        verses,
+        cross_references,
+        translations,
+        strongs_hebrew,
+        strongs_greek,
+        people,
+        places,
+        events,
+        commentaries,
+    })
+}
+
 #[tauri::command]
 pub fn chapter_counts(state: State<DbState>) -> Result<Vec<(String, i64)>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;

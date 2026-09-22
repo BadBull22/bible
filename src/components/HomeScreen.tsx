@@ -1,23 +1,101 @@
 import { useEffect, useRef, useState } from "react";
-import { api, BookInfo, resolveReference, SearchHit } from "../api";
+import { api, BookInfo, HomeStats, resolveReference, SearchHit } from "../api";
 import { SearchIcon } from "./icons";
 
 interface Props {
   books: BookInfo[];
   chapterCounts: Record<string, number>;
   onGo: (book: string, chapter: number, verse: number | null) => void;
+  /** Jumps to a verse and opens its cross-reference graph -- used by the "Cross-references" tile. */
+  onOpenCrossRefs: (book: string, chapter: number, verse: number) => void;
+  /** Jumps to a verse and opens the parallel-translations compare view -- used by "Translations". */
+  onOpenParallel: (book: string, chapter: number, verse: number) => void;
 }
 
 const EXAMPLES = ["John 3:16", "the creation of light", "the prodigal son", "Psalm 23", "the parting of the Red Sea"];
 const RESULT_LIMIT = 12;
 
-export function HomeScreen({ books, chapterCounts, onGo }: Props) {
+// Genesis 1:1 carries 68 outgoing cross-references in the bundled TSK-derived dataset --
+// the most cross-referenced opening verse of any book, and thematically apt ("in the
+// beginning") for the tile that explains what a cross-reference even is.
+const CROSS_REF_DEMO = { book: "Genesis", chapter: 1, verse: 1 };
+// The natural choice for "compare translations": the most widely known verse in English,
+// and one every bundled translation actually contains (unlike some Enoch/Apocrypha-only
+// edge cases), so all 7 rows in the compare view are guaranteed to show real text.
+const PARALLEL_DEMO = { book: "John", chapter: 3, verse: 16 };
+
+/** One tile in the "Inside this Bible" strip. `action`, when present, makes the tile a
+ * button that jumps into the reader and demonstrates the stat live; a tile with no
+ * natural destination (no feature to expand into) is left as a plain, non-interactive
+ * figure instead of a fake button that goes nowhere. */
+interface StatTile {
+  key: string;
+  value: string;
+  label: string;
+  sub: string;
+  action?: () => void;
+}
+
+function buildStatTiles(stats: HomeStats, onGo: Props["onGo"], onOpenCrossRefs: Props["onOpenCrossRefs"], onOpenParallel: Props["onOpenParallel"]): StatTile[] {
+  const n = (x: number) => x.toLocaleString();
+  return [
+    {
+      key: "books",
+      value: n(stats.books),
+      label: "Books",
+      sub: `${stats.ot_books} Old Testament, ${stats.nt_books} New`,
+      action: () => onGo("Genesis", 1, null), // "Books" -> start reading from the first one
+    },
+    {
+      key: "chapters",
+      value: n(stats.chapters),
+      label: "Chapters",
+      sub: `${stats.ot_chapters} Old Testament, ${stats.nt_chapters} New`,
+      // No independent destination -- would just repeat the Books tile's jump.
+    },
+    {
+      key: "verses",
+      value: n(stats.verses),
+      label: "Verses",
+      sub: "counted in the King James Version",
+      // No single "browse all verses" feature exists to expand into.
+    },
+    {
+      key: "authors",
+      value: "~40",
+      label: "Authors",
+      sub: "traditional estimate, across ~1,500 years",
+      // Not in the bundled data at all (no authorship field) -- see NOTICE.md.
+    },
+    {
+      key: "xrefs",
+      value: n(stats.cross_references),
+      label: "Cross-references",
+      sub: "verses linked to each other across Scripture",
+      action: () => onOpenCrossRefs(CROSS_REF_DEMO.book, CROSS_REF_DEMO.chapter, CROSS_REF_DEMO.verse),
+    },
+    {
+      key: "translations",
+      value: n(stats.translations),
+      label: "Translations",
+      sub: "bundled offline, plus the original Hebrew & Greek",
+      action: () => onOpenParallel(PARALLEL_DEMO.book, PARALLEL_DEMO.chapter, PARALLEL_DEMO.verse),
+    },
+  ];
+}
+
+export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpenParallel }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchHit[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<HomeStats | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const requestId = useRef(0);
+
+  useEffect(() => {
+    api.homeStats().then(setStats).catch(console.error);
+  }, []);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -64,7 +142,13 @@ export function HomeScreen({ books, chapterCounts, onGo }: Props) {
   return (
     <div className="home-screen">
       <div className="home-box">
-        <h1>What wonder of God do you want to find today?</h1>
+        <h1 className="gospel-wordmark" aria-label="Gospel">
+          {["G", "o", "s", "p", "e", "l"].map((letter, i) => (
+            <span key={i} aria-hidden="true">
+              {letter}
+            </span>
+          ))}
+        </h1>
         <form
           className="home-search-box"
           onSubmit={(e) => {
@@ -113,6 +197,33 @@ export function HomeScreen({ books, chapterCounts, onGo }: Props) {
           </ul>
         )}
       </div>
+      {/* Hidden while actively searching, same reasoning as the example chips above:
+          keep the screen focused on results rather than competing for attention. */}
+      {!query.trim() && stats && (
+        <div className="home-stats">
+          <p className="home-stats-heading">Inside this Bible</p>
+          <div className="home-stats-grid">
+            {buildStatTiles(stats, onGo, onOpenCrossRefs, onOpenParallel).map((tile) => {
+              const content = (
+                <>
+                  <div className="home-stat-number">{tile.value}</div>
+                  <div className="home-stat-label">{tile.label}</div>
+                  <div className="home-stat-sub">{tile.sub}</div>
+                </>
+              );
+              return tile.action ? (
+                <button key={tile.key} className="home-stat-tile is-active" onClick={tile.action}>
+                  {content}
+                </button>
+              ) : (
+                <div key={tile.key} className="home-stat-tile">
+                  {content}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
