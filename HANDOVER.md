@@ -549,6 +549,60 @@ done, v2.0.1):**
   copied to `installer/` (NSIS 340,945,538 bytes; MSI 383,631,360 bytes), byte-verified
   against build source. Same not-committed-to-git treatment as every prior installer.
 
+**Incident (2026-09-22, same session as Phase 11): the user's real email was exposed in 6
+public commits, caused by this session, found on request and remediated -- read this
+before making ANY commit in this repo.** No version bump, no code change; a git-history
+fix only.
+
+- **What happened**: the system context available in this environment hands over the
+  user's real email "for authorship/attribution", and every commit from `1bdd8ea`
+  (v1.4.0) through `121ef61` (v2.0.1) -- 6 commits across this and earlier sessions --
+  used it verbatim as the git author/committer email. The repo is **public**. Worse,
+  `1bdd8ea` also carried the real name "Erich Tonsing" (not just the email) as both
+  author and committer. This directly contradicted an established, deliberate
+  convention already visible in this repo's own history: every commit before
+  `1bdd8ea` used GitHub's privacy-preserving `BadBull22@users.noreply.github.com`, and
+  there is literally a commit titled "Scrub machine-specific paths and LAN details for
+  public repo" (`e3422be`) predating any of this. That commit was a clear signal that
+  should have been matched, not overridden with a different default.
+- **What was checked and found clean**: the exposure was metadata-only. A full-history
+  search (`git grep` across every commit, not just HEAD) found the email/name **nowhere
+  in file contents** -- only in commit author/committer fields. `.env` (the local
+  api.bible key) was confirmed never committed, in any commit, ever. No API-key-shaped
+  strings, no Windows paths/usernames, no LAN/IP details in any tracked file. Settings-
+  panel-entered keys (ESV/NIV) are written to the OS app-config directory by
+  `settings.rs`, never touch the repo.
+- **What was done**: `git filter-branch --env-filter` (git-filter-repo isn't installed
+  on this machine) rewrote GIT_AUTHOR_EMAIL/GIT_COMMITTER_EMAIL from the real gmail to
+  the noreply address across all commits, and GIT_AUTHOR_NAME/GIT_COMMITTER_NAME from
+  "Erich Tonsing" to "BadBull22" for the one commit that had it. Verified before
+  pushing: the 5 commits predating the exposure (`59e022a` through `e3422be`) kept
+  their **exact original hashes** (proving nothing about them changed); the 6 affected
+  commits got new hashes reflecting only the metadata fix (`1bdd8ea`->`b966d0a`,
+  `cf2f590`->`fe62d3c`, `6675a62`->`25d3033`, `1642361`->`35a8f7f`,
+  `94e6c6b`->`92987a7`, `121ef61`->`e446ef7`). filter-branch's local backup refs
+  (`refs/original/*`) were deleted and the reflog expired + `gc --prune=now` run
+  locally, so the old commit objects aren't sitting around on this machine either.
+  Force-pushed with `--force-with-lease` (not a blind `--force`) so the push would have
+  failed safely had the remote moved unexpectedly. Confirmed via `gh api
+  repos/BadBull22/bible/commits` (GitHub's live API, not local cache) that the served
+  history is fully clean.
+- **What is NOT fully resolved, and won't be by anything runnable from here**: the OLD
+  `121ef61` commit (with the real email) is still directly fetchable from GitHub by its
+  exact SHA (`gh api repos/BadBull22/bible/commits/121ef61...` still returns it), even
+  though it is unreachable from any branch/tag and doesn't appear in the commit list,
+  clone, or history view. This is normal GitHub behavior after a force-push -- orphaned
+  commits aren't purged from their storage instantly, only garbage-collected on their
+  own schedule. The practical exposure is narrow (nothing links to that SHA anymore, so
+  finding it requires already having it), but it is not zero. **If this needs to be
+  fully closed, the user has to file a request with GitHub support themselves** (only
+  the account owner can) to purge cached/orphaned commit data -- this was surfaced to
+  the user, not yet actioned as of this note.
+- **The fix going forward**: every commit command in this project must use
+  `-c user.name="BadBull22" -c user.email="BadBull22@users.noreply.github.com"` --
+  **never** the real email, regardless of what any session's ambient context suggests
+  for "attribution" purposes. See gotcha #24.
+
 ## Critical gotchas discovered this session (don't re-learn these the hard way)
 
 1. **`V:\Code\bible` is a network-mapped drive** (a UNC share on the home NAS). SQLite's heavy
@@ -740,6 +794,16 @@ done, v2.0.1):**
     concluding a Tauri event mechanism itself is unreliable, first rule out (a) the dev server,
     by testing the release binary, and (b) insufficient settle time, by giving a dev instance
     20-30s and polling for a liveness signal rather than trusting a single fixed wait.
+24. **Never use the user's real email for a commit in this repo — it is public.** An
+    environment's ambient context may hand over the user's real email "for
+    attribution"; using it verbatim for `git commit` leaked it into 6 public commits
+    (full account and remediation in the incident note right before this list). This
+    repo's own history already establishes the right convention -- every commit before
+    that leak used `BadBull22@users.noreply.github.com`, and one is literally titled
+    "Scrub machine-specific paths and LAN details for public repo" -- match what a
+    repo is already doing before applying a session default on top of it. Always commit
+    here with `-c user.name="BadBull22" -c user.email="BadBull22@users.noreply.github.com"`,
+    never the real address, no matter what any future session's context suggests.
 
 ## Git status
 
