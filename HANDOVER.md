@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-10 done (v2.0.0)
+## Current status: Phases 1-11 done (v2.0.1)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -501,6 +501,53 @@ literally.
   of a notice isn't evidence of public domain -- copyright is automatic). Nothing was
   added to the app or the data pipeline; the user was told to delete the folder
   themselves, not deleted by this session.
+
+**Phase 11 (Home button, a real closing-splash bug fix, search history, 2026-09-22 —
+done, v2.0.1):**
+
+- **New "Home" button** in the top bar (`App.tsx`, `HomeIcon` in `icons.tsx`), right
+  before "Back": returns to the opening Gospel screen. Deliberately does not touch
+  `history` -- home isn't a reading location, so it doesn't consume a Back step or
+  become reachable by pressing Back afterward. Disabled when already on the home
+  screen, same pattern as Back being disabled with no history. `book`/`chapter`/
+  `verses` state stays intact underneath while home is showing, so navigating away
+  from home again picks up cleanly.
+- **Real bug fixed in the farewell splash** (the Phase 7/8 feature): the user watched
+  it happen and reported the splash "appears and then disappears, then about half a
+  second later the app closes." Root cause, found immediately from the CSS rather than
+  needing another diagnostic saga: the splash's exit step faded `.splash-screen`'s
+  *opacity* to 0, but that overlay sits on top of the still-mounted reading view --
+  fading it to transparent doesn't hide it, it reveals the app underneath for the
+  whole 400ms transition, which is exactly the "appears then disappears" (the splash
+  fading away to expose the reader view) followed by a dead gap before the window
+  actually closed. Fixed by removing the fade-out entirely (`ClosingSplash.tsx`): the
+  splash now stays fully opaque for the whole visible duration, then calls `onDone`
+  immediately, no transition to wait out. The unrelated arrival `SplashScreen.tsx`
+  keeps its own fade-out unchanged -- there, revealing the app underneath *is* the
+  intended effect. Measured on the compiled release binary (not dev mode, per gotcha
+  #23's lesson), 3 runs: 3179/3184/3173ms, tight and consistent, down from the old
+  ~3400ms-visible-plus-~500ms-reveal-gap and with no more flicker.
+- **Search history**: new `searchHistory.ts` -- last 10 distinct searches, newest
+  first, deduplicated case-insensitively, persisted via `localStorage` (same
+  established pattern as the sidebar/panel-width preferences in `App.tsx`, so it
+  survives app restarts). Shared between the opening screen's search box and the
+  top-bar quick search (`runQuickSearch` in `App.tsx`) rather than two separate
+  histories, since a term typed in one is just as worth having in the other. Shown on
+  the opening screen as clickable "Recent:" chips above the existing "Try:" examples,
+  same click-to-insert behavior. Only records on an actual commit -- a resolved
+  reference or a clicked result (`goAndRemember` in `HomeScreen.tsx`) -- not every
+  debounced keystroke, so it doesn't fill with half-typed fragments. The opening
+  screen's stat-tile demo jumps (Books/Cross-references/Translations) deliberately do
+  NOT record to history -- those are canned jumps the user didn't type, not searches.
+- **Verified**: `tsc --noEmit` clean (no Rust changed this phase); a dev-mode launch
+  confirmed no panic and correct wiring for all three pieces; the closing-splash
+  timing was measured against the compiled release binary as above. Home button and
+  search-history chips have not been clicked by a human yet, only compiled and
+  wired-checked.
+- **Version bumped `2.0.0` -> `2.0.1`** (patch -- three focused fixes, not new feature
+  scope) in the three usual places plus `package-lock.json`; both bundles built and
+  copied to `installer/` (NSIS 340,945,538 bytes; MSI 383,631,360 bytes), byte-verified
+  against build source. Same not-committed-to-git treatment as every prior installer.
 
 ## Critical gotchas discovered this session (don't re-learn these the hard way)
 

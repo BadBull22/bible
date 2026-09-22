@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { api, BookInfo, resolveReference, Version, VerseWithWords } from "./api";
+import { addSearchHistory } from "./searchHistory";
 import { Sidebar } from "./components/Sidebar";
 import { ChapterView } from "./components/ChapterView";
 import { HomeScreen } from "./components/HomeScreen";
@@ -14,7 +15,7 @@ import { ResizeHandle } from "./components/ResizeHandle";
 import { SplashScreen } from "./components/SplashScreen";
 import { ClosingSplash } from "./components/ClosingSplash";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { BackIcon, MapIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
+import { BackIcon, HomeIcon, MapIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import "./App.css";
 
 // The two graph panels pull in cytoscape (+ the cola layout), and the map panel pulls
@@ -291,6 +292,15 @@ function App() {
     setPanel(null);
   }
 
+  // Back to the opening "Gospel" screen. Deliberately doesn't touch `history` -- home
+  // isn't a reading location, so it shouldn't consume a Back step or be reachable by
+  // pressing Back afterward; the current chapter/verses stay loaded underneath and pick
+  // up exactly where they were if the reader navigates away from home again.
+  function goHome() {
+    setPanel(null);
+    setHomeActive(true);
+  }
+
   function changeVersion(code: string) {
     setTargetVerse(null);
     setVersionCode(code);
@@ -299,6 +309,9 @@ function App() {
   function runQuickSearch() {
     const q = quickQuery.trim();
     if (!q) return;
+    // Shared with the opening Gospel screen's search box (see searchHistory.ts) -- a
+    // term typed here is just as worth remembering as one typed there.
+    addSearchHistory(q);
     // A typed reference ("John 3:16", "gen 1", "Jude 3") navigates directly instead
     // of being sent to search -- the most common thing people type into a Bible app.
     const resolved = resolveReference(q, books, chapterCounts);
@@ -405,6 +418,15 @@ function App() {
               Ctrl K
             </kbd>
           </form>
+          <button
+            className="text-btn"
+            onClick={goHome}
+            disabled={homeActive}
+            title="Back to the opening screen"
+            aria-label="Home"
+          >
+            <HomeIcon size={15} /> <span className="label">Home</span>
+          </button>
           <button
             className="text-btn"
             onClick={goBack}
