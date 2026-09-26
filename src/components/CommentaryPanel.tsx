@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { api, CommentaryChapter, CommentaryInfo } from "../api";
+import { addToBasket } from "../basket";
+import { BasketButton } from "./BasketButton";
+import { CopyButton } from "./CopyButton";
+import { ListenButton } from "./ListenButton";
 import { CloseIcon } from "./icons";
 
 interface Props {
@@ -167,6 +171,24 @@ export function CommentaryPanel({ book, chapter, focusVerse, verseCount, initial
                 <button className="link-btn" onClick={() => onJump(book, chapter, s.verse_start)} title="Read this passage">
                   {rangeLabel(s.verse_start, data.sections[i + 1]?.verse_start, verseCount)}
                 </button>
+                <span className="item-tools">
+                  <ListenButton title="Read this commentary note aloud" text={s.text} />
+                  <BasketButton
+                    add={() => {
+                      const range = rangeLabel(s.verse_start, data.sections[i + 1]?.verse_start, verseCount).replace(/^Verses? /, "");
+                      const body = s.text.split(/\n+/).map((p) => p.trim()).filter(Boolean).join("\n\n");
+                      return addToBasket("commentary", `${current?.name ?? "Commentary"} on ${book} ${chapter}:${range}`, body);
+                    }}
+                  />
+                  <CopyButton
+                    title="Copy this commentary note"
+                    text={() => {
+                      const range = rangeLabel(s.verse_start, data.sections[i + 1]?.verse_start, verseCount).replace(/^Verses? /, "");
+                      const body = s.text.split(/\n+/).map((p) => p.trim()).filter(Boolean).join("\n\n");
+                      return `${book} ${chapter}:${range} — ${current?.name ?? "Commentary"}\n\n${body}`;
+                    }}
+                  />
+                </span>
               </h4>
               <div className="commentary-text">
                 <Paragraphs text={s.text} />

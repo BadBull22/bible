@@ -3,6 +3,9 @@ import cytoscape, { Core, ElementDefinition, Layouts } from "cytoscape";
 // @ts-expect-error no type defs published for the cola layout extension itself
 import cola from "cytoscape-cola";
 import { api, BookInfo, CrossReference } from "../api";
+import { addVersesToBasket } from "../basket";
+import { BasketButton } from "./BasketButton";
+import { CopyButton } from "./CopyButton";
 import { CloseIcon } from "./icons";
 
 cytoscape.use(cola);
@@ -37,6 +40,14 @@ const EXPAND_LIMIT = 10;
 
 function refId(r: NodeRef) {
   return `${r.book} ${r.chapter}:${r.verse}`;
+}
+
+/** "Isaiah 53:5 (BSB) — But He was pierced…", with the whole range's text. */
+async function xrefCopyText(r: CrossReference): Promise<string> {
+  const version = r.to_book === "Enoch" ? "ENOCH1" : "BSB";
+  const range = r.to_verse_end > r.to_verse_start ? `-${r.to_verse_end}` : "";
+  const text = await api.passageText(version, r.to_book, r.to_chapter, r.to_verse_start, r.to_verse_end).catch(() => "");
+  return `${r.to_book} ${r.to_chapter}:${r.to_verse_start}${range} (${version})${text ? ` — ${text}` : ""}`;
 }
 
 export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: Props) {
@@ -242,7 +253,16 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
       )}
       {topRefs.length > 0 && (
         <>
-          <h4 className="section-label">Strongest direct links</h4>
+          <div className="xref-list-head">
+            <h4 className="section-label">Strongest direct links</h4>
+            <CopyButton
+              title="Copy all of these references with their text"
+              text={async () => {
+                const parts = await Promise.all(topRefs.map(xrefCopyText));
+                return `Cross references for ${book} ${chapter}:${verse}\n\n${parts.join("\n\n")}`;
+              }}
+            />
+          </div>
           <ul className="xref-list">
             {topRefs.map((r) => {
               const key = refId({ book: r.to_book, chapter: r.to_chapter, verse: r.to_verse_start });
@@ -257,6 +277,9 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
                     <span className="votes" title="Community votes for this link (OpenBible.info)">
                       {r.votes} votes
                     </span>
+                    <BasketButton add={() => addVersesToBasket(r.to_book, r.to_chapter, r.to_verse_start, Math.max(r.to_verse_start, r.to_verse_end), r.to_book === "Enoch" ? "ENOCH1" : "BSB")} />
+                    <CopyButton title="Copy this verse with its reference" text={() => xrefCopyText(r)} />
+
                   </div>
                   {snippets[key] && <span className="snippet">{snippets[key]}</span>}
                 </li>

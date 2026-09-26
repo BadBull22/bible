@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { api, BookInfo, resolveReference, Version, VerseWithWords } from "./api";
+import { api, BookInfo, ChapterMarks, resolveReference, Version, VerseWithWords } from "./api";
 import { addSearchHistory } from "./searchHistory";
 import { Sidebar } from "./components/Sidebar";
 import { ChapterView } from "./components/ChapterView";
@@ -14,8 +14,19 @@ import { EntitiesPanel } from "./components/EntitiesPanel";
 import { ResizeHandle } from "./components/ResizeHandle";
 import { SplashScreen } from "./components/SplashScreen";
 import { ClosingSplash } from "./components/ClosingSplash";
+import { InterlinearPanel } from "./components/InterlinearPanel";
+import { DictionaryPanel } from "./components/DictionaryPanel";
+import { StudyPanel } from "./components/StudyPanel";
+import { HelpPanel } from "./components/HelpPanel";
+import { StudySheetPanel } from "./components/StudySheetPanel";
+import { BasketPanel } from "./components/BasketPanel";
+import { useBasket } from "./basket";
+import { ReadAloudBar } from "./components/ReadAloudBar";
+import { chapterAnnouncement, chunkText, LISTEN_EVENT, loadReadPrefs, ReadAloud, ReaderState, ReadItem, speechText } from "./readAloud";
+import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
+import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { BackIcon, HomeIcon, MapIcon, MenuIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
+import { BackIcon, BasketIcon, DictionaryIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import "./App.css";
 
 // The two graph panels pull in cytoscape (+ the cola layout), and the map panel pulls
@@ -49,7 +60,15 @@ type SidePanel =
   // commentary / entities follow the reader's current book+chapter (so paging keeps them in sync)
   | { kind: "commentary"; verse: number | null; commentaryId?: string }
   | { kind: "entities" }
+  | { kind: "interlinear"; book: string; chapter: number; verse: number }
+  | { kind: "dictionary"; verse?: { book: string; chapter: number; verse: number }; initialQuery?: string }
+  | { kind: "study"; tab?: "notes" | "highlights" | "bookmarks" | "plans" }
+  | { kind: "help" }
+  | { kind: "sheet"; book: string; chapter: number; verseStart: number; verseEnd: number }
+  | { kind: "basket" }
   | null;
+
+const NO_MARKS: ChapterMarks = { bookmarks: [], highlights: [], notes: [] };
 
 interface Location {
   book: string;
@@ -121,6 +140,37 @@ function App() {
   const sidebarMax = Math.max(SIDEBAR.min, Math.min(SIDEBAR.max, window.innerWidth - currentPanelWidth - READER_MIN));
   const panelMax = Math.max(PANEL.min, Math.min(PANEL.max, window.innerWidth - (sidebarOpen ? sidebarWidth : 0) - READER_MIN));
   const quickSearchRef = useRef<HTMLInputElement>(null);
+  // The reader's own marks (highlights/bookmarks/notes) for the chapter on screen, and a
+  // counter bumped whenever they change so the My Study lists and Home screen refresh.
+  const [marks, setMarks] = useState<ChapterMarks>(NO_MARKS);
+  const [studyVersion, setStudyVersion] = useState(0);
+  const [basketItems] = useBasket();
+  const [prefs, setPrefs] = useState<ReadingPrefs>(() => loadPrefs());
+  const [focusMode, setFocusMode] = useState(false);
+  useEffect(() => {
+    applyPrefs(prefs);
+    savePrefs(prefs);
+  }, [prefs]);
+  useEffect(() => {
+    if (homeActive) return;
+    let cancelled = false;
+    api
+      .chapterMarks(book, chapter)
+      .then((m) => !cancelled && setMarks(m))
+      .catch(() => !cancelled && setMarks(NO_MARKS));
+    return () => {
+      cancelled = true;
+    };
+  }, [book, chapter, homeActive, studyVersion]);
+
+  // Focus mode: full screen, no book list or side panels, just the text. Esc leaves it.
+  function setFocus(on: boolean) {
+    setFocusMode(on);
+    if (on) setPanel(null);
+    getCurrentWindow()
+      .setFullscreen(on)
+      .catch(() => undefined);
+  }
   // Monotonic token so a slow chapter response can never overwrite a newer one
   // (e.g. rapid Next/Next/Next, or a jump landing while a previous load is in flight).
   const chapterRequest = useRef(0);
@@ -275,6 +325,87 @@ function App() {
     setPanel(panel);
   }
 
+  // ---- read aloud ------------------------------------------------------------------
+  // One reader for the whole app. It reads the chapter on screen verse by verse; at the
+  // end it can turn to the next chapter and carry on. Navigating elsewhere yourself (or
+  // changing translation) stops it.
+  const [readState, setReadState] = useState<ReaderState>({ status: "idle", verse: null, message: null, engine: "natural" });
+  const [readPrefs, setReadPrefs] = useState(loadReadPrefs);
+  const readFinished = useRef<() => void>(() => undefined);
+  const readerRef = useRef<ReadAloud | null>(null);
+  readerRef.current ??= new ReadAloud(setReadState, () => readFinished.current());
+  const reader = readerRef.current;
+  const listening = useRef<{ book: string; chapter: number; version: string } | null>(null);
+  const continueTo = useRef<string | null>(null);
+  const canListen = !homeActive && versions.find((v) => v.code === versionCode)?.language === "English" && verses.length > 0;
+
+  // "chapter": reading the chapter (may carry on to the next); "selection": reading what
+  // the reader selected and chose "Listen to selection" for -- stops at its end.
+  const readMode = useRef<"chapter" | "selection">("chapter");
+
+  function listen(fromVerse: number) {
+    const items: ReadItem[] = [];
+    if (fromVerse <= (verses[0]?.verse ?? 1)) items.push({ verse: 0, text: chapterAnnouncement(book, chapter) });
+    for (const v of verses) if (v.verse >= fromVerse) items.push({ verse: v.verse, text: speechText(v.text) });
+    readMode.current = "chapter";
+    listening.current = { book, chapter, version: versionCode };
+    reader.start(items, 0);
+  }
+
+  function listenSelection(sel: SelectionPayload) {
+    readMode.current = "selection";
+    if (sel.verses && !homeActive) {
+      // Bible text in the chapter: read it verse by verse, highlighting as it goes
+      listening.current = { book, chapter, version: versionCode };
+      reader.start(sel.verses.map((v) => ({ verse: v.verse, text: speechText(v.text) })));
+    } else {
+      // a commentary note, word study, dictionary entry...: not tied to the chapter
+      listening.current = null;
+      reader.start(chunkText(sel.text).map((t) => ({ verse: -1, text: speechText(t) })));
+    }
+  }
+
+  // the 🔊 Listen buttons in side panels (commentary, Word Study, dictionary, answers)
+  const listenSelectionRef = useRef(listenSelection);
+  listenSelectionRef.current = listenSelection;
+  useEffect(() => {
+    const onRequest = (e: Event) => listenSelectionRef.current({ text: (e as CustomEvent<string>).detail, verses: null });
+    window.addEventListener(LISTEN_EVENT, onRequest);
+    return () => window.removeEventListener(LISTEN_EVENT, onRequest);
+  }, []);
+
+  readFinished.current = () => {
+    if (readMode.current === "chapter" && reader.prefsNow.continueChapters && adjacent.next) {
+      continueTo.current = `${adjacent.next.book}/${adjacent.next.chapter}`;
+      flipChapter(adjacent.next);
+    } else {
+      listening.current = null;
+    }
+  };
+
+  useEffect(() => {
+    // the loaded verses must belong to the chapter now showing before anything is read
+    const loaded = !loadingChapter && verses[0]?.book === book && verses[0]?.chapter === chapter;
+    if (continueTo.current === `${book}/${chapter}`) {
+      if (loaded) {
+        continueTo.current = null;
+        listen(verses[0].verse);
+      }
+      return;
+    }
+    const l = listening.current;
+    if (l && (l.book !== book || l.chapter !== chapter || l.version !== versionCode)) {
+      reader.stop();
+      listening.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loadingChapter, verses, book, chapter, versionCode]);
+
+  useEffect(() => () => reader.stop(), [reader]);
+
+  const readingHere =
+    readState.status !== "idle" && listening.current?.book === book && listening.current?.chapter === chapter ? readState.verse : null;
+
   // Previous/Next keep whatever panel is open: paging through chapters while a
   // comparison or word study is up is a normal reading pattern.
   function flipChapter(to: Location | null) {
@@ -329,8 +460,8 @@ function App() {
 
   // Keyboard shortcuts. Handlers are read through a ref so the listener is attached
   // once but always sees the latest state without re-subscribing on every render.
-  const shortcuts = useRef({ adjacent, flipChapter, closePanel: () => setPanel(null) });
-  shortcuts.current = { adjacent, flipChapter, closePanel: () => setPanel(null) };
+  const shortcuts = useRef({ adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus });
+  shortcuts.current = { adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus };
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const t = e.target as HTMLElement | null;
@@ -343,7 +474,13 @@ function App() {
       }
       if (e.key === "Escape") {
         if (typing) (t as HTMLElement).blur();
+        else if (shortcuts.current.focusMode) shortcuts.current.setFocus(false);
         else shortcuts.current.closePanel();
+        return;
+      }
+      if (e.key === "F11") {
+        e.preventDefault();
+        shortcuts.current.setFocus(!shortcuts.current.focusMode);
         return;
       }
       if (typing || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -369,7 +506,7 @@ function App() {
           }}
         />
       )}
-      <div className="app-shell">
+      <div className={"app-shell" + (focusMode ? " focus-mode" : "")}>
         <header className="top-bar">
           <button
             className="icon-btn"
@@ -437,6 +574,22 @@ function App() {
             <BackIcon size={15} /> <span className="label">Back</span>
           </button>
           <div className="spacer" />
+          {focusMode ? (
+            <button className="pill-btn" onClick={() => setFocus(false)} title="Leave focus mode (Esc)">
+              <FocusIcon size={15} /> <span className="label">Exit focus</span>
+            </button>
+          ) : (
+            <>
+          <button className="text-btn" onClick={() => setPanel({ kind: "study" })} title="My notes, highlights, bookmarks and reading plans" aria-label="My Study">
+            <NotebookIcon size={15} /> <span className="label">My Study</span>
+          </button>
+          <button className="text-btn" onClick={() => setPanel({ kind: "basket" })} title="Study basket: material gathered for a study sheet" aria-label={`Study basket, ${basketItems.length} items`}>
+            <BasketIcon size={15} /> <span className="label">Basket</span>
+            {basketItems.length > 0 && <span className="count-badge">{basketItems.length}</span>}
+          </button>
+          <button className="text-btn" onClick={() => setPanel({ kind: "dictionary" })} title="Bible dictionaries and topical indexes" aria-label="Dictionary">
+            <DictionaryIcon size={15} /> <span className="label">Dictionary</span>
+          </button>
           <button className="text-btn" onClick={() => setPanel({ kind: "genealogy" })} title="Genealogies" aria-label="Genealogies">
             <TreeIcon size={15} /> <span className="label">Genealogies</span>
           </button>
@@ -457,15 +610,20 @@ function App() {
           >
             <TimelineIcon size={15} /> <span className="label">Timeline</span>
           </button>
-          <button className="text-btn" onClick={() => window.print()} title="Print this view" aria-label="Print">
+          <button className="text-btn" onClick={() => { document.body.classList.remove("printing-sheet"); window.print(); }} title="Print this view" aria-label="Print">
             <PrintIcon size={15} /> <span className="label">Print</span>
+          </button>
+          <button className="text-btn" onClick={() => setFocus(true)} disabled={homeActive} title="Focus mode: full screen, just the text (F11)" aria-label="Focus mode">
+            <FocusIcon size={15} /> <span className="label">Focus</span>
           </button>
           <button className="pill-btn" onClick={() => setPanel({ kind: "settings" })} title="Settings" aria-label="Settings">
             <SettingsIcon size={15} /> <span className="label">Settings</span>
           </button>
+            </>
+          )}
         </header>
         <div className="app-body" style={panelWidth ? ({ "--panel-width": `${panelWidth}px` } as React.CSSProperties) : undefined}>
-          {sidebarOpen && (
+          {sidebarOpen && !focusMode && (
             <>
               <Sidebar
                 books={books}
@@ -494,6 +652,9 @@ function App() {
                 onGo={startFromHome}
                 onOpenCrossRefs={(b, c, v) => startFromHomeWithPanel(b, c, v, { kind: "xref", book: b, chapter: c, verse: v })}
                 onOpenParallel={(b, c, v) => startFromHomeWithPanel(b, c, v, { kind: "parallel", book: b, chapter: c, verse: v })}
+                studyVersion={studyVersion}
+                onOpenPlans={() => setPanel({ kind: "study", tab: "plans" })}
+                onOpenDictionary={(q) => setPanel({ kind: "dictionary", initialQuery: q })}
               />
             ) : (
               <ChapterView
@@ -511,10 +672,42 @@ function App() {
                 onShowCrossRefs={(verse) => setPanel({ kind: "xref", book, chapter, verse })}
                 onShowParallel={(verse) => setPanel({ kind: "parallel", book, chapter, verse })}
                 onShowCommentary={(verse) => setPanel({ kind: "commentary", verse })}
+                onShowInterlinear={(verse) => setPanel({ kind: "interlinear", book, chapter, verse })}
+                onShowTopics={(verse) => setPanel({ kind: "dictionary", verse: { book, chapter, verse } })}
+                onPrepareSheet={(verseStart, verseEnd) => setPanel({ kind: "sheet", book, chapter, verseStart, verseEnd })}
+                onListen={canListen ? listen : null}
+                readingVerse={readingHere}
+                marks={marks}
+                onMarksChanged={() => setStudyVersion((n) => n + 1)}
               />
             )}
+            {readState.status !== "idle" && (
+              <ReadAloudBar
+                state={readState}
+                prefs={readPrefs}
+                label={listening.current ? `${listening.current.book} ${listening.current.chapter}` : "the selection"}
+                showContinue={readMode.current === "chapter"}
+                onPrefs={(p) => {
+                  setReadPrefs(p);
+                  reader.setPrefs(p);
+                }}
+                onPause={() => reader.pause()}
+                onResume={() => reader.resume()}
+                onStop={() => {
+                  reader.stop();
+                  listening.current = null;
+                }}
+                onPrev={() => reader.prev()}
+                onNext={() => reader.next()}
+              />
+            )}
+            <SelectionMenu
+              chapterLabel={homeActive ? null : `${book} ${chapter}`}
+              onListen={listenSelection}
+              onSearch={(q) => setPanel({ kind: "search", initialQuery: q })}
+            />
           </main>
-          {panel && (
+          {panel && !focusMode && (
             <ResizeHandle
               side="right"
               width={panelWidth || panelDefaultWidth(panel.kind)}
@@ -565,6 +758,7 @@ function App() {
                 jumpTo(b, c, v);
                 setPanel({ kind: "commentary", verse: v, commentaryId });
               }}
+              onOpenDictionary={(q) => setPanel({ kind: "dictionary", initialQuery: q })}
               onClose={() => setPanel(null)}
             />
           )}
@@ -588,7 +782,59 @@ function App() {
               onFocusPlace={setFocusedPlaceId}
             />
           )}
-          {panel?.kind === "settings" && <SettingsPanel onClose={() => setPanel(null)} />}
+          {panel?.kind === "settings" && (
+            <SettingsPanel
+              prefs={prefs}
+              onPrefsChange={setPrefs}
+              readPrefs={readPrefs}
+              onReadPrefsChange={(p) => {
+                setReadPrefs(p);
+                reader.setPrefs(p);
+              }} onOpenHelp={() => setPanel({ kind: "help" })} onClose={() => setPanel(null)} />
+          )}
+          {panel?.kind === "help" && <HelpPanel onBack={() => setPanel({ kind: "settings" })} onClose={() => setPanel(null)} />}
+          {panel?.kind === "interlinear" && (
+            <InterlinearPanel
+              book={panel.book}
+              chapter={panel.chapter}
+              verse={panel.verse}
+              verseCount={panel.book === book && panel.chapter === chapter ? verses.length : 0}
+              onChangeVerse={(v) => {
+                setPanel({ kind: "interlinear", book: panel.book, chapter: panel.chapter, verse: v });
+                if (panel.book === book && panel.chapter === chapter) setTargetVerse(v);
+              }}
+              onWordStudy={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
+              onClose={() => setPanel(null)}
+            />
+          )}
+          {panel?.kind === "dictionary" && (
+            <DictionaryPanel key={`${panel.initialQuery ?? ""}|${panel.verse ? `${panel.verse.book} ${panel.verse.chapter}:${panel.verse.verse}` : ""}`} verse={panel.verse} initialQuery={panel.initialQuery} onJump={jumpTo} onClose={() => setPanel(null)} />
+          )}
+          {panel?.kind === "study" && (
+            <StudyPanel
+              books={books}
+              chapterCounts={chapterCounts}
+              initialTab={panel.tab}
+              refreshKey={studyVersion}
+              onJump={jumpTo}
+              onPlansChanged={() => setStudyVersion((n) => n + 1)}
+              onClose={() => setPanel(null)}
+            />
+          )}
+          {panel?.kind === "sheet" && (
+            <StudySheetPanel
+              key={`${panel.book} ${panel.chapter}:${panel.verseStart}-${panel.verseEnd}`}
+              book={panel.book}
+              chapter={panel.chapter}
+              verseStart={panel.verseStart}
+              verseEnd={panel.verseEnd}
+              verseCount={panel.book === book && panel.chapter === chapter ? verses.length : 0}
+              versions={versions}
+              versionCode={versionCode}
+              onClose={() => setPanel(null)}
+            />
+          )}
+          {panel?.kind === "basket" && <BasketPanel onJump={jumpTo} onClose={() => setPanel(null)} />}
           {panel?.kind === "genealogy" && (
             <Suspense fallback={<PanelFallback />}>
               <GenealogyPanel
@@ -623,7 +869,7 @@ function App() {
 /** Mirrors the CSS defaults (.side-panel / .side-panel.wide) so the handle's first drag
  * starts from the width actually on screen. */
 function panelDefaultWidth(kind: NonNullable<SidePanel>["kind"]): number {
-  const wide = kind === "xref" || kind === "genealogy" || kind === "commentary" || kind === "map" || kind === "timeline";
+  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket"].includes(kind);
   const vw = window.innerWidth;
   return wide ? Math.min(640, vw * 0.42) : Math.min(400, vw * 0.36);
 }

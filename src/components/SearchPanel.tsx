@@ -9,6 +9,7 @@ interface Props {
   initialQuery?: string;
   onJump: (book: string, chapter: number, verse: number) => void;
   onOpenCommentary: (commentaryId: string, book: string, chapter: number, verse: number) => void;
+  onOpenDictionary: (query: string) => void;
   onClose: () => void;
 }
 
@@ -26,7 +27,7 @@ const PHRASE_LIMIT = 100;
 const TOPIC_LIMIT = 50;
 const COMMENTARY_LIMIT = 60;
 
-export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onClose }: Props) {
+export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onOpenDictionary, onClose }: Props) {
   const [mode, setMode] = useState<Mode>("ask");
   const [query, setQuery] = useState(initialQuery ?? "");
   const [searchVersion, setSearchVersion] = useState(versionCode === "ENOCH1" ? "BSB" : versionCode);
@@ -171,7 +172,7 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
       </div>
       {error && <p className="status-error">Search failed: {error}</p>}
       {!loading && ran && ran.mode === "ask" && askAnswer && (
-        <AskAnswerView answer={askAnswer} hitCount={hits.length} commentaryHitCount={commentaryHits.length} onJump={onJump} />
+        <AskAnswerView answer={askAnswer} hitCount={hits.length} commentaryHitCount={commentaryHits.length} onJump={onJump} onOpenDictionaryEntry={onOpenDictionary} />
       )}
       {!loading && ran && ran.mode === "frequency" && totalCount !== null && (
         <p className="frequency-summary">
@@ -232,8 +233,9 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
       )}
       {mode === "commentary" && (
         <p className="search-hint">
-          Searches the full text of all seven bundled commentaries (Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke,
-          John Gill, Calvin, Keil &amp; Delitzsch, Tyndale Open Study Notes). Click a hit to read that passage with the
+          Searches the full text of all nine bundled commentaries (Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke,
+          John Gill, Calvin, Keil &amp; Delitzsch, Tyndale Open Study Notes, John Wesley's Notes, Scofield Reference
+          Notes). Click a hit to read that passage with the
           commentary open beside it.
         </p>
       )}

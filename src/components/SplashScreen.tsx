@@ -14,9 +14,12 @@ const END_GRACE_MS = 2500;
 // console is invisible in an installed build, so otherwise a failure is undiagnosable.
 const FAILURE_HOLD_MS = 4000;
 
-// Every way the splash can end early is logged with its reason: the fail-safes below turn a
-// broken video into a silent skip, and without a trace that is impossible to diagnose.
-const log = (...args: unknown[]) => console.warn("[splash]", ...args);
+// Every way the splash can end early is logged with its reason (development builds only):
+// the fail-safes below turn a broken video into a skip, and without a trace that would be
+// impossible to diagnose. A normal play logs nothing.
+const log = (...args: unknown[]) => {
+  if (import.meta.env.DEV) console.warn("[splash]", ...args);
+};
 
 export function SplashScreen({ onDone }: { onDone: () => void }) {
   const [fading, setFading] = useState(false);
@@ -36,7 +39,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
   const finish = useCallback((reason: string, played = false) => {
     if (finished.current) return;
     finished.current = true;
-    log("finished:", reason);
+    if (!played) log("ended early:", reason);
     window.clearTimeout(startFailsafe.current);
     window.clearTimeout(endFailsafe.current);
     const fadeOut = () => {
@@ -58,16 +61,13 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
     let cancelled = false;
     let objectUrl: string | null = null;
     startFailsafe.current = window.setTimeout(() => finish("video never started playing"), START_FAILSAFE_MS);
-    log("canPlayType H.264+AAC:", JSON.stringify(document.createElement("video").canPlayType('video/mp4; codecs="avc1.640028, mp4a.40.2"')));
     fetch(VIDEO_URL)
       .then((r) => {
-        log("fetch", r.status, r.headers.get("content-type"), r.headers.get("content-length"));
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.blob();
       })
       .then((blob) => {
         if (cancelled) return;
-        log("blob", blob.size, "bytes");
         objectUrl = URL.createObjectURL(new Blob([blob], { type: "video/mp4" }));
         setSrc(objectUrl);
       })
@@ -86,10 +86,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
     const v = videoRef.current;
     if (!src || !v) return;
     v.muted = true;
-    v.play().then(
-      () => log("play() resolved"),
-      (e) => finish(`play() rejected: ${e}`),
-    );
+    v.play().catch((e) => finish(`play() rejected: ${e}`));
   }, [src, finish]);
 
   // Once it is actually playing, `ended` should arrive right on the clip's duration; this
@@ -99,7 +96,6 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
     window.clearTimeout(endFailsafe.current);
     const seconds = videoRef.current?.duration;
     const ms = seconds !== undefined && Number.isFinite(seconds) ? seconds * 1000 : 5000;
-    log("playing, duration", seconds);
     endFailsafe.current = window.setTimeout(() => finish("ended event never arrived"), ms + END_GRACE_MS);
   }
 
@@ -120,7 +116,6 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
           preload="auto"
           disablePictureInPicture
           aria-label="EPT — Bible Research Study"
-          onLoadedMetadata={(e) => log("metadata", e.currentTarget.videoWidth, "x", e.currentTarget.videoHeight, "duration", e.currentTarget.duration)}
           onPlaying={handlePlaying}
           onEnded={() => finish("ended", true)}
           onError={handleError}

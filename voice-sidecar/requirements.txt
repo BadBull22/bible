@@ -1,0 +1,5 @@
+# Python 3.12. Versions as first built (2026-09-26).
+kokoro-onnx==0.6.1
+onnxruntime==1.30.0
+numpy
+pyinstaller

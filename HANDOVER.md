@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-13 done (v2.1.0)
+## Current status: Phases 1-14 done (v2.2.0 released 2026-09-26: Phase 14 study features, read aloud)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -53,7 +53,8 @@ contents here if you need it from a different machine, since that path is local 
 **Phase 3 (added in a later session) — done:**
 - **Splash screen**: `src/components/SplashScreen.tsx` shows `public/splashscreen.jpg` (a
   marble/gold "EPT — Bible Research Study" image the user supplied) for ~3s on launch, edges
-  faded to black via a CSS radial mask, then fades into the main app.
+  faded to black via a CSS radial mask, then fades into the main app. *(Superseded in
+  Phase 13 by a launch video; the image was deleted in Phase 14c.)*
 - **Accent color**: the app's interactive accent was gold/amber (`--gold-*` in `App.css`); per
   user request it's now a blue palette (`--accent-*`). The cross-reference graph's OT/NT/current
   -verse legend colors were deliberately left alone (a semantic 3-way code, not a stray accent).
@@ -598,19 +599,18 @@ fix only.
   fully closed, the user has to file a request with GitHub support themselves** (only
   the account owner can) to purge cached/orphaned commit data -- this was surfaced to
   the user, not yet actioned as of this note.
-- **Follow-up (2026-09-26): this very write-up briefly re-leaked the real name.** The
-  incident note pushed in commit `29cc956` spelled out the user's full name inside
-  `HANDOVER.md` -- i.e. in *file contents*, contradicting the "nowhere in file contents"
-  finding above (the email address itself was never in any file, only the name). It was
-  found by a pre-commit scan of the v2.1.0 changes, removed from the working file, and
-  the v2.1.0 commit no longer carries it. **The copy inside commit `29cc956` remains in
-  the public history until that commit is rewritten** -- since `29cc956` was the branch
-  tip, that is a one-commit amend + `--force-with-lease` push; the user was asked whether
-  to do it. Lesson: an incident write-up must not repeat the personal data it is about --
-  describe it ("the user's real name") instead of quoting it. Always run the sensitive-
-  string scan (real name, email fragments, API-key shapes, machine paths) over everything
-  about to be committed, including HANDOVER.md itself.
-- **The fix going forward**: every commit command in this project must use
+- **Follow-up (2026-09-26): the user's NAME is not a secret -- only email and contact
+  details are.** A pre-commit scan of the v2.1.0 changes found that this incident write-up
+  (commit `29cc956`) spelled out the user's full name in `HANDOVER.md`. The name was removed
+  from the working file, and the user was asked whether to purge it from history with a
+  force-push. **The user said no purge is needed:** the app's own About section credits
+  them by name ("Made by ... as a personal Bible study tool", `SettingsPanel.tsx`, which is
+  public), so a name mention is fine. **What must never appear in this repo is their email
+  address and contact details** (the email itself was never in any file's contents -- only
+  in the since-rewritten commit metadata). The scrub was therefore harmless but not
+  required; the commit-author identity still stays `BadBull22` noreply, as the user chose.
+  Keep running the pre-commit scan for email/phone/contact details, API-key shapes and
+  machine paths over everything about to be committed, including HANDOVER.md itself.- **The fix going forward**: every commit command in this project must use
   `-c user.name="BadBull22" -c user.email="BadBull22@users.noreply.github.com"` --
   **never** the real email, regardless of what any session's ambient context suggests
   for "attribution" purposes. See gotcha #24.
@@ -1115,10 +1115,9 @@ farewell `ClosingSplash.tsx` is untouched.
 - **Filename note:** the file keeps the user's own name, `Video Project 1.mp4`, referenced
   via `encodeURI`; Tauri percent-decodes asset paths (`protocol/tauri.rs`), so the space is
   fine. Re-exporting a new clip over the same name in `public/` replaces the splash. The
-  old `public/splashscreen.jpg` is now unused (still bundled, ~0.4 MB); delete it if the
-  video is final. `public/FAQ.txt` also ships inside the app as a static asset although
-  nothing reads it (its content is in `qa.json`, and the original still contains the
-  citation errors described above) -- worth moving out of `public/`.
+  old `public/splashscreen.jpg` was left unused, and `public/FAQ.txt` shipped although
+  nothing reads it -- both dealt with in Phase 14c (deleted / moved to
+  `data-pipeline/qa_sources/`).
 - **First test: "there was no video playback" -- root cause found, and it was NOT the
   video or the component; it was the Vite dev server.** The failsafes had turned a broken
   video into a silent skip, so diagnostic `console.warn` logging was added (Vite forwards
@@ -1140,8 +1139,8 @@ farewell `ClosingSplash.tsx` is untouched.
 - **The splash now shows why it failed:** if the video can't play, it prints "The launch
   video could not be played (<reason>)." on the black splash for 4 s and then opens the app
   (`.splash-failure`), because the console is invisible in an installed build. Never shown
-  when the video plays. The diagnostic `[splash]` `console.warn` lines were left in
-  (dev-only visibility, harmless in production).
+  when the video plays. The diagnostic `[splash]` `console.warn` lines were left in at
+  first; since Phase 14c only early endings are logged, and only in dev builds.
 - **Installer for the user to test the installed path:** built with `npm run tauri build`
   at version 2.0.1 (no bump was requested); the copies in `installer/` carry a
   `-videotest` suffix so the existing 22 Sept `2.0.1` installers (built before
@@ -1165,6 +1164,233 @@ farewell `ClosingSplash.tsx` is untouched.
   timing as above. **Playback itself has still not been seen by a human.** Watch for: it
   starts promptly, plays all 5 s with no sound, and the app appears right after it ends.
   The installer grows by about 8 MB.
+
+**Phase 14 (study-tool gap-filling after a competitive review, 2026-09-26 -- code still at
+v2.1.0, not yet version-bumped, committed or built into an installer):** the user asked for
+a comparison against Logos, Accordance, e-Sword, theWord, Blue Letter Bible, STEP Bible,
+Olive Tree and YouVersion, then approved **all** the recommended features and fixes except
+audio Bible reading ("hold off on the bible reading part (audio)"). Built:
+
+- **Personal study data** -- notes, highlights (5 colours), bookmarks and reading-plan
+  progress, in a new writable `userdata.db` in the per-user app data folder
+  (`%APPDATA%\com.local.bibleconcordance\`, beside settings.json -- never the install folder,
+  so it survives reinstalls). Backend `userdata.rs` + `study_commands.rs`; each verse has a
+  new "⋯" menu (Interlinear, Topics, Bookmark, Add/Edit note, Copy verse, highlight swatches)
+  and shows bookmark/note markers inline; notes are edited in place under the verse. New
+  top-bar **My Study** panel (`StudyPanel.tsx`): tabs for notes/highlights/bookmarks (with
+  filter) and reading plans; **Export** writes `Documents\Bible Concordance\Bible study
+  notes <date>.md` (readable) + `.json` (backup) and reveals it in Explorer; **Import backup**
+  merges a .json back (never deletes; a note is only overwritten by a *newer* copy).
+  Highlight colours are validated server-side (they become CSS class names).
+- **Reading plans** (`readingPlans.ts`): Bible in a year, NT in 90 days, Gospels in 30
+  days, Psalms & Proverbs in a month -- generated from the bundled chapter list, so only
+  progress is stored. **Home screen** now shows a **verse of the day** (`dailyVerse.ts`, 160
+  well-known verses, all checked to exist in the BSB; text read live from bible.db) and
+  **today's reading** for each active plan.
+- **Copy/export**: copy verse (with reference + translation), copy chapter, copy a curated
+  answer or dictionary entry.
+- **Reading comfort** (Settings): text size, line spacing, page width (localStorage, applied
+  as CSS vars `--reader-scale` / `--reader-line-height` / `data-reading-width`), plus **Focus
+  mode** (top-bar button or F11; full screen, no sidebar/panels; Esc leaves) -- needed the new
+  capability `core:window:allow-set-fullscreen`.
+- **Interlinear with grammar** (`InterlinearPanel.tsx`, `study.rs`): every word of a verse
+  in Hebrew/Greek with transliteration, English gloss, dictionary form + meaning, Strong's
+  (links to Word Study) and a plain-English parsing ("Verb Aorist Active Indicative 3rd
+  Singular"; hover for the full breakdown). Greek has a Critical text / Textus Receptus /
+  Show all switch (TAGNT marks each word's editions), Hebrew lays out right-to-left and
+  flags ketiv/qere. Data: **STEPBible TAHOT/TAGNT + TEHMC/TEGMC, CC BY 4.0** (attribution is
+  in Settings > About, the credits list and NOTICE.md -- required by the licence).
+- **Second Greek NT reading text: THGNT** (Tyndale House Greek New Testament 2017, CC BY-SA
+  4.0), added to bible.db as version `THGNT` with Strong's links, assembled from TAGNT's
+  "Tyn" edition marks. **Deliberately not SBLGNT** (its own EULA, not an open licence) and
+  **not NA28** (commercially licensed). 7,932 verses vs the TR's 7,957 -- the 25 missing are
+  verses the critical editions omit (e.g. Matt 17:21), not missing data.
+- **Bible dictionaries & topical indexes** (`DictionaryPanel.tsx`): Easton's (3,963 entries),
+  Smith's (4,639), Nave's Topical (5,322), Torrey's Topical (628) -- all public domain, from
+  CrossWire SWORD modules, parsed by a small reader of our own (`data-pipeline/
+  sword_lexdict.py`: RawLD/RawLD4/zLD; Smith's/Torrey's are Latin-1, the others UTF-8).
+  Bodies are stored as plain text with `⟦Book|ch|v|v_end|label⟧` reference markers (never
+  HTML) rendered as links by `RichText.tsx`. 147,319 verse->entry links power **"Topics &
+  dictionary for this verse"** (e.g. 19 Nave's/Torrey's/Easton's topics cite John 3:16).
+- **Ask a question now answers who/what questions from the dictionaries** (new
+  `AskAnswer::Dictionary` / `kind: "dictionary"`): "who was Aaron?", "what is grace?",
+  "what does selah mean?", "what does the Bible say about prayer?" get the entry, badged
+  "From Easton's Bible Dictionary (1897) -- a reference work, not scripture". Precedence
+  rules, all in `ask_question_query`: exact curated match first; then a dictionary entry for
+  the question's exact subject beats a merely *similar* curated answer (semantic score below
+  `ASK_DICTIONARY_OVERRIDE = 0.8` -- "prayer" had matched "Can our prayers change God's
+  mind?"); **but never over a `doctrinal_view` (house-lens) curated answer**. Plain "what is
+  baptism?" now reaches the water-baptism entry (new alt phrasings) instead of the tongues
+  entry.
+- **Commentary balance**: added **John Wesley's Explanatory Notes (1754-65)** -- 16,710
+  notes, Wesleyan-Arminian, matching the user's conditional-security/holiness view and the
+  tradition Pentecostalism grew from -- and the **Scofield Reference Notes (1917)** -- 3,207
+  notes, dispensational/pre-tribulation, matching the end-times lens. Both public domain,
+  SWORD zCom modules read by `sword_commentary.py` (versification checked slot-for-slot:
+  OT 24,115, NT 8,246). Nine commentaries total now. Pentecostal-authored commentaries are
+  post-1929 and still under copyright, so none were bundled.
+- **BSB quotations**: `data-pipeline/audit_qa_quotes.py` checked all 189 quotations in
+  qa.json against the BSB text of the verse each cites; 100 were NIV/ESV-style wording and
+  were replaced with BSB wording (automatic word alignment + 31 hand-checked overrides in
+  the script's `OVERRIDES`, verified against bible.db), then 7 sentences re-worded around
+  their new quotes. A re-run reports 0 non-BSB quotations. **Run it after adding any curated
+  entry.** (It rewrote qa.json with Python's json formatting, hence a large diff.)
+
+**New data-pipeline scripts** (sources download to `%LOCALAPPDATA%\bible-concordance-build\
+study-src`, nothing large is committed): `build_study.py` -> `resources/study.db` (80 MB,
+**gitignored** like bible.db); `add_thgnt.py` -> adds THGNT to bible.db; 
+`add_sword_commentaries.py` -> adds Wesley + Scofield to commentaries.db; helpers
+`refs.py` (reference parsing: OSIS/STEP/free-text book names, carried-forward chapter
+lists), `sword_lexdict.py`, `sword_commentary.py`; `audit_qa_quotes.py`. All three builders
+work on a **local-disk copy and copy back only after `PRAGMA integrity_check` = ok**
+(gotcha #1); originals were backed up once to `bible.db.before-thgnt` /
+`commentaries.db.before-sword` in the same build folder. **On a fresh clone, run
+build_study.py, add_thgnt.py and add_sword_commentaries.py after the usual database build.**
+
+**Gotchas found this phase:** (1) STEPBible writes some Greek accents in the Greek Extended
+block (U+1F71 alpha-with-oxia) where standard text uses the canonically equivalent tonos
+(U+03AC) -- identical on screen, unequal in comparisons. build_study.py NFC-normalizes all
+Greek (not Hebrew, where NFC can reorder points). A unit test caught it. (2) STEP's default
+branch isn't `master` -- use the GitHub API's `download_url`. (3) Re-running add_thgnt.py
+leaves ~2 MB of free pages in bible.db each time; not vacuumed on purpose (VACUUM could
+renumber rowids the vec0/FTS tables depend on).
+
+**Verified (backend + build only):** 25 Rust unit tests pass (5 new study tests: John 3:16
+grammar/editions, Hebrew morpheme expansion, crasis words, dictionary search/topics,
+snippet markers; 1 new userdata test: full bookmark/highlight/note/plan round trip through
+export -> fresh db -> import, colour validation, empty-note deletion); the Ask smoke test
+routes every question as intended (listed above); `cargo check` and `tsc --noEmit` clean;
+the dev app launches with no errors and creates userdata.db. **None of the new screens
+have been clicked through by a human yet.**
+
+**Phase 14b (same day, after the user's first look):**
+
+- **Help & user guide** (`HelpPanel.tsx`, Settings -> "Help & user guide"): searchable,
+  one collapsible section per feature. **Keep it up to date when adding features.**
+- **Highlight colours**: 11 now -- the 5 soft ones plus 6 bright (`lemon`, `lime`, `sky`,
+  `rose`, `red`, `violet`), shown as two rows in the ⋯ menu. The list lives in *two* places
+  that must match: `HIGHLIGHT_COLORS` in `userdata.rs` (server-side validation; they become
+  CSS class names) and `api.ts`.
+- **Jump-to-verse flash**: the target verse glows light blue for ~3 s
+  (`.verse-row--target`, `verse-target-flash` keyframes).
+- **The app starts maximized** (`"maximized": true` in tauri.conf.json). The user said
+  "always start fullscreen"; true full screen (no title bar/taskbar) is what Focus mode/F11
+  does, and starting in it would hide the window controls, so maximized was chosen.
+- **Study sheet builder** (`StudySheetPanel.tsx`, `studySheet.ts`, Rust `sheet.rs`): from a
+  verse's ⋯ -> "Prepare study sheet…" or the chapter title's "Study sheet" button. Pick the
+  verse range, 1-3 translations, N strongest cross references (with their text, via the new
+  `passage_text` command), key Hebrew/Greek words (content words from the interlinear,
+  deduped by Strong's, max 15), the reader's notes/highlights, Nave's/Torrey's topics, any
+  commentaries (labelled as opinion), blank lines. The sheet is one flat `SheetBlock[]` list
+  (title/subtitle/heading/subheading/para/quote/lines) that drives all four outputs: the
+  preview and **Print/PDF** (an inline-styled copy is appended to `<body>` as
+  `#sheet-print-root`; `body.printing-sheet` print rules hide everything else; removed on
+  `afterprint`), **Copy** (`copyRich`: ClipboardItem with text/html + text/plain, so Word
+  keeps headings/bold), **Plain text**, and **Save as Word** (`save_study_sheet` -> docx-rs
+  0.4 with `default-features = false` so no `image` crate; writes
+  `Documents\Bible Concordance\<title>.docx`, adds " (2)" rather than overwrite, reveals it).
+  Option choices persist in localStorage (`studySheet:prefs`). Verified: unit test builds a
+  real .docx and checks no-overwrite; a sample opened in Word via COM (11 paragraphs, Segoe
+  UI title at 18 pt). `cargo test sheet::tests::sample -- --ignored` with
+  `SHEET_SAMPLE_DIR` set writes one to inspect.
+- **Copy buttons** everywhere text is worth taking elsewhere: each commentary section, each
+  cross reference (full range text) plus "copy all", each My Study item (verse + note).
+  Shared `components/CopyButton.tsx` (text may be a lazy async function).
+
+**Phase 14c (same day; the user tested 14/14b and found everything working):**
+
+- **Red-letter text** (words of Jesus): `data-pipeline/build_red_letter.py` ->
+  `src/redLetter.json` (200 KB, committed; loaded lazily by `src/redLetter.ts` as its own
+  chunk). Only the KJV (`<q who="Jesus">`, 2,035 spans, each inside one verse) and WEB
+  (`\wj`) sources mark His words; the script transfers the marking to the other texts:
+  ASV/YLT from KJV and BSB from WEB by difflib word alignment (reworded stretches of very
+  different length are left unmapped); the BSB is then fitted to its own quotation marks
+  (`snap_to_quotes`: narration outside “…” is never red; if Jesus is the only speaker
+  quoted in the WEB verse every quote is His; with several speakers each quote goes by its
+  aligned words; someone else repeating His words gets only the inner ‘…’ red); TR from
+  the KJV's `src` Greek-position attributes, THGNT aligned to TR (accents stripped).
+  Stored as **word-index ranges**, not character offsets, because `tidyPunctuation`
+  changes character positions before display; a "word" is a maximal letter/digit run in
+  both Python (`[^\W_]+`) and TS (`[\p{L}\p{N}]+`). Rendering: `splitRed` splits the
+  segments from `segmentVerse` into `.wj` spans without breaking Strong's click targets;
+  the colour is pure CSS (`:root[data-red-letter="on"] .wj`), toggled in Settings ->
+  Reading comfort ("Words of Jesus", default on, `ReadingPrefs.redLetter`). Study sheets
+  carry it too (`SheetRun.red` -> inline colour in HTML, `B0261C` in the .docx).
+  **Reviewed by eye** against tricky verses (Matt 26:25, Acts 9:5, John 8:11, 21:17,
+  7:36, 8:22, Mark 5:9, Luke 9:55-56...); the script prints the BSB verses that differ
+  most from the WEB for review. **Re-run after rebuilding bible.db.**
+- **Study basket** ("collect basket"): table `basket` in userdata.db (not in the backup --
+  it's a scratch area), commands `basket_list/add/update/remove/clear/reorder`
+  (+ unit test). Frontend `src/basket.ts` (add helpers, `useBasket` hook kept current by a
+  `basket-changed` window event, `basketSheet` -> SheetBlock[]), `BasketButton.tsx`
+  ("Basket" beside Copy on commentary sections, cross refs, dictionary entries, Ask
+  answers, My Study items; "Add to study basket" in the verse ⋯ menu), `BasketPanel.tsx`
+  (reorder, edit, own text, empty; "Make study sheet" view). Top-bar **Basket** button with
+  a count badge. Verse items store `{book, chapter, verseStart, verseEnd, version}` in
+  `meta`, so the sheet re-reads the text (with red letters). The print/copy/Word half of
+  the study sheet is now the shared `SheetOutput.tsx`.
+- **Clean-ups:** `public/FAQ.txt` moved to `data-pipeline/qa_sources/` (no longer shipped);
+  unused `public/splashscreen.jpg` deleted; the splash's diagnostic logging now only
+  reports early endings, and only in dev builds.
+
+**Phase 14d (same day): read aloud with a natural Kokoro voice.** The user asked for it
+using the Kokoro sidecar from their own desktop assistant
+(`X:\Code\openui\ghost-claw-v6\kokoro-sidecar`: FastAPI + kokoro-onnx, PyInstaller onefile,
+model downloaded on first use). Reused its design; rebuilt it as `voice-sidecar/` because
+measuring it showed two one-off delays worth removing:
+
+1. **~65 s to start**: a PyInstaller *onefile* exe unpacks itself to %TEMP% on every
+   launch (the model itself loads in <1 s). -> built **--onedir** instead
+   (`resources/voice/voice-sidecar/`); the app spawns it itself (no shell plugin, no
+   `externalBin`), so a folder is fine. Now ~1.5 s from local disk.
+2. **~16 s before the first word of every run**: phonemizer copies `espeak-ng.dll` into a
+   new temp folder per wrapper instance and loads each copy -- and the antivirus scans
+   every freshly copied DLL (~4 s each; the original loads in 0.00 s). `server.py`
+   replaces `EspeakAPI.__init__` to load the DLL once, in place (safe: the server is one
+   process with one espeak instance, synthesis under a lock), and does a warm-up synthesis
+   before printing `ready <port>`.
+
+Model choice, measured on the dev PC (Ryzen 9 9950X): **fp16** (169 MB) speaks John 3:16
+in ~1 s, same as fp32 (310 MB); int8 (88 MB) took 4.6 s -- slower on CPU. Voices trimmed
+to the 28 English ones (`make_voices.py`, 14 MB); espeak data trimmed to English (-16 MB).
+**`resources/voice/` = 274 MB, gitignored; rebuild with `voice-sidecar\build.ps1`**
+(Python 3.12 venv + downloads on local disk, then copies in). Samples of the three model
+sizes were written to `Documents\Bible Concordance\voice samples` for the user.
+
+Sidecar protocol: `voice-sidecar.exe --model … --voices … --parent-pid <app pid>`; binds
+127.0.0.1 on an OS-chosen port and prints `ready <port>`; `POST /speak {text, voice, speed}`
+-> WAV; `GET /health`, `/voices`. It waits on the parent's process handle and exits when
+the app dies (crash/kill included); `exit_app` also kills it. Rust `voice.rs`: started on
+first use (not at launch -- ~0.5 GB RAM), `voice_status` / `voice_start` / `voice_speak`
+(returns raw bytes via `tauri::ipc::Response` -> ArrayBuffer), spawned with
+CREATE_NO_WINDOW. Frontend `readAloud.ts` (`ReadAloud` class: verse-by-verse, prefetches
+the next two verses, chapter announcement first, falls back to the Web Speech API if the
+voice folder is missing or fails), `ReadAloudBar.tsx` (sticky at the bottom of the reading
+pane), `.verse-row--reading` highlight, "Listen" by the chapter title and "Listen from
+here" in the ⋯ menu, Settings -> Read aloud (voice, speed, "Try this voice"). Default voice
+`af_sarah` (the one the user picked in Ghost Claw). English versions only. Navigating away
+or changing translation stops reading; "Carry on to the next chapter" (default on)
+turns the page itself and continues.
+
+**Follow-up after the user's first test:** (1) **Right-click on selected text** now opens
+the app's own menu (`SelectionMenu.tsx`, a window-level `contextmenu` listener that only
+takes over when there is a selection outside text boxes): *Listen to selection*, Copy, Add
+to study basket, Search. A selection inside the chapter is split at verse rows
+(`.verse-row[data-verse]`, verse numbers/markers/buttons stripped from the cloned range) so
+it is read verse by verse with highlighting; anything else (commentary, Word Study,
+dictionary) is read as prose, split into ~350-character sentence chunks (`chunkText`).
+Selection reading never carries on to the next chapter (`readMode` in App). (2) The player
+is now a **floating** panel (`position: fixed`, bottom centre by default), draggable by a
+grip, position remembered in localStorage (`readAloud:barPos`), double-click the grip to
+reset, clamped on window resize.
+
+The Ghost Claw findings from building this were written up for that project in
+`X:\Code\openui\ghost-claw-v6\KOKORO_DELAYS_FINDINGS_2026-09-26.md` (one-file startup,
+espeak DLL copies, duplicate sidecars after a start timeout, calibration restarting Kokoro).
+
+**Licensing:** espeak-ng and phonemizer are GPL-3.0, so the voice program is distributed
+under GPL-3.0 with its source in `voice-sidecar/` (NOTICE.md explains); the main app is a
+separate program talking to it over localhost.
 
 ## Critical gotchas discovered this session (don't re-learn these the hard way)
 
@@ -1477,6 +1703,9 @@ src-tauri/src/
   qa.rs, qa_parser.rs      Phase 12 "Ask a question": qa.json/qa_index.json loader + runtime
                           semantic match (qa.rs), strict word-count question grammar (qa_parser.rs)
   bin/index_qa.rs          One-time tool: embeds qa.json + firsts.json questions -> qa_index.json
+  study.rs, userdata.rs    Interlinear/dictionaries (study.db, read-only) and the reader's own notes/
+                          highlights/bookmarks/plans (userdata.db, writable, per-user app data)
+  study_commands.rs        Tauri commands for the two above (kept out of commands.rs for size)
   online.rs, settings.rs   api.bible live-fetch + local settings persistence
 src-tauri/resources/     bible.db, commentaries.db, model/ (MiniLM), genealogies.json, firsts.json,
                          qa.json, qa_index.json — all bundled into the shipped app via
@@ -1486,7 +1715,11 @@ src-tauri/resources/     bible.db, commentaries.db, model/ (MiniLM), genealogies
 src/                     React frontend; components/ has one file per panel (SearchPanel,
                          CrossRefGraph, GenealogyPanel, FirstsPanel, SettingsPanel, SplashScreen,
                          MapPanel, TimelinePanel, HomeScreen, etc.)
-public/splashscreen.jpg  User-supplied launch-screen image (see Phase 3)
+public/Video Project 1.mp4  User-supplied launch video (see Phase 13; the Phase 3 splashscreen.jpg
+                         was deleted in Phase 14c)
+src/redLetter.json       Words-of-Jesus word ranges per translation (build_red_letter.py)
+data-pipeline/qa_sources/FAQ.txt  The user's original FAQ list (source for qa.json; moved out of
+                         public/ in Phase 14c so it no longer ships in the app)
 public/map/              Basemap/territory/modern-name JSON for the Map panel (see Phase 6) --
                          small, committed normally (not gitignored like the .db files). Its `eras`
                          block also drives the Timeline's era bands (Phase 7).

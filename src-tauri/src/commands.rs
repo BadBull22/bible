@@ -741,6 +741,12 @@ fn semantic_search_query(conn: &rusqlite::Connection, vector: &[f32], query: &st
 /// model, not a permanently tuned value -- revisit if real usage turns up a bad match on
 /// either side of it.
 const ASK_SIMILARITY_THRESHOLD: f32 = 0.6;
+/// For a short who/what question with a dictionary entry for its exact subject, a
+/// semantic curated match must be at least this close to win over the dictionary entry.
+/// Genuine paraphrases of curated questions score 0.84+ (see the smoke test), while a
+/// merely-related curated answer ("what does the Bible say about prayer" -> "Can our
+/// prayers change God's mind?") scored below this.
+const ASK_DICTIONARY_OVERRIDE: f32 = 0.8;
 
 /// Resolves one of `qa.json`'s recognized `computed_from` tags to a live number,
 /// re-querying directly rather than routing through the `home_stats` command so
@@ -830,6 +836,7 @@ fn ask_question_query(
     conn: &rusqlite::Connection,
     embedder: &crate::embeddings::Embedder,
     commentary_conn: Option<&rusqlite::Connection>,
+    study_conn: Option<&rusqlite::Connection>,
     firsts: &FirstsData,
     qa: &crate::qa::QaRuntime,
     query: &str,
@@ -859,8 +866,40 @@ fn ask_question_query(
     // the semantic curated-match step and the fallback if it comes to that.
     let vector = embedder.embed(query).map_err(|e| e.to_string())?;
 
+    // A short who/what question names its subject outright ("what does the Bible say
+    // about prayer"), so a dictionary entry for exactly that subject beats a curated answer
+    // that only *resembles* the question ("Can our prayers change God's mind?") -- unless
+    // the resemblance is very close. Exact curated matches were already returned above.
+    let dictionary_hit = || -> Result<Option<AskAnswer>, String> {
+        let (Some(study), Some((term, prefer))) = (study_conn, dictionary_term(query)) else {
+            return Ok(None);
+        };
+        let mut candidates = vec![term.clone()];
+        if let Some(s) = term.strip_suffix("es").filter(|s| s.len() > 2) {
+            candidates.push(s.to_string());
+        }
+        if let Some(s) = term.strip_suffix('s').filter(|s| s.len() > 2) {
+            candidates.push(s.to_string());
+        }
+        for c in candidates {
+            if let Some(entry) = crate::study::lookup_headword(study, &c, prefer)? {
+                return Ok(Some(AskAnswer::Dictionary { entry, term: c }));
+            }
+        }
+        Ok(None)
+    };
+
     // Layer 2b: semantic match, across qa.json AND the existing Firsts/Prophecies data.
     if let Some((source, id, similarity)) = qa.best_match(&vector) {
+        // Never let a dictionary override one of the house-lens answers (scripture first,
+        // then the Pentecostal reading -- see the "doctrinal lens" rule in HANDOVER.md).
+        let is_house_view =
+            source == "qa" && qa.data.get(&id).is_some_and(|e| e.confidence == crate::qa::QaConfidence::DoctrinalView);
+        if similarity >= ASK_SIMILARITY_THRESHOLD && similarity < ASK_DICTIONARY_OVERRIDE && !is_house_view {
+            if let Some(answer) = dictionary_hit()? {
+                return Ok(answer);
+            }
+        }
         if similarity >= ASK_SIMILARITY_THRESHOLD {
             if source == "qa" {
                 if let Some(entry) = qa.data.get(&id) {
@@ -874,11 +913,56 @@ fn ask_question_query(
         }
     }
 
+    // Layer 2c: a who/what question about a person, place or subject with no curated
+    // answer -- look the term up in the bundled Bible dictionaries.
+    if let Some(answer) = dictionary_hit()? {
+        return Ok(answer);
+    }
+
     // Layer 3: labeled best-effort fallback -- no confident answer on file.
     let hits = semantic_search_query(conn, &vector, query, fallback_limit)?;
     let commentary_hits =
         commentary_conn.map(|c| commentaries::search(c, query, None, fallback_limit).unwrap_or_default()).unwrap_or_default();
     Ok(AskAnswer::Fallback { hits, commentary_hits })
+}
+
+const DICT_GENERAL: &[&str] = &["easton", "smith", "nave", "torrey"];
+const DICT_TOPICAL: &[&str] = &["nave", "torrey", "easton", "smith"];
+
+/// The subject of a short who/what question, and which dictionaries to try first:
+/// "who was Aaron?" -> ("aaron", general); "what does the bible say about prayer" ->
+/// ("prayer", topical first). Deliberately narrow -- a long question isn't a headword.
+fn dictionary_term(query: &str) -> Option<(String, &'static [&'static str])> {
+    static PATTERNS: std::sync::OnceLock<Vec<(regex::Regex, &'static [&'static str])>> = std::sync::OnceLock::new();
+    let patterns = PATTERNS.get_or_init(|| {
+        [
+            (r"(?i)^what\s+does\s+(?:the\s+bible|scripture|god's\s+word)\s+(?:say|teach)\s+(?:about|on|regarding)\s+(.+)$", DICT_TOPICAL),
+            (r"(?i)^what\s+does\s+(.+?)\s+mean$", DICT_GENERAL),
+            (r"(?i)^(?:who|what|where)\s+(?:is|was|were|are)\s+(.+)$", DICT_GENERAL),
+            (r"(?i)^(?:tell\s+me\s+about|define|definition\s+of|meaning\s+of|what\s+is\s+meant\s+by)\s+(.+)$", DICT_GENERAL),
+        ]
+        .into_iter()
+        .map(|(p, pref)| (regex::Regex::new(p).unwrap(), pref))
+        .collect()
+    });
+    let q = query.trim().trim_end_matches(['?', '.', '!']).trim();
+    let (raw, prefer) = patterns.iter().find_map(|(re, pref)| re.captures(q).map(|c| (c[1].to_string(), *pref)))?;
+    let mut t = raw.to_lowercase();
+    for suffix in [" in the bible", " in scripture", " in the old testament", " in the new testament", " biblically"] {
+        if let Some(s) = t.strip_suffix(suffix) {
+            t = s.to_string();
+        }
+    }
+    for prefix in ["the ", "a ", "an "] {
+        if let Some(s) = t.strip_prefix(prefix) {
+            t = s.to_string();
+        }
+    }
+    let t = t.trim().to_string();
+    if t.is_empty() || t.split_whitespace().count() > 4 {
+        return None;
+    }
+    Some((t, prefer))
 }
 
 #[tauri::command]
@@ -888,15 +972,18 @@ pub fn ask_question(
     commentary_state: State<CommentaryState>,
     firsts_state: State<FirstsState>,
     qa_state: State<QaState>,
+    study_state: State<crate::study::StudyState>,
     query: String,
     fallback_limit: i64,
 ) -> Result<AskAnswer, String> {
     let conn = db_state.0.lock().map_err(|e| e.to_string())?;
     let commentary_guard = commentary_conn(&commentary_state).ok();
+    let study_guard = study_state.0.as_ref().and_then(|m| m.lock().ok());
     ask_question_query(
         &conn,
         &embedder_state.0,
         commentary_guard.as_deref(),
+        study_guard.as_deref(),
         &firsts_state.0,
         &qa_state.0,
         &query,
@@ -1040,6 +1127,7 @@ pub fn timeline_data(
 /// is somehow missing (see the `onCloseRequested` handler in App.tsx).
 #[tauri::command]
 pub fn exit_app(app: tauri::AppHandle) {
+    crate::voice::shutdown(&app);
     app.exit(0);
 }
 
@@ -1079,6 +1167,7 @@ mod ask_question_smoke_tests {
         let firsts = FirstsData::load(&dir.join("resources/firsts.json")).expect("load firsts.json");
         let qa = QaRuntime::load(&dir.join("resources/qa.json"), &dir.join("resources/qa_index.json")).expect("load qa runtime");
         let commentary_conn = rusqlite::Connection::open(dir.join("resources/commentaries.db")).ok();
+        let study_conn = rusqlite::Connection::open(dir.join("resources/study.db")).ok();
 
         let questions = [
             "how many time is love mentioned in the bible",
@@ -1167,6 +1256,17 @@ mod ask_question_smoke_tests {
             "is the blood of jesus enough to save me",
             "what is the difference between the rapture and the second coming",
             "what is the judgment seat of christ",
+            // Dictionary layer (v2.2): who/what questions with no curated answer should be
+            // answered from Easton's/Smith's/Nave's -- while ones that DO have a curated
+            // answer ("who was moses?") must still get the curated one.
+            "who was Aaron?",
+            "what is grace?",
+            "who were the Pharisees?",
+            "tell me about Nineveh",
+            "what does the bible say about prayer?",
+            "what does selah mean?",
+            "who was Melchizedek",
+            "what is the meaning of life",
             // Round after the user set their positions: conditional security, women in
             // ministry, Trinity, and the new blood-of-Jesus entry.
             "what does the blood of jesus do",
@@ -1182,7 +1282,7 @@ mod ask_question_smoke_tests {
         ];
 
         for q in questions {
-            let result = ask_question_query(&conn, &embedder, commentary_conn.as_ref(), &firsts, &qa, q, 5);
+            let result = ask_question_query(&conn, &embedder, commentary_conn.as_ref(), study_conn.as_ref(), &firsts, &qa, q, 5);
             println!("\n=== {q} ===");
             match result {
                 Ok(answer) => println!("{}", serde_json::to_string_pretty(&answer).unwrap()),

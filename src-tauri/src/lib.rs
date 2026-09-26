@@ -9,6 +9,11 @@ mod online;
 pub mod qa;
 mod qa_parser;
 mod settings;
+mod sheet;
+mod study;
+mod study_commands;
+mod userdata;
+mod voice;
 
 use db::DbState;
 use embeddings::Embedder;
@@ -102,6 +107,20 @@ pub fn run() {
                 .resolve("resources/commentaries.db", tauri::path::BaseDirectory::Resource)
                 .expect("failed to resolve commentaries.db resource path");
             app.manage(commentaries::CommentaryState(commentaries::open(&commentaries_path)));
+
+            // Optional, like commentaries.db: interlinear + Bible dictionaries.
+            let study_path = app
+                .path()
+                .resolve("resources/study.db", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve study.db resource path");
+            app.manage(study::StudyState(study::open(&study_path)));
+
+            // The reader's own notes/highlights/bookmarks: writable, in the per-user app
+            // data folder (never the install folder), so it survives reinstalls.
+            let data_dir = app.path().app_data_dir().expect("no app data dir");
+            let user_db = userdata::open(&data_dir).expect("failed to open userdata.db");
+            app.manage(userdata::UserDataState(Mutex::new(user_db)));
+            app.manage(voice::VoiceState::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -138,6 +157,34 @@ pub fn run() {
             commands::map_places,
             commands::exit_app,
             commands::ask_question,
+            study_commands::interlinear_verse,
+            study_commands::list_dictionaries,
+            study_commands::search_dictionaries,
+            study_commands::dictionary_entry,
+            study_commands::topics_for_verse,
+            study_commands::chapter_marks,
+            study_commands::toggle_bookmark,
+            study_commands::set_highlight,
+            study_commands::get_note,
+            study_commands::save_note,
+            study_commands::list_study,
+            study_commands::plan_progress,
+            study_commands::start_plan,
+            study_commands::stop_plan,
+            study_commands::set_plan_day,
+            study_commands::export_study,
+            study_commands::import_study,
+            study_commands::passage_text,
+            study_commands::save_study_sheet,
+            study_commands::basket_list,
+            study_commands::basket_add,
+            study_commands::basket_update,
+            study_commands::basket_remove,
+            study_commands::basket_clear,
+            study_commands::basket_reorder,
+            voice::voice_status,
+            voice::voice_start,
+            voice::voice_speak,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
