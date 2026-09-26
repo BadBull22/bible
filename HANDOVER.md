@@ -1384,9 +1384,27 @@ is now a **floating** panel (`position: fixed`, bottom centre by default), dragg
 grip, position remembered in localStorage (`readAloud:barPos`), double-click the grip to
 reset, clamped on window resize.
 
+**v2.2.0 release round (2026-09-26):** 🔊 **Listen** buttons on commentary sections, Word
+Study entries, dictionary entries and Ask answers (`ListenButton.tsx` dispatches a
+`read-aloud-request` window event -> App's `listenSelection`); in production builds the
+browser's own right-click menu (Back/Refresh/Print/Inspect) is suppressed when nothing is
+selected (text boxes keep Cut/Copy/Paste; dev builds keep Inspect). `voice.rs` gained an
+ignored end-to-end test (`cargo test voice -- --ignored --nocapture`): starts the real
+sidecar from `resources/voice`, speaks a verse, checks the WAV -- 6.2 s to ready from the
+network share, 0.4 s per verse. Version 2.2.0 in package.json/package-lock, Cargo.toml,
+tauri.conf.json; commit `cb2b197` pushed; `npm run tauri build` -> both bundles copied to
+`installer/` and SHA-256-verified against the build output: **NSIS 567,102,494 bytes
+(541 MB), MSI 641,868,933 bytes (612 MB)** -- +207 MB / +237 MB over 2.1.0, from study.db
+(interlinear + dictionaries, 80 MB) and the read-aloud voice (274 MB uncompressed; the fp16
+model barely compresses).
+
 The Ghost Claw findings from building this were written up for that project in
 `X:\Code\openui\ghost-claw-v6\KOKORO_DELAYS_FINDINGS_2026-09-26.md` (one-file startup,
-espeak DLL copies, duplicate sidecars after a start timeout, calibration restarting Kokoro).
+espeak DLL copies, duplicate sidecars after a start timeout, calibration restarting Kokoro)
+and, at the user's request, **applied there** (uncommitted in that repo, for the user to
+review): one-folder sidecar in `src-tauri/resources/kokoro-sidecar/`, espeak fix + warm-up,
+no duplicate spawns, idempotent `kokoro_start`. Measured: ready 8-14 s from the share (was
+~65 s), first reply 0.5 s (was ~17 s).
 
 **Licensing:** espeak-ng and phonemizer are GPL-3.0, so the voice program is distributed
 under GPL-3.0 with its source in `voice-sidecar/` (NOTICE.md explains); the main app is a
