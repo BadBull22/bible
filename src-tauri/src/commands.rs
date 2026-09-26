@@ -2,12 +2,14 @@ use crate::commentaries::{
     self, ChapterEntities, CommentaryChapter, CommentaryHit, CommentaryInfo, CommentaryState, EntityDetail, EntitySummary, MapPlace,
 };
 use crate::db::DbState;
-use crate::firsts::FirstsEntry;
+use crate::firsts::{FirstsData, FirstsEntry};
 use crate::genealogy::{LineagePerson, PersonSummary};
 use crate::models::*;
 use crate::online;
+use crate::qa::{QaConfidence, QaEntry};
+use crate::qa_parser::{self, ParsedScope};
 use crate::settings::{self, AppSettings};
-use crate::{ConfigDir, EmbedderState, FirstsState, GenealogyState, SettingsState};
+use crate::{ConfigDir, EmbedderState, FirstsState, GenealogyState, QaState, SettingsState};
 use regex::RegexBuilder;
 use rusqlite::params;
 use std::collections::{HashMap, HashSet};
@@ -372,14 +374,40 @@ pub fn search_keyword(
     rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
 }
 
-/// Exact whole-word occurrence count (not just verse count) for concordance-style
-/// "how many times is X used" queries. FTS5 pre-filters candidate verses; the actual
-/// count comes from a case-insensitive word-boundary regex over that smaller set, so
-/// the number is exact rather than an FTS relevance approximation.
-#[tauri::command]
-pub fn word_frequency(state: State<DbState>, version_code: String, word: String) -> Result<WordFrequencyResult, String> {
-    let conn = state.0.lock().map_err(|e| e.to_string())?;
+/// Case-insensitive, unambiguous-prefix book name lookup, mirroring `parseReference`'s
+/// existing matching rule in `api.ts` (exact match first, else exactly one prefix match)
+/// server-side, so `ask_question`'s scope resolution behaves the same way a typed
+/// reference like "gen 1" already does elsewhere in this app. Returns the canonical
+/// `books.name` value, or a clear "I don't recognize the book" error rather than
+/// silently falling through -- a recognized-but-invalid scope is a different case from
+/// an unrecognized question shape.
+fn resolve_book_name(conn: &rusqlite::Connection, raw: &str) -> Result<String, String> {
+    let needle = raw.trim().to_lowercase();
+    let mut stmt = conn.prepare("SELECT name FROM books").map_err(|e| e.to_string())?;
+    let names: Vec<String> =
+        stmt.query_map([], |r| r.get(0)).map_err(|e| e.to_string())?.collect::<Result<_, _>>().map_err(|e| e.to_string())?;
+    if let Some(exact) = names.iter().find(|n| n.to_lowercase() == needle) {
+        return Ok(exact.clone());
+    }
+    let candidates: Vec<&String> = names.iter().filter(|n| n.to_lowercase().starts_with(&needle)).collect();
+    if candidates.len() == 1 {
+        return Ok(candidates[0].clone());
+    }
+    Err(format!("I don't recognize the book \"{}\".", raw.trim()))
+}
+
+fn word_frequency_query(
+    conn: &rusqlite::Connection,
+    version_code: &str,
+    word: &str,
+    scope: Option<&FrequencyScope>,
+) -> Result<WordFrequencyResult, String> {
     let fts_query = format!("\"{}\"", word.replace('"', "\"\""));
+    let (testament_filter, book_filter): (Option<&str>, Option<&str>) = match scope {
+        None => (None, None),
+        Some(FrequencyScope::Testament { testament }) => (Some(testament.as_str()), None),
+        Some(FrequencyScope::Book { book }) => (None, Some(book.as_str())),
+    };
     let mut stmt = conn
         .prepare(
             "SELECT ver.code, b.name, v.chapter, v.verse, v.text
@@ -388,18 +416,20 @@ pub fn word_frequency(state: State<DbState>, version_code: String, word: String)
              JOIN versions ver ON v.version_id = ver.id
              JOIN books b ON v.book_id = b.id
              WHERE verses_fts MATCH ?1 AND ver.code = ?2
+               AND (?3 IS NULL OR b.testament = ?3)
+               AND (?4 IS NULL OR b.name = ?4)
              ORDER BY b.order_index, v.chapter, v.verse",
         )
         .map_err(|e| e.to_string())?;
     let candidates: Vec<SearchHit> = stmt
-        .query_map(params![fts_query, version_code], |r| {
+        .query_map(params![fts_query, version_code, testament_filter, book_filter], |r| {
             Ok(SearchHit { version_code: r.get(0)?, book: r.get(1)?, chapter: r.get(2)?, verse: r.get(3)?, text: r.get(4)? })
         })
         .map_err(|e| e.to_string())?
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
 
-    let pattern = format!(r"\b{}\b", regex::escape(&word));
+    let pattern = format!(r"\b{}\b", regex::escape(word));
     let re = RegexBuilder::new(&pattern).case_insensitive(true).build().map_err(|e| e.to_string())?;
 
     let mut total = 0i64;
@@ -411,7 +441,27 @@ pub fn word_frequency(state: State<DbState>, version_code: String, word: String)
             verses.push(hit);
         }
     }
-    Ok(WordFrequencyResult { total_occurrences: total, verses })
+    let scope_label = match scope {
+        None => None,
+        Some(FrequencyScope::Testament { testament }) if testament == "OT" => Some("in the Old Testament".to_string()),
+        Some(FrequencyScope::Testament { .. }) => Some("in the New Testament".to_string()),
+        Some(FrequencyScope::Book { book }) => Some(format!("in {book}")),
+    };
+    Ok(WordFrequencyResult { total_occurrences: total, verses, scope_label })
+}
+
+/// "how many times is X used" queries. FTS5 pre-filters candidate verses; the actual
+/// count comes from a case-insensitive word-boundary regex over that smaller set, so
+/// the number is exact rather than an FTS relevance approximation.
+#[tauri::command]
+pub fn word_frequency(
+    state: State<DbState>,
+    version_code: String,
+    word: String,
+    scope: Option<FrequencyScope>,
+) -> Result<WordFrequencyResult, String> {
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    word_frequency_query(&conn, &version_code, &word, scope.as_ref())
 }
 
 #[tauri::command]
@@ -607,9 +657,16 @@ pub fn semantic_search(
     limit: i64,
 ) -> Result<Vec<SearchHit>, String> {
     let vector = embedder_state.0.embed(&query).map_err(|e| e.to_string())?;
-    let literal = embedding_to_sql_literal(&vector);
-
     let conn = db_state.0.lock().map_err(|e| e.to_string())?;
+    semantic_search_query(&conn, &vector, &query, limit)
+}
+
+/// Body of [`semantic_search`], taking an already-computed query embedding so callers
+/// that need it for more than one purpose in the same request (`ask_question`'s
+/// fallback layer reuses the same embedding it already computed for the curated
+/// semantic-match step) only pay the `embed()` cost once.
+fn semantic_search_query(conn: &rusqlite::Connection, vector: &[f32], query: &str, limit: i64) -> Result<Vec<SearchHit>, String> {
+    let literal = embedding_to_sql_literal(vector);
 
     // Two-step: nearest-neighbor query against the vec0 table alone first (the
     // documented sqlite-vec pattern), then join those rowids back to verse text --
@@ -624,7 +681,7 @@ pub fn semantic_search(
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
 
-    let words = content_words(&query);
+    let words = content_words(query);
     let phrase: Vec<i64> = if words.is_empty() {
         Vec::new()
     } else {
@@ -672,6 +729,179 @@ pub fn semantic_search(
         hits.push(hit);
     }
     Ok(hits)
+}
+
+/// Below this cosine similarity, a semantic match against the curated set is treated as
+/// "not actually about this" rather than shown as an answer. Empirically set, not just
+/// guessed: a smoke test (`ask_question_smoke_tests` below) turned up a real false
+/// positive at 0.45 -- "the prodigal son" matched a Messianic-prophecy entry at 0.478,
+/// purely on the shared word "son," not actual topical relevance -- while every genuine
+/// paraphrase match found so far scores 0.84 or higher. 0.6 sits with real margin on
+/// both sides of that gap, but it's still evidence from one seed set on one embedding
+/// model, not a permanently tuned value -- revisit if real usage turns up a bad match on
+/// either side of it.
+const ASK_SIMILARITY_THRESHOLD: f32 = 0.6;
+
+/// Resolves one of `qa.json`'s recognized `computed_from` tags to a live number,
+/// re-querying directly rather than routing through the `home_stats` command so
+/// `ask_question` doesn't need `CommentaryState` just to answer a books/verses/chapters
+/// question. Mirrors the exact queries `home_stats` uses for the tags they share, so the
+/// two can't silently disagree.
+fn resolve_computed(conn: &rusqlite::Connection, firsts: &FirstsData, tag: &str) -> Result<i64, String> {
+    let count = |sql: &str| -> Result<i64, String> { conn.query_row(sql, [], |r| r.get(0)).map_err(|e| e.to_string()) };
+    match tag {
+        "books" => count("SELECT COUNT(*) FROM books WHERE testament != 'Apocrypha'"),
+        "ot_books" => count("SELECT COUNT(*) FROM books WHERE testament = 'OT'"),
+        "nt_books" => count("SELECT COUNT(*) FROM books WHERE testament = 'NT'"),
+        "chapters" => count(
+            "SELECT COUNT(*) FROM (SELECT DISTINCT v.book_id, v.chapter FROM verses v
+             JOIN versions ver ON v.version_id = ver.id WHERE ver.code = 'BSB')",
+        ),
+        "verses" => count("SELECT COUNT(*) FROM verses v JOIN versions ver ON v.version_id = ver.id WHERE ver.code = 'KJV'"),
+        "cross_references" => count("SELECT COUNT(*) FROM cross_references"),
+        "translations" => count("SELECT COUNT(*) FROM versions WHERE code != 'ENOCH1'"),
+        "strongs_hebrew" => count("SELECT COUNT(*) FROM strongs_dict WHERE language = 'Hebrew'"),
+        "strongs_greek" => count("SELECT COUNT(*) FROM strongs_dict WHERE language = 'Greek'"),
+        "prophecy_count" => Ok(firsts.all().iter().filter(|e| e.category == "prophecy").count() as i64),
+        other => Err(format!("unknown computed_from tag: {other}")),
+    }
+}
+
+/// Builds the UI-facing answer from a `qa.json` entry, splicing a live number into its
+/// `{{n}}` token when the entry names a `computed_from` tag.
+fn build_curated_entry(entry: &QaEntry, conn: &rusqlite::Connection, firsts: &FirstsData) -> Result<AskCuratedEntry, String> {
+    let answer = match &entry.computed_from {
+        Some(tag) => {
+            let n = resolve_computed(conn, firsts, tag)?;
+            entry.answer.replace("{{n}}", &n.to_string())
+        }
+        None => entry.answer.clone(),
+    };
+    Ok(AskCuratedEntry {
+        question: entry.question.clone(),
+        confidence: entry.confidence.clone(),
+        answer,
+        citations: entry.citations.iter().map(|c| AskCitation { reference: c.reference.clone(), role: c.role.clone() }).collect(),
+        note: entry.note.clone(),
+    })
+}
+
+/// Builds the UI-facing answer from an existing Firsts/Prophecies entry matched by the
+/// semantic layer. Prophecy entries carry an intentionally empty `answer` (the Facts UI
+/// renders their foretold/fulfilled pair as a two-column card instead), so this
+/// synthesizes prose from `citations` + `fulfillment` rather than surfacing a blank
+/// answer -- the one data quirk this reuse has to account for.
+fn build_curated_entry_from_firsts(entry: &FirstsEntry) -> AskCuratedEntry {
+    if entry.category == "prophecy" {
+        let foretold = entry.citations.join("; ");
+        let fulfilled = entry.fulfillment.join("; ");
+        let mut citations: Vec<AskCitation> =
+            entry.citations.iter().map(|c| AskCitation { reference: c.clone(), role: "foretold".to_string() }).collect();
+        citations.extend(entry.fulfillment.iter().map(|c| AskCitation { reference: c.clone(), role: "fulfilled".to_string() }));
+        AskCuratedEntry {
+            question: entry.question.clone(),
+            confidence: QaConfidence::Stated,
+            answer: format!("Foretold in {foretold} -- fulfilled in {fulfilled}."),
+            citations,
+            note: entry.note.clone(),
+        }
+    } else {
+        AskCuratedEntry {
+            question: entry.question.clone(),
+            confidence: QaConfidence::Stated,
+            answer: entry.answer.clone(),
+            citations: entry.citations.iter().map(|c| AskCitation { reference: c.clone(), role: "supporting".to_string() }).collect(),
+            note: entry.note.clone(),
+        }
+    }
+}
+
+/// Orchestrates the three "Ask a question" layers in a fixed order, stopping at the
+/// first hit: (1) the strict `qa_parser` grammar for exact word-occurrence counts,
+/// (2) an exact-text then semantic match against the curated `qa.json` set (plus the
+/// app's existing Firsts/Prophecies entries, embedded into the same index), and
+/// (3) a labeled best-effort fallback reusing `semantic_search` + commentary search.
+/// Every layer after the free exact-text check shares one `embed()` call rather than
+/// re-embedding the query for each layer that might need it.
+///
+/// Takes already-unwrapped dependencies rather than Tauri `State`, so it can also be
+/// driven directly by a test against the real bundled data with no running Tauri app.
+fn ask_question_query(
+    conn: &rusqlite::Connection,
+    embedder: &crate::embeddings::Embedder,
+    commentary_conn: Option<&rusqlite::Connection>,
+    firsts: &FirstsData,
+    qa: &crate::qa::QaRuntime,
+    query: &str,
+    fallback_limit: i64,
+) -> Result<AskAnswer, String> {
+    // Layer 1: structured/computable -- an exact, deterministic word-occurrence count.
+    if let Some(parsed) = qa_parser::parse_frequency_question(query) {
+        let scope = match parsed.scope {
+            ParsedScope::WholeBible => None,
+            ParsedScope::Testament(t) => Some(FrequencyScope::Testament { testament: t }),
+            ParsedScope::Book(raw) => {
+                let canonical = resolve_book_name(conn, &raw)?;
+                Some(FrequencyScope::Book { book: canonical })
+            }
+        };
+        let result = word_frequency_query(conn, "BSB", &parsed.word, scope.as_ref())?;
+        return Ok(AskAnswer::Computed { word: parsed.word, result });
+    }
+
+    // Layer 2a: exact match against the curated set -- free, no embed() call needed.
+    if let Some(entry) = qa.data.find_exact(query) {
+        let curated = build_curated_entry(entry, conn, firsts)?;
+        return Ok(AskAnswer::Curated { entry: curated, matched_by: "exact".to_string(), similarity: None });
+    }
+
+    // Everything from here needs the query embedded -- computed once, reused by both
+    // the semantic curated-match step and the fallback if it comes to that.
+    let vector = embedder.embed(query).map_err(|e| e.to_string())?;
+
+    // Layer 2b: semantic match, across qa.json AND the existing Firsts/Prophecies data.
+    if let Some((source, id, similarity)) = qa.best_match(&vector) {
+        if similarity >= ASK_SIMILARITY_THRESHOLD {
+            if source == "qa" {
+                if let Some(entry) = qa.data.get(&id) {
+                    let curated = build_curated_entry(entry, conn, firsts)?;
+                    return Ok(AskAnswer::Curated { entry: curated, matched_by: "semantic".to_string(), similarity: Some(similarity) });
+                }
+            } else if let Some(entry) = firsts.all().into_iter().find(|e| e.id == id) {
+                let curated = build_curated_entry_from_firsts(&entry);
+                return Ok(AskAnswer::Curated { entry: curated, matched_by: "semantic".to_string(), similarity: Some(similarity) });
+            }
+        }
+    }
+
+    // Layer 3: labeled best-effort fallback -- no confident answer on file.
+    let hits = semantic_search_query(conn, &vector, query, fallback_limit)?;
+    let commentary_hits =
+        commentary_conn.map(|c| commentaries::search(c, query, None, fallback_limit).unwrap_or_default()).unwrap_or_default();
+    Ok(AskAnswer::Fallback { hits, commentary_hits })
+}
+
+#[tauri::command]
+pub fn ask_question(
+    db_state: State<DbState>,
+    embedder_state: State<EmbedderState>,
+    commentary_state: State<CommentaryState>,
+    firsts_state: State<FirstsState>,
+    qa_state: State<QaState>,
+    query: String,
+    fallback_limit: i64,
+) -> Result<AskAnswer, String> {
+    let conn = db_state.0.lock().map_err(|e| e.to_string())?;
+    let commentary_guard = commentary_conn(&commentary_state).ok();
+    ask_question_query(
+        &conn,
+        &embedder_state.0,
+        commentary_guard.as_deref(),
+        &firsts_state.0,
+        &qa_state.0,
+        &query,
+        fallback_limit,
+    )
 }
 
 #[tauri::command]
@@ -821,4 +1051,143 @@ pub fn list_firsts(state: State<FirstsState>) -> Vec<FirstsEntry> {
 #[tauri::command]
 pub fn search_firsts(state: State<FirstsState>, query: String) -> Vec<FirstsEntry> {
     state.0.search(&query)
+}
+
+/// Not a correctness test (there's no fixed expected output to assert against -- the
+/// whole point is eyeballing real answers from the real bundled data, since this app has
+/// no browser-automation tooling to drive the actual UI). Run with:
+///   cargo test --release --quiet ask_question_smoke -- --nocapture
+/// Verifies: layer 1 fires for the user's own literal (typo'd) word-count phrasing but
+/// NOT for the 4 non-word-count examples; the 40-days, prophecy-count, and Joseph's-age
+/// questions all get their intended curated answer; a genuine paraphrase with no shared
+/// keywords still finds its curated match by meaning; and a wholly unrelated question
+/// gets a labeled fallback rather than a false curated hit.
+#[cfg(test)]
+mod ask_question_smoke_tests {
+    use super::*;
+    use crate::embeddings::Embedder;
+    use crate::firsts::FirstsData;
+    use crate::qa::QaRuntime;
+    use std::path::PathBuf;
+
+    #[test]
+    fn ask_question_smoke() {
+        crate::register_sqlite_vec();
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let conn = rusqlite::Connection::open(dir.join("resources/bible.db")).expect("open bible.db");
+        let embedder = Embedder::load(&dir.join("resources/model")).expect("load embedder");
+        let firsts = FirstsData::load(&dir.join("resources/firsts.json")).expect("load firsts.json");
+        let qa = QaRuntime::load(&dir.join("resources/qa.json"), &dir.join("resources/qa_index.json")).expect("load qa runtime");
+        let commentary_conn = rusqlite::Connection::open(dir.join("resources/commentaries.db")).ok();
+
+        let questions = [
+            "how many time is love mentioned in the bible",
+            "how many time is it mentione in the new testamanet",
+            "How many times did Jesus appear after His resurrection?",
+            "How many days was He still on earth after His resurrection?",
+            "How many prophecies were fulfilled with the birth, life, and resurrection of Christ?",
+            "How old was Joseph the father of Jesus when he died?",
+            "How many books are in the Bible?",
+            "who was the oldest person in the bible",
+            "how long did jesus stay on earth before he went up to heaven",
+            "what is the meaning of life",
+            // Home screen's own pre-existing "Try:" example chips -- now routed through
+            // ask_question instead of plain semantic_search, so these must still behave
+            // as ordinary topic searches (Fallback), not get intercepted by a false
+            // curated match.
+            "the prodigal son",
+            "the parting of the Red Sea",
+            "the creation of light",
+            "how many time is the word gold is used",
+            // User's second batch of questions (verbatim, typos included).
+            "How many times did the isralites rebel?",
+            "How many years did they wander int he wilderness",
+            "how many days was Jona in the whales stomach?",
+            "how many miricles happended in the old testamanet?",
+            "how many time does God talk loudly to his people?",
+            "how many prophets were there in the old testament?",
+            "who was moses?",
+            "what is the purpose of being saved?",
+            "how do you become saved?",
+            "what is eternal life?",
+            "how do you get eternal life?",
+            "what are the ten commandments?",
+            "what is the new covenant?",
+            // False-positive sweep: near-neighbor topics that share vocabulary with the
+            // new entries but are NOT the same question, to check for new collisions
+            // like the earlier "the prodigal son" -> prophecy-entry false match.
+            "who was Aaron?",
+            "what is grace?",
+            "what is the old covenant?",
+            "how do you pray?",
+            "what is baptism?",
+            "who wrote the ten commandments on stone the second time?",
+            // Spot-check across the 100-question FAQ import, one per category, exact
+            // wording as it appears in the source FAQ.
+            "Is Jesus God?",
+            "How can there be one God, yet three Persons (the Trinity)?",
+            "Is the Bible completely true and without error?",
+            "What must I do to be saved?", // should map to the EXISTING how_to_be_saved entry, not a new duplicate
+            "Can a Christian lose their salvation?",
+            "What happens to a Christian immediately when they die?",
+            "What is the Rapture?",
+            "What does the Bible say about homosexuality?",
+            "Does the Bible support evolution?",
+            "Can women serve as pastors or elders?",
+            "Can a Christian see a secular therapist or psychiatrist?",
+            // Deliberate close-neighbor collision sweep within the tightly-clustered
+            // end-times block (Rapture/Antichrist/Tribulation/Millennium/Armageddon all
+            // share heavy vocabulary) and the salvation block -- each MUST resolve to
+            // its own distinct entry, not a neighboring one.
+            "what is the antichrist",
+            "what is the tribulation",
+            "what is the millennial kingdom",
+            "what is armageddon",
+            "what is the great white throne judgment",
+            "what is the mark of the beast",
+            "can you lose your salvation",
+            "is baptism required to be saved",
+            "what is predestination",
+            "is purgatory real",
+            "what is transubstantiation",
+            "is masturbation a sin",
+            "is gambling a sin",
+            "is drinking alcohol a sin",
+            // Pentecostal-lens revision sweep: the new tongues/Spirit-baptism phrasings must
+            // land on the tongues entry, NOT the water-baptism one, and the rapture/
+            // tribulation/millennium cluster must still resolve to distinct entries.
+            "what is the baptism in the holy spirit",
+            "is speaking in tongues the evidence of the holy spirit",
+            "what is water baptism",
+            "will christians go through the tribulation",
+            "will the rapture happen before the tribulation",
+            "does god still heal today",
+            "how do i become born again",
+            "what does it mean to be born again",
+            "is the blood of jesus enough to save me",
+            "what is the difference between the rapture and the second coming",
+            "what is the judgment seat of christ",
+            // Round after the user set their positions: conditional security, women in
+            // ministry, Trinity, and the new blood-of-Jesus entry.
+            "what does the blood of jesus do",
+            "what does it mean to be washed in the blood",
+            "what does blood bought mean",
+            "why did jesus have to shed his blood",
+            "what is the trinity",
+            "is god one or three",
+            "can women be elders",
+            "can a born again christian go back to sin and still be saved",
+            "is salvation a get out of jail free card",
+            "can a christian sin and still go to heaven",
+        ];
+
+        for q in questions {
+            let result = ask_question_query(&conn, &embedder, commentary_conn.as_ref(), &firsts, &qa, q, 5);
+            println!("\n=== {q} ===");
+            match result {
+                Ok(answer) => println!("{}", serde_json::to_string_pretty(&answer).unwrap()),
+                Err(e) => println!("ERROR: {e}"),
+            }
+        }
+    }
 }

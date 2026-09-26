@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-11 done (v2.0.1)
+## Current status: Phases 1-13 done (v2.1.0)
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -558,7 +558,7 @@ fix only.
   user's real email "for authorship/attribution", and every commit from `1bdd8ea`
   (v1.4.0) through `121ef61` (v2.0.1) -- 6 commits across this and earlier sessions --
   used it verbatim as the git author/committer email. The repo is **public**. Worse,
-  `1bdd8ea` also carried the real name "Erich Tonsing" (not just the email) as both
+  `1bdd8ea` also carried the user's real full name (not just the email) as both
   author and committer. This directly contradicted an established, deliberate
   convention already visible in this repo's own history: every commit before
   `1bdd8ea` used GitHub's privacy-preserving `BadBull22@users.noreply.github.com`, and
@@ -573,9 +573,9 @@ fix only.
   panel-entered keys (ESV/NIV) are written to the OS app-config directory by
   `settings.rs`, never touch the repo.
 - **What was done**: `git filter-branch --env-filter` (git-filter-repo isn't installed
-  on this machine) rewrote GIT_AUTHOR_EMAIL/GIT_COMMITTER_EMAIL from the real gmail to
-  the noreply address across all commits, and GIT_AUTHOR_NAME/GIT_COMMITTER_NAME from
-  "Erich Tonsing" to "BadBull22" for the one commit that had it. Verified before
+  on this machine) rewrote GIT_AUTHOR_EMAIL/GIT_COMMITTER_EMAIL from the real personal
+  address to the noreply address across all commits, and GIT_AUTHOR_NAME/
+  GIT_COMMITTER_NAME from the real name to "BadBull22" for the one commit that had it. Verified before
   pushing: the 5 commits predating the exposure (`59e022a` through `e3422be`) kept
   their **exact original hashes** (proving nothing about them changed); the 6 affected
   commits got new hashes reflecting only the metadata fix (`1bdd8ea`->`b966d0a`,
@@ -598,10 +598,573 @@ fix only.
   fully closed, the user has to file a request with GitHub support themselves** (only
   the account owner can) to purge cached/orphaned commit data -- this was surfaced to
   the user, not yet actioned as of this note.
+- **Follow-up (2026-09-26): this very write-up briefly re-leaked the real name.** The
+  incident note pushed in commit `29cc956` spelled out the user's full name inside
+  `HANDOVER.md` -- i.e. in *file contents*, contradicting the "nowhere in file contents"
+  finding above (the email address itself was never in any file, only the name). It was
+  found by a pre-commit scan of the v2.1.0 changes, removed from the working file, and
+  the v2.1.0 commit no longer carries it. **The copy inside commit `29cc956` remains in
+  the public history until that commit is rewritten** -- since `29cc956` was the branch
+  tip, that is a one-commit amend + `--force-with-lease` push; the user was asked whether
+  to do it. Lesson: an incident write-up must not repeat the personal data it is about --
+  describe it ("the user's real name") instead of quoting it. Always run the sensitive-
+  string scan (real name, email fragments, API-key shapes, machine paths) over everything
+  about to be committed, including HANDOVER.md itself.
 - **The fix going forward**: every commit command in this project must use
   `-c user.name="BadBull22" -c user.email="BadBull22@users.noreply.github.com"` --
   **never** the real email, regardless of what any session's ambient context suggests
   for "attribution" purposes. See gotcha #24.
+
+**Phase 12 (offline "Ask a question" search, 2026-09-25 — done, still v2.0.1, no
+installer built this phase):**
+
+- **What it is**: a 5th Search-panel tab ("Ask a question", now the default tab) that
+  answers real questions -- "how many times is X mentioned [in the OT/NT/a book]",
+  "how many prophecies were fulfilled in Christ's birth, life, and resurrection", "how
+  old was Joseph when he died" -- rather than just returning a verse list. Explicitly
+  **not** a generative/local-LLM feature (the user was offered that option and rejected
+  it, worried about hallucinated facts undermining this app's whole verification
+  discipline). Three layers, tried in order, first hit wins:
+  1. **`qa_parser.rs`** (new, no I/O) -- a strict regex grammar recognizes only
+     "how many time(s) is/does/did/was/were/has/do X mentioned/used/appears/occurs/
+     found [in the Old/New Testament | in \<book\>]"-shaped questions and hands off to
+     an **extended `word_frequency`** (`commands.rs`/`models.rs` gained
+     `FrequencyScope` -- `Testament{testament}` | `Book{book}` -- reusing the
+     `(?N IS NULL OR col=?N)` SQL idiom `home_stats` already established) for an exact,
+     deterministic count. Everything else -- including "how many times did Jesus
+     appear after His resurrection", which contains the literal words "how many
+     times" -- must fall through untouched; a false match here would show a
+     confidently wrong number for a question that wasn't actually asked. Two real bugs
+     were caught by its own unit tests before shipping (both from a naive
+     non-greedy-capture-then-open-tail regex design): a trailing qualifying clause
+     ("...mentioned in Genesis **before the flood**") was wrongly accepted as a book
+     name, and an active-voice phrasing ("does the Bible **mention** faith") matched
+     almost nothing because the capture collapsed to one character. Fixed by splitting
+     into two phases -- `strip_scope_suffix` (peels a recognized, **word-count-capped**
+     scope clause off the very end first) then simple head/verb templates anchored to
+     end-of-string on what's left -- rather than trying to patch one big regex.
+  2. **Curated knowledge base + semantic match** -- `qa.rs` (new) + `resources/qa.json`
+     (new, 21 hand-verified seed entries spanning all four confidence levels --
+     `stated`/`computed`/`traditional`/`unattested`, never presented with uniform false
+     certainty; e.g. Joseph's age at death is honestly answered "not stated," not
+     guessed). `computed_from` entries (books/verses/chapters/cross-references/
+     translations/Strong's counts, prophecy count) splice a **live** number into a
+     literal `{{n}}` token in the answer at query time (`resolve_computed` in
+     `commands.rs`) so these can never drift stale, same reasoning as the Home
+     screen's stat tiles. `src-tauri/src/bin/index_qa.rs` (new, mirrors
+     `index_embeddings.rs`) embeds every `qa.json` question+`alt_phrasing` **and**
+     every existing Firsts/Prophecies question (84 of them, already curated -- this is
+     what makes "how many prophecies were fulfilled" work on day one, reusing the
+     existing 42-entry prophecy tracker) into `resources/qa_index.json` (157 rows
+     total) with the same bundled MiniLM model, no SQLite involved. At runtime, an
+     exact case/whitespace-insensitive text match is tried first (free), then cosine
+     similarity (plain dot product -- vectors are already L2-normalized) against the
+     combined index, threshold `ASK_SIMILARITY_THRESHOLD = 0.45` (picked as a
+     conservative starting point, then empirically checked -- see Verified below).
+     Firsts-sourced prophecy hits get their answer prose **synthesized** from
+     `citations`+`fulfillment` (`build_curated_entry_from_firsts`), since those 42
+     entries intentionally ship with an empty `answer` string (the Facts tab renders
+     them as a two-column foretold/fulfilled card instead) -- surfacing that blank
+     string directly would have been a real, silent bug.
+  3. **Fallback** -- reuses `semantic_search`'s body (extracted into
+     `semantic_search_query`) and `commentaries::search`, sharing the **one** query
+     embedding already computed for step 2 rather than re-embedding, labeled "No
+     direct answer on file -- here's what's most relevant" (or, if even that's empty,
+     says so plainly) rather than ever guessing silently.
+  - All three layers are orchestrated by `ask_question_query` in `commands.rs`
+    (plain function, not `#[tauri::command]` itself -- see Verified below for why),
+    with a thin `ask_question` Tauri-command wrapper around it.
+  - **Frontend**: `SearchPanel.tsx` gained the "ask" mode/tab (now default), reusing
+    the existing `hits`/`totalCount` state for `Computed` answers and `hits`/
+    `commentaryHits` for `Fallback`, with new markup only for `Curated` answers (a
+    confidence badge, prose, a citation-button row -- `AskRefRow`, mirroring
+    `FirstsPanel.tsx`'s `RefRow` -- and a "matched by meaning" note when the match
+    was semantic rather than exact). The existing mode-switch effect that already
+    clears stale results on tab change was extended to also clear the new
+    `askAnswer` state, since that exact class of bug (stale results under a new
+    tab's heading) was already found and fixed once in this file previously.
+  - **Verified**: `cargo test` (18 tests: 17 `qa_parser` unit tests including both
+    regressions above, plus one smoke test below) and `cargo check`/`tsc --noEmit` all
+    clean. This machine's Bash tool has a broken `$PATH` (raw untranslated Windows
+    `PATH`, so `cargo`/`grep`/etc. all 127) -- PowerShell was used for every command
+    this phase; re-verify Bash before trusting it in a future session rather than
+    assuming this was fixed. No browser-automation tool was available to click through
+    the actual UI, so instead of skipping verification, a `#[cfg(test)]` smoke test
+    (`ask_question_smoke_tests` in `commands.rs`, run via
+    `cargo test --release --quiet ask_question_smoke -- --nocapture`) drives
+    `ask_question_query` directly against the real bundled `bible.db`/model/
+    `qa.json`/`qa_index.json`/`firsts.json` with all 5 of the user's own example
+    questions (typos included) plus a books-count question, a genuine paraphrase with
+    **zero shared keywords** ("how long did jesus stay on earth before he went up to
+    heaven" for the 40-days entry), and a wholly unrelated control question. All 10
+    behaved correctly: the word-count example hit layer 1 exactly (372 for "love" in
+    the whole Bible); the typo'd second example correctly fell all the way through to
+    a labeled fallback instead of a false match; the resurrection-appearances question
+    hit its curated entry by exact text; the 40-days/prophecy-count/Joseph's-age
+    questions all hit their curated entries by semantic match at 0.96/0.99/0.99
+    similarity; the zero-keyword-overlap paraphrase still found the 40-days entry at
+    0.84; and the unrelated control question ("what is the meaning of life") correctly
+    fell to a labeled fallback with thematically loose but honest results. This is
+    real evidence the 0.45 threshold has comfortable margin, not just a guess -- but it
+    is still evidence from one seed set on one embedding model, not a tuned/final
+    value; revisit if real usage turns up a bad match. **The UI itself (the new tab,
+    the badge, the citation buttons) has not been clicked by a human** -- only
+    compiled, type-checked, and exercised through this backend-only harness.
+  - **Making `ask_question_query` testable cost a real design decision, worth knowing
+    for next time**: the first instinct was a standalone `src/bin/` probe binary (like
+    `index_qa.rs`), which needs the functions/types it calls to be `pub` and reachable
+    from an *external* crate. Marking `commands`/`models` `pub mod` for that alone
+    would have leaked nearly this whole app's command surface into the crate's public
+    API and triggered E0446 ("private type in public interface") cascading through
+    every other command whose return type touches a still-private module
+    (`commentaries`, `genealogy`, `settings`, ...) -- a much bigger blast radius than
+    intended for what was meant to be a throwaway debug tool. The actual fix: a
+    `#[cfg(test)] mod` **inside** `commands.rs` gets full same-crate access to every
+    private item with no visibility changes at all, since Rust test modules compile as
+    part of the crate itself, not as a separate external crate the way both
+    `src/bin/*.rs` and `tests/*.rs` do. `qa`/`firsts` *did* need to become `pub mod`
+    (for `index_qa.rs`, a real bin target, not a throwaway) -- safe there specifically
+    because neither module's public types reference any *other* still-private module,
+    so no cascade.
+  - **Not done, deliberately left for the user to request**: no version bump, no
+    installer built. `qa.json`'s 21 entries are a broad starter set per the approved
+    plan, not a final list -- the user is welcome to hand over specific questions to
+    add.
+
+**Phase 12 continued, same day, based on live user testing (2026-09-25/26 --
+still v2.0.1, no installer built):** the user actually ran the app and immediately
+found two real problems this backend-only smoke test couldn't have caught, plus asked
+for 12 more curated questions and a new sourcing rule. All fixed/added in this pass:
+
+- **The real bug: the Home screen ("Gospel" box) wasn't wired to `ask_question` at
+  all.** The user typed questions into the *Home screen's* main search box (the one
+  styled after Google) and just got a plain verse list with no summary -- because
+  `ask_question` had only been wired into the separate `SearchPanel.tsx` side panel's
+  new "Ask a question" tab, which the user never opened. This was a placement call made
+  during planning (the approved plan named `SearchPanel.tsx` specifically) that turned
+  out to be wrong once a real person used the app the way they naturally would. Fixed
+  by wiring `HomeScreen.tsx`'s existing debounced search effect to call
+  `api.askQuestion` instead of `api.semanticSearch`, handling all three `AskAnswer`
+  shapes the same way `SearchPanel.tsx` does. The two call sites' shared markup (the
+  confidence badge, curated prose, citation buttons, computed-count summary line,
+  fallback heading) was pulled out into a new `src/components/AskAnswerView.tsx` rather
+  than duplicated a second time. **Lesson for next time a feature has an obvious
+  "default" entry point in the UI (a home screen, a primary search box): check that the
+  feature is actually reachable from there before calling it done, not just from
+  whatever tab/panel the plan happened to name.**
+- **A second real regex bug, found only because a human typed a sentence differently
+  than any of the unit tests did**: "how many time is the word gold **is** used" (a
+  natural copula before the trailing verb) got parsed as word `"gold is"`, not
+  `"gold"`. Same root-cause family as the two bugs already fixed pre-launch (a
+  non-greedy phrase capture stopping at the first place a required literal can be
+  found, not necessarily the right place) -- fixed by adding an optional `(?:is |was
+  )?` immediately before T1's trailing verb group, with a regression test using the
+  user's exact typed sentence. This makes three separate real bugs this parser has had
+  caught by *sentence shapes nobody had tried yet* rather than by reasoning about the
+  regex in the abstract -- treat any future report of a wrong word-count extraction as
+  plausible on sight, and add the literal failing sentence as a test case before fixing
+  anything.
+- **A real semantic-match false positive, found by deliberately testing existing "Try:"
+  example chips through the new pipeline**: "the prodigal son" matched a curated
+  Messianic-prophecy entry ("Messiah would be declared the Son of God") at similarity
+  0.478 -- comfortably over the original `ASK_SIMILARITY_THRESHOLD = 0.45`, on nothing
+  more than the shared word "son." True positives found so far all scored 0.84-0.99,
+  so the threshold was raised to **0.6**, which has real margin on both sides of that
+  gap (confirmed by re-running the same smoke-test sweep after the change -- the false
+  positive disappeared, nothing genuine broke). Still an empirically-checked value from
+  one seed set, not a permanently tuned one.
+- **A second false positive, found only after the next content batch below was added**:
+  "what is the old covenant?" matched the **new**-covenant entry at 0.90 similarity --
+  well above any reasonable threshold, because "old covenant" and "new covenant" share
+  almost every word except one antonym, which sentence embeddings are notoriously weak
+  at distinguishing. Raising the threshold further wasn't an option (0.90 sits above
+  several genuine true positives). The real fix was content, not a threshold: a
+  dedicated `what_is_the_old_covenant` entry was added so the index has a correct
+  target to match against; the query now matches its own entry exactly (0.90 stops
+  being the winning score once a closer match exists). **General lesson: a semantic
+  false positive between two of *this app's own* curated entries can't be fixed by
+  threshold-tuning alone if both entries are legitimately similar in wording --
+  distinguish them with a dedicated entry instead, and always re-run the full
+  false-positive sweep after adding new content, not just after adding new logic.**
+- **New confidence tier: `commentary_opinion`**, added to `QaConfidence`
+  (`qa.rs`/`api.ts`/`AskAnswerView.tsx`'s badge styling) per an explicit new user rule:
+  *"where there are no direct scripture also look at the commentaries for views on the
+  subject and mention that this is taken from commentaries... any opinions have to be
+  noted as opinions."* Distinct from `traditional` (a harmonization/scholarly
+  consensus): this tier is for an answer that leans on a *named* bundled commentary's
+  interpretation, and the answer text must name both the commentary and the verse it's
+  commenting on -- never blend an unattributed commentary paraphrase into
+  `stated`/`traditional` prose. Used for the one entry in this batch that actually
+  needed it (`god_speaks_audibly` quotes Matthew Henry's commentary on Exodus 20:1 by
+  name, attributed inline); every other new entry below turned out to be directly
+  answerable from scripture itself once actually researched, so `stated`/`traditional`/
+  `unattested` covered them without needing the new tier -- it exists now as real,
+  tested infrastructure for the harder questions still to come.
+- **12 new curated `qa.json` entries** (21 -> 23 total, since one requested question
+  --the wilderness-years one-- already existed and just got the user's literal phrasing
+  added as an `alt_phrasing`), each verified against real bundled text before writing
+  (scripture directly, or the actual bundled Matthew Henry/JFB commentary text read via
+  a temporary research probe test, not from memory): how many times the Israelites
+  rebelled (`israelites_rebellion_count` -- Numbers 14:22 literally says "these ten
+  times"), Jonah's three days and three nights in the fish (`jonah_in_the_fish`), an
+  honest no-total-given answer for Old Testament miracle counts
+  (`old_testament_miracles_count`, same discipline as the existing Jesus-miracles
+  entry), God speaking audibly (`god_speaks_audibly`, the one `commentary_opinion`
+  entry), Old Testament prophet counts (`old_testament_prophets_count`, clearly
+  labeling the Talmudic 48+7 tradition as Jewish tradition, not scripture, alongside
+  the firmer fact of 17 prophetic books), a "Who was Moses?" biography
+  (`who_was_moses`), the purpose of salvation (`purpose_of_salvation`), how to be saved
+  (`how_to_be_saved`), what eternal life is and how to get it (`what_is_eternal_life`,
+  `how_to_get_eternal_life`), the Ten Commandments listed in full
+  (`ten_commandments_list`), and the new *and* old covenants
+  (`what_is_the_new_covenant`, `what_is_the_old_covenant`). All soteriology-adjacent
+  entries (salvation/eternal life) were deliberately kept to the New Testament's own
+  most-repeated, cross-tradition-shared statements (Ephesians 2:8-10, Romans 10:9-13,
+  John 3:16, John 17:3, Romans 6:23) rather than wading into genuinely disputed
+  doctrine (baptism's role, perseverance, etc.); each of those entries' `note` field
+  says so explicitly and points to the Commentaries tab for denominationally varied
+  fuller treatment, rather than this app picking a side.
+- **A judgment call, not fixed, worth knowing about**: "what is the meaning of life"
+  (a deliberately vague, unrelated control question in the smoke test) now matches the
+  new `what_is_eternal_life` entry at 0.68 similarity, where it previously fell to
+  Fallback. Left as-is: in a Bible app specifically, redirecting that question to
+  scripture's own definition of eternal life is a defensible reading, not obviously
+  wrong, and the existing "matched by meaning, not your exact wording... closest
+  curated question was X" disclosure means the user always sees exactly what actually
+  matched rather than being told this silently. Revisit if it turns out to feel wrong
+  in practice.
+- **Re-verified with the same backend-only smoke-test harness** (still no
+  browser-automation tool available): `cargo test` now runs **19 tests** (18
+  `qa_parser` + this one smoke test covering all of the above plus a deliberate
+  false-positive sweep of near-neighbor questions -- "who was Aaron?", "what is
+  grace?", "what is baptism?", "how do you pray?" -- confirming they still correctly
+  fall to Fallback rather than getting swept into an unrelated curated entry). `cargo
+  check` and `tsc --noEmit` both clean. `index_qa` re-run twice (202 embedded rows
+  now, up from 157). The Tauri dev server crashed once mid-session with `os error 32`
+  (file in use) while loading `model.safetensors` -- a transient Windows file-lock race
+  from several rapid successive saves triggering the dev watcher's rebuild-and-relaunch
+  faster than the outgoing process instance released its handle, not a real bug;
+  restarting `npm run tauri dev` cleared it immediately. **The actual UI still hasn't
+  been clicked through by a human as of this note** -- the user was mid-testing when
+  this round of fixes went in; next step is them re-testing against the restarted dev
+  instance.
+
+**Phase 12, third round, same overall feature (2026-09-26 -- still v2.0.1, no
+installer built): user supplied `public/FAQ.txt`, a 100-question Bible/Christianity
+FAQ (questions + answers + scripture references), asking it be checked against the
+bundled data and incorporated.** `qa.json` grew from 34 to 133 entries (the count was
+stated as "23 to 122" in an earlier version of this note -- that was a miscount, the
+file has 133 entries with unique ids); `qa_index.json` from 202 to 494 embedded rows.
+
+- **The document was AI-generated** (its own footer says so: "AI responses may
+  include mistakes") **and checking it, not just importing it, turned up real
+  errors**, exactly validating why the user asked for it to be checked rather than
+  copied in directly:
+  - Question 12 ("Is God male or a genderless spirit?") cited Luke 24:39 as support --
+    that verse is Jesus proving to the disciples He isn't a ghost after the
+    resurrection, entirely unrelated to God's gender. Dropped; kept John 4:24 ("God
+    is spirit") and Matthew 6:9, which actually support the answer.
+  - Question 2 (the Trinity) cited "Peter 1:2," not a real citation format (missing
+    which epistle) -- corrected to 1 Peter 1:2, the verse that actually fits the
+    Trinitarian formula being cited (grace and peace from Father, Son, and Spirit).
+  - Question 96 (therapist/psychiatrist) cited "Protestants 11:14" -- **not a real
+    book of the Bible** (probably a garbled autocomplete of "Proverbs 11:14," which
+    fits the "seek godly counsel" point the answer was making) -- corrected, and the
+    correction is noted openly in that entry's own `note` field rather than silently
+    fixed and forgotten.
+  - Question 38 (pets in heaven) cited Revelation 19:11 (Christ returning on a white
+    horse) for "animal life in the New Earth" -- unrelated; replaced with Isaiah
+    65:25, which actually describes animal life in restored creation.
+- **A much bigger issue than citation typos: a large fraction of these 100 questions
+  touch genuinely, sincerely disputed Christian doctrine, and the source FAQ answered
+  nearly all of them in one confident voice with no indication that serious,
+  Bible-believing Christians disagree.** Most seriously: the entire "Prophecy and End
+  Times" category (Rapture, Antichrist, Mark of the Beast, Tribulation, Millennium,
+  Armageddon, Great White Throne) was written entirely from a **dispensational
+  premillennialist** framework -- the specific eschatology popularized by the Scofield
+  Reference Bible and "Left Behind"-style evangelicalism -- stated as if it were the
+  Bible's own plain, uncontested teaching. It is one major framework among several
+  (amillennialism, historic premillennialism, postmillennialism, preterism) held
+  across huge swaths of the global church, including most historic Catholic, Orthodox,
+  and Reformed/Lutheran theology. Presenting it unqualified as *the* answer would have
+  meant this app taking an unrequested denominational stance on the user's behalf.
+  Every one of those entries was rewritten before being added: reclassified from
+  `stated`/flat assertion down to `confidence: "traditional"`, named explicitly as one
+  interpretive framework, and given a one-line pointer to what the major alternative
+  readings hold. The same treatment was applied to: eternal security/"once saved
+  always saved" (Calvinist vs. Arminian -- both positions' key texts are cited),
+  baptism's role in salvation, predestination, purgatory, transubstantiation, women as
+  pastors/elders, and whether Jehovah's Witnesses/Mormons count as Christian --
+  **every one of these now presents the range of serious Christian positions and the
+  texts each side actually cites, rather than asserting a single answer.** A smaller
+  set of genuinely fact-adjacent-but-speculative claims were also walked back from
+  the FAQ's flat assertions to honestly hedged ones: the identification of Isaiah 14's
+  "Lucifer" and Ezekiel 28's oracle with Satan (a long-standing *interpretive
+  tradition*, not a passage that names Satan -- both are addressed to human kings in
+  their immediate context), Job's Behemoth/Leviathan as literal dinosaurs (one YEC
+  apologetic reading among several -- many scholars read them as a hippo/crocodile or
+  poetic chaos-imagery), and the "no genetic risk" reasoning for Cain marrying a
+  sister/close relative (a modern apologetic argument, not a scriptural claim).
+  Questions never directly named in scripture at all (masturbation, gambling, tattoos)
+  were marked `unattested`/`traditional` rather than `stated`, with the answer
+  explicit that this is an *application* of adjacent principles, not a direct verse.
+  **This is the single largest editorial pass this feature has had, and it reflects
+  real judgment calls, not mechanical fact-checking -- if the user wants a different
+  framing on any of these (e.g. they hold a specific eschatological or denominational
+  position they *do* want this app to state as settled), that's a easy, welcome
+  correction to make on a per-entry basis, not a redesign.**
+- **One duplicate avoided, not created**: FAQ Question 26 ("What must I do to be
+  saved?") is the same question as the already-existing `how_to_be_saved` entry from
+  the prior round -- added as an `alt_phrasing` there instead of a second entry (and
+  confirmed by the verification sweep below: it now matches `how_to_be_saved` at 0.98
+  similarity rather than creating a competing answer).
+- **Verified with the same backend-only harness**: content written and validated in
+  three batches (JSON re-parsed and `ask_question_smoke` re-run after each, so a
+  syntax error in a late batch couldn't silently invalidate earlier work), then a
+  dedicated false-positive sweep specifically targeting the highest-collision-risk
+  content -- the tightly-clustered end-times block (Rapture/Antichrist/Tribulation/
+  Millennium/Armageddon all share heavy vocabulary) and the salvation block
+  (salvation/baptism/predestination/lost-salvation all share "saved") -- deliberately
+  asking each one's question in isolation to confirm it resolves to *its own* entry,
+  not a neighbor's. **Every single one resolved correctly**, with strong similarity
+  margins (0.66-0.99); no new false positives were found in this round, unlike the
+  "prodigal son" and old/new-covenant collisions found in the prior round. `cargo
+  test` still passes (same 19 tests -- this was a content-only change, no new logic).
+  `index_qa` re-run once more (494 embedded rows, up from 202). **The UI itself is
+  still unclicked by a human as of this note.**
+
+**Phase 12, fourth round (2026-09-26 -- still v2.0.1, no installer built): the user
+set the house doctrinal lens, and the answers were rewritten to it.** After reviewing
+the list of FAQ answers that had been reworded, the user said: *"it is not about
+offending one or another group but rather about being true to the scriptures... i stand
+close to the viewpoint of pentecostal, blood bought, reborn, rapture believing
+christian faith and the app should present this viewpoint more prominently... but
+based on scripture alone... scripture first then pentecostal belief or interpretation
+then the rest."* This reverses the round-three approach for those entries (which had
+presented the range of views with the dispensational/eschatological positions
+labeled as one view among several). **This is now a standing editorial rule for the
+whole Q&A feature -- see the "doctrinal lens" memory and follow it for every new entry:
+(1) what scripture itself states, with verses; (2) the Pentecostal / blood-bought /
+born-again / rapture-believing reading, labeled as that reading; (3) other views (Catholic,
+Reformed, amillennial, cessationist...) kept briefly, never deleted.**
+
+- **New confidence tier `doctrinal_view`** (`qa.rs` `QaConfidence::DoctrinalView`,
+  `api.ts`, `AskAnswerView.tsx` badge text "Scripture first, then the Pentecostal /
+  evangelical reading", `App.css` warm badge). It exists so the Pentecostal reading is
+  honestly *labeled as a reading* rather than shown under a "Stated in scripture" or
+  "Traditional / scholarly consensus" badge (the latter would have been inaccurate for
+  it). The earlier standing rule -- opinions are noted as opinions -- is unchanged;
+  what changed is whose view leads. `.curated-answer-text` also gained
+  `white-space: pre-line` so the three parts ("Scripture: ... / Pentecostal / evangelical
+  understanding: ... / Other views: ...") show as separate paragraphs.
+- **32 entries rewritten** (31 spliced from a scratch file by id, plus a small
+  alt-phrasing edit): the whole end-times block now leads with the pre-tribulation,
+  premillennial reading (`faq_rapture`, `faq_christians_in_tribulation`,
+  `faq_end_times_signs`, `faq_antichrist`, `faq_mark_of_beast`, `faq_tribulation`,
+  `faq_millennial_kingdom`, `faq_armageddon`, `faq_great_white_throne` -- which now also
+  covers the Judgment Seat of Christ as a separate judgment); plus
+  `faq_tongues_required` (now presents Spirit baptism with tongues as initial evidence
+  vs. the ministry gift of 1 Cor 12, and carries the alt phrasings "what is the baptism
+  in the holy spirit" so that question has an answer), `faq_god_still_heals_today`
+  (divine healing continues today; cessationism as the other view; scripture's own
+  honest counter-examples -- Paul's thorn, Timothy, Trophimus -- kept), 
+  `faq_christian_demon_possession` (oppression, not possession), `faq_alcohol` (total
+  abstinence as the Pentecostal/holiness teaching, with the honest scripture point that
+  it condemns drunkenness rather than every drink), `faq_tithe_10_percent` (the tithe as
+  the baseline; Abraham pre-Law, Jesus in Matt 23:23), `faq_tattoos`,
+  `faq_homosexuality` (the scripture stated plainly, with the gospel hope of 1 Cor 6:11;
+  the revisionist reading now one short "other views" sentence), `faq_divorce_permitted`,
+  `faq_hell_real_literal` (eternal conscious punishment; annihilationism as other view),
+  `faq_purgatory` / `faq_transubstantiation` / `faq_protestant_catholic_differences` /
+  `faq_church_ordinances` / `faq_apocrypha_excluded` (scripture, then the evangelical
+  view with the blood of Christ emphasized, then Catholic teaching -- retained, not
+  removed), `faq_jw_mormons_christian`, `faq_bible_evolution` (special creation),
+  `faq_satan_origin_fall` (Isaiah 14 / Ezekiel 28 as also describing Satan's fall,
+  with the in-context note that they address human kings kept as scripture's own
+  context), `faq_baptism_required_for_salvation`, `faq_predestination`,
+  `faq_can_lose_salvation`, `faq_women_pastors_elders`, and the earlier
+  `how_to_be_saved`, which now carries the born-again (John 3), redemption-by-the-blood
+  (1 Pet 1:18-19, Eph 1:7) and Spirit-baptism emphasis and answers "how do you become
+  born again".
+- **RESOLVED afterwards -- the user answered all three questions below (see the next
+  bullet block, "Fifth round"); the paragraph that follows records what was originally
+  flagged and is kept only for the history.** **Where Pentecostals are themselves
+  divided -- originally not resolved by the assistant, flagged to the user to decide:** eternal vs. conditional security
+  (`faq_can_lose_salvation` states both), whether women may be pastors/elders
+  (`faq_women_pastors_elders`; the Assemblies of God ordains women, others reserve the
+  office for men), and Trinitarian vs. Oneness (`faq_trinity` was left as the
+  historic Trinitarian formulation, unchanged; Oneness Pentecostals reject it -- the
+  baptism entry names Oneness only as a group holding baptism is necessary). The
+  earth-age and Genesis-days entries were also left as the two-view answers they
+  already were, because Pentecostal churches don't share one position on them. The
+  memory rule says: never assert a denomination's official position that isn't certain;
+  "many Pentecostal churches" is the hedge.
+- **Quotation caveat found while doing this, NOT yet fixed:** many curated answers
+  (most of the entries from before this round) quote verse wording that is NIV/ESV-
+  flavored, not the bundled BSB (public domain) or KJV. The new/rewritten entries lean
+  on BSB wording and paraphrase, but the older ones weren't converted. Given the user's
+  earlier concern about ESV/NIV copyright, a follow-up pass that replaces those quotes
+  with BSB text pulled from `bible.db` is worth doing; offered to the user, not started.
+- **Verified with the same backend-only harness:** `qa.json` parses (133 entries, unique
+  ids, every `confidence` value a known variant); `index_qa` re-run (499 rows);
+  `cargo test` 19 passing; `tsc --noEmit` clean; and a fresh sweep confirmed "what is the
+  baptism in the holy spirit" and "is speaking in tongues the evidence of the holy
+  spirit" resolve to the tongues entry (not water baptism), the rapture/tribulation
+  cluster still resolves to distinct entries, "what does it mean to be born again"
+  reaches `how_to_be_saved`, and "what is the judgment seat of christ" reaches the
+  Great White Throne entry after its alt phrasings were added. Two natural questions
+  still have no dedicated entry and fall to the labeled fallback -- "is the blood of
+  Jesus enough to save me" (a "blood-bought" entry would be a natural addition) -- and
+  are offered to the user. **The UI has still not been clicked through by a human.**
+
+**Phase 12, fifth round (2026-09-26 -- still v2.0.1, no installer built): the user
+answered the three open questions, and the blood-of-Jesus entry was added.** In the
+user's words, in summary (the durable version is in the "doctrinal lens" memory):
+- **Security: conditional.** Salvation is a free gift bought by the death and blood of
+  Christ, but "not a get out of jail free card" -- a reborn person is a new creation who
+  strives to live a new life, and one who returns to the old ways and keeps living as
+  before (lukewarm, Rev 3:15-16: "better you are hot or cold") is at risk. Not "without
+  a changed heart and trying to live a new life." `faq_can_lose_salvation` was rewritten
+  to lead with this (scripture: 2 Cor 5:17, Titus 2:11-12, Rom 6:1-2, Heb 10:26,
+  John 15:1-6, Matt 7:21, Heb 12:14, Rev 3:15-16, 2 Pet 2:20-22, balanced by 1 John 1:9 /
+  2:1 forgiveness for the believer who stumbles and John 10:27-29 / Rom 8:38-39 on
+  Christ's keeping), with eternal security now under "other views."
+- **Women: yes**, as elders, pastors and leaders. `faq_women_pastors_elders` now leads
+  with the scripture's women in leadership (Miriam, Deborah, Huldah, Anna, Mary
+  Magdalene, Philip's daughters, Phoebe, Priscilla, Euodia/Syntyche, Joel 2 / Acts 2,
+  Gal 3:28), notes headship in the home (Eph 5:23, 1 Cor 11:3) and the strong wife
+  (Prov 31, 14:1) -- the user's point that headship in the home and calling in the church
+  are separate questions -- reads 1 Tim 2:12 / 3:2 / 1 Cor 14:34-35 as addressing
+  specific first-century situations, and moves the complementarian reading to "other
+  views." Junia (Rom 16:7) was deliberately left out of the scripture list: whether she is
+  "among the apostles" or merely "known to them" is itself disputed.
+- **Trinity: yes -- three in one.** `faq_trinity` was rewritten (scripture first:
+  Deut 6:4, Isa 45:5, Matt 28:19 "name" singular, Matt 3:16-17 all three at the baptism,
+  John 14:16-17, John 1:1, Acts 5:3-4). The user's clock-gears picture is kept. **One
+  deliberate addition the user did not ask for:** the entry adds that the picture falls
+  short in one respect -- scripture presents Father, Son and Spirit as each fully God
+  (Col 2:9, Acts 5:3-4) and shows all three at once, so they are three persons in one
+  God rather than one person "known by three roles" (which is the Oneness position,
+  now listed under "other views"). The user described it as "three different roles";
+  that phrase was rendered as "three persons with different roles and functions," and
+  the user was told, so it can be reverted if they disagree.
+- **Trinity, second pass (same day):** the user asked that the entry say the concept is
+  a mystery our minds cannot fully grasp ("the three is one and the one is three"), that
+  the three are one and the same being and so know each other's mind exactly, and that
+  the one God takes up three roles in three persons (Father, Son, Holy Spirit) -- which
+  matches the "three persons" wording already used. `faq_trinity` now cites the unity of
+  mind (John 10:30, 14:9-11, 16:13-15; 1 Cor 2:10-11) and God being beyond our full
+  understanding (Isa 55:8-9; Rom 11:33-34). I raised Mark 13:32 ("nor the Son" does not
+  know the day or hour) as the obvious objection to "all know each other's mind exactly",
+  and first answered it with the kenosis reading (Phil 2:7). **The user corrected that:**
+  the Son does know -- it was *withheld from us*, "it is meant for us not to know," and
+  "Jesus spoke a lot in parables" (Acts 1:7; Matt 13:10-17, 34-35). That is now the lead
+  reading in the entry (an old view -- Augustine held it), with the kenosis reading kept
+  only as one sentence under "other views." `faq_cant_predict_return_date` still just
+  quotes Matt 24:36 / Mark 13:32 as scripture with no gloss; add the same clarification
+  there if the user wants it.
+- **New entry `blood_of_jesus`** ("What does the blood of Jesus do?", with alt phrasings
+  including "is the blood of jesus enough to save me", "what does blood bought mean"):
+  the blood bought us (Acts 20:28, 1 Cor 6:20, 1 Pet 1:18-19, Rev 5:9), washed away sin
+  (1 John 1:7, Eph 1:7, Rev 7:14), is God's appointed payment (Heb 9:22, Lev 17:11,
+  Ex 12:13), justifies and gives access (Rom 5:9, Col 1:20, Heb 10:19), and overcomes the
+  accuser (Rev 12:11); the Pentecostal paragraph ties it to the new life ("bought with a
+  price, so we belong to Him") and to Heb 10:26-29, matching the user's "not a free
+  pass" position. The entry count is now **134**; `qa_index.json` is **509** rows.
+- **Two related entries changed for consistency**, not asked for by the user:
+  `faq_why_christians_still_sin` (new birth as a real change, striving with the Spirit's
+  power, stumbling-and-repenting vs. returning to the old ways) and
+  `faq_suicide_and_heaven` (it had leaned on the eternal-security proof texts; now
+  scripture-first -- the Bible records suicides and never calls it the unforgivable sin;
+  God alone sees the heart -- and it ends with a short "please tell someone" care line
+  for a reader who may be at risk).
+- **Verified (backend-only harness, UI still unclicked):** 134 entries parse with unique
+  ids; `index_qa` re-run; the ten new probe questions resolve to the right entries
+  ("what does blood bought mean" / "is the blood of jesus enough to save me" ->
+  `blood_of_jesus`; "is salvation a get out of jail free card" and "can a christian sin
+  and still go to heaven" -> `faq_can_lose_salvation` at 0.60/0.66, just above the 0.6
+  threshold); `cargo test` 19 passing; `cargo check` and `tsc --noEmit` clean.
+- **Still open:** the older quoted verse wording (NIV/ESV-flavored) has not been
+  converted to BSB. And **the user is working on a new splash screen** -- do not touch
+  the splash/closing-splash components (`SplashScreen.tsx`, `ClosingSplash.tsx`) without
+  checking first, and remember `tauri dev` auto-rebuilds on every save.
+
+**Phase 13 (video launch splash, 2026-09-26 -- still v2.0.1, no installer built): the
+user added `public/Video Project 1.mp4` (5 s, 1920x1080, H.264, ~8 MB) to replace the
+opening splash image and asked that it run for its full length when the app opens.**
+`SplashScreen.tsx` now plays that video instead of showing `splashscreen.jpg`; the
+farewell `ClosingSplash.tsx` is untouched.
+- **Behavior:** the video plays to its natural end (the `ended` event -- there is no fixed
+  timer and no skip), then the existing 400 ms fade reveals the app. It is **always played
+  muted**: the file carries an audio track (video editors add a silent one) but the user
+  said the splash should just be a video with no sound. Muting also means WebView2's
+  autoplay policy can never block it. Shown with `object-fit: contain` on the black ground,
+  so a non-16:9 window letterboxes instead of cropping the clip.
+- **Two deliberate robustness choices, both because this could not be watched from here:**
+  (1) the clip's `moov` index is at the END of the file (not a "fast-start" MP4), which
+  needs byte-range support to play from a normal URL, so the component fetches the file
+  whole and plays it from a blob URL -- independent of whether Tauri's embedded-asset
+  server answers range requests; (2) fail-safes so a bad video can never strand the user on
+  black: an error or a rejected `play()` finishes the splash at once, no `playing` event
+  within 6 s finishes it, and once playing, no `ended` within duration + 2.5 s finishes it.
+- **Fixed a latent bug in the same component:** the old splash's timers were an effect
+  keyed on the `onDone` prop, and `App.tsx` passes a fresh inline function every render, so
+  any App re-render during the splash restarted the timers and lengthened it. `onDone` is
+  now read through a ref and the effects run once. (Not visible with a 2.6 s image, but it
+  would have restarted a video mid-play.)
+- **Filename note:** the file keeps the user's own name, `Video Project 1.mp4`, referenced
+  via `encodeURI`; Tauri percent-decodes asset paths (`protocol/tauri.rs`), so the space is
+  fine. Re-exporting a new clip over the same name in `public/` replaces the splash. The
+  old `public/splashscreen.jpg` is now unused (still bundled, ~0.4 MB); delete it if the
+  video is final. `public/FAQ.txt` also ships inside the app as a static asset although
+  nothing reads it (its content is in `qa.json`, and the original still contains the
+  citation errors described above) -- worth moving out of `public/`.
+- **First test: "there was no video playback" -- root cause found, and it was NOT the
+  video or the component; it was the Vite dev server.** The failsafes had turned a broken
+  video into a silent skip, so diagnostic `console.warn` logging was added (Vite forwards
+  it to the terminal). The log showed: `canPlayType H.264+AAC: "probably"` (the codec is
+  fine), `fetch 200 video/mp4 8379200` (the file was found and its headers arrived) -- and
+  then no body, until the 6 s "never started playing" failsafe fired. Isolating it:
+  the file reads from the `X:` project drive in 0.08 s in PowerShell, and a bare Node
+  server streams it from `X:` in 0.2 s, but the Vite dev server took **~37 s (0.2 MB/s)**
+  (a bigger `UV_THREADPOOL_SIZE` helped only partly). Cause: `vite.config.ts` polls every
+  watched file every 300 ms (SMB can't deliver change notifications), and the watched tree
+  included `public/chart` (1,505 map tiles) plus its 1,528-file copy in `dist/` -- roughly
+  10,000 `stat()` calls a second over the share, starving every real read on the same
+  connection. **Fix: `watch.ignored` now also excludes `dist/`, `installer/`, `check/` and
+  `public/chart/`** (none change during development). After the change the same 8 MB
+  download from the dev server takes **0.05 s**. This is a dev-server-only problem: an
+  installed app serves the video from memory. **General lesson: a "slow static file" from
+  the dev server on this SMB drive means the watcher, not the file** -- and it also makes
+  every dev page load and HMR update faster.
+- **The splash now shows why it failed:** if the video can't play, it prints "The launch
+  video could not be played (<reason>)." on the black splash for 4 s and then opens the app
+  (`.splash-failure`), because the console is invisible in an installed build. Never shown
+  when the video plays. The diagnostic `[splash]` `console.warn` lines were left in
+  (dev-only visibility, harmless in production).
+- **Installer for the user to test the installed path:** built with `npm run tauri build`
+  at version 2.0.1 (no bump was requested); the copies in `installer/` carry a
+  `-videotest` suffix so the existing 22 Sept `2.0.1` installers (built before
+  Ask-a-question) are not overwritten. Because the version is unchanged, use the `.exe`
+  (NSIS); the `.msi` may refuse a same-version install. **The user installed it and
+  confirmed: "video played perfectly on the splash opener."** The installed (embedded-asset)
+  path therefore works, and the earlier failure really was only the dev server.
+- **Version bumped `2.0.1` -> `2.1.0`** (a minor bump: Ask-a-question, the Pentecostal-lens
+  answer set and the video splash are new feature scope) in the four usual places --
+  `package.json`, `package-lock.json` (via `npm version 2.1.0 --no-git-tag-version`),
+  `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json` -- plus `Cargo.lock` (refreshed by
+  `cargo check`). **No 2.1.0 installer has been built yet**: the only installer from this
+  code is the `2.0.1-videotest` pair in `installer/` (untracked, gitignored); build a
+  proper `2.1.0` one with `npm run tauri build` when wanted and copy it into `installer/`.
+- **`check/` is now in `.gitignore`.** That folder holds the user's downloaded ESV/NIV/
+  Amplified PDFs (kept only for the earlier licensing check) and was sitting untracked in
+  the working tree; it is copyrighted and must never be pushed to this public repo. Stage
+  files by name -- never `git add -A` -- in this repo.
+- **Verified:** `tsc --noEmit` clean; `npm run build` copies the video into `dist/`
+  (7.99 MB) while still excluding the 218 MB Adams chart scan; dev-server download
+  timing as above. **Playback itself has still not been seen by a human.** Watch for: it
+  starts promptly, plays all 5 s with no sound, and the app appears right after it ends.
+  The installer grows by about 8 MB.
 
 ## Critical gotchas discovered this session (don't re-learn these the hard way)
 
@@ -804,6 +1367,39 @@ fix only.
     repo is already doing before applying a session default on top of it. Always commit
     here with `-c user.name="BadBull22" -c user.email="BadBull22@users.noreply.github.com"`,
     never the real address, no matter what any future session's context suggests.
+25. **A regex `(?P<phrase>.+?)` non-greedy capture immediately followed by an open
+    `(.*)$` tail can collapse to matching almost nothing**, because nothing forces the
+    non-greedy group to consume more than the bare minimum when everything after it is
+    itself optional/wildcard. Bit `qa_parser.rs`'s active-voice template ("does the
+    Bible mention X") in Phase 12: it matched a 1-character "phrase" and dumped the
+    rest into the tail. Don't reach for a bigger regex to patch this -- split the
+    problem instead: strip any recognized *suffix* first (in a separate pass, anchored
+    to end-of-string), then match the remaining "core" text with the phrase capture
+    safely anchored to `$` with nothing ambiguous left after it.
+26. **Wrapping crate-internal logic (`commands.rs` etc.) for a throwaway `src/bin/`
+    probe or `tests/` integration test requires those modules to be `pub mod`**, since
+    both compile as separate external crates against the lib -- and that pub-ness
+    cascades: every *other* already-existing `pub fn` in that module whose return type
+    touches any still-private module now fails to compile (E0446, "private type in
+    public interface"), not just the one function you meant to expose. In this
+    codebase that would have meant making `commentaries`/`genealogy`/`settings` all
+    `pub` too just to test one new command. A `#[cfg(test)] mod` declared *inside* the
+    same file (unit tests, not `tests/*.rs` integration tests) needs none of this --
+    it compiles as part of the same crate and already sees every private item, exactly
+    like any other sibling module does. Reach for that first; only make something
+    genuinely `pub` when a real external bin target (like `index_qa.rs`) needs it, and
+    even then check whether its return types stay self-contained (no references to
+    other still-private modules) before assuming one `pub mod` is enough.
+27. **On this machine, the Bash tool's `$PATH` is the raw, untranslated Windows
+    `%PATH%`** (semicolon-separated, backslash paths) -- none of Bash's Unix coreutils
+    (`grep`/`tail`/`head`/`which`) or Windows executables (`cargo`/etc.) resolve,
+    every one fails with exit 127 as if genuinely missing. Verified via PowerShell
+    that the tools themselves are fine (`cargo 1.94.1`, `git 2.55.0.windows.5`) -- this
+    is specifically the Bash tool's environment being wrong, not the machine. Use the
+    PowerShell tool for command execution here instead; don't burn a debugging cycle
+    re-diagnosing this if it resurfaces, but do re-verify (a quick `cargo --version`
+    in Bash) before trusting it fixed, since this is an environment quirk that could
+    change between sessions.
 
 ## Git status
 
@@ -878,10 +1474,15 @@ src-tauri/src/
   embeddings.rs           candle/BERT wrapper (Embedder::load, Embedder::embed)
   bin/index_embeddings.rs One-time tool: embeds all BSB verses into the vec0 table
   genealogy.rs, firsts.rs  Loaders for the two curated JSON datasets
+  qa.rs, qa_parser.rs      Phase 12 "Ask a question": qa.json/qa_index.json loader + runtime
+                          semantic match (qa.rs), strict word-count question grammar (qa_parser.rs)
+  bin/index_qa.rs          One-time tool: embeds qa.json + firsts.json questions -> qa_index.json
   online.rs, settings.rs   api.bible live-fetch + local settings persistence
-src-tauri/resources/     bible.db, commentaries.db, model/ (MiniLM), genealogies.json, firsts.json
-                         — all bundled into the shipped app via tauri.conf.json's bundle.resources
-                         (both .db files and model/ are gitignored: copy or rebuild on a new PC)
+src-tauri/resources/     bible.db, commentaries.db, model/ (MiniLM), genealogies.json, firsts.json,
+                         qa.json, qa_index.json — all bundled into the shipped app via
+                         tauri.conf.json's bundle.resources (only the .db files and model/ are
+                         gitignored: copy or rebuild on a new PC; qa.json/qa_index.json commit
+                         normally, same as firsts.json)
 src/                     React frontend; components/ has one file per panel (SearchPanel,
                          CrossRefGraph, GenealogyPanel, FirstsPanel, SettingsPanel, SplashScreen,
                          MapPanel, TimelinePanel, HomeScreen, etc.)

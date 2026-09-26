@@ -16,17 +16,26 @@
   pointer-events: none;
 }
 
-.splash-image {
-  width: min(72vmin, 680px);
-  height: auto;
+/* The launch video fills the window without cropping: "contain" letterboxes it on the black
+   ground when the window isn't 16:9 (the clip is 1920x1080). */
+.splash-video {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
+  background: #000;
+}
 
-  /* fade the image's edges to transparent so it bleeds into the surrounding
-     black background instead of showing a hard rectangular edge */
-  -webkit-mask-image: radial-gradient(ellipse 62% 62% at center, #000 55%, transparent 100%);
-  mask-image: radial-gradient(ellipse 62% 62% at center, #000 55%, transparent 100%);
-
-  animation: splash-rise 900ms ease-out;
+/* Shown only when the launch video fails to play, so the reason is visible in an installed
+   build (where there is no console). Never appears when the video plays. */
+.splash-failure {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1.5rem;
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #8a8a8a;
 }
 
 /* Farewell splash: same black ground and rise animation as the launch splash, but

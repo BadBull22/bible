@@ -60,7 +60,14 @@ export interface CrossReference {
 export interface WordFrequencyResult {
   total_occurrences: number;
   verses: SearchHit[];
+  /** Human-readable applied scope ("in the New Testament", "in Romans"), or null for an
+   * unscoped whole-Bible count. */
+  scope_label: string | null;
 }
+
+/** An optional restriction on a `wordFrequency` query -- omitted/null searches the
+ * whole Bible. */
+export type FrequencyScope = { kind: "testament"; testament: string } | { kind: "book"; book: string };
 
 export interface AppSettings {
   api_bible_key: string | null;
@@ -237,6 +244,33 @@ export interface EntityDetail {
   references: EntityRef[];
 }
 
+/** How certain a curated "Ask a question" answer is -- see `qa.rs`'s `QaConfidence` for
+ * what each level means and when it's used. Never inferred by the UI; always set by
+ * whoever curated the entry. */
+export type QaConfidence = "stated" | "computed" | "traditional" | "commentary_opinion" | "doctrinal_view" | "unattested";
+
+export interface AskCitation {
+  reference: string;
+  role: string;
+}
+
+export interface AskCuratedEntry {
+  question: string;
+  confidence: QaConfidence;
+  answer: string;
+  citations: AskCitation[];
+  note: string | null;
+}
+
+/** The tagged result of `askQuestion`, in the order its three layers are tried: an exact
+ * computed count, a curated hand-verified answer, or (when neither hits) a labeled
+ * best-effort fallback -- kept distinguishable so the UI never lets a guess look as
+ * certain as a verified answer. */
+export type AskAnswer =
+  | { kind: "computed"; word: string; result: WordFrequencyResult }
+  | { kind: "curated"; entry: AskCuratedEntry; matched_by: "exact" | "semantic"; similarity: number | null }
+  | { kind: "fallback"; hits: SearchHit[]; commentary_hits: CommentaryHit[] };
+
 export interface MapPlace {
   id: string;
   name: string;
@@ -286,8 +320,8 @@ export const api = {
   searchKeyword: (version_code: string, query: string, limit: number) =>
     invoke<SearchHit[]>("search_keyword", { versionCode: version_code, query, limit }),
   semanticSearch: (query: string, limit: number) => invoke<SearchHit[]>("semantic_search", { query, limit }),
-  wordFrequency: (version_code: string, word: string) =>
-    invoke<WordFrequencyResult>("word_frequency", { versionCode: version_code, word }),
+  wordFrequency: (version_code: string, word: string, scope: FrequencyScope | null = null) =>
+    invoke<WordFrequencyResult>("word_frequency", { versionCode: version_code, word, scope }),
   crossReferencesFor: (book: string, chapter: number, verse: number) =>
     invoke<CrossReference[]>("cross_references_for", { book, chapter, verse }),
   getSettings: () => invoke<AppSettings>("get_settings"),
@@ -310,6 +344,7 @@ export const api = {
   getEntity: (kind: EntityKind, id: string) => invoke<EntityDetail | null>("get_entity", { kind, id }),
   searchEntities: (query: string, limit: number) => invoke<EntitySummary[]>("search_entities", { query, limit }),
   mapPlaces: () => invoke<MapPlace[]>("map_places"),
+  askQuestion: (query: string, fallback_limit: number = 12) => invoke<AskAnswer>("ask_question", { query, fallbackLimit: fallback_limit }),
   /** Actually quits. The close button is intercepted in Rust so the farewell verse can
    * be shown first; this is what ends the process afterwards. */
   exitApp: () => invoke<void>("exit_app"),
