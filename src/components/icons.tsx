@@ -64,6 +64,52 @@ export const PrintIcon = (p: IconProps) => (
   </svg>
 );
 
+export const SheetIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z" />
+    <path d="M14 3v5h5" />
+    <path d="M8 13h8M8 17h5" />
+  </svg>
+);
+
+export const GripIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <circle cx="9" cy="6" r="1" />
+    <circle cx="15" cy="6" r="1" />
+    <circle cx="9" cy="12" r="1" />
+    <circle cx="15" cy="12" r="1" />
+    <circle cx="9" cy="18" r="1" />
+    <circle cx="15" cy="18" r="1" />
+  </svg>
+);
+
+export const PlayIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M7 4.5v15l12-7.5z" />
+  </svg>
+);
+
+export const PauseIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M8 5v14M16 5v14" />
+  </svg>
+);
+
+export const SpeakerIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M4 9v6h4l5 4V5L8 9z" />
+    <path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+  </svg>
+);
+
+export const BasketIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M4 10h16l-1.6 9.2a1 1 0 0 1-1 .8H6.6a1 1 0 0 1-1-.8z" />
+    <path d="m8 10 3-6M16 10l-3-6" />
+    <path d="M9.5 14v3M14.5 14v3" />
+  </svg>
+);
+
 export const SettingsIcon = (p: IconProps) => (
   <svg {...base(p.size, p.className)}>
     <circle cx="12" cy="12" r="3" />
@@ -150,5 +196,83 @@ export const UsersIcon = (p: IconProps) => (
     <circle cx="9" cy="7" r="4" />
     <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+export const MoreIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <circle cx="5" cy="12" r="1.2" />
+    <circle cx="12" cy="12" r="1.2" />
+    <circle cx="19" cy="12" r="1.2" />
+  </svg>
+);
+
+export const BookmarkIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M6 3h12v18l-6-4-6 4z" />
+  </svg>
+);
+
+export const HighlightIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="m9 11-5 5v3h3l5-5" />
+    <path d="m14 4 6 6-8 8-6-6z" />
+  </svg>
+);
+
+export const NoteIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M4 20h4L19 9l-4-4L4 16z" />
+    <path d="m13 7 4 4" />
+  </svg>
+);
+
+export const CopyIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M5 15V5a2 2 0 0 1 2-2h8" />
+  </svg>
+);
+
+export const InterlinearIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M4 6h16" />
+    <path d="M4 10h10" />
+    <path d="M4 15h16" />
+    <path d="M4 19h10" />
+  </svg>
+);
+
+export const DictionaryIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z" />
+    <path d="M4 17a3 3 0 0 1 3-3h11" />
+    <path d="m9 11 2-5 2 5" />
+    <path d="M9.8 9h2.4" />
+  </svg>
+);
+
+export const NotebookIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <rect x="5" y="3" width="14" height="18" rx="2" />
+    <path d="M9 3v18" />
+    <path d="M12 8h4" />
+    <path d="M12 12h4" />
+  </svg>
+);
+
+export const TagIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M3 12V4h8l9 9-8 8z" />
+    <circle cx="7.5" cy="8.5" r="1.2" />
+  </svg>
+);
+
+export const FocusIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M4 9V4h5" />
+    <path d="M20 9V4h-5" />
+    <path d="M4 15v5h5" />
+    <path d="M20 15v5h-5" />
   </svg>
 );

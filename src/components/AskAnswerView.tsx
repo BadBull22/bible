@@ -1,4 +1,9 @@
 import { AskAnswer, AskCitation, QaConfidence, parseCitation } from "../api";
+import { addToBasket } from "../basket";
+import { BasketButton } from "./BasketButton";
+import { ListenButton } from "./ListenButton";
+import { CopyButton } from "./CopyButton";
+import { plainText, RichText } from "./RichText";
 
 const CONFIDENCE_LABEL: Record<QaConfidence, string> = {
   stated: "Stated in scripture",
@@ -47,11 +52,14 @@ export function AskAnswerView({
   hitCount,
   commentaryHitCount = 0,
   onJump,
+  onOpenDictionaryEntry,
 }: {
   answer: AskAnswer;
   hitCount: number;
   commentaryHitCount?: number;
   onJump: OnJump;
+  /** Optional: open the full entry in the Dictionary panel. */
+  onOpenDictionaryEntry?: (headword: string) => void;
 }) {
   if (answer.kind === "computed") {
     return (
@@ -64,7 +72,22 @@ export function AskAnswerView({
   if (answer.kind === "curated") {
     return (
       <div className="curated-answer">
-        <span className={`confidence-badge conf-${answer.entry.confidence}`}>{CONFIDENCE_LABEL[answer.entry.confidence]}</span>
+        <div className="answer-bar">
+          <span className={`confidence-badge conf-${answer.entry.confidence}`}>{CONFIDENCE_LABEL[answer.entry.confidence]}</span>
+          <ListenButton title="Read this answer aloud" text={answer.entry.answer} />
+          <BasketButton
+            add={() =>
+              addToBasket(
+                "answer",
+                answer.entry.question,
+                `${answer.entry.answer}${answer.entry.citations.length ? `\n\nSee: ${answer.entry.citations.map((c) => c.reference).join("; ")}` : ""}`,
+              )
+            }
+          />
+          <CopyButton
+            text={`${answer.entry.question}\n\n${answer.entry.answer}${answer.entry.citations.length ? `\n\nSee: ${answer.entry.citations.map((c) => c.reference).join("; ")}` : ""}`}
+          />
+        </div>
         <p className="curated-answer-text">{answer.entry.answer}</p>
         {answer.entry.note && <p className="snippet note">{answer.entry.note}</p>}
         <AskRefRow citations={answer.entry.citations} onJump={onJump} />
@@ -74,6 +97,34 @@ export function AskAnswerView({
             curated question on file was "{answer.entry.question}"
           </p>
         )}
+      </div>
+    );
+  }
+  if (answer.kind === "dictionary") {
+    const e = answer.entry;
+    // A dictionary article can run to many screens; show the opening and let the reader
+    // open the whole entry in the Dictionary panel.
+    const paras = e.body.split(/\n{2,}/);
+    const preview = paras.slice(0, 3).join("\n\n");
+    return (
+      <div className="curated-answer dictionary-answer">
+        <div className="answer-bar">
+          <span className="confidence-badge conf-commentary_opinion">From {e.dict_name} — a reference work, not scripture</span>
+          <ListenButton title="Read this entry aloud" text={() => `${e.headword}.\n${plainText(e.body)}`} />
+          <BasketButton add={() => addToBasket("dictionary", `${e.headword} — ${e.dict_name}`, plainText(e.body))} />
+          <CopyButton text={`${e.headword} — ${e.dict_name}\n\n${plainText(e.body)}`} />
+        </div>
+        <h4 className="dict-headword">{e.headword}</h4>
+        <RichText text={preview} onJump={onJump} />
+        {(paras.length > 3 || onOpenDictionaryEntry) && onOpenDictionaryEntry && (
+          <button className="text-btn" onClick={() => onOpenDictionaryEntry(e.headword)}>
+            {paras.length > 3 ? "Read the full entry →" : "Open in the Dictionary →"}
+          </button>
+        )}
+        <p className="search-hint">
+          No hand-verified answer is on file for this question, so this is the {e.dict_name.replace(/ \(\d{4}\)$/, "")} entry for "{e.headword}". It
+          reflects its 19th-century author's scholarship and views — check it against the scripture it cites.
+        </p>
       </div>
     );
   }

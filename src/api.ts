@@ -269,7 +269,161 @@ export interface AskCuratedEntry {
 export type AskAnswer =
   | { kind: "computed"; word: string; result: WordFrequencyResult }
   | { kind: "curated"; entry: AskCuratedEntry; matched_by: "exact" | "semantic"; similarity: number | null }
+  | { kind: "dictionary"; entry: DictionaryEntry; term: string }
   | { kind: "fallback"; hits: SearchHit[]; commentary_hits: CommentaryHit[] };
+
+// ---------------------------------------------------------------- study data (v2.2)
+
+export interface MorphPart {
+  code: string;
+  /** Plain-English reading, e.g. "Verb Aorist Active Indicative 3rd Singular". */
+  summary: string;
+  detail: string;
+}
+
+export interface InterlinearWord {
+  word_pos: number;
+  word_type: string;
+  original: string;
+  translit: string;
+  gloss: string;
+  /** App-format Strong's number ("G25"), or "" for STEPBible-only particle codes. */
+  strongs: string;
+  lemma: string;
+  lemma_gloss: string;
+  morph: string;
+  morph_parts: MorphPart[];
+  /** Greek editions containing the word ("NA28", "Tyn", "TR", ...); empty for Hebrew. */
+  editions: string[];
+}
+
+export interface DictionaryInfo {
+  code: string;
+  name: string;
+  kind: "dictionary" | "topical";
+  entry_count: number;
+}
+
+export interface DictionaryHit {
+  id: number;
+  dict_code: string;
+  dict_name: string;
+  headword: string;
+  snippet: string;
+}
+
+export interface DictionaryEntry {
+  id: number;
+  dict_code: string;
+  dict_name: string;
+  kind: "dictionary" | "topical";
+  headword: string;
+  /** Plain text with ⟦Book|chapter|verse|verse_end|label⟧ reference markers. */
+  body: string;
+}
+
+export type HighlightColor = "yellow" | "green" | "blue" | "pink" | "orange" | "lemon" | "lime" | "sky" | "rose" | "red" | "violet";
+// Soft (pastel) colours, then bright ones.
+export const HIGHLIGHT_COLORS_SOFT: HighlightColor[] = ["yellow", "green", "blue", "pink", "orange"];
+export const HIGHLIGHT_COLORS_BRIGHT: HighlightColor[] = ["lemon", "lime", "sky", "rose", "red", "violet"];
+export const HIGHLIGHT_COLORS: HighlightColor[] = [...HIGHLIGHT_COLORS_SOFT, ...HIGHLIGHT_COLORS_BRIGHT];
+export const HIGHLIGHT_COLOR_NAMES: Record<HighlightColor, string> = {
+  yellow: "Soft yellow",
+  green: "Soft green",
+  blue: "Soft blue",
+  pink: "Soft pink",
+  orange: "Soft orange",
+  lemon: "Bright yellow",
+  lime: "Bright green",
+  sky: "Bright blue",
+  rose: "Hot pink",
+  red: "Red",
+  violet: "Purple",
+};
+
+export interface ChapterMarks {
+  bookmarks: number[];
+  highlights: [number, HighlightColor][];
+  notes: number[];
+}
+
+export interface StudyItem {
+  book: string;
+  chapter: number;
+  verse: number;
+  /** Highlight colour, or the note text; "" for bookmarks. */
+  value: string;
+  created_at: string;
+  updated_at: string;
+  verse_text: string;
+}
+
+export interface StudyLists {
+  bookmarks: StudyItem[];
+  highlights: StudyItem[];
+  notes: StudyItem[];
+}
+
+export interface PlanProgress {
+  plan_id: string;
+  started_on: string;
+  done_days: number[];
+}
+
+export interface ExportResult {
+  markdown_path: string;
+  json_path: string;
+  notes: number;
+  highlights: number;
+  bookmarks: number;
+}
+
+export interface ImportResult {
+  notes: number;
+  highlights: number;
+  bookmarks: number;
+  plans: number;
+}
+
+/** One run of text inside a study-sheet paragraph. */
+export interface SheetRun {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+  /** words of Jesus, when red letters are on */
+  red?: boolean;
+}
+
+/** A study sheet is a flat list of these blocks: the same list drives the on-screen
+ * preview, printing, copying, and the Word document built in Rust (`sheet.rs`). */
+export type SheetBlock =
+  | { kind: "title"; text: string }
+  | { kind: "subtitle"; text: string }
+  | { kind: "heading"; text: string }
+  | { kind: "subheading"; text: string }
+  | { kind: "para"; runs: SheetRun[] }
+  | { kind: "quote"; runs: SheetRun[] }
+  | { kind: "lines"; count: number };
+
+export type BasketKind = "verse" | "note" | "commentary" | "dictionary" | "answer" | "text";
+
+/** A study-basket item. `meta` is kind-specific JSON (for "verse": BasketVerseMeta). */
+export interface BasketItem {
+  id: number;
+  kind: BasketKind;
+  title: string;
+  body: string;
+  meta: string;
+  created_at: string;
+}
+
+export interface BasketVerseMeta {
+  book: string;
+  chapter: number;
+  verseStart: number;
+  verseEnd: number;
+  version: string;
+}
 
 export interface MapPlace {
   id: string;
@@ -345,6 +499,38 @@ export const api = {
   searchEntities: (query: string, limit: number) => invoke<EntitySummary[]>("search_entities", { query, limit }),
   mapPlaces: () => invoke<MapPlace[]>("map_places"),
   askQuestion: (query: string, fallback_limit: number = 12) => invoke<AskAnswer>("ask_question", { query, fallbackLimit: fallback_limit }),
+  interlinearVerse: (book: string, chapter: number, verse: number) =>
+    invoke<InterlinearWord[]>("interlinear_verse", { book, chapter, verse }),
+  listDictionaries: () => invoke<DictionaryInfo[]>("list_dictionaries"),
+  searchDictionaries: (query: string, dict_code: string | null, limit: number) =>
+    invoke<DictionaryHit[]>("search_dictionaries", { query, dictCode: dict_code, limit }),
+  dictionaryEntry: (id: number) => invoke<DictionaryEntry | null>("dictionary_entry", { id }),
+  topicsForVerse: (book: string, chapter: number, verse: number) =>
+    invoke<DictionaryHit[]>("topics_for_verse", { book, chapter, verse }),
+  chapterMarks: (book: string, chapter: number) => invoke<ChapterMarks>("chapter_marks", { book, chapter }),
+  toggleBookmark: (book: string, chapter: number, verse: number) => invoke<boolean>("toggle_bookmark", { book, chapter, verse }),
+  setHighlight: (book: string, chapter: number, verse: number, color: HighlightColor | null) =>
+    invoke<void>("set_highlight", { book, chapter, verse, color }),
+  getNote: (book: string, chapter: number, verse: number) => invoke<string | null>("get_note", { book, chapter, verse }),
+  saveNote: (book: string, chapter: number, verse: number, body: string) =>
+    invoke<void>("save_note", { book, chapter, verse, body }),
+  listStudy: () => invoke<StudyLists>("list_study"),
+  planProgress: () => invoke<PlanProgress[]>("plan_progress"),
+  startPlan: (plan_id: string, started_on: string) => invoke<void>("start_plan", { planId: plan_id, startedOn: started_on }),
+  stopPlan: (plan_id: string) => invoke<void>("stop_plan", { planId: plan_id }),
+  setPlanDay: (plan_id: string, day: number, done: boolean) => invoke<void>("set_plan_day", { planId: plan_id, day, done }),
+  exportStudy: () => invoke<ExportResult>("export_study"),
+  importStudy: (json: string) => invoke<ImportResult>("import_study", { json }),
+  passageText: (version_code: string, book: string, chapter: number, verse_start: number, verse_end: number) =>
+    invoke<string>("passage_text", { versionCode: version_code, book, chapter, verseStart: verse_start, verseEnd: verse_end }),
+  /** Writes the sheet as a .docx in Documents\Bible Concordance; returns the path. */
+  saveStudySheet: (title: string, blocks: SheetBlock[]) => invoke<string>("save_study_sheet", { title, blocks }),
+  basketList: () => invoke<BasketItem[]>("basket_list"),
+  basketAdd: (kind: BasketKind, title: string, body: string, meta: string = "") => invoke<number>("basket_add", { kind, title, body, meta }),
+  basketUpdate: (id: number, title: string, body: string) => invoke<void>("basket_update", { id, title, body }),
+  basketRemove: (id: number) => invoke<void>("basket_remove", { id }),
+  basketClear: () => invoke<void>("basket_clear"),
+  basketReorder: (ids: number[]) => invoke<void>("basket_reorder", { ids }),
   /** Actually quits. The close button is intercepted in Rust so the farewell verse can
    * be shown first; this is what ends the process afterwards. */
   exitApp: () => invoke<void>("exit_app"),

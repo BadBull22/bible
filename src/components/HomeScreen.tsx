@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { api, AskAnswer, BookInfo, HomeStats, resolveReference, SearchHit } from "../api";
+import { api, AskAnswer, BookInfo, HomeStats, PlanProgress, resolveReference, SearchHit } from "../api";
 import { addSearchHistory, getSearchHistory } from "../searchHistory";
 import { AskAnswerView } from "./AskAnswerView";
+import { verseOfTheDay } from "../dailyVerse";
+import { buildPlan, currentDay, PLANS } from "../readingPlans";
+import { copyText, formatVerseForCopy } from "../clipboard";
 import { SearchIcon } from "./icons";
 
 interface Props {
@@ -12,6 +15,10 @@ interface Props {
   onOpenCrossRefs: (book: string, chapter: number, verse: number) => void;
   /** Jumps to a verse and opens the parallel-translations compare view -- used by "Translations". */
   onOpenParallel: (book: string, chapter: number, verse: number) => void;
+  /** Bumped when the reader's study data (reading-plan progress) changes. */
+  studyVersion: number;
+  onOpenPlans: () => void;
+  onOpenDictionary: (query: string) => void;
 }
 
 const EXAMPLES = ["John 3:16", "the creation of light", "the prodigal son", "Psalm 23", "the parting of the Red Sea"];
@@ -85,7 +92,11 @@ function buildStatTiles(stats: HomeStats, onGo: Props["onGo"], onOpenCrossRefs: 
   ];
 }
 
-export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpenParallel }: Props) {
+export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpenParallel, studyVersion, onOpenPlans, onOpenDictionary }: Props) {
+  const [dailyText, setDailyText] = useState<string | null>(null);
+  const [plans, setPlans] = useState<PlanProgress[]>([]);
+  const [copiedDaily, setCopiedDaily] = useState(false);
+  const [dailyBook, dailyChapter, dailyVerse] = verseOfTheDay();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchHit[]>([]);
   const [askAnswer, setAskAnswer] = useState<AskAnswer | null>(null);
@@ -100,7 +111,16 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
 
   useEffect(() => {
     api.homeStats().then(setStats).catch(console.error);
+    api
+      .getVerseWithStrongs("BSB", dailyBook, dailyChapter, dailyVerse)
+      .then((v) => setDailyText(v.text))
+      .catch(() => setDailyText(null));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    api.planProgress().then(setPlans).catch(() => setPlans([]));
+  }, [studyVersion]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -210,7 +230,7 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
         {loading && <p className="muted">Searching…</p>}
         {error && <p className="status-error">{error}</p>}
         {!loading && !reference && askAnswer && (
-          <AskAnswerView answer={askAnswer} hitCount={results.length} onJump={(book, chapter, verse) => goAndRemember(book, chapter, verse)} />
+          <AskAnswerView answer={askAnswer} hitCount={results.length} onJump={(book, chapter, verse) => goAndRemember(book, chapter, verse)} onOpenDictionaryEntry={onOpenDictionary} />
         )}
         {!loading && !error && !askAnswer && query.trim() && !reference && results.length === 0 && <p className="muted">No matches for "{query.trim()}".</p>}
         {!reference && results.length > 0 && (
@@ -226,6 +246,56 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
           </ul>
         )}
       </div>
+      {!query.trim() && (dailyText || plans.length > 0) && (
+        <div className="home-daily">
+          {dailyText && (
+            <figure className="daily-verse">
+              <p className="muted daily-label">Verse of the day</p>
+              <blockquote>{dailyText}</blockquote>
+              <figcaption>
+                <button className="link-btn" onClick={() => goAndRemember(dailyBook, dailyChapter, dailyVerse)}>
+                  {dailyBook} {dailyChapter}:{dailyVerse}
+                </button>{" "}
+                <span className="muted">(BSB)</span>{" "}
+                <button
+                  className="text-btn"
+                  onClick={async () => {
+                    setCopiedDaily(await copyText(formatVerseForCopy(dailyBook, dailyChapter, dailyVerse, dailyText, "BSB")));
+                    window.setTimeout(() => setCopiedDaily(false), 1500);
+                  }}
+                >
+                  {copiedDaily ? "Copied" : "Copy"}
+                </button>
+              </figcaption>
+            </figure>
+          )}
+          {plans.map((p) => {
+            const def = PLANS.find((d) => d.id === p.plan_id);
+            if (!def) return null;
+            const day = currentDay(p.started_on, def.days);
+            const readings = buildPlan(def.id, books, chapterCounts)[day - 1] ?? [];
+            const done = p.done_days.includes(day);
+            return (
+              <div key={p.plan_id} className="today-reading">
+                <p className="muted daily-label">
+                  Today's reading · {def.name} · day {day} of {def.days}
+                  {done ? " · done ✓" : ""}
+                </p>
+                <div className="today-reading-links">
+                  {readings.map((r, i) => (
+                    <button key={i} className="outline-btn" onClick={() => goAndRemember(r.book, r.chapter, 1)}>
+                      {r.book} {r.chapter}
+                    </button>
+                  ))}
+                  <button className="text-btn" onClick={onOpenPlans}>
+                    Tick off / see plan →
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
       {/* Hidden while actively searching, same reasoning as the example chips above:
           keep the screen focused on results rather than competing for attention. */}
       {!query.trim() && stats && (

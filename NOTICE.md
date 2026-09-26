@@ -27,6 +27,11 @@ user's own key from the publisher's platform, and remain the property of their p
 | Cross-reference dataset (TSK-derived) | OpenBible.info, via `scrollmapper/bible_databases` | CC BY 4.0 |
 | Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke, John Gill, Calvin, Keil & Delitzsch commentaries | Free Use Bible API (bible.helloao.org, AO Lab) | Public domain (CC PDM 1.0) |
 | Tyndale Open Study Notes | Free Use Bible API (bible.helloao.org, AO Lab) | CC BY-SA 4.0 |
+| John Wesley's Explanatory Notes on the Bible (1754–65); Scofield Reference Notes (1917 edition) | CrossWire Bible Society SWORD modules `Wesley`, `Scofield` | Public domain |
+| Tyndale House Greek New Testament (THGNT, 2017) — second Greek NT reading text | Tyndale House, Cambridge; assembled from STEPBible TAGNT edition markings | CC BY-SA 4.0 |
+| Interlinear word data with grammar: Translators Amalgamated Hebrew OT (TAHOT) and Greek NT (TAGNT) | STEPBible.org, Tyndale House, Cambridge (`STEPBible/STEPBible-Data`) | CC BY 4.0 — "Data created by www.STEPBible.org based on work at Tyndale House Cambridge" |
+| Grammar-code explanations (TEHMC, TEGMC) | STEPBible.org (`STEPBible/STEPBible-Data`) | CC BY 4.0 |
+| Easton's Bible Dictionary (1897), Smith's Bible Dictionary (1884), Nave's Topical Bible (1896), Torrey's New Topical Textbook (1897) | CrossWire Bible Society SWORD modules `Easton`, `Smith`, `Nave`, `Torrey` | Public domain |
 | Theographic Bible Metadata (people, places, events) | `robertrouse/theographic-bible-metadata`, via Free Use Bible API | CC BY-SA 4.0 |
 | Coastline, river and lake basemap (Map panel) | Natural Earth (`naturalearthdata.com`), 1:50m cultural/physical vectors | Public domain |
 | Ancient-to-modern place name links (Map panel "Modern names" mode) | OpenBible.info Bible-Geocoding-Data | CC BY 4.0 |
@@ -38,7 +43,11 @@ user's own key from the publisher's platform, and remain the property of their p
 
 Word-level Strong's-number tagging for BSB/KJV/ASV/WEB comes from the OSIS/USFM markup
 included in the above sources. Curated genealogies and "Firsts & Milestones" entries were
-compiled for this app from the bundled KJV text.
+compiled for this app from the bundled KJV text. Curated "Ask a question" answers quote
+scripture from the bundled Berean Standard Bible (public domain).
+
+The reader's own notes, highlights, bookmarks and reading-plan progress are stored only on
+their own computer (`userdata.db` in the app's data folder) and are never sent anywhere.
 
 ## Online-only translations (optional, user's own key)
 
@@ -51,3 +60,24 @@ compiled for this app from the bundled KJV text.
 
 Built with Tauri, Rust, React, SQLite (FTS5, sqlite-vec), candle and Cytoscape, all under
 permissive open-source licences (MIT / Apache 2.0).
+
+### Read-aloud voice
+
+Read aloud runs in a **separate program** shipped beside the app (`resources/voice/`), which
+the app starts and talks to over a local connection (127.0.0.1 only; nothing leaves the
+computer). It contains:
+
+| Component | Source | Licence |
+|---|---|---|
+| Kokoro-82M text-to-speech model (fp16 ONNX export) and voices | hexgrad/Kokoro-82M; ONNX files from `thewh1teagle/kokoro-onnx` | Apache 2.0 |
+| kokoro-onnx | `thewh1teagle/kokoro-onnx` | MIT |
+| ONNX Runtime | Microsoft | MIT |
+| NumPy, Python 3.12 runtime | numpy.org, python.org | BSD-3-Clause, PSF |
+| espeak-ng (pronunciation) | `espeak-ng/espeak-ng`, via `espeakng-loader` | **GPL-3.0** |
+| phonemizer | `bootphon/phonemizer` | **GPL-3.0** |
+
+Because espeak-ng and phonemizer are GPL-3.0, the voice program as a whole is distributed under
+the **GPL-3.0**. Its complete source is in this repository (`voice-sidecar/`: `server.py`,
+`make_voices.py`, `build.ps1`, `requirements.txt`), and the unmodified sources of espeak-ng and
+phonemizer are available from the projects above. The rest of Bible Concordance is a separate
+program that only exchanges text and audio with it, and is not affected by that licence.

@@ -185,6 +185,14 @@ pub enum AskAnswer {
         /// Cosine similarity of the match, present only when `matched_by` is "semantic".
         similarity: Option<f32>,
     },
+    /// A who/what question with no curated answer, answered from a bundled Bible
+    /// dictionary (Easton's / Smith's / Nave's). Always presented as that reference work's
+    /// entry -- a 19th-century scholar's summary -- never as scripture or as this app's
+    /// own verified answer.
+    Dictionary {
+        entry: crate::study::DictionaryEntry,
+        term: String,
+    },
     Fallback {
         hits: Vec<SearchHit>,
         commentary_hits: Vec<CommentaryHit>,

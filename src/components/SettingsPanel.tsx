@@ -2,6 +2,40 @@ import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { api } from "../api";
 import { CloseIcon } from "./icons";
+import { DEFAULT_PREFS, ReadingPrefs } from "../readingPrefs";
+import { NATURAL_VOICES, ReadAloudPrefs } from "../readAloud";
+import { invoke } from "@tauri-apps/api/core";
+
+/** Plays a short sample in the chosen voice ("Preparing…" the first time, while the
+ * voice starts). */
+function TryVoice({ prefs }: { prefs: ReadAloudPrefs }) {
+  const [state, setState] = useState<"idle" | "busy" | "error">("idle");
+  return (
+    <button
+      className="text-btn"
+      disabled={state === "busy"}
+      onClick={async () => {
+        setState("busy");
+        try {
+          const buf = await invoke<ArrayBuffer>("voice_speak", {
+            text: "The Lord is my shepherd; I shall not want.",
+            voice: prefs.voice,
+            speed: prefs.speed,
+          });
+          const url = URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+          const a = new Audio(url);
+          a.onended = () => URL.revokeObjectURL(url);
+          await a.play();
+          setState("idle");
+        } catch {
+          setState("error");
+        }
+      }}
+    >
+      {state === "busy" ? "Preparing…" : state === "error" ? "The natural voice isn't available" : "▶ Try this voice"}
+    </button>
+  );
+}
 
 const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "Berean Standard Bible (BSB)", licence: "Public domain" },
@@ -11,11 +45,16 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "World English Bible (eBible.org)", licence: "Public domain" },
   { name: "Westminster Leningrad Codex (Hebrew OT)", licence: "Public domain" },
   { name: "Textus Receptus, Scrivener 1894 (Greek NT)", licence: "Public domain" },
+  { name: "Tyndale House Greek New Testament, 2017 (THGNT, Greek NT) — Tyndale House, Cambridge", licence: "CC BY-SA 4.0" },
+  { name: "Interlinear word data with grammar: STEPBible TAHOT & TAGNT, Tyndale House, Cambridge (STEPBible.org)", licence: "CC BY 4.0" },
+  { name: "Grammar-code explanations: STEPBible TEHMC & TEGMC (STEPBible.org)", licence: "CC BY 4.0" },
+  { name: "Easton's Bible Dictionary (1897), Smith's Bible Dictionary (1884), Nave's Topical Bible (1896), Torrey's New Topical Textbook (1897) — via CrossWire SWORD modules", licence: "Public domain" },
   { name: "1 Enoch, Charles & Oesterley 1917 (Project Gutenberg)", licence: "Public domain" },
   { name: "Strong's Hebrew & Greek Dictionaries (openscriptures)", licence: "CC BY-SA" },
   { name: "Cross references (OpenBible.info)", licence: "CC BY 4.0" },
   { name: "Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke, John Gill, Calvin, Keil & Delitzsch (via Free Use Bible API, AO Lab)", licence: "Public domain" },
   { name: "Tyndale Open Study Notes (via Free Use Bible API)", licence: "CC BY-SA 4.0" },
+  { name: "John Wesley's Explanatory Notes (1754–65) and Scofield Reference Notes (1917) — via CrossWire SWORD modules", licence: "Public domain" },
   { name: "Theographic Bible Metadata — people, places, events", licence: "CC BY-SA 4.0" },
   { name: "Natural Earth 1:50m coastlines, rivers and lakes (Map)", licence: "Public domain" },
   { name: "Ancient-to-modern place names, OpenBible.info Bible-Geocoding-Data (Map)", licence: "CC BY 4.0" },
@@ -23,10 +62,18 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "Adams' Synchronological Chart or Map of History, Sebastian C. Adams 1871 (Timeline facsimile)", licence: "Public domain" },
   { name: "Messianic prophecy pairings (Prophecies tab) — selection from \"FULFILLED\" by thecfelix & Kevin Flerlage", licence: "References credited; verses shown from bundled public-domain texts" },
   { name: "all-MiniLM-L6-v2 embedding model (topic search)", licence: "Apache 2.0" },
+  { name: "Kokoro-82M text-to-speech model and voices, hexgrad (read aloud)", licence: "Apache 2.0" },
+  { name: "kokoro-onnx (thewh1teagle) and ONNX Runtime (Microsoft) — read-aloud engine", licence: "MIT" },
+  { name: "espeak-ng and phonemizer — pronunciation, inside the separate read-aloud voice program", licence: "GPL-3.0 (source: github.com/espeak-ng/espeak-ng, github.com/bootphon/phonemizer)" },
   { name: "Poppins Regular font (the \"Gospel\" wordmark, opening screen)", licence: "SIL Open Font License 1.1" },
 ];
 
 interface Props {
+  prefs: ReadingPrefs;
+  onPrefsChange: (p: ReadingPrefs) => void;
+  readPrefs: ReadAloudPrefs;
+  onReadPrefsChange: (p: ReadAloudPrefs) => void;
+  onOpenHelp: () => void;
   onClose: () => void;
 }
 
@@ -101,7 +148,7 @@ function KeyField({ label, placeholder, value, hasKey, onChange, onSave, onRemov
   );
 }
 
-export function SettingsPanel({ onClose }: Props) {
+export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChange, onOpenHelp, onClose }: Props) {
   const [apiBibleKey, setApiBibleKey] = useState("");
   const [hasApiBible, setHasApiBible] = useState(false);
   const [esvKey, setEsvKey] = useState("");
@@ -140,6 +187,95 @@ export function SettingsPanel({ onClose }: Props) {
         </button>
       </div>
       {loadError && <p className="status-error">{loadError}</p>}
+
+      <button className="pill-btn help-open" onClick={onOpenHelp}>
+        Help &amp; user guide — how to use every feature
+      </button>
+
+      <h4 className="section-label">Reading comfort</h4>
+      <div className="reading-prefs">
+        <label>
+          <span>Text size</span>
+          <input
+            type="range"
+            min={0.85}
+            max={1.6}
+            step={0.05}
+            value={prefs.fontScale}
+            onChange={(e) => onPrefsChange({ ...prefs, fontScale: Number(e.target.value) })}
+            aria-label="Reading text size"
+          />
+          <span className="muted">{Math.round(prefs.fontScale * 100)}%</span>
+        </label>
+        <label>
+          <span>Line spacing</span>
+          <input
+            type="range"
+            min={1.5}
+            max={2.2}
+            step={0.05}
+            value={prefs.lineHeight}
+            onChange={(e) => onPrefsChange({ ...prefs, lineHeight: Number(e.target.value) })}
+            aria-label="Reading line spacing"
+          />
+          <span className="muted">{prefs.lineHeight.toFixed(2)}</span>
+        </label>
+        <label>
+          <span>Page width</span>
+          <select value={prefs.width} onChange={(e) => onPrefsChange({ ...prefs, width: e.target.value as ReadingPrefs["width"] })} aria-label="Reading page width">
+            <option value="normal">Comfortable column</option>
+            <option value="wide">Full width</option>
+          </select>
+        </label>
+        <label>
+          <span>Words of Jesus</span>
+          <select
+            value={prefs.redLetter ? "red" : "plain"}
+            onChange={(e) => onPrefsChange({ ...prefs, redLetter: e.target.value === "red" })}
+            aria-label="Words of Jesus in red"
+          >
+            <option value="red">In red (red-letter edition)</option>
+            <option value="plain">Same colour as the rest</option>
+          </select>
+        </label>
+        <button className="text-btn" onClick={() => onPrefsChange(DEFAULT_PREFS)}>
+          Reset to defaults
+        </button>
+      </div>
+      <p className="search-hint" style={{ marginTop: "0.3rem" }}>
+        Focus mode (the Focus button, or <kbd>F11</kbd>) shows just the text, full screen. <kbd>Esc</kbd> leaves it.
+      </p>
+
+      <h4 className="section-label">Read aloud</h4>
+      <div className="reading-prefs">
+        <label>
+          <span>Voice</span>
+          <select value={readPrefs.voice} onChange={(e) => onReadPrefsChange({ ...readPrefs, voice: e.target.value })} aria-label="Read-aloud voice">
+            {NATURAL_VOICES.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span>Speed</span>
+          <select value={readPrefs.speed} onChange={(e) => onReadPrefsChange({ ...readPrefs, speed: Number(e.target.value) })} aria-label="Read-aloud speed">
+            {[0.8, 0.9, 1, 1.1, 1.25, 1.5].map((s) => (
+              <option key={s} value={s}>
+                {s === 1 ? "Normal" : `${s}×`}
+              </option>
+            ))}
+          </select>
+        </label>
+        <TryVoice prefs={readPrefs} />
+      </div>
+      <p className="search-hint" style={{ marginTop: "0.3rem" }}>
+        Press <strong>Listen</strong> beside a chapter's title (or ⋯ → <em>Listen from here</em> on a verse) to hear it read in a
+        natural voice, fully offline. The first time after starting the app takes a few seconds while the voice gets ready.
+      </p>
+
+      <h4 className="section-label">Online translations</h4>
       <p className="search-hint" style={{ marginTop: 0 }}>
         Everything in this app works offline: the bundled public-domain translations, Strong's dictionaries, cross
         references, commentaries and people/places data. The options below add <strong>online-only</strong> copyrighted
@@ -207,7 +343,10 @@ export function SettingsPanel({ onClose }: Props) {
           <kbd>Ctrl</kbd> <kbd>K</kbd> focus the search box
         </li>
         <li>
-          <kbd>Esc</kbd> close the side panel
+          <kbd>Esc</kbd> close the side panel / leave focus mode
+        </li>
+        <li>
+          <kbd>F11</kbd> focus mode (full screen, just the text)
         </li>
       </ul>
       <p className="search-hint">
@@ -230,7 +369,8 @@ export function SettingsPanel({ onClose }: Props) {
         </p>
         <p>
           Every text and dataset bundled in the app is public domain or released under an open licence that permits
-          redistribution, and is used with that permission. Copyrighted modern translations (NIV, NKJV, ESV) are not
+          redistribution, and is used with that permission. The interlinear and grammar data are from STEPBible.org
+          (Tyndale House, Cambridge), used under CC BY 4.0. Copyrighted modern translations (NIV, NKJV, ESV) are not
           bundled: they can only be viewed live over the internet with your own key, and remain the property of their
           publishers.
         </p>

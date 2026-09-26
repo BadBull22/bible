@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, StrongsEntry, SearchHit } from "../api";
 import { CloseIcon } from "./icons";
+import { ListenButton } from "./ListenButton";
 
 interface Props {
   // A single surface word can carry more than one Strong's number (e.g. a Hebrew
@@ -63,7 +64,22 @@ export function WordStudyPanel({ strongsNumbers, surfaceText, versionCode, onClo
       {error && <p className="status-error">Couldn't load this entry: {error}</p>}
       {!loading && !error && entry && (
         <div className="strongs-entry">
-          <div className="strongs-number">{entry.strongs_number}</div>
+          <div className="strongs-entry-bar">
+            <div className="strongs-number">{entry.strongs_number}</div>
+            <ListenButton
+              title="Read this entry aloud"
+              text={() =>
+                [
+                  entry.xlit && `${entry.xlit}.`,
+                  entry.derivation,
+                  entry.strongs_def && `Definition: ${entry.strongs_def}`,
+                  entry.kjv_def && `King James usage: ${entry.kjv_def}`,
+                ]
+                  .filter(Boolean)
+                  .join("\n")
+              }
+            />
+          </div>
           {entry.lemma && <div className="lemma" lang={entry.language === "Hebrew" ? "he" : "grc"}>{entry.lemma}</div>}
           {entry.xlit && <div className="xlit">({entry.xlit})</div>}
           {entry.pronunciation && <div className="pron">pronounced: {entry.pronunciation}</div>}
