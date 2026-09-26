@@ -1,5 +1,6 @@
-use crate::commentaries::TimelineEvent;
-use serde::Serialize;
+use crate::commentaries::{CommentaryHit, TimelineEvent};
+use crate::qa::QaConfidence;
+use serde::{Deserialize, Serialize};
 
 /// The opening screen's "Inside this Bible" stat tiles -- every field is a live count
 /// against the bundled data (never a hardcoded figure), so these can't drift out of sync
@@ -130,6 +131,64 @@ pub struct CrossReference {
 pub struct WordFrequencyResult {
     pub total_occurrences: i64,
     pub verses: Vec<SearchHit>,
+    /// Human-readable description of an applied scope ("in the New Testament", "in
+    /// Romans"), `None` for an unscoped whole-Bible count -- lets the UI phrase its
+    /// summary sentence correctly without re-deriving it from `FrequencyScope` itself.
+    pub scope_label: Option<String>,
+}
+
+/// An optional restriction on a `word_frequency` query -- `None` (the default, omitted
+/// entirely) searches the whole Bible, matching today's existing behavior exactly.
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum FrequencyScope {
+    Testament { testament: String },
+    Book { book: String },
+}
+
+/// One citation backing an [`AskCuratedEntry`] answer, with a short note on the role it
+/// plays (e.g. "stated" vs. "supporting" vs. "foretold"/"fulfilled" for a prophecy pair).
+#[derive(Serialize, Clone)]
+pub struct AskCitation {
+    pub reference: String,
+    pub role: String,
+}
+
+/// A curated answer as shown to the user -- built from either a `qa.json` entry or a
+/// matched Firsts/Prophecies entry, so both sources render through one shape.
+#[derive(Serialize, Clone)]
+pub struct AskCuratedEntry {
+    pub question: String,
+    pub confidence: QaConfidence,
+    pub answer: String,
+    pub citations: Vec<AskCitation>,
+    pub note: Option<String>,
+}
+
+/// The tagged result of `ask_question`, in the fixed order its three layers are tried:
+/// an exact computed count, a curated hand-verified answer, or (when neither hits) the
+/// best-effort semantic/lexical fallback, clearly distinguished so the UI never lets a
+/// guess look as certain as a verified answer.
+#[derive(Serialize, Clone)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum AskAnswer {
+    Computed {
+        word: String,
+        result: WordFrequencyResult,
+    },
+    Curated {
+        entry: AskCuratedEntry,
+        /// "exact" (matched `qa.json` question/alt_phrasing text verbatim) or "semantic"
+        /// (matched by embedding similarity) -- the UI shows a "matched by meaning" note
+        /// only for the latter.
+        matched_by: String,
+        /// Cosine similarity of the match, present only when `matched_by` is "semantic".
+        similarity: Option<f32>,
+    },
+    Fallback {
+        hits: Vec<SearchHit>,
+        commentary_hits: Vec<CommentaryHit>,
+    },
 }
 
 #[derive(Serialize, Clone)]

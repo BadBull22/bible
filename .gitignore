@@ -46,3 +46,6 @@ data-pipeline/output/
 installer/
 # machine-specific Cargo target-dir override (see config.toml.example)
 src-tauri/.cargo/config.toml
+# User-downloaded copies of copyrighted translations (ESV / NIV / Amplified PDFs) kept only
+# for a licensing check. They must never be published in this public repo.
+check/

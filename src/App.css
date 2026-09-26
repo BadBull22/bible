@@ -1732,6 +1732,40 @@ body.is-resizing .leaflet-container {
   color: #6b2d1c;
 }
 
+/* ---------- "Ask a question" curated answers (Search panel) ---------- */
+
+.curated-answer {
+  background: var(--chrome-bg);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.9rem;
+}
+
+.confidence-badge {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  background: var(--accent-100);
+  color: var(--navy-900);
+}
+
+.confidence-badge.conf-traditional,
+.confidence-badge.conf-commentary_opinion,
+.confidence-badge.conf-doctrinal_view,
+.confidence-badge.conf-unattested {
+  background: #f0d9d2;
+  color: #6b2d1c;
+}
+
+/* pre-line: curated answers use blank lines to separate "Scripture", the Pentecostal /
+   evangelical reading, and "Other views" -- plain text has no other paragraph markup. */
+.curated-answer-text {
+  margin: 0.5rem 0 0;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
 .timeline-note {
   border-left: 2px solid #b5543f;
   padding-left: 0.5rem;

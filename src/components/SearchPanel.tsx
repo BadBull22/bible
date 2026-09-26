@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { api, CommentaryHit, SearchHit, Version } from "../api";
+import { api, AskAnswer, CommentaryHit, SearchHit, Version } from "../api";
+import { AskAnswerView } from "./AskAnswerView";
 import { CloseIcon } from "./icons";
 
 interface Props {
@@ -11,9 +12,10 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = "phrase" | "frequency" | "topic" | "commentary";
+type Mode = "ask" | "phrase" | "frequency" | "topic" | "commentary";
 
 const MODES: { key: Mode; label: string; placeholder: string }[] = [
+  { key: "ask", label: "Ask a question", placeholder: "e.g. how many times is love mentioned in the New Testament?" },
   { key: "topic", label: "Topics & themes", placeholder: "e.g. the sacrifice of bulls, forgiveness, the first crime" },
   { key: "phrase", label: "Exact phrase", placeholder: "e.g. sacrifice of bulls" },
   { key: "frequency", label: "Word count", placeholder: "e.g. gold" },
@@ -25,12 +27,13 @@ const TOPIC_LIMIT = 50;
 const COMMENTARY_LIMIT = 60;
 
 export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onClose }: Props) {
-  const [mode, setMode] = useState<Mode>("topic");
+  const [mode, setMode] = useState<Mode>("ask");
   const [query, setQuery] = useState(initialQuery ?? "");
   const [searchVersion, setSearchVersion] = useState(versionCode === "ENOCH1" ? "BSB" : versionCode);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [commentaryHits, setCommentaryHits] = useState<CommentaryHit[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [askAnswer, setAskAnswer] = useState<AskAnswer | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ran, setRan] = useState<{ query: string; mode: Mode; version: string } | null>(null);
@@ -45,12 +48,32 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
     try {
       let results: SearchHit[] = [];
       let total: number | null = null;
-      if (mode === "commentary") {
+      if (mode === "ask") {
+        const a = await api.askQuestion(effective);
+        if (id !== requestId.current) return;
+        setAskAnswer(a);
+        if (a.kind === "computed") {
+          setHits(a.result.verses);
+          setTotalCount(a.result.total_occurrences);
+          setCommentaryHits([]);
+        } else if (a.kind === "fallback") {
+          setHits(a.hits);
+          setCommentaryHits(a.commentary_hits);
+          setTotalCount(null);
+        } else {
+          setHits([]);
+          setCommentaryHits([]);
+          setTotalCount(null);
+        }
+        setRan({ query: effective, mode, version: searchVersion });
+        return;
+      } else if (mode === "commentary") {
         const c = await api.searchCommentaries(effective, null, COMMENTARY_LIMIT);
         if (id !== requestId.current) return;
         setCommentaryHits(c);
         setHits([]);
         setTotalCount(null);
+        setAskAnswer(null);
         setRan({ query: effective, mode, version: searchVersion });
         return;
       } else if (mode === "phrase") {
@@ -66,11 +89,13 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
       setCommentaryHits([]);
       setHits(results);
       setTotalCount(total);
+      setAskAnswer(null);
       setRan({ query: effective, mode, version: searchVersion });
     } catch (e) {
       if (id !== requestId.current) return;
       setError(String(e));
       setHits([]);
+      setAskAnswer(null);
     } finally {
       if (id === requestId.current) setLoading(false);
     }
@@ -98,6 +123,7 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
     setHits([]);
     setCommentaryHits([]);
     setTotalCount(null);
+    setAskAnswer(null);
     setRan(null);
     if (query.trim()) runSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -144,6 +170,9 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
         </form>
       </div>
       {error && <p className="status-error">Search failed: {error}</p>}
+      {!loading && ran && ran.mode === "ask" && askAnswer && (
+        <AskAnswerView answer={askAnswer} hitCount={hits.length} commentaryHitCount={commentaryHits.length} onJump={onJump} />
+      )}
       {!loading && ran && ran.mode === "frequency" && totalCount !== null && (
         <p className="frequency-summary">
           "{ran.query}" appears <strong>{totalCount}</strong> time{totalCount === 1 ? "" : "s"} in {ran.version}, across{" "}
@@ -171,14 +200,16 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
           ))}
         </ul>
       )}
-      {!loading && ran && ran.mode !== "frequency" && ran.mode !== "commentary" && hits.length > 0 && (
+      {!loading && ran && ran.mode !== "frequency" && ran.mode !== "commentary" && ran.mode !== "ask" && hits.length > 0 && (
         <p className="result-count">
           {hits.length}
           {ran.mode === "phrase" && hits.length >= PHRASE_LIMIT ? "+" : ""} {hits.length === 1 ? "result" : "results"}
           {ran.mode === "topic" ? " by meaning (BSB)" : ` in ${ran.version}`}
         </p>
       )}
-      {!loading && ran && !error && hits.length === 0 && commentaryHits.length === 0 && <p className="muted">No matches for "{ran.query}".</p>}
+      {!loading && ran && ran.mode !== "ask" && !error && hits.length === 0 && commentaryHits.length === 0 && (
+        <p className="muted">No matches for "{ran.query}".</p>
+      )}
       {!loading && hits.length > 0 && (
         <ul className="xref-list">
           {hits.map((h) => (
@@ -190,6 +221,14 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
             </li>
           ))}
         </ul>
+      )}
+      {mode === "ask" && (
+        <p className="search-hint">
+          Ask things like "how many times is love mentioned in the New Testament?", "how many prophecies were
+          fulfilled in Christ's birth, life, and resurrection?", or "how old was Joseph when he died?" — exact counts
+          are computed live; everything else is answered from this app's own hand-verified curated set, or, when
+          nothing matches, the closest related verses and commentary.
+        </p>
       )}
       {mode === "commentary" && (
         <p className="search-hint">

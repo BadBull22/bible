@@ -2,10 +2,12 @@ mod commands;
 mod commentaries;
 mod db;
 pub mod embeddings;
-mod firsts;
+pub mod firsts;
 mod genealogy;
 mod models;
 mod online;
+pub mod qa;
+mod qa_parser;
 mod settings;
 
 use db::DbState;
@@ -22,6 +24,7 @@ pub struct SettingsState(pub Mutex<AppSettings>);
 pub struct EmbedderState(pub Embedder);
 pub struct GenealogyState(pub GenealogyData);
 pub struct FirstsState(pub FirstsData);
+pub struct QaState(pub qa::QaRuntime);
 
 /// Registers the sqlite-vec extension for every connection subsequently opened in this
 /// process (rusqlite's `sqlite3_auto_extension` is process-global, not per-connection).
@@ -82,6 +85,17 @@ pub fn run() {
             let firsts = FirstsData::load(&firsts_path).expect("failed to load firsts.json");
             app.manage(FirstsState(firsts));
 
+            let qa_path = app
+                .path()
+                .resolve("resources/qa.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve qa.json resource path");
+            let qa_index_path = app
+                .path()
+                .resolve("resources/qa_index.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve qa_index.json resource path");
+            let qa_runtime = qa::QaRuntime::load(&qa_path, &qa_index_path).expect("failed to load qa.json/qa_index.json");
+            app.manage(QaState(qa_runtime));
+
             // Optional: the app still runs without commentaries.db (commands report it missing).
             let commentaries_path = app
                 .path()
@@ -123,6 +137,7 @@ pub fn run() {
             commands::search_entities,
             commands::map_places,
             commands::exit_app,
+            commands::ask_question,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

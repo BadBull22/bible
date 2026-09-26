@@ -94,7 +94,23 @@ export default defineConfig(() => ({
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`, the (large, slow-to-scan)
       // data pipeline sources/output, and env files
-      ignored: ["**/src-tauri/**", "**/data-pipeline/**", "**/.env*"],
+      //
+      // Also ignored, because of point 4 below: polling means a stat() of EVERY watched
+      // file every 300ms over the SMB share. Left in, `public/chart` (1,505 map tiles) and its
+      // 1,528-file copy in `dist/` alone were ~10,000 stats a second -- enough to starve
+      // every real read on the same connection: an 8MB launch video served by the dev
+      // server took ~37s (0.2MB/s) instead of 0.2s, so the splash gave up before it could
+      // play. None of these ever change while developing, so nothing is lost by not
+      // watching them.
+      ignored: [
+        "**/src-tauri/**",
+        "**/data-pipeline/**",
+        "**/.env*",
+        "**/dist/**",
+        "**/installer/**",
+        "**/check/**",
+        "**/public/chart/**",
+      ],
       // 4. native fs.watch fails with "UNKNOWN: unknown error, watch" on this
       // project's network-mapped drive (SMB doesn't support Windows change
       // notifications reliably) - fall back to polling.

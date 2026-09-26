@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { api, BookInfo, HomeStats, resolveReference, SearchHit } from "../api";
+import { api, AskAnswer, BookInfo, HomeStats, resolveReference, SearchHit } from "../api";
 import { addSearchHistory, getSearchHistory } from "../searchHistory";
+import { AskAnswerView } from "./AskAnswerView";
 import { SearchIcon } from "./icons";
 
 interface Props {
@@ -14,7 +15,6 @@ interface Props {
 }
 
 const EXAMPLES = ["John 3:16", "the creation of light", "the prodigal son", "Psalm 23", "the parting of the Red Sea"];
-const RESULT_LIMIT = 12;
 
 // Genesis 1:1 carries 68 outgoing cross-references in the bundled TSK-derived dataset --
 // the most cross-referenced opening verse of any book, and thematically apt ("in the
@@ -88,6 +88,7 @@ function buildStatTiles(stats: HomeStats, onGo: Props["onGo"], onOpenCrossRefs: 
 export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpenParallel }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchHit[]>([]);
+  const [askAnswer, setAskAnswer] = useState<AskAnswer | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<HomeStats | null>(null);
@@ -109,9 +110,10 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
 
   useEffect(() => {
     const q = query.trim();
-    // A recognized reference is unambiguous -- no need to also run a topic search under it.
+    // A recognized reference is unambiguous -- no need to also run a search under it.
     if (!q || reference) {
       setResults([]);
+      setAskAnswer(null);
       setError(null);
       return;
     }
@@ -119,16 +121,18 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
     const handle = setTimeout(() => {
       setLoading(true);
       api
-        .semanticSearch(q, RESULT_LIMIT)
-        .then((r) => {
+        .askQuestion(q)
+        .then((a) => {
           if (id !== requestId.current) return;
-          setResults(r);
+          setAskAnswer(a);
+          setResults(a.kind === "computed" ? a.result.verses : a.kind === "fallback" ? a.hits : []);
           setError(null);
         })
         .catch((e) => {
           if (id !== requestId.current) return;
           setError(String(e));
           setResults([]);
+          setAskAnswer(null);
         })
         .finally(() => {
           if (id === requestId.current) setLoading(false);
@@ -205,7 +209,10 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
         )}
         {loading && <p className="muted">Searching…</p>}
         {error && <p className="status-error">{error}</p>}
-        {!loading && !error && query.trim() && !reference && results.length === 0 && <p className="muted">No matches for "{query.trim()}".</p>}
+        {!loading && !reference && askAnswer && (
+          <AskAnswerView answer={askAnswer} hitCount={results.length} onJump={(book, chapter, verse) => goAndRemember(book, chapter, verse)} />
+        )}
+        {!loading && !error && !askAnswer && query.trim() && !reference && results.length === 0 && <p className="muted">No matches for "{query.trim()}".</p>}
         {!reference && results.length > 0 && (
           <ul className="xref-list">
             {results.map((h) => (
