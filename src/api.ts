@@ -72,6 +72,7 @@ export type FrequencyScope = { kind: "testament"; testament: string } | { kind: 
 export interface AppSettings {
   api_bible_key: string | null;
   esv_api_key: string | null;
+  highlight_titles: Record<string, string>;
 }
 
 export interface OnlineVersionInfo {
@@ -341,6 +342,13 @@ export const HIGHLIGHT_COLOR_NAMES: Record<HighlightColor, string> = {
   violet: "Purple",
 };
 
+/** The label to show for a highlight colour: the reader's own custom title (e.g. "Love")
+ * if they've set one, otherwise the default descriptive name ("Soft yellow"). */
+export function highlightLabel(color: string, titles: Record<string, string>): string {
+  const custom = titles[color]?.trim();
+  return custom || HIGHLIGHT_COLOR_NAMES[color as HighlightColor] || color;
+}
+
 export interface ChapterMarks {
   bookmarks: number[];
   highlights: [number, HighlightColor][];
@@ -481,6 +489,7 @@ export const api = {
   getSettings: () => invoke<AppSettings>("get_settings"),
   saveApiBibleKey: (key: string) => invoke<void>("save_api_bible_key", { key }),
   saveEsvApiKey: (key: string) => invoke<void>("save_esv_api_key", { key }),
+  saveHighlightTitle: (color: HighlightColor, title: string) => invoke<void>("save_highlight_title", { color, title }),
   listOnlineVersions: () => invoke<OnlineVersionInfo[]>("list_online_versions"),
   fetchOnlineVerse: (version_code: string, book: string, chapter: number, verse: number) =>
     invoke<OnlineVerseResult>("fetch_online_verse", { versionCode: version_code, book, chapter, verse }),

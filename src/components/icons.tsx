@@ -56,6 +56,12 @@ export const ChevronRightIcon = (p: IconProps) => (
   </svg>
 );
 
+export const ChevronDownIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+);
+
 export const PrintIcon = (p: IconProps) => (
   <svg {...base(p.size, p.className)}>
     <path d="M6 9V3h12v6" />

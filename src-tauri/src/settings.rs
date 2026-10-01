@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -13,6 +14,11 @@ pub struct AppSettings {
     /// Crossway ESV API key (api.esv.org) -- separate provider, separate key.
     #[serde(default)]
     pub esv_api_key: Option<String>,
+    /// User-chosen label per highlight colour (e.g. "yellow" -> "Love"), so a colour can
+    /// carry a personal meaning instead of just its name. Keyed by the same colour strings
+    /// as `userdata::HIGHLIGHT_COLORS`; a colour with no entry has no custom title yet.
+    #[serde(default)]
+    pub highlight_titles: HashMap<String, String>,
 }
 
 fn settings_path(config_dir: &Path) -> PathBuf {

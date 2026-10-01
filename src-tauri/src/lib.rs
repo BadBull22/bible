@@ -140,6 +140,7 @@ pub fn run() {
             commands::get_settings,
             commands::save_api_bible_key,
             commands::save_esv_api_key,
+            commands::save_highlight_title,
             commands::list_online_versions,
             commands::fetch_online_verse,
             commands::semantic_search,

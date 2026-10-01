@@ -27,6 +27,7 @@ import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
 import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { BackIcon, BasketIcon, DictionaryIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
+import { TopMenu } from "./components/TopMenu";
 import "./App.css";
 
 // The two graph panels pull in cytoscape (+ the cola layout), and the map panel pulls
@@ -147,6 +148,10 @@ function App() {
   const [basketItems] = useBasket();
   const [prefs, setPrefs] = useState<ReadingPrefs>(() => loadPrefs());
   const [focusMode, setFocusMode] = useState(false);
+  // User-chosen names for the highlight colours (e.g. "yellow" -> "Love"), lifted here
+  // rather than fetched locally in each consumer: ChapterView is long-lived and stays on
+  // screen beside Settings, so a rename needs to reach it immediately, not just on remount.
+  const [highlightTitles, setHighlightTitles] = useState<Record<string, string>>({});
   useEffect(() => {
     applyPrefs(prefs);
     savePrefs(prefs);
@@ -178,6 +183,10 @@ function App() {
   useEffect(() => {
     api.listVersions().then(setVersions).catch(console.error);
     api.listBooks().then(setBooks).catch(console.error);
+    api
+      .getSettings()
+      .then((s) => setHighlightTitles(s.highlight_titles))
+      .catch(console.error);
     api
       .chapterCounts()
       .then((rows) => {
@@ -580,36 +589,32 @@ function App() {
             </button>
           ) : (
             <>
-          <button className="text-btn" onClick={() => setPanel({ kind: "study" })} title="My notes, highlights, bookmarks and reading plans" aria-label="My Study">
-            <NotebookIcon size={15} /> <span className="label">My Study</span>
-          </button>
-          <button className="text-btn" onClick={() => setPanel({ kind: "basket" })} title="Study basket: material gathered for a study sheet" aria-label={`Study basket, ${basketItems.length} items`}>
-            <BasketIcon size={15} /> <span className="label">Basket</span>
-            {basketItems.length > 0 && <span className="count-badge">{basketItems.length}</span>}
-          </button>
-          <button className="text-btn" onClick={() => setPanel({ kind: "dictionary" })} title="Bible dictionaries and topical indexes" aria-label="Dictionary">
-            <DictionaryIcon size={15} /> <span className="label">Dictionary</span>
-          </button>
-          <button className="text-btn" onClick={() => setPanel({ kind: "genealogy" })} title="Genealogies" aria-label="Genealogies">
-            <TreeIcon size={15} /> <span className="label">Genealogies</span>
-          </button>
-          <button className="text-btn" onClick={() => setPanel({ kind: "firsts" })} title="Firsts & Milestones" aria-label="Firsts and Milestones">
-            <StarIcon size={15} /> <span className="label">Firsts</span>
-          </button>
-          <button className="text-btn" onClick={() => setPanel({ kind: "entities" })} title="People, places and events in this chapter" aria-label="People and places">
-            <UsersIcon size={15} /> <span className="label">People &amp; Places</span>
-          </button>
-          <button className="text-btn" onClick={() => setPanel({ kind: "map" })} title="Map of biblical places" aria-label="Map">
-            <MapIcon size={15} /> <span className="label">Map</span>
-          </button>
-          <button
-            className="text-btn"
-            onClick={() => setPanel({ kind: "timeline" })}
-            title="Timeline of lifespans and events"
-            aria-label="Timeline"
-          >
-            <TimelineIcon size={15} /> <span className="label">Timeline</span>
-          </button>
+          <TopMenu
+            label="Study"
+            icon={<NotebookIcon size={15} />}
+            items={[
+              { key: "study", label: "My Study", icon: <NotebookIcon size={14} />, onClick: () => setPanel({ kind: "study" }) },
+              { key: "basket", label: "Basket", icon: <BasketIcon size={14} />, onClick: () => setPanel({ kind: "basket" }), badge: basketItems.length },
+            ]}
+          />
+          <TopMenu
+            label="Reference"
+            icon={<UsersIcon size={15} />}
+            items={[
+              { key: "entities", label: "People & Places", icon: <UsersIcon size={14} />, onClick: () => setPanel({ kind: "entities" }) },
+              { key: "firsts", label: "Firsts & Milestones", icon: <StarIcon size={14} />, onClick: () => setPanel({ kind: "firsts" }) },
+              { key: "genealogy", label: "Genealogies", icon: <TreeIcon size={14} />, onClick: () => setPanel({ kind: "genealogy" }) },
+            ]}
+          />
+          <TopMenu
+            label="Explore"
+            icon={<MapIcon size={15} />}
+            items={[
+              { key: "map", label: "Map", icon: <MapIcon size={14} />, onClick: () => setPanel({ kind: "map" }) },
+              { key: "timeline", label: "Timeline", icon: <TimelineIcon size={14} />, onClick: () => setPanel({ kind: "timeline" }) },
+              { key: "dictionary", label: "Dictionary", icon: <DictionaryIcon size={14} />, onClick: () => setPanel({ kind: "dictionary" }) },
+            ]}
+          />
           <button className="text-btn" onClick={() => { document.body.classList.remove("printing-sheet"); window.print(); }} title="Print this view" aria-label="Print">
             <PrintIcon size={15} /> <span className="label">Print</span>
           </button>
@@ -679,6 +684,7 @@ function App() {
                 readingVerse={readingHere}
                 marks={marks}
                 onMarksChanged={() => setStudyVersion((n) => n + 1)}
+                highlightTitles={highlightTitles}
               />
             )}
             {readState.status !== "idle" && (
@@ -790,7 +796,12 @@ function App() {
               onReadPrefsChange={(p) => {
                 setReadPrefs(p);
                 reader.setPrefs(p);
-              }} onOpenHelp={() => setPanel({ kind: "help" })} onClose={() => setPanel(null)} />
+              }}
+              highlightTitles={highlightTitles}
+              onHighlightTitlesChange={setHighlightTitles}
+              onOpenHelp={() => setPanel({ kind: "help" })}
+              onClose={() => setPanel(null)}
+            />
           )}
           {panel?.kind === "help" && <HelpPanel onBack={() => setPanel({ kind: "settings" })} onClose={() => setPanel(null)} />}
           {panel?.kind === "interlinear" && (
@@ -819,6 +830,7 @@ function App() {
               onJump={jumpTo}
               onPlansChanged={() => setStudyVersion((n) => n + 1)}
               onClose={() => setPanel(null)}
+              highlightTitles={highlightTitles}
             />
           )}
           {panel?.kind === "sheet" && (

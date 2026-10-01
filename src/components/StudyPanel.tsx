@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { api, BookInfo, PlanProgress, StudyItem, StudyLists } from "../api";
+import { api, BookInfo, HIGHLIGHT_COLORS, highlightLabel, PlanProgress, StudyItem, StudyLists } from "../api";
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "../readingPlans";
 import { addToBasket, addVersesToBasket } from "../basket";
 import { BasketButton } from "./BasketButton";
 import { CopyButton } from "./CopyButton";
-import { CloseIcon } from "./icons";
+import { ChevronDownIcon, CloseIcon } from "./icons";
 
 type Tab = "notes" | "highlights" | "bookmarks" | "plans";
 
@@ -17,6 +17,8 @@ interface Props {
   onJump: (book: string, chapter: number, verse: number) => void;
   onPlansChanged: () => void;
   onClose: () => void;
+  /** The reader's own names for the highlight colours (e.g. "yellow" -> "Love"), if set. */
+  highlightTitles: Record<string, string>;
 }
 
 const TABS: { key: Tab; label: string }[] = [
@@ -26,14 +28,24 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "plans", label: "Reading plans" },
 ];
 
-export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJump, onPlansChanged, onClose }: Props) {
+export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJump, onPlansChanged, onClose, highlightTitles }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab ?? "notes");
   const [lists, setLists] = useState<StudyLists | null>(null);
   const [plans, setPlans] = useState<PlanProgress[]>([]);
   const [filter, setFilter] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expandedColors, setExpandedColors] = useState<Set<string>>(new Set());
   const fileRef = useRef<HTMLInputElement>(null);
+
+  function toggleColor(color: string) {
+    setExpandedColors((s) => {
+      const next = new Set(s);
+      if (next.has(color)) next.delete(color);
+      else next.add(color);
+      return next;
+    });
+  }
 
   function reload() {
     api.listStudy().then(setLists).catch((e) => setError(String(e)));
@@ -49,8 +61,26 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
     const all = lists[tab];
     const q = filter.trim().toLowerCase();
     if (!q) return all;
-    return all.filter((i) => `${i.book} ${i.chapter}:${i.verse} ${i.value} ${i.verse_text}`.toLowerCase().includes(q));
-  }, [lists, tab, filter]);
+    return all.filter((i) =>
+      `${i.book} ${i.chapter}:${i.verse} ${i.value} ${highlightTitles[i.value] ?? ""} ${i.verse_text}`.toLowerCase().includes(q),
+    );
+  }, [lists, tab, filter, highlightTitles]);
+
+  // Highlights grouped by colour (not flat/chronological like the other tabs) -- each
+  // colour becomes one collapsible section, so a reader with a lot of highlights can find
+  // "everything I called Love" instead of scrolling a single undifferentiated list.
+  const highlightGroups = useMemo(() => {
+    if (tab !== "highlights") return [];
+    const byColor = new Map<string, StudyItem[]>();
+    for (const i of items) {
+      const arr = byColor.get(i.value);
+      if (arr) arr.push(i);
+      else byColor.set(i.value, [i]);
+    }
+    const known = HIGHLIGHT_COLORS.filter((c) => byColor.has(c));
+    const other = [...byColor.keys()].filter((c) => !(HIGHLIGHT_COLORS as string[]).includes(c));
+    return [...known, ...other].map((color) => ({ color, items: byColor.get(color)! }));
+  }, [items, tab]);
 
   async function doExport() {
     setError(null);
@@ -154,31 +184,72 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
                     : "No bookmarks yet. Use the ⋯ menu beside any verse to bookmark it."}
             </p>
           )}
-          <ul className="xref-list study-list">
-            {items.map((i) => (
-              <li key={`${i.book}-${i.chapter}-${i.verse}`} className={tab === "highlights" ? `hl-${i.value}` : undefined}>
-                <div className="xref-item-head">
-                  <button className="link-btn" onClick={() => onJump(i.book, i.chapter, i.verse)}>
-                    {i.book} {i.chapter}:{i.verse}
-                  </button>
-                  <span className="votes">{(tab === "notes" ? i.updated_at : i.created_at).slice(0, 10)}</span>
-                  <BasketButton
-                    add={async () =>
-                      (await addVersesToBasket(i.book, i.chapter, i.verse, i.verse, "BSB")) &&
-                      (tab !== "notes" || (await addToBasket("note", `My note on ${i.book} ${i.chapter}:${i.verse}`, i.value)))
-                    }
-                    title={tab === "notes" ? "Add the verse and your note to the study basket" : "Add this verse to the study basket"}
-                  />
-                  <CopyButton
-                    title={tab === "notes" ? "Copy the verse and your note" : "Copy this verse"}
-                    text={`${i.book} ${i.chapter}:${i.verse} (BSB)${i.verse_text ? ` — ${i.verse_text.trim()}` : ""}${tab === "notes" ? `\n\nMy note: ${i.value}` : ""}`}
-                  />
-                </div>
-                {tab === "notes" && <div className="study-note-body">{i.value}</div>}
-                {i.verse_text && <div className="snippet">{i.verse_text}</div>}
-              </li>
-            ))}
-          </ul>
+          {tab === "highlights" ? (
+            <div className="highlight-groups">
+              {highlightGroups.map(({ color, items: groupItems }) => {
+                const expanded = expandedColors.has(color);
+                return (
+                  <div className={`highlight-group hl-${color}`} key={color}>
+                    <button className="highlight-group-header" onClick={() => toggleColor(color)} aria-expanded={expanded}>
+                      <i className={`highlight-swatch swatch-${color}`} />
+                      <span className="highlight-group-title">{highlightLabel(color, highlightTitles)}</span>
+                      <span className="tab-count">{groupItems.length}</span>
+                      <ChevronDownIcon size={14} className={expanded ? "highlight-group-chevron open" : "highlight-group-chevron"} />
+                    </button>
+                    {expanded && (
+                      <ul className="xref-list study-list">
+                        {groupItems.map((i) => (
+                          <li key={`${i.book}-${i.chapter}-${i.verse}`}>
+                            <div className="xref-item-head">
+                              <button className="link-btn" onClick={() => onJump(i.book, i.chapter, i.verse)}>
+                                {i.book} {i.chapter}:{i.verse}
+                              </button>
+                              <span className="votes">{i.created_at.slice(0, 10)}</span>
+                              <BasketButton
+                                add={() => addVersesToBasket(i.book, i.chapter, i.verse, i.verse, "BSB")}
+                                title="Add this verse to the study basket"
+                              />
+                              <CopyButton
+                                title="Copy this verse"
+                                text={`${i.book} ${i.chapter}:${i.verse} (BSB)${i.verse_text ? ` — ${i.verse_text.trim()}` : ""}`}
+                              />
+                            </div>
+                            {i.verse_text && <div className="snippet">{i.verse_text}</div>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <ul className="xref-list study-list">
+              {items.map((i) => (
+                <li key={`${i.book}-${i.chapter}-${i.verse}`}>
+                  <div className="xref-item-head">
+                    <button className="link-btn" onClick={() => onJump(i.book, i.chapter, i.verse)}>
+                      {i.book} {i.chapter}:{i.verse}
+                    </button>
+                    <span className="votes">{(tab === "notes" ? i.updated_at : i.created_at).slice(0, 10)}</span>
+                    <BasketButton
+                      add={async () =>
+                        (await addVersesToBasket(i.book, i.chapter, i.verse, i.verse, "BSB")) &&
+                        (tab !== "notes" || (await addToBasket("note", `My note on ${i.book} ${i.chapter}:${i.verse}`, i.value)))
+                      }
+                      title={tab === "notes" ? "Add the verse and your note to the study basket" : "Add this verse to the study basket"}
+                    />
+                    <CopyButton
+                      title={tab === "notes" ? "Copy the verse and your note" : "Copy this verse"}
+                      text={`${i.book} ${i.chapter}:${i.verse} (BSB)${i.verse_text ? ` — ${i.verse_text.trim()}` : ""}${tab === "notes" ? `\n\nMy note: ${i.value}` : ""}`}
+                    />
+                  </div>
+                  {tab === "notes" && <div className="study-note-body">{i.value}</div>}
+                  {i.verse_text && <div className="snippet">{i.verse_text}</div>}
+                </li>
+              ))}
+            </ul>
+          )}
         </>
       )}
 

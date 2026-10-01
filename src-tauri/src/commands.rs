@@ -518,6 +518,28 @@ pub fn save_esv_api_key(
     settings::save(&config_dir.0, &s).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub fn save_highlight_title(
+    config_dir: State<ConfigDir>,
+    state: State<SettingsState>,
+    color: String,
+    title: String,
+) -> Result<(), String> {
+    if !crate::userdata::HIGHLIGHT_COLORS.contains(&color.as_str()) {
+        return Err(format!("unknown highlight colour: {color}"));
+    }
+    let mut s = state.0.lock().map_err(|e| e.to_string())?;
+    match title.trim() {
+        "" => {
+            s.highlight_titles.remove(&color);
+        }
+        t => {
+            s.highlight_titles.insert(color, t.to_string());
+        }
+    }
+    settings::save(&config_dir.0, &s).map_err(|e| e.to_string())
+}
+
 fn key_for(settings: &AppSettings, provider: online::Provider) -> Option<String> {
     match provider {
         online::Provider::ApiBible { .. } => settings.api_bible_key.clone(),
