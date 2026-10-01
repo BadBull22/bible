@@ -265,6 +265,48 @@ kbd {
   margin-left: auto;
 }
 
+/* Grouped top-bar dropdown (My Study+Basket, People&Places+Firsts, Map+Timeline): one
+ * trigger button instead of one-button-per-panel, so the bar doesn't run out of room and
+ * push Settings off the edge of a narrower window. */
+.top-menu {
+  position: relative;
+}
+
+.top-menu-dropdown {
+  position: absolute;
+  z-index: 20;
+  inset-inline-start: 0;
+  top: 2.1rem;
+  min-width: 13rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-family: var(--sans);
+}
+
+.top-menu-dropdown > button {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.top-menu-dropdown > button:hover,
+.top-menu-dropdown > button:focus-visible {
+  background: var(--accent-100);
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -1473,6 +1515,22 @@ body.is-resizing .leaflet-container {
   font-size: 0.72rem;
 }
 
+.highlight-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.highlight-swatch {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--hl);
+  flex-shrink: 0;
+}
+
 /* ---------- search panel ---------- */
 
 .search-controls {
@@ -2160,6 +2218,54 @@ body.is-resizing .leaflet-container {
   padding-left: 0.6rem;
 }
 
+.highlight-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.highlight-group {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.highlight-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--chrome-bg);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.highlight-group[class*="hl-"] .highlight-group-header {
+  background: var(--hl);
+}
+
+.highlight-group-title {
+  flex: 1;
+}
+
+.highlight-group-chevron {
+  transition: transform 0.15s;
+  color: var(--text-muted);
+}
+
+.highlight-group-chevron.open {
+  transform: rotate(180deg);
+}
+
+.highlight-group .study-list {
+  margin: 0.3rem 0 0;
+}
+
 .verse-mark {
   display: inline-flex;
   align-items: center;
@@ -2618,6 +2724,34 @@ body.is-resizing .leaflet-container {
 
 .reading-prefs .text-btn {
   align-self: flex-start;
+}
+
+.highlight-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.highlight-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.highlight-title-row .highlight-swatch {
+  width: 1rem;
+  height: 1rem;
+}
+
+.highlight-title-row input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--paper-raised);
+  color: var(--text);
+  font-size: 0.85rem;
 }
 
 /* ---------- focus mode ---------- */

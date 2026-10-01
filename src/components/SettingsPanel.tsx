@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
-import { api } from "../api";
+import { api, HIGHLIGHT_COLOR_NAMES, HIGHLIGHT_COLORS, HighlightColor } from "../api";
 import { CloseIcon } from "./icons";
 import { DEFAULT_PREFS, ReadingPrefs } from "../readingPrefs";
 import { NATURAL_VOICES, ReadAloudPrefs } from "../readAloud";
@@ -73,6 +73,9 @@ interface Props {
   onPrefsChange: (p: ReadingPrefs) => void;
   readPrefs: ReadAloudPrefs;
   onReadPrefsChange: (p: ReadAloudPrefs) => void;
+  /** The reader's own names for the highlight colours (e.g. "yellow" -> "Love"), if set. */
+  highlightTitles: Record<string, string>;
+  onHighlightTitlesChange: (titles: Record<string, string>) => void;
   onOpenHelp: () => void;
   onClose: () => void;
 }
@@ -148,7 +151,27 @@ function KeyField({ label, placeholder, value, hasKey, onChange, onSave, onRemov
   );
 }
 
-export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChange, onOpenHelp, onClose }: Props) {
+/** One highlight colour's name field. Uncontrolled (saves on blur/Enter) rather than
+ * tracked in state on every keystroke -- simpler, and avoids 11 fields needing to stay
+ * in sync with a parent-level map that only ever changes from this same panel anyway. */
+function HighlightTitleField({ color, defaultTitle, onSave }: { color: HighlightColor; defaultTitle: string; onSave: (title: string) => void }) {
+  return (
+    <label className="highlight-title-row">
+      <i className={`highlight-swatch swatch-${color}`} aria-hidden="true" />
+      <input
+        defaultValue={defaultTitle}
+        placeholder={HIGHLIGHT_COLOR_NAMES[color]}
+        aria-label={`Your name for ${HIGHLIGHT_COLOR_NAMES[color]}`}
+        onBlur={(e) => onSave(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+        }}
+      />
+    </label>
+  );
+}
+
+export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChange, highlightTitles, onHighlightTitlesChange, onOpenHelp, onClose }: Props) {
   const [apiBibleKey, setApiBibleKey] = useState("");
   const [hasApiBible, setHasApiBible] = useState(false);
   const [esvKey, setEsvKey] = useState("");
@@ -161,6 +184,19 @@ export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChan
       .then(setVersion)
       .catch(() => setVersion(""));
   }, []);
+
+  async function saveHighlightTitle(color: HighlightColor, title: string) {
+    const trimmed = title.trim();
+    try {
+      await api.saveHighlightTitle(color, trimmed);
+      const next = { ...highlightTitles };
+      if (trimmed) next[color] = trimmed;
+      else delete next[color];
+      onHighlightTitlesChange(next);
+    } catch (e) {
+      setLoadError(String(e));
+    }
+  }
 
   useEffect(() => {
     api
@@ -274,6 +310,17 @@ export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChan
         Press <strong>Listen</strong> beside a chapter's title (or ⋯ → <em>Listen from here</em> on a verse) to hear it read in a
         natural voice, fully offline. The first time after starting the app takes a few seconds while the voice gets ready.
       </p>
+
+      <h4 className="section-label">Name your highlights</h4>
+      <p className="search-hint" style={{ marginTop: 0 }}>
+        Give each highlight colour its own meaning — Love, Family, Prophecy, Prayer, whatever helps you study. Leave a
+        name blank to just use the colour's own name. Your names show next to the colour in My Study → Highlights.
+      </p>
+      <div className="highlight-titles">
+        {HIGHLIGHT_COLORS.map((c) => (
+          <HighlightTitleField key={c} color={c} defaultTitle={highlightTitles[c] ?? ""} onSave={(title) => saveHighlightTitle(c, title)} />
+        ))}
+      </div>
 
       <h4 className="section-label">Online translations</h4>
       <p className="search-hint" style={{ marginTop: 0 }}>

@@ -1,5 +1,5 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
-import { api, ChapterMarks, HIGHLIGHT_COLOR_NAMES as COLOR_NAMES, HIGHLIGHT_COLORS_BRIGHT, HIGHLIGHT_COLORS_SOFT, HighlightColor, VerseWithWords } from "../api";
+import { api, ChapterMarks, highlightLabel, HIGHLIGHT_COLORS_BRIGHT, HIGHLIGHT_COLORS_SOFT, HighlightColor, VerseWithWords } from "../api";
 import { copyText, formatVerseForCopy } from "../clipboard";
 import { chapterRedLetter, loadRedLetter, splitRed } from "../redLetter";
 import { segmentVerse } from "../verseSegments";
@@ -48,6 +48,8 @@ interface Props {
   next: Location | null;
   marks: ChapterMarks;
   onMarksChanged: () => void;
+  /** The reader's own names for the highlight colours (e.g. "yellow" -> "Love"), if set. */
+  highlightTitles: Record<string, string>;
   onNavigate: (to: Location | null) => void;
   onWordClick: (strongsNumbers: string[], surfaceText: string) => void;
   onShowCrossRefs: (verse: number) => void;
@@ -75,6 +77,7 @@ export function ChapterView({
   next,
   marks,
   onMarksChanged,
+  highlightTitles,
   onNavigate,
   onWordClick,
   onShowCrossRefs,
@@ -417,8 +420,8 @@ export function ChapterView({
                           role="menuitemradio"
                           aria-checked={hl === c}
                           className={`swatch swatch-${c}` + (hl === c ? " active" : "")}
-                          title={COLOR_NAMES[c]}
-                          aria-label={`Highlight ${COLOR_NAMES[c]}`}
+                          title={highlightLabel(c, highlightTitles)}
+                          aria-label={`Highlight ${highlightLabel(c, highlightTitles)}`}
                           onClick={() => highlight(v.verse, c)}
                         />
                       ))}
