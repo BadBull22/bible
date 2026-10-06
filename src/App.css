@@ -164,7 +164,10 @@ kbd {
   color: #f3f1ea;
   flex-shrink: 0;
   box-shadow: var(--shadow-sm);
-  z-index: 2;
+  /* Above the pinned chapter heading (z-index 8) so the Study/Reference/Explore
+     dropdowns open over it instead of being hidden behind it. */
+  position: relative;
+  z-index: 50;
 }
 
 .brand {
