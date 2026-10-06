@@ -1,6 +1,6 @@
 [package]
 name = "bible-concordance"
-version = "2.3.0"
+version = "2.4.0"
 description = "Offline Bible concordance and research app"
 authors = ["you"]
 edition = "2021"
@@ -35,6 +35,12 @@ candle-transformers = "0.9"
 tokenizers = { version = "0.21", default-features = false, features = ["onig"] }
 flate2 = "1"
 docx-rs = { version = "0.4", default-features = false }
+zip = { version = "8", default-features = false, features = ["deflate"] }
+tar = { version = "0.4", default-features = false }
+base64 = "0.22"
+unicode-normalization = "0.1"
+tauri-plugin-updater = "2"
+sha2 = "0.10"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

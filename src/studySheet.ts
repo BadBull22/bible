@@ -145,14 +145,15 @@ export async function buildSheet(o: SheetOptions, versions: Version[]): Promise<
   // --- the reader's own notes and highlights
   if (o.myNotes) {
     const marks = await api.chapterMarks(book, chapter).catch(() => null);
-    const noteVerses = (marks?.notes ?? []).filter(inRange);
-    const notes = await Promise.all(noteVerses.map((v) => api.getNote(book, chapter, v).catch(() => null)));
+    // a note on a range counts when any of its verses is on the sheet
+    const notes = (await api.chapterNotes(book, chapter).catch(() => [])).filter((n) => n.verse <= end && n.verse_end >= start);
     const hls = (marks?.highlights ?? []).filter(([v]) => inRange(v));
-    if (noteVerses.length || hls.length) {
+    if (notes.length || hls.length) {
       blocks.push({ kind: "heading", text: "My notes" });
-      noteVerses.forEach((v, i) => {
-        const body = notes[i]?.trim();
-        if (body) blocks.push({ kind: "para", runs: [{ text: `Verse ${v}: `, bold: true }, plainRun(body)] });
+      notes.forEach((n) => {
+        const label = n.verse_end > n.verse ? `Verses ${n.verse}–${n.verse_end}: ` : `Verse ${n.verse}: `;
+        const tags = n.tags.length ? ` (${n.tags.join(", ")})` : "";
+        if (n.body.trim()) blocks.push({ kind: "para", runs: [{ text: label, bold: true }, plainRun(n.body.trim() + tags)] });
       });
       if (hls.length) {
         blocks.push({
@@ -248,6 +249,8 @@ export function sheetHtml(blocks: SheetBlock[]): string {
         return `<p style="${serif} font-size: 11.5pt; line-height: 1.55; margin: 3pt 0 7pt 18pt; padding-left: 8pt; border-left: 3px solid #c8963e;">${runsHtml(b.runs)}</p>`;
       case "lines":
         return Array.from({ length: b.count }, () => `<p style="margin: 0; height: 24pt; border-bottom: 1px solid #bbb;">&nbsp;</p>`).join("");
+      case "image":
+        return `<figure style="margin: 8pt 0 10pt; text-align: center;"><img src="${b.src}" width="${Math.min(b.width, 560)}" style="max-width: 100%; height: auto;" alt="${esc(b.caption)}"/><figcaption style="${sans} font-size: 9pt; color: #555; margin-top: 3pt;">${esc(b.caption)}</figcaption></figure>`;
     }
   });
   return `<div style="color: #111;">${out.join("\n")}</div>`;
@@ -277,6 +280,9 @@ export function sheetPlainText(blocks: SheetBlock[]): string {
         break;
       case "lines":
         for (let i = 0; i < b.count; i++) out.push("_".repeat(60));
+        break;
+      case "image":
+        out.push(`[Picture: ${b.caption}]`);
         break;
     }
   }

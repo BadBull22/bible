@@ -220,7 +220,8 @@ pub fn plain_snippet(body: &str, max: usize) -> String {
     }
 }
 
-fn fts_expr(query: &str) -> Option<String> {
+/// An FTS5 query requiring every word of `query` (also used by the Library's searches).
+pub fn fts_expr(query: &str) -> Option<String> {
     let words: Vec<String> = query
         .to_lowercase()
         .split(|c: char| !(c.is_alphanumeric() || c == '\''))

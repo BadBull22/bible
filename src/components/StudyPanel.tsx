@@ -21,6 +21,11 @@ interface Props {
   highlightTitles: Record<string, string>;
 }
 
+/** "John 3:16", or "John 3:16–18" for a note on a range */
+function refLabel(i: StudyItem) {
+  return `${i.book} ${i.chapter}:${i.verse}${i.verse_end && i.verse_end > i.verse ? `–${i.verse_end}` : ""}`;
+}
+
 const TABS: { key: Tab; label: string }[] = [
   { key: "notes", label: "Notes" },
   { key: "highlights", label: "Highlights" },
@@ -33,6 +38,7 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
   const [lists, setLists] = useState<StudyLists | null>(null);
   const [plans, setPlans] = useState<PlanProgress[]>([]);
   const [filter, setFilter] = useState("");
+  const [tag, setTag] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedColors, setExpandedColors] = useState<Set<string>>(new Set());
@@ -56,15 +62,29 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
     if (initialTab) setTab(initialTab);
   }, [initialTab]);
 
+  // every tag on a note, most used first
+  const allTags = useMemo(() => {
+    const counts = new Map<string, { tag: string; n: number }>();
+    for (const i of lists?.notes ?? [])
+      for (const t of i.tags ?? []) {
+        const k = t.toLowerCase();
+        const c = counts.get(k);
+        if (c) c.n++;
+        else counts.set(k, { tag: t, n: 1 });
+      }
+    return [...counts.values()].sort((a, b) => b.n - a.n || a.tag.localeCompare(b.tag));
+  }, [lists]);
+
   const items: StudyItem[] = useMemo(() => {
     if (!lists || tab === "plans") return [];
-    const all = lists[tab];
+    let all = lists[tab];
+    if (tab === "notes" && tag) all = all.filter((i) => (i.tags ?? []).some((t) => t.toLowerCase() === tag.toLowerCase()));
     const q = filter.trim().toLowerCase();
     if (!q) return all;
     return all.filter((i) =>
-      `${i.book} ${i.chapter}:${i.verse} ${i.value} ${highlightTitles[i.value] ?? ""} ${i.verse_text}`.toLowerCase().includes(q),
+      `${refLabel(i)} ${i.value} ${highlightTitles[i.value] ?? ""} ${(i.tags ?? []).join(" ")} ${i.verse_text}`.toLowerCase().includes(q),
     );
-  }, [lists, tab, filter, highlightTitles]);
+  }, [lists, tab, filter, tag, highlightTitles]);
 
   // Highlights grouped by colour (not flat/chronological like the other tabs) -- each
   // colour becomes one collapsible section, so a reader with a lot of highlights can find
@@ -173,9 +193,18 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
           <div className="search-controls">
             <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={`Filter ${tab}…`} aria-label={`Filter ${tab}`} />
           </div>
+          {tab === "notes" && allTags.length > 0 && (
+            <div className="note-tag-filter" role="group" aria-label="Show notes with a tag">
+              {allTags.map(({ tag: t, n }) => (
+                <button key={t} className={"note-tag" + (tag?.toLowerCase() === t.toLowerCase() ? " active" : "")} onClick={() => setTag(tag?.toLowerCase() === t.toLowerCase() ? null : t)}>
+                  #{t} <span className="tab-count">{n}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {lists && items.length === 0 && (
             <p className="muted">
-              {filter.trim()
+              {filter.trim() || (tab === "notes" && tag)
                 ? "Nothing matches that filter."
                 : tab === "notes"
                   ? "No notes yet. Use the ⋯ menu beside any verse and choose Add note."
@@ -229,22 +258,31 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
                 <li key={`${i.book}-${i.chapter}-${i.verse}`}>
                   <div className="xref-item-head">
                     <button className="link-btn" onClick={() => onJump(i.book, i.chapter, i.verse)}>
-                      {i.book} {i.chapter}:{i.verse}
+                      {refLabel(i)}
                     </button>
                     <span className="votes">{(tab === "notes" ? i.updated_at : i.created_at).slice(0, 10)}</span>
                     <BasketButton
                       add={async () =>
-                        (await addVersesToBasket(i.book, i.chapter, i.verse, i.verse, "BSB")) &&
-                        (tab !== "notes" || (await addToBasket("note", `My note on ${i.book} ${i.chapter}:${i.verse}`, i.value)))
+                        (await addVersesToBasket(i.book, i.chapter, i.verse, i.verse_end ?? i.verse, "BSB")) &&
+                        (tab !== "notes" || (await addToBasket("note", `My note on ${refLabel(i)}`, i.value)))
                       }
                       title={tab === "notes" ? "Add the verse and your note to the study basket" : "Add this verse to the study basket"}
                     />
                     <CopyButton
                       title={tab === "notes" ? "Copy the verse and your note" : "Copy this verse"}
-                      text={`${i.book} ${i.chapter}:${i.verse} (BSB)${i.verse_text ? ` — ${i.verse_text.trim()}` : ""}${tab === "notes" ? `\n\nMy note: ${i.value}` : ""}`}
+                      text={`${refLabel(i)} (BSB)${i.verse_text ? ` — ${i.verse_text.trim()}` : ""}${tab === "notes" ? `\n\nMy note: ${i.value}` : ""}${i.tags?.length ? `\nTags: ${i.tags.join(", ")}` : ""}`}
                     />
                   </div>
                   {tab === "notes" && <div className="study-note-body">{i.value}</div>}
+                  {tab === "notes" && !!i.tags?.length && (
+                    <div className="note-tag-list">
+                      {i.tags.map((t) => (
+                        <button key={t} className="note-tag small" onClick={() => setTag(t)} title={`Show every note tagged ${t}`}>
+                          #{t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {i.verse_text && <div className="snippet">{i.verse_text}</div>}
                 </li>
               ))}

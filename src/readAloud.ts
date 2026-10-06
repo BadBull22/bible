@@ -3,6 +3,7 @@
 // are no gaps. If this build has no natural voice, Windows' own voices are used instead
 // (Web Speech API). The reader's choices are remembered per viewer (localStorage).
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { tidyPunctuation } from "./verseSegments";
 
 export interface ReadItem {
@@ -133,7 +134,12 @@ export class ReadAloud {
     private onChange: (s: ReaderState) => void,
     /** called when the last item finishes (not when stopped) */
     private onFinished: () => void,
-  ) {}
+  ) {
+    // downloaded or removed in Settings: look again next time
+    listen("voice-changed", () => {
+      this.natural = null;
+    }).catch(() => undefined);
+  }
 
   private set(s: Partial<ReaderState>) {
     this.state = { ...this.state, ...s };

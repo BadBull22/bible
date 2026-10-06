@@ -2,7 +2,7 @@
 //! of simple blocks -- the same list it renders as the on-screen preview, prints, and
 //! copies -- and this turns that list into a Word document.
 
-use docx_rs::{Docx, LineSpacing, Paragraph, Run, RunFonts};
+use docx_rs::{AlignmentType, Docx, LineSpacing, Paragraph, Pic, Run, RunFonts};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -30,6 +30,15 @@ pub enum SheetBlock {
     Quote { runs: Vec<SheetRun> },
     /// Ruled lines left blank for handwritten notes.
     Lines { count: u32 },
+    /// A picture: a PNG `data:` URL and its pixel size, with a caption line under it.
+    Image { src: String, width: u32, height: u32, caption: String },
+}
+
+/// PNG bytes from a "data:image/png;base64,..." URL.
+fn png_bytes(src: &str) -> Option<Vec<u8>> {
+    use base64::Engine;
+    let b64 = src.strip_prefix("data:image/png;base64,")?;
+    base64::engine::general_purpose::STANDARD.decode(b64).ok()
 }
 
 const SERIF: &str = "Georgia";
@@ -83,6 +92,17 @@ pub fn build_docx(blocks: &[SheetBlock]) -> Result<Vec<u8>, String> {
                     );
                 }
                 continue;
+            }
+            SheetBlock::Image { src, width, height, caption } => {
+                if let Some(bytes) = png_bytes(src) {
+                    // fit within 16 cm of page width (EMU: 9525 per pixel at 96 dpi)
+                    const MAX_W: u64 = 5_760_720;
+                    let (w, h) = (*width as u64 * 9525, *height as u64 * 9525);
+                    let scale = if w > MAX_W { MAX_W as f64 / w as f64 } else { 1.0 };
+                    let pic = Pic::new_with_dimensions(bytes, *width, *height).size((w as f64 * scale) as u32, (h as f64 * scale) as u32);
+                    doc = doc.add_paragraph(Paragraph::new().add_run(Run::new().add_image(pic)).align(AlignmentType::Center).line_spacing(spacing(120, 40)));
+                }
+                Paragraph::new().add_run(run(caption, SANS, 18).color("555555")).align(AlignmentType::Center).line_spacing(spacing(0, 160))
             }
         };
         doc = doc.add_paragraph(p);
