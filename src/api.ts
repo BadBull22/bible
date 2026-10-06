@@ -1,4 +1,14 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke as tauriInvoke, InvokeArgs } from "@tauri-apps/api/core";
+import { logEvent } from "./errorLog";
+
+// Every command goes through here so a failure is also written to the app's log (many
+// callers deliberately swallow errors, which would otherwise leave no trace at all).
+function invoke<T>(cmd: string, args?: InvokeArgs): Promise<T> {
+  return tauriInvoke<T>(cmd, args).catch((e) => {
+    logEvent("warn", `${cmd} failed:`, e);
+    throw e;
+  });
+}
 
 export interface Version {
   code: string;
@@ -352,7 +362,18 @@ export function highlightLabel(color: string, titles: Record<string, string>): s
 export interface ChapterMarks {
   bookmarks: number[];
   highlights: [number, HighlightColor][];
+  /** verses a note starts on */
   notes: number[];
+  /** [first, last] verse of each note on more than one verse */
+  note_spans: [number, number][];
+}
+
+/** A reader's note; `verse_end` equals `verse` for a one-verse note. */
+export interface Note {
+  verse: number;
+  verse_end: number;
+  body: string;
+  tags: string[];
 }
 
 export interface StudyItem {
@@ -364,6 +385,10 @@ export interface StudyItem {
   created_at: string;
   updated_at: string;
   verse_text: string;
+  /** notes only: last verse of a note on a range */
+  verse_end?: number;
+  /** notes only */
+  tags?: string[];
 }
 
 export interface StudyLists {
@@ -384,6 +409,22 @@ export interface ExportResult {
   notes: number;
   highlights: number;
   bookmarks: number;
+}
+
+/** The natural read-aloud voice: present, running, or downloadable. */
+export interface VoiceStatus {
+  available: boolean;
+  running: boolean;
+  source: "downloaded" | "bundled" | null;
+  download_bytes: number | null;
+  downloading: boolean;
+}
+
+export interface UpdateInfo {
+  version: string;
+  current_version: string;
+  notes: string | null;
+  date: string | null;
 }
 
 export interface ImportResult {
@@ -411,9 +452,11 @@ export type SheetBlock =
   | { kind: "subheading"; text: string }
   | { kind: "para"; runs: SheetRun[] }
   | { kind: "quote"; runs: SheetRun[] }
-  | { kind: "lines"; count: number };
+  | { kind: "lines"; count: number }
+  /** a picture: PNG data URL + its pixel size, and a caption line under it */
+  | { kind: "image"; src: string; width: number; height: number; caption: string };
 
-export type BasketKind = "verse" | "note" | "commentary" | "dictionary" | "answer" | "text";
+export type BasketKind = "verse" | "note" | "commentary" | "dictionary" | "answer" | "text" | "picture";
 
 /** A study-basket item. `meta` is kind-specific JSON (for "verse": BasketVerseMeta). */
 export interface BasketItem {
@@ -431,6 +474,172 @@ export interface BasketVerseMeta {
   verseStart: number;
   verseEnd: number;
   version: string;
+}
+
+// ---------------------------------------------------------------- the Library (CrossWire)
+
+export type LibraryKind = "bible" | "commentary" | "dictionary" | "devotional" | "book" | "other";
+
+/** A module in CrossWire's catalogue. */
+export interface CatalogItem {
+  name: string;
+  kind: LibraryKind;
+  title: string;
+  lang: string;
+  language: string;
+  licence: string;
+  about: string;
+  size_kb: number;
+  version: string;
+  category: string;
+  /** CrossWire's own "Cults / Unorthodox / Questionable Material" category */
+  questionable: boolean;
+  supported: boolean;
+  /** why it can't be installed, or that the app already includes it */
+  note: string | null;
+  built_in: boolean;
+  installed: boolean;
+  installed_version: string | null;
+}
+
+export interface InstalledModule {
+  name: string;
+  kind: LibraryKind;
+  title: string;
+  language: string;
+  licence: string;
+  about: string;
+  version: string;
+  entries: number;
+  installed_at: string;
+}
+
+export interface InstallReport {
+  name: string;
+  kind: LibraryKind;
+  title: string;
+  entries: number;
+}
+
+export interface LibraryProgress {
+  name: string;
+  stage: "downloading" | "unpacking" | "reading" | "saving";
+  pct: number | null;
+}
+
+export interface TocEntry {
+  id: number;
+  parent: number | null;
+  title: string;
+  has_text: boolean;
+}
+
+export interface BookSection {
+  id: number;
+  module: string;
+  module_title: string;
+  title: string;
+  /** plain text with ⟦..⟧ reference markers (RichText) */
+  text: string;
+  prev: number | null;
+  next: number | null;
+}
+
+export interface BookHit {
+  id: number;
+  module: string;
+  module_title: string;
+  title: string;
+  snippet: string;
+}
+
+// ---------------------------------------------------------------- Hebrew & Greek search
+
+export interface WordCandidate {
+  strongs: string;
+  lemma: string;
+  gloss: string;
+  language: "Greek" | "Hebrew";
+  count: number;
+}
+
+export interface OriginalFacet {
+  key: string;
+  /** [value, occurrences] */
+  values: [string, number][];
+}
+
+export interface OriginalHit {
+  book: string;
+  chapter: number;
+  verse: number;
+  original: string;
+  translit: string;
+  gloss: string;
+  parsing: string;
+  /** the verse in the BSB */
+  text: string;
+}
+
+export interface OriginalSearchResult {
+  word: WordCandidate | null;
+  total: number;
+  matched: number;
+  facets: OriginalFacet[];
+  by_book: [string, number][];
+  hits: OriginalHit[];
+}
+
+// ---------------------------------------------------------------- Bible pictures
+
+export interface PictureCollection {
+  key: string;
+  title: string;
+  artist: string;
+  year: string;
+  licence: string;
+  licence_url: string;
+  about: string;
+  count: number;
+  approx_mb: number;
+  downloaded: number;
+  downloading: boolean;
+}
+
+/** [book, chapter, first verse, last verse] */
+export type PictureRef = [string, number, number | null, number | null];
+
+export interface PictureInfo {
+  id: string;
+  /** collection key */
+  c: string;
+  title: string;
+  caption: string;
+  refs: PictureRef[];
+  url: string;
+  w: number;
+  h: number;
+  /** its Wikimedia Commons page */
+  page: string;
+  credit: string;
+  collection_title: string;
+  artist: string;
+  licence: string;
+  licence_url: string;
+  downloaded: boolean;
+}
+
+export interface ChapterPictures {
+  pictures: PictureInfo[];
+  /** [collection title, number of pictures for this chapter not downloaded yet] */
+  available: [string, number][];
+}
+
+export interface PicturesProgress {
+  collection: string;
+  done: number;
+  total: number;
+  failed: number;
 }
 
 export interface MapPlace {
@@ -520,9 +729,13 @@ export const api = {
   toggleBookmark: (book: string, chapter: number, verse: number) => invoke<boolean>("toggle_bookmark", { book, chapter, verse }),
   setHighlight: (book: string, chapter: number, verse: number, color: HighlightColor | null) =>
     invoke<void>("set_highlight", { book, chapter, verse, color }),
-  getNote: (book: string, chapter: number, verse: number) => invoke<string | null>("get_note", { book, chapter, verse }),
-  saveNote: (book: string, chapter: number, verse: number, body: string) =>
-    invoke<void>("save_note", { book, chapter, verse, body }),
+  getNote: (book: string, chapter: number, verse: number) => invoke<Note | null>("get_note", { book, chapter, verse }),
+  /** an empty body deletes the note; `verseEnd` past `verse` makes it a note on the range */
+  saveNote: (book: string, chapter: number, verse: number, body: string, verseEnd?: number, tags?: string[]) =>
+    invoke<void>("save_note", { book, chapter, verse, body, verseEnd: verseEnd ?? null, tags: tags ?? null }),
+  chapterNotes: (book: string, chapter: number) => invoke<Note[]>("chapter_notes", { book, chapter }),
+  /** every tag used on a note, with its count, most used first */
+  noteTags: () => invoke<[string, number][]>("note_tags"),
   listStudy: () => invoke<StudyLists>("list_study"),
   planProgress: () => invoke<PlanProgress[]>("plan_progress"),
   startPlan: (plan_id: string, started_on: string) => invoke<void>("start_plan", { planId: plan_id, startedOn: started_on }),
@@ -530,10 +743,44 @@ export const api = {
   setPlanDay: (plan_id: string, day: number, done: boolean) => invoke<void>("set_plan_day", { planId: plan_id, day, done }),
   exportStudy: () => invoke<ExportResult>("export_study"),
   importStudy: (json: string) => invoke<ImportResult>("import_study", { json }),
+  /** the last lines of the app's error log */
+  logRecent: (lines = 200) => invoke<string>("log_recent", { lines }),
+  logPath: () => invoke<string | null>("log_path"),
+  openLogFolder: () => invoke<void>("open_log_folder"),
+  voiceStatus: () => invoke<VoiceStatus>("voice_status"),
+  /** progress arrives as "voice-progress" events, "voice-changed" when it's ready */
+  voiceDownload: () => invoke<void>("voice_download"),
+  voiceCancelDownload: () => invoke<void>("voice_cancel_download"),
+  voiceRemove: () => invoke<void>("voice_remove"),
+  /** null when this is the latest version */
+  updateCheck: () => invoke<UpdateInfo | null>("update_check"),
+  /** progress arrives as "update-progress" events; the app restarts when done */
+  updateInstall: () => invoke<void>("update_install"),
   passageText: (version_code: string, book: string, chapter: number, verse_start: number, verse_end: number) =>
     invoke<string>("passage_text", { versionCode: version_code, book, chapter, verseStart: verse_start, verseEnd: verse_end }),
   /** Writes the sheet as a .docx in Documents\Bible Concordance; returns the path. */
   saveStudySheet: (title: string, blocks: SheetBlock[]) => invoke<string>("save_study_sheet", { title, blocks }),
+  originalWordLookup: (query: string, limit = 20) => invoke<WordCandidate[]>("original_word_lookup", { query, limit }),
+  originalWordSearch: (strongs: string, filters: Record<string, string>, limit = 200) =>
+    invoke<OriginalSearchResult>("original_word_search", { strongs, filters, limit }),
+  picturesCollections: () => invoke<PictureCollection[]>("pictures_collections"),
+  picturesForChapter: (book: string, chapter: number) => invoke<ChapterPictures>("pictures_for_chapter", { book, chapter }),
+  picturesGallery: (collection: string, offset: number, limit: number) =>
+    invoke<[PictureInfo[], number]>("pictures_gallery", { collection, offset, limit }),
+  pictureBytes: (id: string) => invoke<ArrayBuffer>("picture_bytes", { id }),
+  picturesDownload: (collection: string) => invoke<number>("pictures_download", { collection }),
+  picturesCancel: (collection: string) => invoke<void>("pictures_cancel", { collection }),
+  picturesRemove: (collection: string) => invoke<void>("pictures_remove", { collection }),
+  libraryCatalog: (refresh: boolean) => invoke<CatalogItem[]>("library_catalog", { refresh }),
+  libraryInstall: (name: string) => invoke<InstallReport>("library_install", { name }),
+  libraryRemove: (name: string) => invoke<void>("library_remove", { name }),
+  libraryInstalled: (kind: LibraryKind | null = null) => invoke<InstalledModule[]>("library_installed", { kind }),
+  libraryToc: (name: string) => invoke<TocEntry[]>("library_toc", { name }),
+  librarySection: (id: number) => invoke<BookSection | null>("library_section", { id }),
+  /** entries for a Strong's number ("G25") in installed Library lexicons */
+  libraryLexiconEntries: (strongs: string) => invoke<DictionaryEntry[]>("library_lexicon_entries", { strongs }),
+  librarySearchBooks: (query: string, name: string | null, limit: number) =>
+    invoke<BookHit[]>("library_search_books", { query, name, limit }),
   basketList: () => invoke<BasketItem[]>("basket_list"),
   basketAdd: (kind: BasketKind, title: string, body: string, meta: string = "") => invoke<number>("basket_add", { kind, title, body, meta }),
   basketUpdate: (id: number, title: string, body: string) => invoke<void>("basket_update", { id, title, body }),

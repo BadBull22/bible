@@ -833,6 +833,15 @@ kbd {
   margin-left: 0.3rem;
 }
 
+/* The verse buttons keep their own left-to-right order (dir="ltr" on them), which also
+   makes "inline end" mean the right -- where a Hebrew verse starts. Put them on the left,
+   the side the verse's padding leaves free in a right-to-left chapter. */
+.chapter-view[dir="rtl"] .verse-actions,
+.sbs-cell[dir="rtl"] .verse-actions {
+  inset-inline-end: auto;
+  left: 0;
+}
+
 .chapter-view[lang="grc"] .verse-row {
   font-size: calc(1.2rem * var(--reader-scale, 1));
 }
@@ -3262,4 +3271,823 @@ body.is-resizing .leaflet-container {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+/* ---------- library + books ---------- */
+
+.library-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.library-filters input {
+  flex: 1 1 12rem;
+}
+
+.library-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.library-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  padding: 0.5rem 0.65rem;
+}
+
+.library-item.questionable {
+  border-style: dashed;
+}
+
+.library-item-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.library-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.library-meta {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+}
+
+.library-about {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  max-height: 14rem;
+  overflow: auto;
+}
+
+.library-installed {
+  color: var(--status-ok);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.library-progress {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.pill-btn.small {
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.book-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.book-search {
+  flex: 1;
+}
+
+.book-search input {
+  width: 100%;
+}
+
+.book-toc {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  font-size: 0.86rem;
+}
+
+.book-toc li {
+  margin: 0.1rem 0;
+}
+
+.book-toc .link-btn {
+  text-align: left;
+}
+
+.book-toc .link-btn.active {
+  font-weight: 700;
+}
+
+.book-toc .toc-heading {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.book-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.book-section-head h4 {
+  margin: 0.2rem 0 0.6rem;
+  font-family: var(--serif);
+  font-size: 1.1rem;
+}
+
+.book-text .rich-text {
+  font-family: var(--serif);
+  font-size: calc(1rem * var(--reader-scale, 1));
+  line-height: 1.65;
+}
+
+.book-nav {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0 0.5rem;
+}
+
+.book-children {
+  padding-left: 1.1rem;
+}
+
+/* ---------- Bible pictures ---------- */
+
+.picture-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.8rem;
+}
+
+.picture-thumb {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  overflow: hidden;
+  cursor: zoom-in;
+  text-align: left;
+}
+
+.picture-thumb img,
+.picture-thumb-empty {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  background: var(--chrome-bg);
+}
+
+.picture-thumb-label {
+  font-size: 0.72rem;
+  padding: 0.25rem 0.4rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.picture-thumb:hover {
+  border-color: var(--accent-500);
+}
+
+.picture-more {
+  margin-bottom: 1rem;
+}
+
+.picture-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(10, 10, 14, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 4rem;
+}
+
+.picture-viewer-figure {
+  margin: 0;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.picture-viewer-figure img {
+  max-width: 100%;
+  max-height: calc(100vh - 11rem);
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+.picture-viewer-figure figcaption {
+  color: #eee;
+  text-align: center;
+  margin-top: 0.7rem;
+  max-width: 60rem;
+  font-size: 0.9rem;
+}
+
+.picture-viewer-figure .link-btn {
+  color: #9cc2ff;
+}
+
+.picture-viewer-caption {
+  margin-top: 0.3rem;
+  color: #ccc;
+}
+
+.picture-viewer-credit {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.picture-viewer-actions {
+  margin-top: 0.4rem;
+}
+
+.picture-viewer-actions .text-btn {
+  color: #ddd;
+}
+
+.picture-viewer-loading {
+  color: #aaa;
+  padding: 4rem;
+}
+
+.picture-viewer-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.picture-viewer-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.picture-viewer-nav.prev {
+  left: 1rem;
+}
+
+.picture-viewer-nav.next {
+  right: 1rem;
+}
+
+.basket-picture {
+  display: block;
+  max-width: 12rem;
+  max-height: 8rem;
+  margin-top: 0.4rem;
+  border-radius: var(--radius-sm);
+}
+
+.picture-viewer-verse {
+  margin-top: 0.35rem;
+  font-family: var(--serif);
+  font-style: italic;
+  color: #ddd;
+  max-height: 6.5rem;
+  overflow: auto;
+}
+
+/* ---------- side by side (parallel) reading ---------- */
+
+.chapter-view.parallel {
+  max-width: none;
+}
+
+.chapter-heading-actions .chapter-copy.active {
+  color: var(--accent-600);
+  font-weight: 600;
+}
+
+.sbs-head,
+.sbs-row {
+  display: grid;
+  grid-template-columns: repeat(var(--parallel-cols, 2), minmax(0, 1fr));
+  column-gap: 1.4rem;
+}
+
+.sbs-head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+  padding: 0.35rem 0;
+  margin-bottom: 0.6rem;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+}
+
+.sbs-head-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.sbs-head-cell .muted {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sbs-head-cell select {
+  min-width: 0;
+  flex: 1;
+  max-width: 100%;
+}
+
+.sbs-head-cell .icon-only {
+  background: none;
+  border: none;
+  padding: 0.2rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.sbs-head-cell .icon-only:hover {
+  color: var(--text);
+  background: var(--chrome-bg);
+}
+
+.sbs-row {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  padding-top: 0.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.sbs-row--reading {
+  background: color-mix(in srgb, var(--accent-100) 55%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.sbs-cell {
+  min-width: 0;
+  position: relative;
+}
+
+/* the first column keeps its verse buttons, shown on hover so they don't take width */
+.chapter-view.parallel .verse-row {
+  padding-inline-end: 0;
+  margin-bottom: 0.5rem;
+}
+
+.chapter-view.parallel .verse-actions {
+  opacity: 0;
+  background: var(--paper);
+  padding: 0.1rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.12s;
+}
+
+.chapter-view.parallel .verse-row:hover .verse-actions,
+.chapter-view.parallel .verse-row:focus-within .verse-actions {
+  opacity: 1;
+}
+
+.sbs-text,
+.sbs-missing {
+  margin: 0 0 0.5rem;
+  font-family: var(--serif);
+  font-size: calc(1.12rem * var(--reader-scale, 1));
+  line-height: var(--reader-line-height, 1.75);
+}
+
+.sbs-missing {
+  color: var(--text-faint);
+}
+
+.sbs-cell[dir="rtl"] .verse-row,
+.sbs-cell[dir="rtl"] .sbs-text {
+  font-size: calc(1.3rem * var(--reader-scale, 1));
+  line-height: max(1.9, var(--reader-line-height, 1.75));
+}
+
+.sbs-cell[lang="grc"] .verse-row,
+.sbs-cell[lang="grc"] .sbs-text {
+  font-size: calc(1.18rem * var(--reader-scale, 1));
+}
+
+.sbs-cell[dir="rtl"] .verse-num {
+  margin-right: 0;
+  margin-left: 0.3rem;
+}
+
+@media print {
+  .sbs-head {
+    position: static;
+  }
+}
+
+.chapter-view.parallel .verse-row {
+  scroll-margin-top: 3.2rem;
+}
+
+/* ---------- pinned chapter heading ----------
+   The title and its buttons (Pictures, Listen, Side by side, Study sheet, Copy) -- and in
+   side-by-side mode the column headings -- stay at the top of the reading pane while the
+   verses scroll under them. The negative top/margin cancel the pane's own top padding, so
+   the heading's background covers that strip instead of verses showing through it. */
+.chapter-sticky {
+  position: sticky;
+  top: -2rem;
+  margin-top: -2rem;
+  padding-top: 2rem;
+  z-index: 8;
+  background: var(--paper);
+  box-shadow: 0 10px 10px -12px rgba(0, 0, 0, 0.45);
+  margin-bottom: 1.1rem;
+}
+
+.app-shell.focus-mode .chapter-sticky {
+  top: -3rem;
+  margin-top: -3rem;
+  padding-top: 3rem;
+}
+
+.chapter-sticky .chapter-heading h2 {
+  margin-bottom: 0.6rem;
+}
+
+.chapter-sticky .sbs-head {
+  position: static;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+/* notices ("Verse copied") drop down just below the pinned heading */
+.chapter-sticky .reader-flash {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+}
+
+/* a verse jumped to lands below the pinned heading, not under it */
+.chapter-view .verse-row {
+  scroll-margin-top: 5.5rem;
+}
+
+@media print {
+  .chapter-sticky {
+    position: static;
+    box-shadow: none;
+    margin-top: 0;
+    padding-top: 0;
+  }
+}
+
+/* ---------- Hebrew & Greek search ---------- */
+
+.original-panel > form.search-controls {
+  flex-direction: row;
+}
+
+.original-candidates {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.original-candidate {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  color: var(--text);
+}
+
+.original-candidate:hover {
+  border-color: var(--accent-500);
+  background: var(--accent-100);
+}
+
+.original-lemma {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  min-width: 5.5rem;
+}
+
+.original-lemma.big {
+  font-size: 1.6rem;
+  min-width: 0;
+}
+
+.original-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.original-word-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.9rem;
+  margin-bottom: 0.8rem;
+}
+
+.original-word-head .text-btn {
+  margin-left: auto;
+}
+
+.original-facets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 0.5rem 0.75rem;
+  align-items: end;
+  background: var(--chrome-bg);
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.8rem;
+}
+
+.original-facets label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+}
+
+.original-facets select {
+  padding: 0.3rem 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--paper-raised);
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.original-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.original-summary p {
+  margin: 0.2rem 0;
+}
+
+.original-books {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.4rem 0 0.8rem;
+}
+
+.original-book {
+  font-size: 0.74rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  background: var(--chrome-bg);
+  color: var(--text-muted);
+}
+
+.original-form {
+  font-family: var(--serif);
+  font-size: 1.05rem;
+}
+
+.original-hits .snippet em {
+  color: var(--text-muted);
+}
+
+/* ---------- Word Study: grammar search + Library lexicons ---------- */
+
+.word-study-more {
+  margin: 0.8rem 0 0.4rem;
+}
+
+.word-study-lexicons {
+  margin: 0.9rem 0;
+}
+
+.word-study-lexicons .apparatus-key {
+  margin-bottom: 0.4rem;
+}
+
+.word-study-lexicons .apparatus-key summary {
+  font-weight: 600;
+}
+
+/* ---------- notes on a range of verses, and note tags ---------- */
+
+/* a bar in the margin beside every verse a ranged note covers */
+.verse-row.in-note-span::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -0.7rem;
+  top: 0.2em;
+  bottom: 0.2em;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--accent-500);
+  opacity: 0.55;
+}
+
+.note-editor-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.3rem 0.8rem;
+}
+
+.note-editor-range select {
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  color: var(--text);
+}
+
+.note-editor .note-tags-input {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.85rem;
+}
+
+.note-tag-filter,
+.note-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.note-tag-filter {
+  margin: -0.4rem 0 0.9rem;
+}
+
+.note-tag-list {
+  margin-top: 0.35rem;
+}
+
+.note-tag {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--paper-raised);
+  color: var(--text-muted);
+  padding: 0.12rem 0.55rem;
+  font-size: 0.76rem;
+}
+
+.note-tag.small {
+  font-size: 0.7rem;
+  padding: 0.05rem 0.45rem;
+}
+
+.note-tag:hover {
+  border-color: var(--accent-500);
+}
+
+.note-tag.active {
+  background: var(--accent-500);
+  border-color: var(--accent-500);
+  color: var(--navy-900);
+}
+
+@media print {
+  .verse-row.in-note-span::before {
+    display: none;
+  }
+}
+
+/* ---------- diagnostics + crash screen ---------- */
+
+.log-path {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.72rem;
+  word-break: break-all;
+}
+
+.crash-screen {
+  max-width: 36rem;
+  margin: 15vh auto;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  color: var(--text);
+  font-family: var(--sans);
+  box-shadow: var(--shadow-md);
+}
+
+.crash-screen pre {
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  color: var(--status-error);
+  background: var(--chrome-bg);
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.crash-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* ---------- updates + natural voice download ---------- */
+
+.update-banner {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 60;
+  width: min(22rem, calc(100vw - 2rem));
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--paper-raised);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.update-banner-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.update-banner p {
+  margin: 0.25rem 0 0.6rem;
+}
+
+.update-notes {
+  white-space: pre-wrap;
+  font-size: 0.82rem;
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.update-found p {
+  margin: 0.4rem 0;
+}
+
+.voice-download {
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-md);
+  background: var(--chrome-bg);
+  font-size: 0.88rem;
+}
+
+.voice-download p {
+  margin: 0 0 0.5rem;
+}
+
+.voice-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.voice-progress progress {
+  flex: 1;
+  min-width: 8rem;
+  accent-color: var(--accent-500);
+}
+
+@media print {
+  .update-banner {
+    display: none;
+  }
 }

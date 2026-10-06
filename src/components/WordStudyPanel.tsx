@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { api, StrongsEntry, SearchHit } from "../api";
+import { api, DictionaryEntry, StrongsEntry, SearchHit } from "../api";
+import { RichText } from "./RichText";
 import { CloseIcon } from "./icons";
 import { ListenButton } from "./ListenButton";
 
@@ -11,12 +12,16 @@ interface Props {
   versionCode: string;
   onClose: () => void;
   onJump: (book: string, chapter: number, verse: number) => void;
+  /** open the Hebrew & Greek search on this word */
+  onSearchGrammar: (strongs: string) => void;
+  onOpenLibrary: () => void;
 }
 
-export function WordStudyPanel({ strongsNumbers, surfaceText, versionCode, onClose, onJump }: Props) {
+export function WordStudyPanel({ strongsNumbers, surfaceText, versionCode, onClose, onJump, onSearchGrammar, onOpenLibrary }: Props) {
   const [active, setActive] = useState(0);
   const [entry, setEntry] = useState<StrongsEntry | null>(null);
   const [occurrences, setOccurrences] = useState<SearchHit[]>([]);
+  const [lexicons, setLexicons] = useState<DictionaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,11 +35,16 @@ export function WordStudyPanel({ strongsNumbers, surfaceText, versionCode, onClo
     let cancelled = false;
     setLoading(true);
     setError(null);
-    Promise.all([api.strongsLookup(strongsNumber), api.strongsOccurrences(strongsNumber, versionCode)])
-      .then(([e, occ]) => {
+    Promise.all([
+      api.strongsLookup(strongsNumber),
+      api.strongsOccurrences(strongsNumber, versionCode),
+      api.libraryLexiconEntries(strongsNumber).catch(() => [] as DictionaryEntry[]),
+    ])
+      .then(([e, occ, lex]) => {
         if (cancelled) return;
         setEntry(e);
         setOccurrences(occ);
+        setLexicons(lex);
       })
       .catch((e) => !cancelled && setError(String(e)))
       .finally(() => !cancelled && setLoading(false));
@@ -97,6 +107,38 @@ export function WordStudyPanel({ strongsNumbers, surfaceText, versionCode, onClo
         </div>
       )}
       {!loading && !error && !entry && <p>No dictionary entry found for {strongsNumber}.</p>}
+      {!loading && !error && (
+        <div className="word-study-more">
+          <button className="outline-btn" onClick={() => onSearchGrammar(strongsNumber)} title="Every occurrence of this Hebrew/Greek word, filtered by tense, stem, case…">
+            Search by grammar
+          </button>
+        </div>
+      )}
+      {!loading && !error && (
+        <div className="word-study-lexicons">
+          <h4 className="section-label">From your Library</h4>
+          {lexicons.length === 0 ? (
+            <p className="search-hint" style={{ marginTop: 0 }}>
+              Fuller {strongsNumber.startsWith("H") ? "Hebrew" : "Greek"} lexicons keyed to Strong's numbers —{" "}
+              {strongsNumber.startsWith("H") ? "BDB glosses" : "Abbott-Smith, Dodson, an intermediate Greek–English lexicon"} — can be
+              installed free from the{" "}
+              <button className="link-btn" onClick={onOpenLibrary}>
+                Library
+              </button>{" "}
+              and will show here.
+            </p>
+          ) : (
+            lexicons.map((l, i) => (
+              <details key={l.id} className="apparatus-key" open={i === 0}>
+                <summary>
+                  {l.dict_name} — {l.headword}
+                </summary>
+                <RichText text={l.body} onJump={onJump} />
+              </details>
+            ))
+          )}
+        </div>
+      )}
       {!loading && !error && (
         <div className="occurrences">
           <h4>

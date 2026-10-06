@@ -15,7 +15,12 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-14 done (v2.2.0 released 2026-09-26: Phase 14 study features, read aloud)
+## Current status: Phases 1-16 done — v2.4.0 released 2026-10-06 (Library, Pictures, side by side, Hebrew & Greek search, range notes + tags, error log, in-app updates, voice as a download)
+
+> **Start here next session:** `HANDOVER_2026-10-06_V2_4_0.md` — what's in 2.4.0, how to
+> ship the next version (`scripts/release.ps1`, the updater signing key that must never be
+> lost or committed), the real email still in the old pushed commit `ac15e08`, and the open
+> ideas. A Mac build and a phone app are deferred (user's decision, 2026-10-06).
 
 **Phase 1 (core reader) — done:**
 - Data pipeline (`data-pipeline/`) sources and builds `src-tauri/resources/bible.db`: BSB, KJV,
@@ -1406,6 +1411,129 @@ review): one-folder sidecar in `src-tauri/resources/kokoro-sidecar/`, espeak fix
 no duplicate spawns, idempotent `kokoro_start`. Measured: ready 8-14 s from the share (was
 ~65 s), first reply 0.5 s (was ~17 s).
 
+**Phase 15 (2026-10-05): Library (CrossWire SWORD modules) + Bible pictures.** After a
+second competitive review the user chose: install-your-own free modules and downloadable
+Bible art, "allow the user to choose and download what they want".
+
+*Library* -- Rust `library/` (`sword.rs` format reader, `markup.rs` OSIS/ThML/GBF/TEI ->
+app text with ⟦..⟧ links, `refs.rs` reference parser = port of data-pipeline/refs.py,
+`canons.json` = the 18 SWORD versifications exported from pysword by
+`data-pipeline/export_canons.py`), `library_commands.rs`, writable `library.db` in the
+per-user data folder (modules + lib_verses/lib_comm/lib_dict/lib_book, each with an
+external-content FTS5 table; removal issues FTS 'delete' rows first). Catalogue
+`crosswire.org/ftpmirror/pub/sword/raw/mods.d.tar.gz` cached a week; modules
+`.../packages/rawzip/<Name>.zip`, unpacked to a temp folder, converted, deleted. Installed
+Bibles/commentaries/dictionaries are merged into the EXISTING commands (list_versions,
+get_chapter*, get_parallel_verse, search_keyword, passage_text, *_commentar*, *_dictionar*)
+-- a version code not in bible.db is looked up in the library; commentary/dictionary codes
+are prefixed `lib:`; library dictionary entry ids start at 1,000,000,000 (`LIB_ID_BASE`).
+Books (RawGenBook) and devotionals (lexicons with Feature=DailyDevotion, keys "MM.DD") are
+read in `BookPanel.tsx`; the store is `LibraryPanel.tsx` (Study menu -> Library).
+Measured: the real catalogue = 427 modules, 397 installable (126 English), 17 marked
+built-in (KJV/ASV/YLT/BSB/WEB/TR/WLC + the commentaries/dictionaries already bundled), 3
+flagged by CrossWire as questionable (hidden unless ticked). Tests: unit tests for conf,
+canon slot counts, cp1252, references, markup; ignored tests install 22 real modules of
+every format (`cargo test library -- --ignored --nocapture`, zips in
+%LOCALAPPDATA%\bible-concordance-build\library-probe\zips) and parse the real catalogue.
+**Gotchas found:** (1) RawGenBook tree links (parent/next/child) are positions in the .idx
+(4 bytes each), not .dat offsets, and the root is idx[0] -- the .dat also holds orphaned
+records from edits. (2) Some indexes are LONGER than the versification (Darby's notes):
+like the SWORD engine, read only the slots the versification defines. (3) In OSIS/ThML/TEI
+/GBF a source line break is a space; only tags make paragraphs. (4) The reference parser
+must cache its regex/book table -- per-call compiles made the Treasury of Scripture
+Knowledge take 165 s (now 5 s). (5) OSIS quotation marks can live in `<q marker="“">`.
+Non-KJV versifications (MT, Vulgate, LXX) keep their own verse numbers; Apocrypha books
+aren't shown (the reader has the 66 + Enoch).
+
+*Pictures* -- catalogue built by `data-pipeline/pictures_fetch.py` (Commons API, POST, 1.5 s
+between calls -- the API rate-limits fast clients, and long file names overflow GET URLs:
+HTTP 414) + `pictures_build.py` -> `src-tauri/resources/pictures.json` (~1.9 MB, committed).
+Passage links: Sweet Media from file names (book + chapter; 2 "Deuteronomy 35" files left
+unlinked), Tissot OT from the verse in Phillip Medhurst's file names (the unlinked
+duplicate gouaches are left out), Doré and Tissot NT from hand-made tables in
+`picture_refs.py` (Apocrypha/tradition/portraits/landscapes left out). The builder checks
+every link (chapter/verse exist; title words appear in the chapter; prints REVIEW lines --
+all 27 reviewed and correct) and measures real download sizes by sampling. Result: Doré 139
+(~149 MB), Tissot Life of Christ 228 (~21 MB), Tissot OT 529 (~290 MB), Sweet 2,355 (~397
+MB). Runtime `pictures.rs`: downloads per collection on request (one file at a time, 0.4 s
+apart, Retry-After honoured, resumable, stoppable) into <app data>/pictures/<collection>/;
+`PicturesPanel.tsx` (Explore -> Pictures; tabs chapter/gallery/download), `PictureViewer.tsx`
+(lightbox with the linked verse's BSB text, credit, licence, Commons source link),
+"Pictures (n)" button by the chapter title. Pictures go into the study basket and onto study
+sheets (`SheetBlock` kind "image": PNG data URL made by a canvas in `pictures.ts`; Word via
+docx-rs `Pic::new_with_dimensions`, max 16 cm wide). Schnorr's *Bible in Pictures* was
+fetched but not offered (mixed/foreign file names, no references) -- possible later.
+
+**Side-by-side reading (2026-10-05, after Phase 15):** "Side by side" by the chapter title
+(ChapterView). The per-verse JSX is now `verseContent(v)`; in side-by-side mode each row is a
+CSS grid (`--parallel-cols`) whose first cell is that full-featured verse (Strong's words, ⋯
+menu, notes, highlights, red letters, read-aloud highlight) and the other cells are up to
+three more translations as plain text with red letters (fetched with get_chapter, so
+Library Bibles work too). Rows = the union of verse numbers in all columns (the BSB omits
+e.g. Matthew 17:21; that cell shows a dash). Script metadata (Hebrew RTL, Greek) moves from
+the chapter root to each cell so a Hebrew column doesn't reverse the column order. Column
+choice persists in localStorage (`parallel:prefs`); on/off lasts only for the session -- the
+app always opens in a single column (the user's wish, 2026-10-06); the header row is sticky; Copy
+chapter copies every column; the first column's verse buttons show on hover only.
+Its CSS classes are `sbs-*` (sbs-row, sbs-cell, sbs-head…) -- **not** `parallel-*`: the
+Compare translations panel already owns `.parallel-row` / `.parallel-text`, and reusing them
+squeezed that panel's text into half its width (caught by the user on first test).
+
+**Phase 16 (2026-10-06): the five gaps from the competitive review.**
+
+- **Hebrew & Greek search** (Explore menu; `original_search.rs`, `OriginalSearchPanel.tsx`):
+  word by English gloss / lemma (accent-folded, ς→σ) / Strong's, then every occurrence from
+  study.db's `interlinear`, narrowed by grammar facets parsed from `morph_codes.formal`
+  ("Key=Value; ..."). Facet counts exclude the facet's own filter. Hebrew uses the main
+  morpheme (skips conjunction/preposition/particle/suffix rows) and skips ketiv (K) rows.
+  Lookups group by `normalize_strongs` and count via the `strongs` index -- `lemma_key` has
+  no index (a lookup through it took 15 s; now 0.18 s). Tests pin G25 = 143 (32 aorist
+  active) and H1254 stems Qal 39 / Niphal 10 / Piel 5 / Hiphil 1.
+- **Library lexicons in Word Study**: `library::lexicon_entries` -- dictionary modules keyed
+  by Strong's (StrongsGreek/Hebrew, Dodson, AbbottSmithStrongs, MLStrong,
+  BDBGlosses_Strongs...) get a `lib_dict.strongs` column at install (`strongs_of_key`);
+  modules installed before the migration are back-filled. Word Study shows them under "From
+  your Library" plus a "Search by grammar" button.
+- **Notes on verse ranges + tags** (`userdata.rs`): `notes.verse_end` (NULL = one verse) and
+  `notes.tags` (comma-joined, cleaned by `clean_tags`: no '#', case-insensitive de-dup, 40
+  chars, 20 tags) added by `migrate()`; the key is still (book, chapter, verse) = the first
+  verse, so old data/backups are untouched. `chapter_marks.note_spans` drives the margin
+  bar (`.in-note-span`); `chapter_notes`/`note_tags` commands; backups carry
+  `verse_end`/`tags` (skipped when empty, so old app versions still import them); My Study
+  has tag chips; study sheets include range notes that overlap the chosen verses.
+- **Error log** (`logging.rs`, `errorLog.ts`, `ErrorBoundary.tsx`): `<app log dir>\bible-concordance.log`
+  (`%LOCALAPPDATA%\com.local.bibleconcordance\logs`), rotated to `.old.log` past 1 MB at
+  start-up; Rust panics (hook installed first thing in `setup`, so a failing `expect` there is
+  logged), uncaught errors, unhandled rejections, console.error/warn, and every failed
+  command (api.ts wraps `invoke`) -- web lines rate-limited to 120/min and de-duplicated
+  for 5 s. A render crash shows a Reload screen instead of a blank window. Settings ›
+  Diagnostics: Show log file / Copy recent log. Nothing is sent anywhere.
+- **Voice as a download** (`voice.rs`, `VoiceDownload.tsx`, `scripts/package_voice.py`):
+  `resources/voice/**` is no longer bundled. `package_voice.py --tag vX` zips it (207 MB)
+  into `installer\voice-windows-x86_64-v1.zip` and writes `resources/voice.json` (URL,
+  bytes, SHA-256 per platform; bundled). Settings › Read aloud downloads it into
+  `%APPDATA%\com.local.bibleconcordance\voice` (streamed, SHA-256 checked, unpacked to
+  `voice.partial` then renamed; cancellable; removable). Until then Listen uses the system
+  voice ("Built-in voice"). An older build's bundled `resources/voice` is still used if
+  present. The voice archive only changes when the voice does: later releases keep pointing
+  at the v2.4.0 asset.
+- **In-app updates** (`update.rs`, `Updates.tsx`, tauri-plugin-updater 2.12): endpoint
+  `https://github.com/BadBull22/bible/releases/latest/download/latest.json`; Windows
+  `installMode: passive`; per-installer keys `windows-x86_64-nsis` / `-msi` (the plugin
+  knows which one a copy was installed with). Automatic check ~daily, 20 s after start,
+  switchable in Settings › Updates; offline it fails quietly (one "warn" line in the log).
+  **Signing key**: `C:\Users\ErichT\.tauri\bible-concordance-updater.key` (no password;
+  public half in `tauri.conf.json`). It must be backed up and never committed -- without it
+  installed copies can never be updated again. `bundle.createUpdaterArtifacts: true` means
+  `tauri build` FAILS without `TAURI_SIGNING_PRIVATE_KEY` set -- build releases with
+  `pwsh -File scripts\release.ps1 -Notes "..."`, which sets it, builds, copies the
+  installers to `installer\` without spaces in their names (GitHub turns spaces into dots),
+  writes `latest.json`, and prints (never runs) the `gh release create` command. Copies
+  installed from 2.3.0 or earlier have no updater: they need 2.4.0 installed by hand once.
+- Also: Hebrew verse buttons overlapped the first words of each verse (pre-existing: the
+  buttons are `dir="ltr"`, so `inset-inline-end` meant the right side) -- placed on the left
+  for RTL chapters and side-by-side cells.
+
 **Licensing:** espeak-ng and phonemizer are GPL-3.0, so the voice program is distributed
 under GPL-3.0 with its source in `voice-sidecar/` (NOTICE.md explains); the main app is a
 separate program talking to it over localhost.
@@ -1755,6 +1883,11 @@ NOTICE.md                Attribution for every bundled data source (all public-d
   copyrighted and were never bundled; NIV/NKJV are available live via api.bible with the user's
   own key (ESV isn't offered on that platform).
 - Tech stack: Tauri (not Electron) for a smaller/faster native app.
+- No Mac build and no phone app for now (user, 2026-10-06) -- Windows only.
+- The reader always opens in a single column; side by side is switched on per session
+  (user, 2026-10-06).
+- Releases go through `scripts/release.ps1` (signed for the in-app updater) and GitHub
+  Releases; the natural voice is a separate one-time download, not in the installer.
 - Semantic search was pulled into v1 rather than deferred, per explicit user request.
 - User wants the project **finished end-to-end** — proceed through remaining items without
   stopping for sign-off at each step, per their instruction, while still using judgment on

@@ -5,6 +5,9 @@ import { CloseIcon } from "./icons";
 import { DEFAULT_PREFS, ReadingPrefs } from "../readingPrefs";
 import { NATURAL_VOICES, ReadAloudPrefs } from "../readAloud";
 import { invoke } from "@tauri-apps/api/core";
+import { copyText } from "../clipboard";
+import { VoiceDownload } from "./VoiceDownload";
+import { UpdateSettings } from "./Updates";
 
 /** Plays a short sample in the chosen voice ("Preparing…" the first time, while the
  * voice starts). */
@@ -62,6 +65,9 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "Adams' Synchronological Chart or Map of History, Sebastian C. Adams 1871 (Timeline facsimile)", licence: "Public domain" },
   { name: "Messianic prophecy pairings (Prophecies tab) — selection from \"FULFILLED\" by thecfelix & Kevin Flerlage", licence: "References credited; verses shown from bundled public-domain texts" },
   { name: "all-MiniLM-L6-v2 embedding model (topic search)", licence: "Apache 2.0" },
+  { name: "Library: free modules from the CrossWire Bible Society (crosswire.org), downloaded only when you choose them", licence: "Each item's own licence, shown before installing" },
+  { name: "Pictures: Gustave Doré (1866) and James Tissot (1886–1902), via Wikimedia Commons", licence: "Public domain (Tissot OT scans by Phillip Medhurst: CC BY-SA)" },
+  { name: "Pictures: Jim Padgett, courtesy of Sweet Publishing and Gospel Light (1984), via Wikimedia Commons", licence: "CC BY-SA 3.0" },
   { name: "Kokoro-82M text-to-speech model and voices, hexgrad (read aloud)", licence: "Apache 2.0" },
   { name: "kokoro-onnx (thewh1teagle) and ONNX Runtime (Microsoft) — read-aloud engine", licence: "MIT" },
   { name: "espeak-ng and phonemizer — pronunciation, inside the separate read-aloud voice program", licence: "GPL-3.0 (source: github.com/espeak-ng/espeak-ng, github.com/bootphon/phonemizer)" },
@@ -178,6 +184,7 @@ export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChan
   const [hasEsv, setHasEsv] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [version, setVersion] = useState<string>("");
+  const [voiceAvailable, setVoiceAvailable] = useState(true);
 
   useEffect(() => {
     getVersion()
@@ -304,11 +311,12 @@ export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChan
             ))}
           </select>
         </label>
-        <TryVoice prefs={readPrefs} />
+        {voiceAvailable && <TryVoice prefs={readPrefs} />}
       </div>
+      <VoiceDownload onChange={setVoiceAvailable} />
       <p className="search-hint" style={{ marginTop: "0.3rem" }}>
         Press <strong>Listen</strong> beside a chapter's title (or ⋯ → <em>Listen from here</em> on a verse) to hear it read in a
-        natural voice, fully offline. The first time after starting the app takes a few seconds while the voice gets ready.
+        natural voice, fully offline once it's downloaded. The first time after starting the app takes a few seconds while the voice gets ready.
       </p>
 
       <h4 className="section-label">Name your highlights</h4>
@@ -401,6 +409,10 @@ export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChan
         straight there.
       </p>
 
+      <UpdateSettings />
+
+      <Diagnostics />
+
       <h4 className="section-label">About</h4>
       <div className="about">
         <p>
@@ -443,5 +455,45 @@ export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChan
         </details>
       </div>
     </aside>
+  );
+}
+
+/** Where the error log is, and ways to hand it over when reporting a problem. */
+function Diagnostics() {
+  const [path, setPath] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  useEffect(() => {
+    api.logPath().then(setPath).catch(() => setPath(null));
+  }, []);
+  return (
+    <>
+      <h4 className="section-label">Diagnostics</h4>
+      <p className="search-hint" style={{ marginTop: 0 }}>
+        If something goes wrong, the app writes the details to a log file on this computer (it is never sent anywhere). When
+        reporting a problem, copy the recent log or attach the file.
+        {path && (
+          <>
+            <br />
+            <span className="log-path">{path}</span>
+          </>
+        )}
+      </p>
+      <div className="note-editor-actions">
+        <button className="outline-btn" onClick={() => api.openLogFolder().catch((e) => setStatus(String(e)))}>
+          Show log file
+        </button>
+        <button
+          className="outline-btn"
+          onClick={async () => {
+            const text = await api.logRecent(200).catch(() => "");
+            const ok = text ? await copyText(text) : false;
+            setStatus(!text ? "The log is empty." : ok ? "Recent log copied." : "Couldn't copy the log.");
+          }}
+        >
+          Copy recent log
+        </button>
+      </div>
+      {status && <p className="muted">{status}</p>}
+    </>
   );
 }

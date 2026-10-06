@@ -4,6 +4,7 @@
 // open basket panel) that the basket changed.
 import { useEffect, useState } from "react";
 import { api, BasketItem, BasketKind, BasketVerseMeta, SheetBlock, SheetRun } from "./api";
+import { pictureAsPng } from "./pictures";
 import { loadPrefs } from "./readingPrefs";
 import { chapterRedLetter, loadRedLetter, splitRed } from "./redLetter";
 import { tidyPunctuation } from "./verseSegments";
@@ -96,6 +97,22 @@ export async function basketSheet(items: BasketItem[], title: string, blankLines
         if (item.title.trim()) blocks.push({ kind: "heading", text: item.title });
         blocks.push(...paras(item.body));
         break;
+      case "picture": {
+        let meta: { id?: string; credit?: string } = {};
+        try {
+          meta = JSON.parse(item.meta);
+        } catch {
+          /* no picture data */
+        }
+        const png = meta.id ? await pictureAsPng(meta.id).catch(() => null) : null;
+        if (png) {
+          blocks.push({ kind: "image", ...png, caption: [item.title, meta.credit].filter(Boolean).join(" — ") });
+        } else {
+          blocks.push({ kind: "para", runs: [{ text: `[Picture not available: ${item.title}]`, italic: true }] });
+        }
+        if (item.body.trim()) blocks.push(...paras(item.body));
+        break;
+      }
       case "commentary":
       case "dictionary":
         blocks.push({ kind: "subheading", text: item.title });

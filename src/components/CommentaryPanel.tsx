@@ -3,6 +3,7 @@ import { api, CommentaryChapter, CommentaryInfo } from "../api";
 import { addToBasket } from "../basket";
 import { BasketButton } from "./BasketButton";
 import { CopyButton } from "./CopyButton";
+import { Line, plainText } from "./RichText";
 import { ListenButton } from "./ListenButton";
 import { CloseIcon } from "./icons";
 
@@ -35,8 +36,9 @@ function rangeLabel(start: number, next: number | undefined, verseCount: number)
   return `Verses ${start}–${end}`;
 }
 
-/** Commentary text arrives as plain text with newlines; render each line as a paragraph. */
-function Paragraphs({ text }: { text: string }) {
+/** Commentary text arrives as plain text with newlines; render each line as a paragraph.
+ * Library commentaries also carry ⟦..⟧ scripture-reference markers, shown as links. */
+function Paragraphs({ text, onJump }: { text: string; onJump: (book: string, chapter: number, verse: number) => void }) {
   return (
     <>
       {text
@@ -44,7 +46,9 @@ function Paragraphs({ text }: { text: string }) {
         .map((p) => p.trim())
         .filter(Boolean)
         .map((p, i) => (
-          <p key={i}>{p}</p>
+          <p key={i}>
+            <Line text={p} onJump={onJump} />
+          </p>
         ))}
     </>
   );
@@ -129,8 +133,10 @@ export function CommentaryPanel({ book, chapter, focusVerse, verseCount, initial
       </div>
       {current && (
         <p className="search-hint" style={{ marginTop: 0 }}>
-          {current.license_name ?? "Open licence"} · bundled offline via the Free Use Bible API (AO Lab).
-          {current.website && (
+          {current.id.startsWith("lib:")
+            ? `${current.license_name || "See the module's notes"} · installed from the Library (CrossWire Bible Society).`
+            : `${current.license_name ?? "Open licence"} · bundled offline via the Free Use Bible API (AO Lab).`}
+          {current.website && !current.id.startsWith("lib:") && (
             <>
               {" "}
               <span className="muted">{current.website.replace(/^https?:\/\//, "")}</span>
@@ -146,7 +152,7 @@ export function CommentaryPanel({ book, chapter, focusVerse, verseCount, initial
             <details className="apparatus-key">
               <summary>Introduction to {book}</summary>
               <div className="commentary-text">
-                <Paragraphs text={data.book_introduction} />
+                <Paragraphs text={data.book_introduction} onJump={onJump} />
               </div>
             </details>
           )}
@@ -154,7 +160,7 @@ export function CommentaryPanel({ book, chapter, focusVerse, verseCount, initial
             <details className="apparatus-key" open>
               <summary>Chapter {chapter} overview</summary>
               <div className="commentary-text">
-                <Paragraphs text={data.chapter_introduction} />
+                <Paragraphs text={data.chapter_introduction} onJump={onJump} />
               </div>
             </details>
           )}
@@ -176,7 +182,7 @@ export function CommentaryPanel({ book, chapter, focusVerse, verseCount, initial
                   <BasketButton
                     add={() => {
                       const range = rangeLabel(s.verse_start, data.sections[i + 1]?.verse_start, verseCount).replace(/^Verses? /, "");
-                      const body = s.text.split(/\n+/).map((p) => p.trim()).filter(Boolean).join("\n\n");
+                      const body = plainText(s.text).split(/\n+/).map((p) => p.trim()).filter(Boolean).join("\n\n");
                       return addToBasket("commentary", `${current?.name ?? "Commentary"} on ${book} ${chapter}:${range}`, body);
                     }}
                   />
@@ -184,14 +190,14 @@ export function CommentaryPanel({ book, chapter, focusVerse, verseCount, initial
                     title="Copy this commentary note"
                     text={() => {
                       const range = rangeLabel(s.verse_start, data.sections[i + 1]?.verse_start, verseCount).replace(/^Verses? /, "");
-                      const body = s.text.split(/\n+/).map((p) => p.trim()).filter(Boolean).join("\n\n");
+                      const body = plainText(s.text).split(/\n+/).map((p) => p.trim()).filter(Boolean).join("\n\n");
                       return `${book} ${chapter}:${range} — ${current?.name ?? "Commentary"}\n\n${body}`;
                     }}
                   />
                 </span>
               </h4>
               <div className="commentary-text">
-                <Paragraphs text={s.text} />
+                <Paragraphs text={s.text} onJump={onJump} />
               </div>
             </section>
           ))}

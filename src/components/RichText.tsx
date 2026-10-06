@@ -8,7 +8,8 @@ type OnJump = (book: string, chapter: number, verse: number) => void;
 // and jumps to verse 1.
 const MARKER = /⟦([^|⟧]*)\|(\d+)\|(\d*)\|(\d*)\|([^⟧]*)⟧/g;
 
-function Line({ text, onJump }: { text: string; onJump: OnJump }) {
+/** One line of text with its reference markers turned into links. */
+export function Line({ text, onJump }: { text: string; onJump: OnJump }) {
   const parts: React.ReactNode[] = [];
   let last = 0;
   for (const m of text.matchAll(MARKER)) {

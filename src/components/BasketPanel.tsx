@@ -3,6 +3,7 @@ import { api, BasketItem, BasketKind, BasketVerseMeta, SheetBlock } from "../api
 import { addToBasket, basketSheet, notifyBasketChanged, useBasket } from "../basket";
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "./icons";
 import { SheetOutput } from "./SheetOutput";
+import { usePictureUrl } from "../pictures";
 
 interface Props {
   onJump: (book: string, chapter: number, verse: number) => void;
@@ -16,7 +17,19 @@ const KIND_LABEL: Record<BasketKind, string> = {
   dictionary: "Dictionary",
   answer: "Answer",
   text: "Own text",
+  picture: "Picture",
 };
+
+function PictureThumb({ meta }: { meta: string }) {
+  let id: string | null = null;
+  try {
+    id = (JSON.parse(meta) as { id?: string }).id ?? null;
+  } catch {
+    /* not a picture */
+  }
+  const url = usePictureUrl(id);
+  return url ? <img className="basket-picture" src={url} alt="" /> : null;
+}
 
 const TITLE_KEY = "basket:title";
 
@@ -165,7 +178,10 @@ export function BasketPanel({ onJump, onClose }: Props) {
                     </div>
                   </div>
                 ) : (
-                  it.body && <div className="basket-body">{it.body}</div>
+                  <>
+                    {it.kind === "picture" && <PictureThumb meta={it.meta} />}
+                    {it.body && <div className="basket-body">{it.body}</div>}
+                  </>
                 )}
               </li>
             ))}

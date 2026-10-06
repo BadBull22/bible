@@ -1,0 +1,10 @@
+{
+  "platforms": {
+    "windows-x86_64": {
+      "url": "https://github.com/BadBull22/bible/releases/download/v2.4.0/voice-windows-x86_64-v1.zip",
+      "sha256": "73519b568b34d06d999d9285a2b1b88da24de14ae18862fa2b10b6e78daf4904",
+      "bytes": 207199470
+    }
+  },
+  "version": 1
+}

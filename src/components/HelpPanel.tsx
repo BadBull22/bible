@@ -97,6 +97,15 @@ const SECTIONS: Section[] = [
             ESV if you've added keys in Settings).
           </li>
           <li>
+            To read a <strong>whole chapter in several translations</strong>, press <strong>Side by side</strong> beside the
+            chapter title. The translation you're reading stays in the first column (with all its tools); choose up to three
+            more at the top of the columns (<strong>+ Add translation</strong>, × to remove). The verses line up row by row and
+            scroll together; where a translation has no verse (e.g. the BSB at Matthew 17:21) its cell shows a dash. Your
+            choice of columns is remembered, but the app always opens in a single column; <strong>Single column</strong>{" "}
+            goes back. <em>Copy chapter</em> then copies every
+            column.
+          </li>
+          <li>
             <strong>Commentary</strong> (open book) — nine bundled commentaries on that verse: Matthew Henry,
             Jamieson-Fausset-Brown, Adam Clarke, John Gill, Calvin, Keil &amp; Delitzsch (Old Testament), Tyndale Study
             Notes, John Wesley's Notes and the Scofield Reference Notes.
@@ -116,7 +125,7 @@ const SECTIONS: Section[] = [
   {
     id: "highlight-notes",
     title: "Highlights, notes and bookmarks",
-    keywords: "highlight colour color soft bright note write bookmark save marker clear delete",
+    keywords: "highlight colour color soft bright note write bookmark save marker clear delete range passage verses tags tag",
     body: (
       <>
         <ul>
@@ -128,6 +137,15 @@ const SECTIONS: Section[] = [
             <strong>Note</strong>: ⋯ → <em>Add note</em>. Type underneath the verse and press <em>Save note</em> (or{" "}
             <K>Ctrl</K> <K>Enter</K>). A small pencil appears next to verses with notes — click it to open the note again.
             Empty a note and save to delete it.
+          </li>
+          <li>
+            <strong>A note on several verses</strong>: in the note, choose <em>through verse</em> to make it cover a passage
+            (say verses 1–8). A thin bar in the margin marks every verse it covers; the pencil sits on the first one.
+          </li>
+          <li>
+            <strong>Tags</strong>: type a few words under the note, separated by commas (<em>faith, prayer, sermon: grace</em>).
+            Tags you've used before are offered as you type. In <strong>My Study</strong>, click a tag to see every note
+            that carries it.
           </li>
           <li>
             <strong>Bookmark</strong>: ⋯ → <em>Bookmark</em>. A small ribbon marks the verse.
@@ -143,12 +161,13 @@ const SECTIONS: Section[] = [
   {
     id: "my-study",
     title: "My Study: your notes, plans, export and backup",
-    keywords: "my study notes highlights bookmarks reading plan export import backup documents markdown json new pc",
+    keywords: "my study notes highlights bookmarks reading plan export import backup documents markdown json new pc tags tag",
     body: (
       <>
         <p>
           <strong>My Study</strong> in the top bar lists all your notes, highlights and bookmarks (newest first, with a filter
-          box). Click any reference to go to it.
+          box). Click any reference to go to it. Above your notes are your <strong>tags</strong>: click one to show only the
+          notes with that tag, click it again to show all.
         </p>
         <ul>
           <li>
@@ -260,6 +279,39 @@ const SECTIONS: Section[] = [
     ),
   },
   {
+    id: "original-search",
+    title: "Hebrew & Greek search (by word and grammar)",
+    keywords: "hebrew greek original search grammar tense aorist perfect stem qal piel hiphil case lemma strongs every occurrence word study lexicon",
+    body: (
+      <>
+        <p>
+          <strong>Explore → Hebrew &amp; Greek search</strong> finds every place a Hebrew or Greek word is used, and lets you
+          narrow it by its grammar — for example every <em>aorist</em> of ἀγαπάω (to love), or every <em>Piel</em> of a
+          Hebrew verb.
+        </p>
+        <ul>
+          <li>
+            Type an English meaning (<em>love</em>), the word itself (<em>ἀγαπάω</em>, <em>ברא</em>) or a Strong's number (
+            <em>G25</em>, <em>H1254</em>), then pick the word you mean from the list.
+          </li>
+          <li>
+            Use the boxes — tense, voice, mood, stem, case, person, number… — to narrow the list. Each choice shows how many
+            places it would leave. The chips underneath show which books it's found in.
+          </li>
+          <li>
+            Click a reference to go there. <em>Word Study</em> opens the dictionary entry; the copy button copies the whole
+            list.
+          </li>
+          <li>
+            From any <strong>Word Study</strong>, <em>Search by grammar</em> opens this search on that word. If you've
+            installed Greek or Hebrew lexicons from the <strong>Library</strong> (Abbott-Smith, Dodson, BDB and others),
+            their entries for the word appear in the Word Study too, under <em>From your Library</em>.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: "dictionary",
     title: "Bible dictionaries and topics",
     keywords: "dictionary easton smith nave torrey topical topic verse subject look up",
@@ -367,12 +419,17 @@ const SECTIONS: Section[] = [
   {
     id: "read-aloud",
     title: "Read aloud (listen to the Bible)",
-    keywords: "listen audio read aloud voice speak speech kokoro narrator hear",
+    keywords: "listen audio read aloud voice speak speech kokoro narrator hear download natural voice",
     body: (
       <>
         <p>
           Press <strong>Listen</strong> beside a chapter's title, or ⋯ → <strong>Listen from here</strong> on any verse. The
           chapter is read in a natural voice, fully offline; the verse being read is highlighted and kept in view.
+        </p>
+        <p>
+          <strong>The natural voice is a one-time download</strong> (about 200 MB), so the app itself stays smaller: go to{" "}
+          <strong>Settings → Read aloud</strong> and press <em>Download the natural voice</em>. Until then, Listen uses the
+          computer's built-in voice. Once downloaded it works offline, and it can be removed there again to free space.
         </p>
         <ul>
           <li>
@@ -398,6 +455,76 @@ const SECTIONS: Section[] = [
           </li>
           <li>Read aloud works in English (not the Hebrew and Greek texts).</li>
           <li>Going to another chapter yourself, or changing translation, stops the reading.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: "library",
+    title: "Library: free Bibles, commentaries and books to download",
+    keywords: "library download install sword crosswire module bible commentary dictionary devotional book barnes spurgeon josephus pilgrim afrikaans geneva",
+    body: (
+      <>
+        <p>
+          <strong>Study → Library</strong> opens a catalogue of about 400 free works from the CrossWire Bible Society — Bibles
+          (the Geneva Bible, Tyndale, Douay-Rheims, the Afrikaans 1953 Bybel and many other languages), commentaries
+          (Barnes, Robertson's Word Pictures, Spurgeon's Treasury of David, the Treasury of Scripture Knowledge…),
+          dictionaries (the International Standard Bible Encyclopedia, Hitchcock's Bible Names…), devotionals (Spurgeon's
+          Morning and Evening, Daily Light) and classic books (Josephus, Pilgrim's Progress, Calvin's Institutes, John Owen,
+          Jonathan Edwards…).
+        </p>
+        <ul>
+          <li>
+            <strong>Get more</strong>: filter by kind and language, search, and press <strong>Install</strong>. The internet is
+            needed only while it downloads (most are a few MB); afterwards it works offline.
+          </li>
+          <li>
+            Installed <strong>Bibles</strong> appear in the translation list, <strong>commentaries</strong> in the Commentary
+            panel and <strong>dictionaries</strong> in the Dictionary panel, alongside the built-in ones.{" "}
+            <strong>Books and devotionals</strong> open in their own reader — with contents, search, Previous/Next, and
+            Listen / Copy / Basket for each section; devotionals open at today's date.
+          </li>
+          <li>
+            <strong>My library</strong> lists what you've installed, with Read/Open and Remove. Each item's licence is shown;
+            most are public domain.
+          </li>
+          <li>
+            CrossWire itself files a few works under "questionable material"; they stay hidden unless you tick{" "}
+            <em>Show questionable material</em>.
+          </li>
+          <li>
+            Some Bibles number verses differently (e.g. the Jewish and Catholic traditions), so a verse can sit under a
+            slightly different number than in the KJV; books outside the 66 (the Apocrypha) aren't shown in the reader.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: "pictures",
+    title: "Pictures (Bible art for each chapter)",
+    keywords: "pictures images art illustrations dore tissot sweet gallery download",
+    body: (
+      <>
+        <p>
+          <strong>Explore → Pictures</strong> offers collections of Bible art — Gustave Doré's engravings, James Tissot's
+          paintings of the life of Christ and of the Old Testament, and Sweet Publishing's colour illustrations — each
+          picture linked to the passage it shows.
+        </p>
+        <ul>
+          <li>
+            On the <strong>Download</strong> tab, pick the collections you want (sizes are shown). They download once, gently,
+            one picture at a time — you can stop and resume — and then work offline.
+          </li>
+          <li>
+            When a chapter has pictures, a <strong>Pictures (n)</strong> button appears beside its title. Click a picture to
+            see it large, with its caption, passage, artist and licence; ← and → step through, Esc closes.
+          </li>
+          <li>
+            <strong>Gallery</strong> shows a whole collection. Any picture can be added to the{" "}
+            <strong>study basket</strong>, and it then prints on the study sheet and goes into the Word document.
+          </li>
+          <li>Pictures come from Wikimedia Commons; each shows its source and licence.</li>
         </ul>
       </>
     ),
@@ -466,6 +593,28 @@ const SECTIONS: Section[] = [
         or api.esv.org (ESV) and paste it in <strong>Settings</strong>, they appear in <em>Compare translations</em> while
         you're online. Everything else in the app works fully offline.
       </p>
+    ),
+  },
+  {
+    id: "updates",
+    title: "Updates, and when something goes wrong",
+    keywords: "update new version upgrade install check automatic error problem log diagnostics crash bug report",
+    body: (
+      <>
+        <p>
+          <strong>Updates</strong>: when you're online the app looks for a new version about once a day and, if there is
+          one, offers it in a small card at the bottom right — press <em>Update</em> and it downloads, installs and opens
+          again by itself. Your notes, highlights, Library and pictures are kept. You can also check yourself, or turn the
+          automatic check off, in <strong>Settings → Updates</strong>. Every update is checked against the app's digital
+          signature before it's installed.
+        </p>
+        <p>
+          <strong>If something goes wrong</strong>, the details are written to a log file on this computer (nothing is sent
+          anywhere). <strong>Settings → Diagnostics</strong> has <em>Show log file</em> and <em>Copy recent log</em> — include
+          that when reporting a problem. If a screen ever fails to draw, the app shows a <em>Reload</em> button instead of a
+          blank window; your data is safe.
+        </p>
+      </>
     ),
   },
   {

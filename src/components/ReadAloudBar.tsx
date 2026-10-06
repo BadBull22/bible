@@ -146,7 +146,9 @@ export function ReadAloudBar({ state, prefs, label, showContinue, onPrefs, onPau
             ))}
           </select>
         ) : (
-          <span className="muted">Windows voice</span>
+          <span className="muted" title="The natural voice can be downloaded in Settings › Read aloud">
+            Built-in voice
+          </span>
         )}
         <select value={prefs.speed} onChange={(e) => onPrefs({ ...prefs, speed: Number(e.target.value) })} aria-label="Reading speed">
           {SPEEDS.map((s) => (

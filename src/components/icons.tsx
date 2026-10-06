@@ -78,6 +78,29 @@ export const SheetIcon = (p: IconProps) => (
   </svg>
 );
 
+export const ColumnsIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M9 4v16M15 4v16" />
+  </svg>
+);
+
+export const PictureIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <circle cx="9" cy="10" r="2" />
+    <path d="m21 16-5-5-9 9" />
+  </svg>
+);
+
+export const LibraryIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M4 4v16M8 4v16" />
+    <path d="m12 5 3.5-1 4 15.5-3.5 1z" />
+    <path d="M3 20h18" />
+  </svg>
+);
+
 export const GripIcon = (p: IconProps) => (
   <svg {...base(p.size, p.className)}>
     <circle cx="9" cy="6" r="1" />

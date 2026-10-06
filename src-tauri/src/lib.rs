@@ -4,6 +4,11 @@ mod db;
 pub mod embeddings;
 pub mod firsts;
 mod genealogy;
+pub mod library;
+mod library_commands;
+mod logging;
+mod pictures;
+mod original_search;
 mod models;
 mod online;
 pub mod qa;
@@ -12,6 +17,7 @@ mod settings;
 mod sheet;
 mod study;
 mod study_commands;
+mod update;
 mod userdata;
 mod voice;
 
@@ -48,6 +54,8 @@ pub fn run() {
     register_sqlite_vec();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(update::PendingUpdate::default())
         // Close is intercepted on the FRONTEND, via the window's own onCloseRequested
         // hook (App.tsx) -- not here. This degrades safely if that hook is ever somehow
         // not registered: with no Rust-side prevent_close(), the window just closes
@@ -57,6 +65,11 @@ pub fn run() {
         // session, not a real bug -- see HANDOVER.md's Phase 8 notes before mistrusting
         // this design again.)
         .setup(|app| {
+            // first, so a failure anywhere below (a missing resource, a locked database)
+            // is written to the log as well as ending the start-up
+            if let Ok(log_dir) = app.path().app_log_dir() {
+                logging::init(&log_dir, &app.package_info().version.to_string());
+            }
             let resource_path = app
                 .path()
                 .resolve("resources/bible.db", tauri::path::BaseDirectory::Resource)
@@ -121,6 +134,19 @@ pub fn run() {
             let user_db = userdata::open(&data_dir).expect("failed to open userdata.db");
             app.manage(userdata::UserDataState(Mutex::new(user_db)));
             app.manage(voice::VoiceState::default());
+
+            // Free modules the user installs from the Library (CrossWire), converted into a
+            // writable library.db in the same per-user data folder.
+            let library = library::open(&data_dir).expect("failed to open library.db");
+            app.manage(library);
+
+            // Bible pictures: the catalogue ships with the app, the pictures themselves are
+            // downloaded per collection on request into the same data folder.
+            let pictures_catalog = app
+                .path()
+                .resolve("resources/pictures.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve pictures.json resource path");
+            app.manage(pictures::load(&pictures_catalog, &data_dir));
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -168,6 +194,12 @@ pub fn run() {
             study_commands::set_highlight,
             study_commands::get_note,
             study_commands::save_note,
+            study_commands::chapter_notes,
+            logging::log_event,
+            logging::log_recent,
+            logging::log_path,
+            logging::open_log_folder,
+            study_commands::note_tags,
             study_commands::list_study,
             study_commands::plan_progress,
             study_commands::start_plan,
@@ -186,6 +218,28 @@ pub fn run() {
             voice::voice_status,
             voice::voice_start,
             voice::voice_speak,
+            voice::voice_download,
+            voice::voice_cancel_download,
+            voice::voice_remove,
+            update::update_check,
+            update::update_install,
+            library_commands::library_catalog,
+            library_commands::library_install,
+            library_commands::library_remove,
+            library_commands::library_installed,
+            library_commands::library_toc,
+            library_commands::library_section,
+            library_commands::library_search_books,
+            library_commands::library_lexicon_entries,
+            original_search::original_word_lookup,
+            original_search::original_word_search,
+            pictures::pictures_collections,
+            pictures::pictures_for_chapter,
+            pictures::pictures_gallery,
+            pictures::picture_bytes,
+            pictures::pictures_download,
+            pictures::pictures_cancel,
+            pictures::pictures_remove,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

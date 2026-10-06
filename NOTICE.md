@@ -61,6 +61,28 @@ their own computer (`userdata.db` in the app's data folder) and are never sent a
 Built with Tauri, Rust, React, SQLite (FTS5, sqlite-vec), candle and Cytoscape, all under
 permissive open-source licences (MIT / Apache 2.0).
 
+### Library (downloaded on request)
+
+The Library screen downloads modules from the **CrossWire Bible Society**'s free SWORD
+repository (crosswire.org) only when the user chooses them; nothing from it is bundled. Each
+module carries its own licence, shown in the Library before installing — most are public
+domain; some are copyrighted works whose publishers have permitted CrossWire to distribute
+them free of charge (e.g. the 1933/1953 Afrikaans Bybel, © Bible Society of South Africa).
+The verse-numbering tables used to read them come from the SWORD engine via the pysword
+package (MIT).
+
+### Bible pictures (downloaded on request)
+
+Downloaded from Wikimedia Commons only when the user chooses a collection; each picture keeps
+a link to its Commons page with full source details.
+
+| Collection | Licence |
+|---|---|
+| Gustave Doré, Bible engravings (1866) | Public domain |
+| James Tissot, *The Life of Our Lord Jesus Christ* (1886–94), Brooklyn Museum | Public domain |
+| James Tissot, Old Testament (1896–1902), scans of the 1904 edition by Phillip Medhurst | Artwork public domain; scans CC BY-SA |
+| Bible illustrations by Jim Padgett, courtesy of Sweet Publishing, Ft. Worth, TX, and Gospel Light, Ventura, CA (1984) | CC BY-SA 3.0 |
+
 ### Read-aloud voice
 
 Read aloud runs in a **separate program** shipped beside the app (`resources/voice/`), which

@@ -4,6 +4,7 @@ use crate::commentaries::{
 use crate::db::DbState;
 use crate::firsts::{FirstsData, FirstsEntry};
 use crate::genealogy::{LineagePerson, PersonSummary};
+use crate::library::{self, LibraryState};
 use crate::models::*;
 use crate::online;
 use crate::qa::{QaConfidence, QaEntry};
@@ -42,8 +43,23 @@ fn words_for_verse(stmt: &mut rusqlite::Statement<'_>, verse_id: i64) -> Result<
     Ok(words)
 }
 
+/// True for a translation in the bundled bible.db; anything else may be a Library Bible.
+fn is_bundled_version(conn: &rusqlite::Connection, code: &str) -> bool {
+    conn.query_row("SELECT 1 FROM versions WHERE code = ?1", params![code], |_| Ok(())).is_ok()
+}
+
+fn lib_conn(lib: &LibraryState) -> Result<std::sync::MutexGuard<'_, rusqlite::Connection>, String> {
+    lib.conn.lock().map_err(|e| e.to_string())
+}
+
 #[tauri::command]
-pub fn list_versions(state: State<DbState>) -> Result<Vec<Version>, String> {
+pub fn list_versions(state: State<DbState>, lib: State<LibraryState>) -> Result<Vec<Version>, String> {
+    let mut out = list_bundled_versions(&state)?;
+    out.extend(library::versions(&*lib_conn(&lib)?)?);
+    Ok(out)
+}
+
+fn list_bundled_versions(state: &DbState) -> Result<Vec<Version>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
         .prepare("SELECT code, name, language, is_original_language FROM versions ORDER BY id")
@@ -184,8 +200,12 @@ pub fn chapter_counts(state: State<DbState>) -> Result<Vec<(String, i64)>, Strin
 }
 
 #[tauri::command]
-pub fn get_chapter(state: State<DbState>, version_code: String, book: String, chapter: i64) -> Result<Vec<Verse>, String> {
+pub fn get_chapter(state: State<DbState>, lib: State<LibraryState>, version_code: String, book: String, chapter: i64) -> Result<Vec<Verse>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
+    if !is_bundled_version(&conn, &version_code) {
+        drop(conn);
+        return library::chapter(&*lib_conn(&lib)?, &version_code, &book, chapter);
+    }
     let bid = book_id(&conn, &book)?;
     let mut stmt = conn
         .prepare(
@@ -207,11 +227,18 @@ pub fn get_chapter(state: State<DbState>, version_code: String, book: String, ch
 #[tauri::command]
 pub fn get_chapter_with_strongs(
     state: State<DbState>,
+    lib: State<LibraryState>,
     version_code: String,
     book: String,
     chapter: i64,
 ) -> Result<Vec<VerseWithWords>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
+    if !is_bundled_version(&conn, &version_code) {
+        // a Library Bible: plain text, no Strong's tagging
+        drop(conn);
+        let verses = library::chapter(&*lib_conn(&lib)?, &version_code, &book, chapter)?;
+        return Ok(verses.into_iter().map(|v| VerseWithWords { book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, words: Vec::new() }).collect());
+    }
     let bid = book_id(&conn, &book)?;
     let mut verse_stmt = conn
         .prepare(
@@ -239,6 +266,7 @@ pub fn get_chapter_with_strongs(
 #[tauri::command]
 pub fn get_parallel_verse(
     state: State<DbState>,
+    lib: State<LibraryState>,
     book: String,
     chapter: i64,
     verse: i64,
@@ -259,6 +287,12 @@ pub fn get_parallel_verse(
         )
         .map_err(|e| e.to_string())?;
     for code in version_codes {
+        if !is_bundled_version(&conn, &code) {
+            if let Some(text) = library::verse(&*lib_conn(&lib)?, &code, &book, chapter, verse)? {
+                out.push(SearchHit { version_code: code.clone(), book: book.clone(), chapter, verse, text });
+            }
+            continue;
+        }
         let mut rows = stmt
             .query_map(params![code, bid, chapter, verse], |r| {
                 Ok(SearchHit { version_code: code.clone(), book: r.get(0)?, chapter: r.get(1)?, verse: r.get(2)?, text: r.get(3)? })
@@ -274,12 +308,20 @@ pub fn get_parallel_verse(
 #[tauri::command]
 pub fn get_verse_with_strongs(
     state: State<DbState>,
+    lib: State<LibraryState>,
     version_code: String,
     book: String,
     chapter: i64,
     verse: i64,
 ) -> Result<VerseWithWords, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
+    if !is_bundled_version(&conn, &version_code) {
+        drop(conn);
+        return match library::verse(&*lib_conn(&lib)?, &version_code, &book, chapter, verse)? {
+            Some(text) => Ok(VerseWithWords { book, chapter, verse, text, words: Vec::new() }),
+            None => Err(format!("verse not found: {book} {chapter}:{verse} ({version_code})")),
+        };
+    }
     let bid = book_id(&conn, &book)?;
     let (verse_id, text): (i64, String) = conn
         .query_row(
@@ -348,11 +390,16 @@ pub fn strongs_occurrences(
 #[tauri::command]
 pub fn search_keyword(
     state: State<DbState>,
+    lib: State<LibraryState>,
     version_code: String,
     query: String,
     limit: i64,
 ) -> Result<Vec<SearchHit>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
+    if !is_bundled_version(&conn, &version_code) {
+        drop(conn);
+        return library::search_bible(&*lib_conn(&lib)?, &version_code, &query, limit);
+    }
     let fts_query = format!("\"{}\"", query.replace('"', "\"\""));
     let mut stmt = conn
         .prepare(
@@ -1034,18 +1081,27 @@ fn commentary_conn(state: &CommentaryState) -> Result<std::sync::MutexGuard<'_, 
 }
 
 #[tauri::command]
-pub fn list_commentaries(state: State<CommentaryState>) -> Result<Vec<CommentaryInfo>, String> {
-    let conn = commentary_conn(&state)?;
-    commentaries::list(&conn)
+pub fn list_commentaries(state: State<CommentaryState>, lib: State<LibraryState>) -> Result<Vec<CommentaryInfo>, String> {
+    // the bundled commentaries, then any installed from the Library
+    let mut out = match commentary_conn(&state) {
+        Ok(conn) => commentaries::list(&conn)?,
+        Err(_) => Vec::new(),
+    };
+    out.extend(library::commentaries(&*lib_conn(&lib)?)?);
+    Ok(out)
 }
 
 #[tauri::command]
 pub fn get_commentary_chapter(
     state: State<CommentaryState>,
+    lib: State<LibraryState>,
     commentary_id: String,
     book: String,
     chapter: i64,
 ) -> Result<CommentaryChapter, String> {
+    if commentary_id.starts_with(library::LIB_PREFIX) {
+        return library::commentary_chapter(&*lib_conn(&lib)?, &commentary_id, &book, chapter);
+    }
     let conn = commentary_conn(&state)?;
     commentaries::chapter(&conn, &commentary_id, &book, chapter)
 }
@@ -1053,12 +1109,23 @@ pub fn get_commentary_chapter(
 #[tauri::command]
 pub fn search_commentaries(
     state: State<CommentaryState>,
+    lib: State<LibraryState>,
     query: String,
     commentary_id: Option<String>,
     limit: i64,
 ) -> Result<Vec<CommentaryHit>, String> {
-    let conn = commentary_conn(&state)?;
-    commentaries::search(&conn, &query, commentary_id.as_deref(), limit)
+    if let Some(id) = commentary_id.as_deref().filter(|i| i.starts_with(library::LIB_PREFIX)) {
+        return library::search_commentaries(&*lib_conn(&lib)?, &query, Some(id), limit);
+    }
+    let mut hits = match commentary_conn(&state) {
+        Ok(conn) => commentaries::search(&conn, &query, commentary_id.as_deref(), limit)?,
+        Err(e) if commentary_id.is_some() => return Err(e),
+        Err(_) => Vec::new(),
+    };
+    if commentary_id.is_none() && (hits.len() as i64) < limit {
+        hits.extend(library::search_commentaries(&*lib_conn(&lib)?, &query, None, limit - hits.len() as i64)?);
+    }
+    Ok(hits)
 }
 
 #[tauri::command]

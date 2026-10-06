@@ -20,13 +20,19 @@ import { StudyPanel } from "./components/StudyPanel";
 import { HelpPanel } from "./components/HelpPanel";
 import { StudySheetPanel } from "./components/StudySheetPanel";
 import { BasketPanel } from "./components/BasketPanel";
+import { LibraryPanel } from "./components/LibraryPanel";
+import { listen as listenEvent } from "@tauri-apps/api/event";
+import { BookPanel } from "./components/BookPanel";
+import { PicturesPanel } from "./components/PicturesPanel";
+import { OriginalSearchPanel } from "./components/OriginalSearchPanel";
+import { UpdateBanner } from "./components/Updates";
 import { useBasket } from "./basket";
 import { ReadAloudBar } from "./components/ReadAloudBar";
 import { chapterAnnouncement, chunkText, LISTEN_EVENT, loadReadPrefs, ReadAloud, ReaderState, ReadItem, speechText } from "./readAloud";
 import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
 import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { BackIcon, BasketIcon, DictionaryIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
+import { BackIcon, BasketIcon, DictionaryIcon, InterlinearIcon, LibraryIcon, PictureIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import { TopMenu } from "./components/TopMenu";
 import "./App.css";
 
@@ -67,9 +73,13 @@ type SidePanel =
   | { kind: "help" }
   | { kind: "sheet"; book: string; chapter: number; verseStart: number; verseEnd: number }
   | { kind: "basket" }
+  | { kind: "library"; tab?: "mine" | "more" }
+  | { kind: "book"; name: string }
+  | { kind: "pictures"; tab?: "chapter" | "gallery" | "download" }
+  | { kind: "original"; strongs?: string }
   | null;
 
-const NO_MARKS: ChapterMarks = { bookmarks: [], highlights: [], notes: [] };
+const NO_MARKS: ChapterMarks = { bookmarks: [], highlights: [], notes: [], note_spans: [] };
 
 interface Location {
   book: string;
@@ -146,6 +156,27 @@ function App() {
   const [marks, setMarks] = useState<ChapterMarks>(NO_MARKS);
   const [studyVersion, setStudyVersion] = useState(0);
   const [basketItems] = useBasket();
+
+  // downloaded Bible pictures for the chapter on screen (the chapter's "Pictures" button)
+  const [chapterPictureCount, setChapterPictureCount] = useState(0);
+  const [picturesVersion, setPicturesVersion] = useState(0);
+  useEffect(() => {
+    const un = listenEvent("pictures-changed", () => setPicturesVersion((n) => n + 1));
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
+  useEffect(() => {
+    if (homeActive) return;
+    let live = true;
+    api
+      .picturesForChapter(book, chapter)
+      .then((r) => live && setChapterPictureCount(r.pictures.length))
+      .catch(() => live && setChapterPictureCount(0));
+    return () => {
+      live = false;
+    };
+  }, [book, chapter, homeActive, picturesVersion]);
   const [prefs, setPrefs] = useState<ReadingPrefs>(() => loadPrefs());
   const [focusMode, setFocusMode] = useState(false);
   // User-chosen names for the highlight colours (e.g. "yellow" -> "Love"), lifted here
@@ -183,6 +214,13 @@ function App() {
   useEffect(() => {
     api.listVersions().then(setVersions).catch(console.error);
     api.listBooks().then(setBooks).catch(console.error);
+    // a Bible installed or removed in the Library changes the translation list
+    const unlisten = listenEvent("library-changed", () => {
+      api.listVersions().then((vs) => {
+        setVersions(vs);
+        setVersionCode((cur) => (vs.some((v) => v.code === cur) ? cur : "BSB"));
+      });
+    });
     api
       .getSettings()
       .then((s) => setHighlightTitles(s.highlight_titles))
@@ -195,6 +233,9 @@ function App() {
         setChapterCounts(map);
       })
       .catch(console.error);
+    return () => {
+      unlisten.then((f) => f());
+    };
   }, []);
 
   useEffect(() => {
@@ -595,6 +636,7 @@ function App() {
             items={[
               { key: "study", label: "My Study", icon: <NotebookIcon size={14} />, onClick: () => setPanel({ kind: "study" }) },
               { key: "basket", label: "Basket", icon: <BasketIcon size={14} />, onClick: () => setPanel({ kind: "basket" }), badge: basketItems.length },
+              { key: "library", label: "Library", icon: <LibraryIcon size={14} />, onClick: () => setPanel({ kind: "library" }) },
             ]}
           />
           <TopMenu
@@ -613,6 +655,8 @@ function App() {
               { key: "map", label: "Map", icon: <MapIcon size={14} />, onClick: () => setPanel({ kind: "map" }) },
               { key: "timeline", label: "Timeline", icon: <TimelineIcon size={14} />, onClick: () => setPanel({ kind: "timeline" }) },
               { key: "dictionary", label: "Dictionary", icon: <DictionaryIcon size={14} />, onClick: () => setPanel({ kind: "dictionary" }) },
+              { key: "pictures", label: "Pictures", icon: <PictureIcon size={14} />, onClick: () => setPanel({ kind: "pictures" }) },
+              { key: "original", label: "Hebrew & Greek search", icon: <InterlinearIcon size={14} />, onClick: () => setPanel({ kind: "original" }) },
             ]}
           />
           <button className="text-btn" onClick={() => { document.body.classList.remove("printing-sheet"); window.print(); }} title="Print this view" aria-label="Print">
@@ -666,6 +710,7 @@ function App() {
                 book={book}
                 chapter={chapter}
                 versionCode={versionCode}
+                versions={versions}
                 verses={verses}
                 loading={loadingChapter}
                 error={chapterError}
@@ -681,6 +726,8 @@ function App() {
                 onShowTopics={(verse) => setPanel({ kind: "dictionary", verse: { book, chapter, verse } })}
                 onPrepareSheet={(verseStart, verseEnd) => setPanel({ kind: "sheet", book, chapter, verseStart, verseEnd })}
                 onListen={canListen ? listen : null}
+                pictureCount={chapterPictureCount}
+                onShowPictures={() => setPanel({ kind: "pictures" })}
                 readingVerse={readingHere}
                 marks={marks}
                 onMarksChanged={() => setStudyVersion((n) => n + 1)}
@@ -712,6 +759,7 @@ function App() {
               onListen={listenSelection}
               onSearch={(q) => setPanel({ kind: "search", initialQuery: q })}
             />
+            <UpdateBanner />
           </main>
           {panel && !focusMode && (
             <ResizeHandle
@@ -731,6 +779,8 @@ function App() {
               versionCode={versionCode}
               onClose={() => setPanel(null)}
               onJump={jumpTo}
+              onSearchGrammar={(strongs) => setPanel({ kind: "original", strongs })}
+              onOpenLibrary={() => setPanel({ kind: "library", tab: "more" })}
             />
           )}
           {panel?.kind === "xref" && (
@@ -847,6 +897,34 @@ function App() {
             />
           )}
           {panel?.kind === "basket" && <BasketPanel onJump={jumpTo} onClose={() => setPanel(null)} />}
+          {panel?.kind === "library" && (
+            <LibraryPanel
+              initialTab={panel.tab}
+              onUseVersion={(code) => {
+                setVersionCode(code);
+                setHomeActive(false);
+              }}
+              onOpenCommentary={(id) => setPanel({ kind: "commentary", verse: null, commentaryId: id })}
+              onOpenDictionary={() => setPanel({ kind: "dictionary" })}
+              onOpenBook={(name) => setPanel({ kind: "book", name })}
+              onClose={() => setPanel(null)}
+            />
+          )}
+          {panel?.kind === "pictures" && (
+            <PicturesPanel book={book} chapter={chapter} initialTab={panel.tab} onJump={jumpTo} onClose={() => setPanel(null)} />
+          )}
+          {panel?.kind === "original" && (
+            <OriginalSearchPanel
+              key={panel.strongs ?? ""}
+              initialStrongs={panel.strongs}
+              onJump={jumpTo}
+              onWordStudy={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
+              onClose={() => setPanel(null)}
+            />
+          )}
+          {panel?.kind === "book" && (
+            <BookPanel key={panel.name} name={panel.name} onJump={jumpTo} onOpenLibrary={() => setPanel({ kind: "library" })} onClose={() => setPanel(null)} />
+          )}
           {panel?.kind === "genealogy" && (
             <Suspense fallback={<PanelFallback />}>
               <GenealogyPanel
@@ -881,7 +959,7 @@ function App() {
 /** Mirrors the CSS defaults (.side-panel / .side-panel.wide) so the handle's first drag
  * starts from the width actually on screen. */
 function panelDefaultWidth(kind: NonNullable<SidePanel>["kind"]): number {
-  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket"].includes(kind);
+  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket", "library", "book", "pictures", "original"].includes(kind);
   const vw = window.innerWidth;
   return wide ? Math.min(640, vw * 0.42) : Math.min(400, vw * 0.36);
 }

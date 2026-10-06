@@ -4,9 +4,10 @@
 //! surface) so each file stays navigable.
 
 use crate::db::DbState;
+use crate::library::{self, LibraryState};
 use crate::study::{self, DictionaryEntry, DictionaryHit, DictionaryInfo, InterlinearWord, StudyState};
 use crate::userdata::{self, Backup, ChapterMarks, ExportResult, ImportResult, PlanProgress, StudyItem, UserDataState};
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, Connection};
 use serde::Serialize;
 use std::sync::MutexGuard;
 use tauri::{AppHandle, Manager, State};
@@ -32,17 +33,40 @@ pub fn interlinear_verse(state: State<StudyState>, book: String, chapter: i64, v
 }
 
 #[tauri::command]
-pub fn list_dictionaries(state: State<StudyState>) -> Result<Vec<DictionaryInfo>, String> {
-    study::list_dictionaries(&*study_conn(&state)?)
+pub fn list_dictionaries(state: State<StudyState>, lib: State<LibraryState>) -> Result<Vec<DictionaryInfo>, String> {
+    // the bundled dictionaries, then any installed from the Library
+    let mut out = match study_conn(&state) {
+        Ok(c) => study::list_dictionaries(&c)?,
+        Err(_) => Vec::new(),
+    };
+    out.extend(library::dictionaries(&*lib.conn.lock().map_err(|e| e.to_string())?)?);
+    Ok(out)
 }
 
 #[tauri::command]
-pub fn search_dictionaries(state: State<StudyState>, query: String, dict_code: Option<String>, limit: i64) -> Result<Vec<DictionaryHit>, String> {
-    study::search_dictionaries(&*study_conn(&state)?, &query, dict_code.as_deref(), limit)
+pub fn search_dictionaries(state: State<StudyState>, lib: State<LibraryState>, query: String, dict_code: Option<String>, limit: i64) -> Result<Vec<DictionaryHit>, String> {
+    let lib_only = dict_code.as_deref().is_some_and(|c| c.starts_with(library::LIB_PREFIX));
+    let mut hits = if lib_only {
+        Vec::new()
+    } else {
+        match study_conn(&state) {
+            Ok(c) => study::search_dictionaries(&c, &query, dict_code.as_deref(), limit)?,
+            Err(e) if dict_code.is_some() => return Err(e),
+            Err(_) => Vec::new(),
+        }
+    };
+    if lib_only || (dict_code.is_none() && (hits.len() as i64) < limit) {
+        let room = limit - hits.len() as i64;
+        hits.extend(library::search_dictionaries(&*lib.conn.lock().map_err(|e| e.to_string())?, &query, dict_code.as_deref(), room)?);
+    }
+    Ok(hits)
 }
 
 #[tauri::command]
-pub fn dictionary_entry(state: State<StudyState>, id: i64) -> Result<Option<DictionaryEntry>, String> {
+pub fn dictionary_entry(state: State<StudyState>, lib: State<LibraryState>, id: i64) -> Result<Option<DictionaryEntry>, String> {
+    if id >= library::LIB_ID_BASE {
+        return library::dictionary_entry(&*lib.conn.lock().map_err(|e| e.to_string())?, id);
+    }
     study::dictionary_entry(&*study_conn(&state)?, id)
 }
 
@@ -69,13 +93,31 @@ pub fn set_highlight(state: State<UserDataState>, book: String, chapter: i64, ve
 }
 
 #[tauri::command]
-pub fn get_note(state: State<UserDataState>, book: String, chapter: i64, verse: i64) -> Result<Option<String>, String> {
+pub fn get_note(state: State<UserDataState>, book: String, chapter: i64, verse: i64) -> Result<Option<userdata::Note>, String> {
     userdata::get_note(&*user_conn(&state)?, &book, chapter, verse)
 }
 
 #[tauri::command]
-pub fn save_note(state: State<UserDataState>, book: String, chapter: i64, verse: i64, body: String) -> Result<(), String> {
-    userdata::save_note(&*user_conn(&state)?, &book, chapter, verse, &body)
+pub fn save_note(
+    state: State<UserDataState>,
+    book: String,
+    chapter: i64,
+    verse: i64,
+    body: String,
+    verse_end: Option<i64>,
+    tags: Option<Vec<String>>,
+) -> Result<(), String> {
+    userdata::save_note(&*user_conn(&state)?, &book, chapter, verse, &body, verse_end, &tags.unwrap_or_default())
+}
+
+#[tauri::command]
+pub fn chapter_notes(state: State<UserDataState>, book: String, chapter: i64) -> Result<Vec<userdata::Note>, String> {
+    userdata::chapter_notes(&*user_conn(&state)?, &book, chapter)
+}
+
+#[tauri::command]
+pub fn note_tags(state: State<UserDataState>) -> Result<Vec<(String, i64)>, String> {
+    userdata::note_tags(&*user_conn(&state)?)
 }
 
 #[derive(Serialize)]
@@ -85,20 +127,28 @@ pub struct StudyLists {
     pub notes: Vec<StudyItem>,
 }
 
-/// Fill in each item's BSB verse text (for display and export). The user-data lock is
-/// already released by the time this runs, so the two databases are never locked at once.
+/// Fill in each item's BSB verse text (for display and export) -- for a note on a range,
+/// every verse of it, numbered. The user-data lock is already released by the time this
+/// runs, so the two databases are never locked at once.
 fn fill_verse_text(db: &Connection, items: &mut [StudyItem]) {
     let mut stmt = match db.prepare(
-        "SELECT v.text FROM verses v JOIN books b ON b.id = v.book_id JOIN versions ver ON ver.id = v.version_id
-         WHERE ver.code = 'BSB' AND b.name = ?1 AND v.chapter = ?2 AND v.verse = ?3",
+        "SELECT v.verse, v.text FROM verses v JOIN books b ON b.id = v.book_id JOIN versions ver ON ver.id = v.version_id
+         WHERE ver.code = 'BSB' AND b.name = ?1 AND v.chapter = ?2 AND v.verse BETWEEN ?3 AND ?4 ORDER BY v.verse",
     ) {
         Ok(s) => s,
         Err(_) => return,
     };
     for it in items.iter_mut() {
-        if let Ok(Some(t)) = stmt.query_row(params![it.book, it.chapter, it.verse], |r| r.get::<_, String>(0)).optional() {
-            it.verse_text = t;
-        }
+        let end = it.verse_end.unwrap_or(it.verse).max(it.verse);
+        let rows: Vec<(i64, String)> = match stmt.query_map(params![it.book, it.chapter, it.verse, end], |r| Ok((r.get(0)?, r.get(1)?))) {
+            Ok(rows) => rows.filter_map(Result::ok).collect(),
+            Err(_) => continue,
+        };
+        it.verse_text = if end > it.verse {
+            rows.iter().map(|(v, t)| format!("{v} {}", t.trim())).collect::<Vec<_>>().join(" ")
+        } else {
+            rows.into_iter().next().map(|(_, t)| t).unwrap_or_default()
+        };
     }
 }
 
@@ -167,19 +217,35 @@ pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbStat
 /// Verse text for a passage (one chapter, `verse_start..=verse_end`) in one translation,
 /// verses joined with their numbers -- used by the study sheet for cross-reference text.
 #[tauri::command]
-pub fn passage_text(db: State<DbState>, version_code: String, book: String, chapter: i64, verse_start: i64, verse_end: i64) -> Result<String, String> {
+pub fn passage_text(
+    db: State<DbState>,
+    lib: State<LibraryState>,
+    version_code: String,
+    book: String,
+    chapter: i64,
+    verse_start: i64,
+    verse_end: i64,
+) -> Result<String, String> {
     let d = db.0.lock().map_err(|e| e.to_string())?;
-    let mut stmt = d
-        .prepare(
-            "SELECT v.verse, v.text FROM verses v JOIN books b ON b.id = v.book_id JOIN versions ver ON ver.id = v.version_id
-             WHERE ver.code = ?1 AND b.name = ?2 AND v.chapter = ?3 AND v.verse BETWEEN ?4 AND ?5 ORDER BY v.verse",
-        )
-        .map_err(|e| e.to_string())?;
-    let rows: Vec<(i64, String)> = stmt
-        .query_map(params![version_code, book, chapter, verse_start, verse_end.max(verse_start)], |r| Ok((r.get(0)?, r.get(1)?)))
-        .map_err(|e| e.to_string())?
-        .collect::<Result<_, _>>()
-        .map_err(|e| e.to_string())?;
+    let bundled = d.query_row("SELECT 1 FROM versions WHERE code = ?1", params![version_code], |_| Ok(())).is_ok();
+    let rows: Vec<(i64, String)> = if bundled {
+        let mut stmt = d
+            .prepare(
+                "SELECT v.verse, v.text FROM verses v JOIN books b ON b.id = v.book_id JOIN versions ver ON ver.id = v.version_id
+                 WHERE ver.code = ?1 AND b.name = ?2 AND v.chapter = ?3 AND v.verse BETWEEN ?4 AND ?5 ORDER BY v.verse",
+            )
+            .map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map(params![version_code, book, chapter, verse_start, verse_end.max(verse_start)], |r| Ok((r.get(0)?, r.get(1)?)))
+            .map_err(|e| e.to_string())?
+            .collect::<Result<_, _>>()
+            .map_err(|e| e.to_string())?;
+        rows
+    } else {
+        drop(d);
+        let l = lib.conn.lock().map_err(|e| e.to_string())?;
+        crate::library::verse_range(&l, &version_code, &book, chapter, verse_start, verse_end.max(verse_start))?
+    };
     if rows.len() == 1 {
         return Ok(rows[0].1.trim().to_string());
     }

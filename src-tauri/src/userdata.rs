@@ -48,7 +48,22 @@ pub fn open(dir: &Path) -> Result<Connection, String> {
     std::fs::create_dir_all(dir).map_err(|e| format!("can't create {}: {e}", dir.display()))?;
     let conn = Connection::open(dir.join("userdata.db")).map_err(|e| e.to_string())?;
     conn.execute_batch(SCHEMA).map_err(|e| e.to_string())?;
+    migrate(&conn)?;
     Ok(conn)
+}
+
+/// Columns added after the first release: a note can cover a range of verses in its
+/// chapter (`verse_end`, NULL for one verse) and carry tags (comma-separated).
+fn migrate(conn: &Connection) -> Result<(), String> {
+    let mut s = conn.prepare("PRAGMA table_info(notes)").map_err(err)?;
+    let cols: Vec<String> = s.query_map([], |r| r.get(1)).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    if !cols.iter().any(|c| c == "verse_end") {
+        conn.execute_batch("ALTER TABLE notes ADD COLUMN verse_end INTEGER").map_err(err)?;
+    }
+    if !cols.iter().any(|c| c == "tags") {
+        conn.execute_batch("ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT ''").map_err(err)?;
+    }
+    Ok(())
 }
 
 fn err<E: std::fmt::Display>(e: E) -> String {
@@ -59,7 +74,10 @@ fn err<E: std::fmt::Display>(e: E) -> String {
 pub struct ChapterMarks {
     pub bookmarks: Vec<i64>,
     pub highlights: Vec<(i64, String)>,
+    /// Verses a note starts on.
     pub notes: Vec<i64>,
+    /// (first, last) verse of each note that covers more than one verse.
+    pub note_spans: Vec<(i64, i64)>,
 }
 
 pub fn chapter_marks(conn: &Connection, book: &str, chapter: i64) -> Result<ChapterMarks, String> {
@@ -70,13 +88,19 @@ pub fn chapter_marks(conn: &Connection, book: &str, chapter: i64) -> Result<Chap
     };
     let bookmarks = ints("SELECT verse FROM bookmarks WHERE book=?1 AND chapter=?2")?;
     let notes = ints("SELECT verse FROM notes WHERE book=?1 AND chapter=?2")?;
+    let mut s = conn.prepare("SELECT verse, verse_end FROM notes WHERE book=?1 AND chapter=?2 AND verse_end > verse").map_err(err)?;
+    let note_spans = s
+        .query_map(params![book, chapter], |r| Ok((r.get(0)?, r.get(1)?)))
+        .map_err(err)?
+        .collect::<Result<_, _>>()
+        .map_err(err)?;
     let mut s = conn.prepare("SELECT verse, color FROM highlights WHERE book=?1 AND chapter=?2").map_err(err)?;
     let highlights = s
         .query_map(params![book, chapter], |r| Ok((r.get(0)?, r.get(1)?)))
         .map_err(err)?
         .collect::<Result<_, _>>()
         .map_err(err)?;
-    Ok(ChapterMarks { bookmarks, highlights, notes })
+    Ok(ChapterMarks { bookmarks, highlights, notes, note_spans })
 }
 
 pub fn toggle_bookmark(conn: &Connection, book: &str, chapter: i64, verse: i64) -> Result<bool, String> {
@@ -106,25 +130,87 @@ pub fn set_highlight(conn: &Connection, book: &str, chapter: i64, verse: i64, co
     Ok(())
 }
 
-pub fn get_note(conn: &Connection, book: &str, chapter: i64, verse: i64) -> Result<Option<String>, String> {
-    conn.query_row("SELECT body FROM notes WHERE book=?1 AND chapter=?2 AND verse=?3", params![book, chapter, verse], |r| r.get(0))
+/// A note as the reader wrote it: it starts on `verse` and runs to `verse_end` (the same
+/// verse for a one-verse note), in one chapter.
+#[derive(Serialize, Clone, Debug, PartialEq)]
+pub struct Note {
+    pub verse: i64,
+    pub verse_end: i64,
+    pub body: String,
+    pub tags: Vec<String>,
+}
+
+/// Tags as typed ("#Faith, prayer ,faith") -> clean, de-duplicated ("Faith", "prayer").
+pub fn clean_tags(tags: &[String]) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for t in tags.iter().flat_map(|t| t.split(',')) {
+        let t = t.trim().trim_start_matches('#').split_whitespace().collect::<Vec<_>>().join(" ");
+        let t: String = t.chars().take(40).collect();
+        if !t.is_empty() && !out.iter().any(|o| o.to_lowercase() == t.to_lowercase()) {
+            out.push(t);
+        }
+        if out.len() == 20 {
+            break;
+        }
+    }
+    out
+}
+
+fn split_tags(s: &str) -> Vec<String> {
+    s.split(',').map(str::trim).filter(|t| !t.is_empty()).map(String::from).collect()
+}
+
+fn note_row(r: &rusqlite::Row) -> rusqlite::Result<Note> {
+    let verse: i64 = r.get(0)?;
+    let end: Option<i64> = r.get(1)?;
+    Ok(Note { verse, verse_end: end.filter(|&e| e > verse).unwrap_or(verse), body: r.get(2)?, tags: split_tags(&r.get::<_, String>(3)?) })
+}
+
+pub fn get_note(conn: &Connection, book: &str, chapter: i64, verse: i64) -> Result<Option<Note>, String> {
+    conn.query_row("SELECT verse, verse_end, body, tags FROM notes WHERE book=?1 AND chapter=?2 AND verse=?3", params![book, chapter, verse], note_row)
         .optional()
         .map_err(err)
 }
 
-/// Saving an empty (whitespace-only) note deletes it.
-pub fn save_note(conn: &Connection, book: &str, chapter: i64, verse: i64, body: &str) -> Result<(), String> {
+/// Every note in a chapter, in verse order (for the study sheet).
+pub fn chapter_notes(conn: &Connection, book: &str, chapter: i64) -> Result<Vec<Note>, String> {
+    let mut s = conn.prepare("SELECT verse, verse_end, body, tags FROM notes WHERE book=?1 AND chapter=?2 ORDER BY verse").map_err(err)?;
+    let v = s.query_map(params![book, chapter], note_row).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    Ok(v)
+}
+
+/// Saving an empty (whitespace-only) note deletes it. A `verse_end` past `verse` makes it a
+/// note on the whole range.
+pub fn save_note(conn: &Connection, book: &str, chapter: i64, verse: i64, body: &str, verse_end: Option<i64>, tags: &[String]) -> Result<(), String> {
     if body.trim().is_empty() {
         conn.execute("DELETE FROM notes WHERE book=?1 AND chapter=?2 AND verse=?3", params![book, chapter, verse]).map_err(err)?;
     } else {
+        let end = verse_end.filter(|&e| e > verse);
+        let tags = clean_tags(tags).join(",");
         conn.execute(
-            "INSERT INTO notes (book, chapter, verse, body) VALUES (?1,?2,?3,?4)
-             ON CONFLICT(book, chapter, verse) DO UPDATE SET body = excluded.body, updated_at = datetime('now','localtime')",
-            params![book, chapter, verse, body],
+            "INSERT INTO notes (book, chapter, verse, body, verse_end, tags) VALUES (?1,?2,?3,?4,?5,?6)
+             ON CONFLICT(book, chapter, verse) DO UPDATE SET body = excluded.body, verse_end = excluded.verse_end,
+                 tags = excluded.tags, updated_at = datetime('now','localtime')",
+            params![book, chapter, verse, body, end, tags],
         )
         .map_err(err)?;
     }
     Ok(())
+}
+
+/// Every tag used on a note, with how many notes carry it, most used first.
+pub fn note_tags(conn: &Connection) -> Result<Vec<(String, i64)>, String> {
+    let mut s = conn.prepare("SELECT tags FROM notes WHERE tags <> ''").map_err(err)?;
+    let rows: Vec<String> = s.query_map([], |r| r.get(0)).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    let mut counts: Vec<(String, i64)> = Vec::new();
+    for tag in rows.iter().flat_map(|r| split_tags(r)) {
+        match counts.iter_mut().find(|(t, _)| t.to_lowercase() == tag.to_lowercase()) {
+            Some((_, n)) => *n += 1,
+            None => counts.push((tag, 1)),
+        }
+    }
+    counts.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.to_lowercase().cmp(&b.0.to_lowercase())));
+    Ok(counts)
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -140,20 +226,29 @@ pub struct StudyItem {
     /// BSB text of the verse, filled in for display and export (not stored).
     #[serde(default)]
     pub verse_text: String,
+    /// Notes only: the last verse of a note on a range.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub verse_end: Option<i64>,
+    /// Notes only.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tags: Vec<String>,
 }
 
 fn list(conn: &Connection, sql: &str) -> Result<Vec<StudyItem>, String> {
     let mut s = conn.prepare(sql).map_err(err)?;
     let rows = s
         .query_map([], |r| {
+            let verse: i64 = r.get(2)?;
             Ok(StudyItem {
                 book: r.get(0)?,
                 chapter: r.get(1)?,
-                verse: r.get(2)?,
+                verse,
                 value: r.get(3)?,
                 created_at: r.get(4)?,
                 updated_at: r.get(5)?,
                 verse_text: String::new(),
+                verse_end: r.get::<_, Option<i64>>(6)?.filter(|&e| e > verse),
+                tags: split_tags(&r.get::<_, String>(7)?),
             })
         })
         .map_err(err)?
@@ -163,13 +258,13 @@ fn list(conn: &Connection, sql: &str) -> Result<Vec<StudyItem>, String> {
 }
 
 pub fn list_bookmarks(conn: &Connection) -> Result<Vec<StudyItem>, String> {
-    list(conn, "SELECT book, chapter, verse, '', created_at, created_at FROM bookmarks ORDER BY created_at DESC")
+    list(conn, "SELECT book, chapter, verse, '', created_at, created_at, NULL, '' FROM bookmarks ORDER BY created_at DESC")
 }
 pub fn list_highlights(conn: &Connection) -> Result<Vec<StudyItem>, String> {
-    list(conn, "SELECT book, chapter, verse, color, created_at, created_at FROM highlights ORDER BY created_at DESC")
+    list(conn, "SELECT book, chapter, verse, color, created_at, created_at, NULL, '' FROM highlights ORDER BY created_at DESC")
 }
 pub fn list_notes(conn: &Connection) -> Result<Vec<StudyItem>, String> {
-    list(conn, "SELECT book, chapter, verse, body, created_at, updated_at FROM notes ORDER BY updated_at DESC")
+    list(conn, "SELECT book, chapter, verse, body, created_at, updated_at, verse_end, tags FROM notes ORDER BY updated_at DESC")
 }
 
 // ---------------------------------------------------------------- reading plans
@@ -228,7 +323,7 @@ pub fn set_plan_day(conn: &Connection, plan_id: &str, day: i64, done: bool) -> R
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub struct BasketItem {
     pub id: i64,
-    /// "verse" | "note" | "commentary" | "dictionary" | "answer" | "text"
+    /// "verse" | "note" | "commentary" | "dictionary" | "answer" | "text" | "picture"
     pub kind: String,
     pub title: String,
     pub body: String,
@@ -237,7 +332,7 @@ pub struct BasketItem {
     pub created_at: String,
 }
 
-const BASKET_KINDS: [&str; 6] = ["verse", "note", "commentary", "dictionary", "answer", "text"];
+const BASKET_KINDS: [&str; 7] = ["verse", "note", "commentary", "dictionary", "answer", "text", "picture"];
 
 pub fn basket_list(conn: &Connection) -> Result<Vec<BasketItem>, String> {
     let mut s = conn.prepare("SELECT id, kind, title, body, meta, created_at FROM basket ORDER BY position, id").map_err(err)?;
@@ -318,7 +413,10 @@ pub struct ExportResult {
 }
 
 fn verse_label(i: &StudyItem) -> String {
-    format!("{} {}:{}", i.book, i.chapter, i.verse)
+    match i.verse_end {
+        Some(e) if e > i.verse => format!("{} {}:{}-{}", i.book, i.chapter, i.verse, e),
+        _ => format!("{} {}:{}", i.book, i.chapter, i.verse),
+    }
 }
 
 pub fn render_markdown(b: &Backup) -> String {
@@ -330,6 +428,9 @@ pub fn render_markdown(b: &Backup) -> String {
             md.push_str(&format!("> {} (BSB)\n\n", n.verse_text));
         }
         md.push_str(&format!("{}\n\n", n.value.trim()));
+        if !n.tags.is_empty() {
+            md.push_str(&format!("Tags: {}\n\n", n.tags.join(", ")));
+        }
     }
     md.push_str(&format!("## Highlights ({})\n\n", b.highlights.len()));
     for h in &b.highlights {
@@ -397,12 +498,15 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
             continue;
         }
         let updated = if n.updated_at.is_empty() { n.created_at.clone() } else { n.updated_at.clone() };
+        let end = n.verse_end.filter(|&e| e > n.verse);
+        let tags = clean_tags(&n.tags).join(",");
         r.notes += tx
             .execute(
-                "INSERT INTO notes (book, chapter, verse, body, created_at, updated_at) VALUES (?1,?2,?3,?4,?5,?6)
-                 ON CONFLICT(book, chapter, verse) DO UPDATE SET body = excluded.body, updated_at = excluded.updated_at
+                "INSERT INTO notes (book, chapter, verse, body, created_at, updated_at, verse_end, tags) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)
+                 ON CONFLICT(book, chapter, verse) DO UPDATE SET body = excluded.body, updated_at = excluded.updated_at,
+                     verse_end = excluded.verse_end, tags = excluded.tags
                  WHERE excluded.updated_at > notes.updated_at",
-                params![n.book, n.chapter, n.verse, n.value, n.created_at, updated],
+                params![n.book, n.chapter, n.verse, n.value, n.created_at, updated, end, tags],
             )
             .map_err(err)?;
     }
@@ -442,13 +546,20 @@ mod tests {
         set_highlight(&c, "John", 3, 16, Some("yellow")).unwrap();
         set_highlight(&c, "John", 3, 17, Some("green")).unwrap();
         assert!(set_highlight(&c, "John", 3, 18, Some("url(evil)")).is_err());
-        save_note(&c, "John", 3, 16, "God's love -- the gift of the Son.").unwrap();
+        save_note(&c, "John", 3, 16, "God's love -- the gift of the Son.", None, &[]).unwrap();
+        save_note(&c, "John", 3, 1, "Nicodemus by night", Some(8), &["#New birth, nicodemus".into(), "new BIRTH".into()]).unwrap();
         start_plan(&c, "nt90", "2026-09-26").unwrap();
         set_plan_day(&c, "nt90", 1, true).unwrap();
 
         let m = chapter_marks(&c, "John", 3).unwrap();
         assert_eq!(m.bookmarks, vec![16]);
-        assert_eq!(m.notes, vec![16]);
+        assert_eq!(m.notes.len(), 2);
+        assert_eq!(m.note_spans, vec![(1, 8)]);
+        let n = get_note(&c, "John", 3, 1).unwrap().unwrap();
+        assert_eq!((n.verse_end, n.tags.clone()), (8, vec!["New birth".to_string(), "nicodemus".to_string()]));
+        assert_eq!(get_note(&c, "John", 3, 16).unwrap().unwrap().verse_end, 16);
+        assert_eq!(note_tags(&c).unwrap(), vec![("New birth".to_string(), 1), ("nicodemus".to_string(), 1)]);
+        assert_eq!(chapter_notes(&c, "John", 3).unwrap().iter().map(|n| n.verse).collect::<Vec<_>>(), vec![1, 16]);
         assert_eq!(m.highlights.len(), 2);
 
         // export -> fresh database -> import restores everything
@@ -464,12 +575,14 @@ mod tests {
         let res = write_export(&dir, &stamp, &backup).unwrap();
         let md = std::fs::read_to_string(&res.markdown_path).unwrap();
         assert!(md.contains("John 3:16") && md.contains("gift of the Son"));
+        assert!(md.contains("### John 3:1-8") && md.contains("Tags: New birth, nicodemus"), "{md}");
         let json = std::fs::read_to_string(&res.json_path).unwrap();
 
         let (mut c2, dir2) = temp_db();
         let r = import_backup(&mut c2, &json).unwrap();
-        assert_eq!((r.bookmarks, r.highlights, r.notes, r.plans), (1, 2, 1, 1));
-        assert_eq!(get_note(&c2, "John", 3, 16).unwrap().as_deref(), Some("God's love -- the gift of the Son."));
+        assert_eq!((r.bookmarks, r.highlights, r.notes, r.plans), (1, 2, 2, 1));
+        assert_eq!(get_note(&c2, "John", 3, 16).unwrap().map(|n| n.body).as_deref(), Some("God's love -- the gift of the Son."));
+        assert_eq!(get_note(&c2, "John", 3, 1).unwrap(), get_note(&c, "John", 3, 1).unwrap());
         assert_eq!(plan_progress(&c2).unwrap()[0].done_days, vec![1]);
         // importing the same backup again adds nothing new
         let again = import_backup(&mut c2, &json).unwrap();
@@ -477,7 +590,7 @@ mod tests {
 
         // toggling/clearing
         assert!(!toggle_bookmark(&c, "John", 3, 16).unwrap());
-        save_note(&c, "John", 3, 16, "   ").unwrap();
+        save_note(&c, "John", 3, 16, "   ", None, &[]).unwrap();
         assert!(get_note(&c, "John", 3, 16).unwrap().is_none());
         assert!(import_backup(&mut c2, "{\"format\":\"something-else\",\"exported_at\":\"\"}").is_err());
         drop(c);
