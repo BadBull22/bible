@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-16 done — v2.4.0 committed 2026-10-06 (GitHub release pending a token permission) (Library, Pictures, side by side, Hebrew & Greek search, range notes + tags, error log, in-app updates, voice as a download)
+## Current status: Phases 1-16 done — v2.4.0 released 2026-10-06 (GitHub release + website updated) (Library, Pictures, side by side, Hebrew & Greek search, range notes + tags, error log, in-app updates, voice as a download)
 
 > **Start here next session:** `HANDOVER_2026-10-06_V2_4_0.md` — what's in 2.4.0, how to
 > ship the next version (`scripts/release.ps1`, the updater signing key that must never be
