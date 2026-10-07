@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { api, CatalogItem, InstalledModule, LibraryKind, LibraryProgress } from "../api";
+import { api, CatalogItem, InstalledModule, InstallReport, LibraryKind, LibraryProgress, LibrarySource } from "../api";
 import { CloseIcon } from "./icons";
 
 interface Props {
-  initialTab?: "mine" | "more";
+  initialTab?: Tab;
   /** start "Get more" filtered to this kind (e.g. from the sidebar's "Get more books") */
   onlyKind?: LibraryKind;
   onUseVersion: (code: string) => void;
@@ -13,6 +13,8 @@ interface Props {
   onOpenBook: (name: string) => void;
   onClose: () => void;
 }
+
+type Tab = "mine" | "more" | "file";
 
 const KIND_LABEL: Record<LibraryKind, string> = {
   bible: "Bible",
@@ -45,16 +47,43 @@ function formatSize(kb: number) {
 
 const PREFS_KEY = "library:filters";
 
-function readFilters(): { kind: LibraryKind | "all"; language: string; questionable: boolean } {
+/** Shown first in "Get more" regardless of the language filter (CrossWire names). */
+const PINNED = ["Afr1953"];
+
+interface Filters {
+  kind: LibraryKind | "all";
+  language: string;
+  questionable: boolean;
+  /** which source "Get more" is showing */
+  source: string;
+}
+
+function readFilters(): Filters {
+  const defaults: Filters = { kind: "all", language: "English", questionable: false, source: "crosswire" };
   try {
-    return { kind: "all", language: "English", questionable: false, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") };
+    return { ...defaults, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? "{}") };
   } catch {
-    return { kind: "all", language: "English", questionable: false };
+    return defaults;
   }
 }
 
+const ENTRY_WORD: Record<LibraryKind, string> = {
+  bible: "verses",
+  commentary: "notes",
+  dictionary: "entries",
+  devotional: "readings",
+  book: "sections",
+  other: "entries",
+};
+
 export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenCommentary, onOpenDictionary, onOpenBook, onClose }: Props) {
-  const [tab, setTab] = useState<"mine" | "more">(initialTab ?? "mine");
+  const [tab, setTab] = useState<Tab>(initialTab ?? "mine");
+  const [sources, setSources] = useState<LibrarySource[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState("");
+  const [fileState, setFileState] = useState<"idle" | "checking" | "ready" | "installing" | "done">("idle");
+  const [fileReport, setFileReport] = useState<InstallReport | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [installed, setInstalled] = useState<InstalledModule[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[] | null>(null);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
@@ -65,11 +94,14 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const wantedSource = useRef(filters.source);
+  const source = sources.find((s) => s.id === filters.source);
 
   const reloadInstalled = () => api.libraryInstalled().then(setInstalled).catch(() => undefined);
 
   useEffect(() => {
     reloadInstalled();
+    api.librarySources().then(setSources).catch(() => undefined);
     const un = listen<LibraryProgress>("library-progress", (e) => {
       const p = e.payload;
       const label = p.stage === "downloading" && p.pct != null ? `Downloading ${p.pct}%` : STAGE_LABEL[p.stage];
@@ -91,23 +123,64 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
   function loadCatalog(refresh: boolean) {
     setLoadingCatalog(true);
     setCatalogError(null);
+    const wanted = filters.source;
+    wantedSource.current = wanted;
     api
-      .libraryCatalog(refresh)
-      .then(setCatalog)
-      .catch((e) => setCatalogError(String(e)))
-      .finally(() => setLoadingCatalog(false));
+      .libraryCatalog(refresh, wanted)
+      .then((c) => wantedSource.current === wanted && setCatalog(c))
+      .catch((e) => wantedSource.current === wanted && setCatalogError(String(e)))
+      .finally(() => wantedSource.current === wanted && setLoadingCatalog(false));
   }
 
+  // each source has its own catalogue: load it when "Get more" opens or the source changes
   useEffect(() => {
-    if (tab === "more" && catalog === null && !loadingCatalog) loadCatalog(false);
+    if (tab !== "more") return;
+    setCatalog(null);
+    loadCatalog(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+  }, [tab, filters.source]);
+
+  async function checkFile(file: File) {
+    setFileName(file.name);
+    setFileReport(null);
+    setFileError(null);
+    setFileState("checking");
+    try {
+      const name = file.name.toLowerCase();
+      if (/\.(mobi|azw3?|kfx)$/.test(name)) throw "Kindle files can't be added. Only EPUB e-books, PDF books and SWORD modules (.zip) can.";
+      if (!/\.(epub|pdf|zip)$/.test(name)) throw "Only EPUB e-books (.epub), PDF books (.pdf) and SWORD modules (.zip) can be added.";
+      setFileReport(await api.libraryImportCheck(new Uint8Array(await file.arrayBuffer()), file.name));
+      setFileState("ready");
+    } catch (e) {
+      setFileError(String(e));
+      setFileState("idle");
+    }
+  }
+
+  async function installFile() {
+    setFileState("installing");
+    try {
+      setFileReport(await api.libraryImportInstall());
+      setFileState("done");
+      reloadInstalled();
+    } catch (e) {
+      setFileError(String(e));
+      setFileState("idle");
+    }
+  }
+
+  function cancelFile() {
+    api.libraryImportCancel().catch(() => undefined);
+    setFileReport(null);
+    setFileError(null);
+    setFileState("idle");
+  }
 
   async function install(item: CatalogItem) {
     setErrors((m) => ({ ...m, [item.name]: "" }));
     setProgress((m) => ({ ...m, [item.name]: "Starting…" }));
     try {
-      await api.libraryInstall(item.name);
+      await api.libraryInstall(item.name, item.source);
       setCatalog((c) => c?.map((x) => (x.name === item.name ? { ...x, installed: true, installed_version: x.version } : x)) ?? c);
       reloadInstalled();
     } catch (e) {
@@ -138,17 +211,23 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
     return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [catalog]);
 
+  // a language remembered from another source may not exist in this one
+  const language = filters.language === "all" || languages.some(([l]) => l === filters.language) ? filters.language : "all";
+
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (catalog ?? []).filter(
+    const list = (catalog ?? []).filter(
       (c) =>
         c.kind !== "other" &&
         (filters.kind === "all" || c.kind === filters.kind) &&
-        (filters.language === "all" || c.language === filters.language) &&
+        (language === "all" || c.language === language) &&
         (filters.questionable || !c.questionable) &&
         (!q || `${c.title} ${c.name} ${c.about}`.toLowerCase().includes(q)),
     );
-  }, [catalog, filters, query]);
+    // always in view, whatever language the list is showing: the Afrikaanse Bybel
+    const pinned = !q && (filters.kind === "all" || filters.kind === "bible") ? (catalog ?? []).filter((c) => PINNED.includes(c.name)) : [];
+    return [...pinned, ...list.filter((c) => !pinned.includes(c))];
+  }, [catalog, filters, language, query]);
 
   function openInstalled(m: InstalledModule) {
     if (m.kind === "bible") onUseVersion(m.name);
@@ -181,6 +260,9 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
         <button role="tab" aria-selected={tab === "more"} className={tab === "more" ? "active" : ""} onClick={() => setTab("more")}>
           Get more
         </button>
+        <button role="tab" aria-selected={tab === "file"} className={tab === "file" ? "active" : ""} onClick={() => setTab("file")}>
+          Add from file
+        </button>
       </div>
 
       {tab === "mine" && (
@@ -188,9 +270,10 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
           {installed.length === 0 ? (
             <div className="search-hint">
               <p>
-                Nothing installed yet. <strong>Get more</strong> lists hundreds of free Bibles, commentaries, dictionaries,
-                devotionals and classic Christian books from the CrossWire Bible Society — Barnes, Spurgeon, Josephus,
-                Pilgrim's Progress, the Geneva Bible, the Afrikaans 1953 Bybel and many more.
+                Nothing installed yet. <strong>Get more</strong> lists free Bibles, commentaries, dictionaries, devotionals
+                and classic Christian books from the CrossWire Bible Society, eBible.org and others — Barnes, Spurgeon,
+                Josephus, Pilgrim's Progress, the Geneva Bible, the Afrikaans 1953 Bybel and Bibles in well over a thousand
+                languages.
               </p>
               <button className="pill-btn" onClick={() => setTab("more")}>
                 Browse the library
@@ -203,6 +286,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
                   <div className="library-item-head">
                     <span className="basket-kind">{KIND_LABEL[m.kind] ?? m.kind}</span>
                     <span className="library-title">{m.title}</span>
+                    {m.source === "file" && <span className="library-own">Added by you</span>}
                     <span className="item-tools">
                       <button className="pill-btn small" onClick={() => openInstalled(m)}>
                         {openLabel[m.kind]}
@@ -224,7 +308,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
                     </span>
                   </div>
                   <div className="library-meta muted">
-                    {m.name} · {m.language} · {m.entries.toLocaleString()} {m.kind === "bible" ? "verses" : m.kind === "book" ? "sections" : "entries"}
+                    {m.name} · {m.language} · {m.entries.toLocaleString()} {ENTRY_WORD[m.kind]}
                     {m.licence ? ` · ${m.licence}` : ""}
                   </div>
                   {errors[m.name] && <p className="status-error">{errors[m.name]}</p>}
@@ -241,6 +325,19 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
 
       {tab === "more" && (
         <>
+          <div className="library-source">
+            <label>
+              <span className="muted">From</span>
+              <select value={filters.source} onChange={(e) => setFilters({ ...filters, source: e.target.value })} aria-label="Library source">
+                {sources.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {source && <span className="muted">{source.about}</span>}
+          </div>
           <div className="library-filters">
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search titles and descriptions…" aria-label="Search the library" />
             <select value={filters.kind} onChange={(e) => setFilters({ ...filters, kind: e.target.value as LibraryKind | "all" })} aria-label="Kind">
@@ -250,7 +347,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
                 </option>
               ))}
             </select>
-            <select value={filters.language} onChange={(e) => setFilters({ ...filters, language: e.target.value })} aria-label="Language">
+            <select value={language} onChange={(e) => setFilters({ ...filters, language: e.target.value })} aria-label="Language">
               <option value="all">All languages</option>
               {languages.map(([l, n]) => (
                 <option key={l} value={l}>
@@ -263,7 +360,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
               questionable material
             </label>
           </div>
-          {loadingCatalog && <p className="muted">Loading the CrossWire catalogue…</p>}
+          {loadingCatalog && <p className="muted">Loading the {source?.name ?? "library"} catalogue…</p>}
           {catalogError && <p className="status-error">{catalogError}</p>}
           {catalog && (
             <p className="search-hint">
@@ -304,7 +401,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
                   </div>
                   <div className="library-meta muted">
                     {c.name} · {c.language} · {formatSize(c.size_kb)} · {c.licence}
-                    {c.questionable ? " · CrossWire: questionable material" : ""}
+                    {c.questionable ? " · filed as questionable material" : ""}
                   </div>
                   {c.note && !c.supported && <div className="library-meta muted">{c.note}</div>}
                   {errors[c.name] && <p className="status-error">{errors[c.name]}</p>}
@@ -314,10 +411,106 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
             })}
           </ul>
           <p className="search-hint">
-            From the CrossWire Bible Society's free library (crosswire.org). Internet is needed only while downloading; installed
-            items work offline. Each item's licence is shown — most are public domain.
+            Free libraries of SWORD modules: the CrossWire Bible Society (crosswire.org), eBible.org and others — choose one
+            under <em>From</em>. Internet is needed only while downloading; installed items work offline. Each item's licence is
+            shown; read it before sharing a text with others.
           </p>
         </>
+      )}
+
+      {tab === "file" && (
+        <div className="library-file">
+          <p>
+            Add something you already have as a file:
+          </p>
+          <ul>
+            <li>
+              an <strong>e-book</strong> in EPUB format (<em>.epub</em>) — it joins your books, with its chapters, search and
+              Listen, and the Bible references in it become links;
+            </li>
+            <li>
+              a <strong>book as a PDF</strong> (<em>.pdf</em>) — also added to your books. A PDF stores printed pages, so the
+              result is rougher than an EPUB: use the EPUB when a book comes in both;
+            </li>
+            <li>
+              a <strong>SWORD module</strong> (<em>.zip</em>) — a Bible, commentary, dictionary or book in the format CrossWire
+              and eBible.org publish.
+            </li>
+          </ul>
+          <p className="muted">
+            The app checks the whole file first and shows you what it found. Nothing is added unless every check passes and you
+            press Add, and anything you add can be removed again under My library.
+          </p>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".epub,.pdf,.zip,application/epub+zip,application/pdf,application/zip"
+            hidden
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              e.target.value = "";
+              if (f) checkFile(f);
+            }}
+          />
+          {(fileState === "idle" || fileState === "done") && (
+            <button className="pill-btn" onClick={() => fileRef.current?.click()}>
+              {fileState === "done" ? "Add another file…" : "Choose a file…"}
+            </button>
+          )}
+          {fileState === "checking" && <p className="muted">Checking {fileName}…</p>}
+          {fileError && (
+            <div className="library-file-result refused" role="alert">
+              <strong>{fileName} wasn't added.</strong>
+              <p>{fileError}</p>
+            </div>
+          )}
+          {fileReport && fileState !== "checking" && (
+            <div className={"library-file-result" + (fileState === "done" ? " added" : "")}>
+              <strong>
+                {fileState === "done" ? "Added: " : ""}
+                {fileReport.title}
+              </strong>
+              <p>
+                {KIND_LABEL[fileReport.kind]} · {fileReport.language || "language not stated"} ·{" "}
+                {fileReport.entries.toLocaleString()} {ENTRY_WORD[fileReport.kind]}
+                {fileReport.books > 0 ? ` in ${fileReport.books} book${fileReport.books === 1 ? "" : "s"}` : ""}
+                {fileReport.licence ? ` · ${fileReport.licence}` : ""}
+              </p>
+              {fileReport.replaces && fileState !== "done" && (
+                <p className="library-file-warning">This replaces “{fileReport.replaces}”, which is already in your library.</p>
+              )}
+              {fileReport.warnings.map((w) => (
+                <p key={w} className="library-file-warning">
+                  {w}
+                </p>
+              ))}
+              {fileState === "ready" && (
+                <div className="note-editor-actions">
+                  <button className="pill-btn" onClick={installFile}>
+                    Add to my library
+                  </button>
+                  <button className="text-btn" onClick={cancelFile}>
+                    Cancel
+                  </button>
+                </div>
+              )}
+              {fileState === "installing" && <p className="muted">Adding…</p>}
+              {fileState === "done" && (
+                <div className="note-editor-actions">
+                  <button className="text-btn" onClick={() => setTab("mine")}>
+                    Show my library
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          <p className="search-hint">
+            Only add files you have the right to use; they stay on this computer and are never shared. Only the text of a
+            book is added, not its pictures. Copy-protected or password-protected files (most Kindle, Kobo and Apple Books
+            purchases, and library loans) can't be added, and neither can Kindle files or scanned books that are only pictures
+            of pages.
+          </p>
+        </div>
       )}
     </aside>
   );

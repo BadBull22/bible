@@ -29,7 +29,7 @@ import { OriginalSearchPanel } from "./components/OriginalSearchPanel";
 import { UpdateBanner } from "./components/Updates";
 import { useBasket } from "./basket";
 import { ReadAloudBar } from "./components/ReadAloudBar";
-import { chapterAnnouncement, chunkText, LISTEN_EVENT, loadReadPrefs, ReadAloud, ReaderState, ReadItem, speechText } from "./readAloud";
+import { chapterAnnouncement, chunkText, LISTEN_EVENT, LISTEN_FINISHED_EVENT, loadReadPrefs, ReadAloud, ReaderState, ReadItem, speechText } from "./readAloud";
 import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
 import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -448,6 +448,7 @@ function App() {
       flipChapter(adjacent.next);
     } else {
       listening.current = null;
+      if (readMode.current === "selection") window.dispatchEvent(new Event(LISTEN_FINISHED_EVENT));
     }
   };
 

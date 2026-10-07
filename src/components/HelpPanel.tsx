@@ -462,7 +462,7 @@ const SECTIONS: Section[] = [
   {
     id: "library",
     title: "Library: free Bibles, commentaries and books to download",
-    keywords: "library download install sword crosswire module bible commentary dictionary devotional book barnes spurgeon josephus pilgrim afrikaans geneva",
+    keywords: "library download install sword crosswire ebible net bible module bible commentary dictionary devotional book barnes spurgeon josephus pilgrim afrikaans geneva add import own file zip language epub ebook e-book kindle pdf",
     body: (
       <>
         <p>
@@ -477,6 +477,34 @@ const SECTIONS: Section[] = [
           <li>
             <strong>Get more</strong>: filter by kind and language, search, and press <strong>Install</strong>. The internet is
             needed only while it downloads (most are a few MB); afterwards it works offline.
+          </li>
+          <li>
+            <strong>From</strong> (at the top of Get more) chooses where the list comes from: <em>CrossWire</em> (the main
+            library), <em>eBible.org</em> (about 1,500 Bibles and New Testaments in a very wide range of languages),{" "}
+            <em>NET Bible</em> (the free edition), <em>Wycliffe</em> (minority languages), <em>CrossWire Attic</em> (older
+            editions) and <em>CrossWire Beta</em> (still being tested).
+          </li>
+          <li>
+            <strong>Add from file</strong>: add an <strong>e-book in EPUB format</strong> (<em>.epub</em>), a{" "}
+            <strong>book as a PDF</strong> (<em>.pdf</em>) or a SWORD module (<em>.zip</em>) that you already have. A PDF
+            stores printed pages rather than chapters and paragraphs, so it comes out rougher than an EPUB (a stray page
+            header here and there; chapters only if the PDF has bookmarks, otherwise it's divided into parts) — choose the
+            EPUB when a book comes in both. The app checks the whole file first and shows what it found (its title,
+            how many chapters, anything left out). Nothing is added unless every check passes and you press{" "}
+            <em>Add to my library</em>. An e-book then appears under <strong>Books</strong> in the left-hand list like any
+            other, with contents, search and Listen; Bible references in its text ("John 3:16") become links. Only the text
+            is added, not pictures. Items you add yourself are marked <em>Added by you</em> and can be removed again.
+          </li>
+          <li>
+            <strong>Finding your place in a book</strong>: the slider above the text runs across the whole book — drag it to
+            move, and it shows how far through you are. A book added from a PDF also shows the printed book's page numbers as
+            small grey numbers in the text, with a <em>Page … of …</em> box to go straight to a page. Every book reopens at
+            the place where you stopped reading.
+          </li>
+          <li>
+            What can't be added: <strong>copy-protected</strong> e-books (most Kindle, Kobo and Apple Books purchases, and
+            library loans — the app says so and stops), password-protected PDFs, Kindle files, scanned books that are only
+            pictures of pages, and anything damaged. Add only files you have the right to use; they stay on this computer.
           </li>
           <li>
             Installed <strong>Bibles</strong> appear in the translation list, <strong>commentaries</strong> in the Commentary

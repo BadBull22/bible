@@ -106,6 +106,10 @@ export function speechText(text: string): string {
  * buttons in side panels, which don't have the reader themselves). */
 export const LISTEN_EVENT = "read-aloud-request";
 
+/** Sent when a reading asked for with `requestListen` reaches its end by itself (not when
+ * it is stopped), so a book can carry on into its next chapter. */
+export const LISTEN_FINISHED_EVENT = "read-aloud-finished";
+
 export function requestListen(text: string) {
   window.dispatchEvent(new CustomEvent<string>(LISTEN_EVENT, { detail: text }));
 }

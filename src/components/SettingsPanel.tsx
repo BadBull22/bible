@@ -65,7 +65,7 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "Adams' Synchronological Chart or Map of History, Sebastian C. Adams 1871 (Timeline facsimile)", licence: "Public domain" },
   { name: "Messianic prophecy pairings (Prophecies tab) — selection from \"FULFILLED\" by thecfelix & Kevin Flerlage", licence: "References credited; verses shown from bundled public-domain texts" },
   { name: "all-MiniLM-L6-v2 embedding model (topic search)", licence: "Apache 2.0" },
-  { name: "Library: free modules from the CrossWire Bible Society (crosswire.org), downloaded only when you choose them", licence: "Each item's own licence, shown before installing" },
+  { name: "Library: free modules from the CrossWire Bible Society (crosswire.org), eBible.org and bible.org, downloaded only when you choose them", licence: "Each item's own licence, shown before installing" },
   { name: "Pictures: Gustave Doré (1866) and James Tissot (1886–1902), via Wikimedia Commons", licence: "Public domain (Tissot OT scans by Phillip Medhurst: CC BY-SA)" },
   { name: "Pictures: Jim Padgett, courtesy of Sweet Publishing and Gospel Light (1984), via Wikimedia Commons", licence: "CC BY-SA 3.0" },
   { name: "Kokoro-82M text-to-speech model and voices, hexgrad (read aloud)", licence: "Apache 2.0" },

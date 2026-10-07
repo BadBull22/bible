@@ -9,7 +9,9 @@
 //! .../packages/rawzip/<Name>.zip. See sword.rs for the file formats, markup.rs for how
 //! their markup becomes app text.
 
+pub mod epub;
 pub mod markup;
+pub mod pdf;
 pub mod refs;
 pub mod sword;
 
@@ -27,8 +29,86 @@ use crate::study::{DictionaryEntry, DictionaryHit, DictionaryInfo};
 use markup::Kind;
 use sword::Conf;
 
-pub const CATALOG_URL: &str = "https://crosswire.org/ftpmirror/pub/sword/raw/mods.d.tar.gz";
-pub const MODULE_URL: &str = "https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/";
+/// A repository of SWORD modules the Library can browse: its catalogue (`mods.d.tar.gz`)
+/// and the folder of per-module zips. All are fetched over HTTPS. The list follows
+/// CrossWire's own master list of repositories (masterRepoList.conf), minus the ones that
+/// are FTP-only or hold only locked (paid) modules.
+#[derive(Serialize, Clone, Copy, Debug)]
+pub struct Source {
+    pub id: &'static str,
+    pub name: &'static str,
+    pub about: &'static str,
+    #[serde(skip)]
+    pub catalog_url: &'static str,
+    #[serde(skip)]
+    pub zip_url: &'static str,
+}
+
+pub const SOURCES: &[Source] = &[
+    Source {
+        id: "crosswire",
+        name: "CrossWire",
+        about: "The main CrossWire Bible Society library: Bibles, commentaries, dictionaries, devotionals and books.",
+        catalog_url: "https://crosswire.org/ftpmirror/pub/sword/raw/mods.d.tar.gz",
+        zip_url: "https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/",
+    },
+    Source {
+        id: "ebible",
+        name: "eBible.org",
+        about: "About 1,500 Bibles and Bible portions in a very wide range of languages, from eBible.org.",
+        catalog_url: "https://ebible.org/sword/mods.d.tar.gz",
+        zip_url: "https://ebible.org/sword/zip/",
+    },
+    Source {
+        id: "attic",
+        name: "CrossWire Attic",
+        about: "Older works CrossWire has retired from its main library, often replaced by newer editions.",
+        catalog_url: "https://crosswire.org/ftpmirror/pub/sword/atticraw/mods.d.tar.gz",
+        zip_url: "https://crosswire.org/ftpmirror/pub/sword/atticpackages/rawzip/",
+    },
+    Source {
+        id: "wycliffe",
+        name: "Wycliffe",
+        about: "Bibles in minority languages from Wycliffe Bible Translators, hosted by CrossWire.",
+        catalog_url: "https://crosswire.org/ftpmirror/pub/sword/wyclifferaw/mods.d.tar.gz",
+        zip_url: "https://crosswire.org/ftpmirror/pub/sword/wycliffepackages/rawzip/",
+    },
+    Source {
+        id: "netbible",
+        name: "NET Bible (bible.org)",
+        about: "The NET Bible's free edition from bible.org. The full edition with all notes is locked by its publisher.",
+        catalog_url: "https://crosswire.org/ftpmirror/pub/bible.org/sword/mods.d.tar.gz",
+        zip_url: "https://crosswire.org/ftpmirror/pub/bible.org/sword/packages/",
+    },
+    Source {
+        id: "beta",
+        name: "CrossWire Beta",
+        about: "Works CrossWire is still testing. They may have mistakes.",
+        catalog_url: "https://crosswire.org/ftpmirror/pub/sword/betaraw/mods.d.tar.gz",
+        zip_url: "https://crosswire.org/ftpmirror/pub/sword/betapackages/rawzip/",
+    },
+];
+
+/// `modules.source` for something the reader added from a file of their own.
+pub const SOURCE_FILE: &str = "file";
+
+pub fn source(id: &str) -> Option<&'static Source> {
+    SOURCES.iter().find(|s| s.id == id)
+}
+
+/// Where a source's catalogue is cached in the library folder.
+pub fn catalog_cache(dir: &Path, source: &Source) -> PathBuf {
+    if source.id == "crosswire" {
+        dir.join("mods.d.tar.gz") // its name before there were other sources
+    } else {
+        dir.join(format!("mods.d.{}.tar.gz", source.id))
+    }
+}
+
+/// A module name the app accepts: it becomes part of file paths and of the translation code.
+pub fn valid_name(name: &str) -> bool {
+    !name.is_empty() && name.len() <= 64 && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+}
 
 /// Library dictionary entries share the Dictionary panel's id space with the bundled
 /// study.db entries; ids from here are offset so the two never collide.
@@ -98,6 +178,9 @@ fn has_column(conn: &Connection, table: &str, column: &str) -> bool {
 fn migrate(conn: &Connection, dir: &Path) -> Result<(), String> {
     if !has_column(conn, "modules", "features") {
         conn.execute_batch("ALTER TABLE modules ADD COLUMN features TEXT NOT NULL DEFAULT ''").map_err(err)?;
+    }
+    if !has_column(conn, "modules", "source") {
+        conn.execute_batch("ALTER TABLE modules ADD COLUMN source TEXT NOT NULL DEFAULT 'crosswire'").map_err(err)?;
     }
     if !has_column(conn, "lib_dict", "strongs") {
         conn.execute_batch("ALTER TABLE lib_dict ADD COLUMN strongs TEXT").map_err(err)?;
@@ -332,10 +415,15 @@ pub struct CatalogItem {
     pub built_in: bool,
     pub installed: bool,
     pub installed_version: Option<String>,
+    /// id of the source (repository) this entry comes from
+    pub source: String,
 }
 
 /// Why the app can't use a module, if it can't.
 fn unsupported_reason(conf: &Conf) -> Option<String> {
+    if !valid_name(&conf.name) {
+        return Some("Its name has characters the app can't use.".into());
+    }
     let Some(kind) = kind_of(conf) else {
         return Some(format!("This kind of module ({}) isn't supported yet.", conf.driver()));
     };
@@ -372,7 +460,7 @@ pub fn parse_catalog(targz: &[u8]) -> Result<Vec<Conf>, String> {
     Ok(out)
 }
 
-pub fn catalog_items(confs: &[Conf], conn: &Connection) -> Result<Vec<CatalogItem>, String> {
+pub fn catalog_items(confs: &[Conf], conn: &Connection, source: &str) -> Result<Vec<CatalogItem>, String> {
     let installed: HashMap<String, String> = conn
         .prepare("SELECT name, version FROM modules")
         .map_err(err)?
@@ -405,6 +493,7 @@ pub fn catalog_items(confs: &[Conf], conn: &Connection) -> Result<Vec<CatalogIte
                 built_in: built_in.is_some(),
                 installed: installed.contains_key(&c.name),
                 installed_version: installed.get(&c.name).cloned(),
+                source: source.to_string(),
             })
         })
         .collect();
@@ -419,12 +508,73 @@ pub struct InstallReport {
     pub name: String,
     pub kind: String,
     pub title: String,
+    /// verses, notes, entries or sections with text
     pub entries: i64,
+    /// Bibles and commentaries: how many of the 66 books have text
+    pub books: i64,
+    pub language: String,
+    pub licence: String,
+    /// things the reader should know before installing a file of their own
+    pub warnings: Vec<String>,
+    /// title of an installed work this one would replace
+    pub replaces: Option<String>,
 }
 
-/// Unpacks a module .zip into a fresh folder (guarding against paths that escape it).
-fn unzip(bytes: &[u8], dest: &Path) -> Result<(), String> {
-    let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|e| format!("not a module archive: {e}"))?;
+/// How a module is being installed.
+#[derive(Clone, Copy)]
+pub struct InstallOptions<'a> {
+    /// a `Source` id, or `SOURCE_FILE`
+    pub source: &'a str,
+    /// a file the reader supplied: refuse anything doubtful instead of installing what can be read
+    pub strict: bool,
+    /// false = a trial run that reports what would be installed and changes nothing
+    pub commit: bool,
+}
+
+const MAX_ZIP_FILES: usize = 4000;
+const MAX_UNPACKED_BYTES: u64 = 800 * 1024 * 1024;
+
+/// Unpacks a module .zip into a fresh folder (guarding against paths that escape it, and
+/// against archives that unpack to something enormous). `strict` is for a file the reader
+/// supplied: it must hold exactly one module and nothing else.
+fn unzip(bytes: &[u8], dest: &Path, strict: bool) -> Result<(), String> {
+    let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|_| "This isn't a zip file the app can open.".to_string())?;
+    if zip.len() > MAX_ZIP_FILES {
+        return Err("The archive has too many files to be a single module.".into());
+    }
+    let mut total: u64 = 0;
+    let mut confs = 0;
+    for i in 0..zip.len() {
+        let f = zip.by_index(i).map_err(err)?;
+        total += f.size();
+        if f.is_dir() {
+            continue;
+        }
+        let Some(rel) = f.enclosed_name() else {
+            return Err("The archive has a file path the app won't unpack.".into());
+        };
+        let parts: Vec<String> = rel.components().map(|c| c.as_os_str().to_string_lossy().to_lowercase()).collect();
+        let is_conf = parts.len() == 2 && parts[0] == "mods.d" && parts[1].ends_with(".conf");
+        if is_conf {
+            confs += 1;
+        }
+        if strict && !is_conf && parts.first().map(String::as_str) != Some("modules") {
+            return Err(format!(
+                "This isn't a SWORD module: it contains \"{}\". A module zip holds only a mods.d folder and a modules folder.",
+                rel.display()
+            ));
+        }
+    }
+    if total > MAX_UNPACKED_BYTES {
+        return Err("The archive unpacks to more than 800 MB, which is too large for a module.".into());
+    }
+    if strict && confs != 1 {
+        return Err(if confs == 0 {
+            "This isn't a SWORD module: there is no module description (mods.d/*.conf) in the zip.".to_string()
+        } else {
+            format!("The zip holds {confs} modules. Add them one at a time, each in its own zip.")
+        });
+    }
     for i in 0..zip.len() {
         let mut f = zip.by_index(i).map_err(err)?;
         let Some(rel) = f.enclosed_name() else { continue };
@@ -481,10 +631,15 @@ fn delete_module_rows(tx: &Connection, name: &str) -> Result<(), String> {
 }
 
 /// Converts an unpacked module into library.db. `progress` gets short stage names.
-pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, progress: &dyn Fn(&str)) -> Result<InstallReport, String> {
+pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: InstallOptions, progress: &dyn Fn(&str)) -> Result<InstallReport, String> {
     let conf = find_conf(root, name)?;
     if let Some(reason) = unsupported_reason(&conf) {
         return Err(reason);
+    }
+    if opts.strict {
+        if let Some((_, note)) = BUILT_IN.iter().find(|(n, _)| n.eq_ignore_ascii_case(&conf.name)) {
+            return Err(note.to_string());
+        }
     }
     let kind = kind_of(&conf).unwrap_or("other");
     let source = conf.get("SourceType").unwrap_or("").to_string();
@@ -492,13 +647,19 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, progress
     progress("reading");
 
     let tx = conn.transaction().map_err(err)?;
+    let replaces: Option<String> = tx.query_row("SELECT title FROM modules WHERE name = ?1", params![module], |r| r.get(0)).optional().map_err(err)?;
     delete_module_rows(&tx, &module)?;
     let mut entries: i64 = 0;
+    // books of a Bible/commentary outside the 66 the app knows (e.g. the Apocrypha)
+    let mut other_books: HashSet<String> = HashSet::new();
     match kind {
         "bible" => {
             let mut stmt = tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)").map_err(err)?;
             for e in sword::read_verse_module(root, &conf)? {
-                let Some(book) = refs::osis_book(&e.osis_book) else { continue };
+                let Some(book) = refs::osis_book(&e.osis_book) else {
+                    other_books.insert(e.osis_book.clone());
+                    continue;
+                };
                 if e.chapter == 0 || e.verse == 0 {
                     continue; // book and chapter introductions/headings
                 }
@@ -569,6 +730,40 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, progress
     if entries == 0 {
         return Err("The module contained no text this app can read.".into());
     }
+    let (table, text_col) = match kind {
+        "bible" => ("lib_verses", "text"),
+        "commentary" => ("lib_comm", "text"),
+        "book" => ("lib_book", "text"),
+        _ => ("lib_dict", "body"),
+    };
+    let books: i64 = if kind == "bible" || kind == "commentary" {
+        tx.query_row(&format!("SELECT count(DISTINCT book) FROM {table} WHERE module = ?1"), params![module], |r| r.get(0)).map_err(err)?
+    } else {
+        0
+    };
+    let mut warnings: Vec<String> = Vec::new();
+    if opts.strict {
+        // text that didn't decode cleanly shows as U+FFFD: a little is a damaged character,
+        // a lot means the file's encoding is wrong and it would read as rubbish
+        let garbled: i64 = tx
+            .query_row(&format!("SELECT count(*) FROM {table} WHERE module = ?1 AND instr({text_col}, char(65533)) > 0"), params![module], |r| r.get(0))
+            .map_err(err)?;
+        if garbled * 100 > entries {
+            return Err(format!("The text doesn't read correctly ({garbled} of {entries} entries have unreadable characters), so it wasn't added."));
+        }
+        if garbled > 0 {
+            warnings.push(format!("{garbled} of {entries} entries have a character that couldn't be read."));
+        }
+        if kind == "bible" && entries < 20 {
+            return Err(format!("Only {entries} verses could be read, which is too few to be a Bible or a Bible book."));
+        }
+        if kind == "bible" && books < 66 {
+            warnings.push(format!("It has {books} of the 66 books of the Bible."));
+        }
+    }
+    if !other_books.is_empty() {
+        warnings.push(format!("{} book(s) outside the 66 (such as the Apocrypha) are left out.", other_books.len()));
+    }
     progress("saving");
     for (table, fts, cols) in [
         ("lib_verses", "lib_verses_fts", "text"),
@@ -582,8 +777,8 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, progress
     let lang = conf.get("Lang").unwrap_or("").to_string();
     let features = conf.fields.get("Feature").map(|v| v.join(",")).filter(|f| !f.is_empty()).unwrap_or_else(|| "-".into());
     tx.execute(
-        "INSERT INTO modules(name, kind, title, lang, language, licence, about, version, versification, entries, features)
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11)",
+        "INSERT INTO modules(name, kind, title, lang, language, licence, about, version, versification, entries, features, source)
+         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
         params![
             module,
             kind,
@@ -595,27 +790,167 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, progress
             conf.get("Version").unwrap_or(""),
             conf.versification(),
             entries,
-            features
+            features,
+            opts.source
         ],
     )
     .map_err(err)?;
-    tx.commit().map_err(err)?;
-    Ok(InstallReport { name: module, kind: kind.into(), title: conf.get("Description").unwrap_or(&conf.name).to_string(), entries })
+    if opts.commit {
+        tx.commit().map_err(err)?;
+    } // otherwise the transaction rolls back as it drops: nothing changed
+    Ok(InstallReport {
+        name: module,
+        kind: kind.into(),
+        title: conf.get("Description").unwrap_or(&conf.name).to_string(),
+        entries,
+        books,
+        language: language_name(&lang),
+        licence: conf.get("DistributionLicense").unwrap_or("").to_string(),
+        warnings,
+        replaces,
+    })
 }
 
 /// Unpacks `zip_bytes` into a temporary folder under the library folder, installs it, and
-/// removes the folder again.
-pub fn install_zip(state: &LibraryState, zip_bytes: &[u8], name: &str, progress: &dyn Fn(&str)) -> Result<InstallReport, String> {
+/// removes the folder again. `source` is the id of the repository it was downloaded from.
+pub fn install_zip(state: &LibraryState, zip_bytes: &[u8], name: &str, source: &str, progress: &dyn Fn(&str)) -> Result<InstallReport, String> {
     let tmp = state.dir.join("tmp").join(name);
     let _ = std::fs::remove_dir_all(&tmp);
     std::fs::create_dir_all(&tmp).map_err(err)?;
     progress("unpacking");
-    let result = unzip(zip_bytes, &tmp).and_then(|_| {
+    let result = unzip(zip_bytes, &tmp, false).and_then(|_| {
         let mut conn = state.conn.lock().map_err(err)?;
-        install_unpacked(&mut conn, &tmp, name, progress)
+        install_unpacked(&mut conn, &tmp, name, InstallOptions { source, strict: false, commit: true }, progress)
     });
     let _ = std::fs::remove_dir_all(&tmp);
     result
+}
+
+// ---------------------------------------------------------------- the reader's own files
+//
+// "Add from file": a SWORD module zip the reader already has. It is checked first
+// (`import_check`: unpacked into a holding folder and run through the whole conversion as
+// a trial, which changes nothing) and only installed on a second, explicit step
+// (`import_install`). Anything that fails a check is refused with the reason; nothing is
+// ever half-installed, because the conversion runs inside one database transaction.
+
+fn import_dir(state: &LibraryState) -> PathBuf {
+    state.dir.join("tmp").join("_import")
+}
+
+/// Largest file "Add from file" accepts.
+pub const MAX_IMPORT_BYTES: usize = 400 * 1024 * 1024;
+
+/// Adds an e-book or PDF book (already read and checked by `epub::read` / `pdf::read`) as
+/// a book in the library.
+pub fn install_epub(conn: &mut Connection, book: &epub::Epub, commit: bool) -> Result<InstallReport, String> {
+    let module = epub::module_name(&book.title);
+    let title = if book.author.is_empty() { book.title.clone() } else { format!("{} — {}", book.title, book.author) };
+    let lang = book.lang.split(['-', '_']).next().unwrap_or("").to_lowercase();
+    let language = if lang.is_empty() { String::new() } else { language_name(&lang) };
+    let licence = if book.rights.is_empty() { "Your own copy".to_string() } else { book.rights.chars().take(200).collect() };
+
+    let tx = conn.transaction().map_err(err)?;
+    let replaces: Option<String> = tx.query_row("SELECT title FROM modules WHERE name = ?1", params![module], |r| r.get(0)).optional().map_err(err)?;
+    delete_module_rows(&tx, &module)?;
+    let mut garbled = 0i64;
+    {
+        let mut stmt = tx.prepare("INSERT INTO lib_book(module, parent, ord, title, text) VALUES (?1, NULL, ?2, ?3, ?4)").map_err(err)?;
+        for (ord, (section, text)) in book.sections.iter().enumerate() {
+            if text.contains('\u{FFFD}') {
+                garbled += 1;
+            }
+            stmt.execute(params![module, ord as i64, section, text]).map_err(err)?;
+        }
+    }
+    let entries = book.sections.len() as i64;
+    if garbled * 4 > entries {
+        return Err("The text of this e-book doesn't read correctly (unreadable characters in many chapters), so it wasn't added.".into());
+    }
+    let mut warnings = book.warnings.clone();
+    if garbled > 0 {
+        warnings.push(format!("{garbled} chapter(s) have a character that couldn't be read."));
+    }
+    tx.execute("INSERT INTO lib_book_fts(rowid, title, text) SELECT id, title, text FROM lib_book WHERE module = ?1", params![module]).map_err(err)?;
+    tx.execute(
+        "INSERT INTO modules(name, kind, title, lang, language, licence, about, version, versification, entries, features, source)
+         VALUES (?1, 'book', ?2, ?3, ?4, ?5, ?6, '', '', ?7, ?9, ?8)",
+        params![
+            module,
+            title,
+            lang,
+            language,
+            licence,
+            if book.author.is_empty() { String::new() } else { format!("By {}", book.author) },
+            entries,
+            SOURCE_FILE,
+            if book.pages > 0 { format!("pages={}", book.pages) } else { "-".to_string() }
+        ],
+    )
+    .map_err(err)?;
+    if commit {
+        tx.commit().map_err(err)?;
+    }
+    Ok(InstallReport { name: module, kind: "book".into(), title, entries, books: 0, language, licence, warnings, replaces })
+}
+
+const IMPORT_EPUB: &str = "book.bin";
+
+/// The reader's own book, from an EPUB or a PDF.
+fn read_book(bytes: &[u8], file_name: Option<&str>) -> Result<epub::Epub, String> {
+    if pdf::is_pdf(bytes) {
+        pdf::read(bytes, file_name)
+    } else {
+        epub::read(bytes, file_name)
+    }
+}
+const IMPORT_NAME: &str = "name.txt";
+
+/// Checks a file the reader chose -- an EPUB e-book, a PDF book or a SWORD module zip -- and reports
+/// what installing it would add. The file is kept in the holding folder for `import_install`.
+pub fn import_check(state: &LibraryState, bytes: &[u8], file_name: Option<&str>) -> Result<InstallReport, String> {
+    let dir = import_dir(state);
+    let _ = std::fs::remove_dir_all(&dir);
+    if bytes.len() > MAX_IMPORT_BYTES {
+        return Err("The file is larger than 400 MB, which is too large to add.".into());
+    }
+    std::fs::create_dir_all(&dir).map_err(err)?;
+    let result = if pdf::is_pdf(bytes) || epub::is_epub(bytes) {
+        read_book(bytes, file_name).and_then(|book| {
+            std::fs::write(dir.join(IMPORT_EPUB), bytes).map_err(err)?;
+            std::fs::write(dir.join(IMPORT_NAME), file_name.unwrap_or("")).map_err(err)?;
+            install_epub(&mut *state.conn.lock().map_err(err)?, &book, false)
+        })
+    } else {
+        unzip(bytes, &dir, true).and_then(|_| {
+            let mut conn = state.conn.lock().map_err(err)?;
+            install_unpacked(&mut conn, &dir, "", InstallOptions { source: SOURCE_FILE, strict: true, commit: false }, &|_| {})
+        })
+    };
+    if result.is_err() {
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+    result
+}
+
+/// Installs the file last checked with `import_check`.
+pub fn import_install(state: &LibraryState, progress: &dyn Fn(&str)) -> Result<InstallReport, String> {
+    let dir = import_dir(state);
+    let result = if dir.join(IMPORT_EPUB).is_file() {
+        let file_name = std::fs::read_to_string(dir.join(IMPORT_NAME)).ok().filter(|n| !n.is_empty());
+        std::fs::read(dir.join(IMPORT_EPUB)).map_err(err).and_then(|bytes| read_book(&bytes, file_name.as_deref())).and_then(|book| install_epub(&mut *state.conn.lock().map_err(err)?, &book, true))
+    } else if dir.join("mods.d").is_dir() {
+        let mut conn = state.conn.lock().map_err(err)?;
+        install_unpacked(&mut conn, &dir, "", InstallOptions { source: SOURCE_FILE, strict: true, commit: true }, progress)
+    } else {
+        return Err("Choose the file again: there is nothing waiting to be added.".into());
+    };
+    let _ = std::fs::remove_dir_all(&dir);
+    result
+}
+
+pub fn import_cancel(state: &LibraryState) {
+    let _ = std::fs::remove_dir_all(import_dir(state));
 }
 
 pub fn remove(conn: &mut Connection, name: &str) -> Result<(), String> {
@@ -637,12 +972,28 @@ pub struct InstalledModule {
     pub version: String,
     pub entries: i64,
     pub installed_at: String,
+    /// a `Source` id, or "file" for something the reader added themselves
+    pub source: String,
+    /// a book added from a PDF: how many printed pages it has (0 = it has no page numbers)
+    pub pages: i64,
+}
+
+/// The section of a book where printed page `page` starts (or the nearest earlier page that
+/// has text), with that page's number.
+pub fn book_page(conn: &Connection, module: &str, page: i64) -> Result<Option<(i64, i64)>, String> {
+    let mut stmt = conn.prepare("SELECT id FROM lib_book WHERE module = ?1 AND instr(text, ?2) > 0 ORDER BY ord LIMIT 1").map_err(err)?;
+    for p in (1..=page.max(1)).rev().take(40) {
+        if let Some(id) = stmt.query_row(params![module, epub::page_mark(p as u32)], |r| r.get::<_, i64>(0)).optional().map_err(err)? {
+            return Ok(Some((id, p)));
+        }
+    }
+    Ok(None)
 }
 
 pub fn installed(conn: &Connection, kind: Option<&str>) -> Result<Vec<InstalledModule>, String> {
     let mut stmt = conn
         .prepare(
-            "SELECT name, kind, title, language, licence, about, version, entries, installed_at FROM modules
+            "SELECT name, kind, title, language, licence, about, version, entries, installed_at, source, features FROM modules
              WHERE ?1 IS NULL OR kind = ?1 ORDER BY title",
         )
         .map_err(err)?;
@@ -658,6 +1009,8 @@ pub fn installed(conn: &Connection, kind: Option<&str>) -> Result<Vec<InstalledM
                 version: r.get(6)?,
                 entries: r.get(7)?,
                 installed_at: r.get(8)?,
+                source: r.get(9)?,
+                pages: r.get::<_, String>(10)?.strip_prefix("pages=").and_then(|n| n.parse().ok()).unwrap_or(0),
             })
         })
         .map_err(err)?;
@@ -875,20 +1228,22 @@ pub struct TocEntry {
     pub parent: Option<i64>,
     pub title: String,
     pub has_text: bool,
+    /// length of the section's text, for showing how far through the book a place is
+    pub chars: i64,
 }
 
 /// A book's table of contents; for a devotional, its dated entries (in their own order).
 pub fn toc(conn: &Connection, module: &str) -> Result<Vec<TocEntry>, String> {
     let kind: String = conn.query_row("SELECT kind FROM modules WHERE name = ?1", params![module], |r| r.get(0)).map_err(err)?;
     if kind == "devotional" {
-        let mut stmt = conn.prepare("SELECT id, headword FROM lib_dict WHERE module = ?1 ORDER BY id").map_err(err)?;
+        let mut stmt = conn.prepare("SELECT id, headword, length(body) FROM lib_dict WHERE module = ?1 ORDER BY id").map_err(err)?;
         let rows = stmt
-            .query_map(params![module], |r| Ok(TocEntry { id: LIB_ID_BASE + r.get::<_, i64>(0)?, parent: None, title: r.get(1)?, has_text: true }))
+            .query_map(params![module], |r| Ok(TocEntry { id: LIB_ID_BASE + r.get::<_, i64>(0)?, parent: None, title: r.get(1)?, has_text: true, chars: r.get(2)? }))
             .map_err(err)?;
         return rows.collect::<Result<_, _>>().map_err(err);
     }
-    let mut stmt = conn.prepare("SELECT id, parent, title, length(text) > 0 FROM lib_book WHERE module = ?1 ORDER BY ord").map_err(err)?;
-    let rows = stmt.query_map(params![module], |r| Ok(TocEntry { id: r.get(0)?, parent: r.get(1)?, title: r.get(2)?, has_text: r.get(3)? })).map_err(err)?;
+    let mut stmt = conn.prepare("SELECT id, parent, title, length(text) > 0, length(text) FROM lib_book WHERE module = ?1 ORDER BY ord").map_err(err)?;
+    let rows = stmt.query_map(params![module], |r| Ok(TocEntry { id: r.get(0)?, parent: r.get(1)?, title: r.get(2)?, has_text: r.get(3)?, chars: r.get(4)? })).map_err(err)?;
     rows.collect::<Result<_, _>>().map_err(err)
 }
 
@@ -991,7 +1346,8 @@ mod tests {
         let confs = parse_catalog(&std::fs::read(path).unwrap()).unwrap();
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(SCHEMA).unwrap();
-        let items = catalog_items(&confs, &conn).unwrap();
+        migrate(&conn, Path::new(".")).unwrap();
+        let items = catalog_items(&confs, &conn, "crosswire").unwrap();
         let count = |f: &dyn Fn(&CatalogItem) -> bool| items.iter().filter(|i| f(i)).count();
         println!(
             "{} modules; {} installable; {} built in; {} questionable; english installable {}",
@@ -1007,6 +1363,126 @@ mod tests {
         let afr = items.iter().find(|i| i.name == "Afr1953").unwrap();
         println!("Afr1953: {} / {} / {} KB / {} / about: {}", afr.language, afr.licence, afr.size_kb, afr.kind, afr.about.chars().take(120).collect::<String>());
         assert!(items.len() > 400);
+    }
+
+    fn zip_of(files: &[(&str, &[u8])]) -> Vec<u8> {
+        use std::io::Write;
+        let mut z = zip::ZipWriter::new(Cursor::new(Vec::new()));
+        for (name, data) in files {
+            z.start_file(*name, zip::write::SimpleFileOptions::default()).unwrap();
+            z.write_all(data).unwrap();
+        }
+        z.finish().unwrap().into_inner()
+    }
+
+    /// "Add from file" refuses everything that isn't exactly one readable module, with a
+    /// reason, and leaves the library untouched.
+    #[test]
+    fn import_refuses_what_it_cannot_vouch_for() {
+        let dir = std::env::temp_dir().join(format!("bc-import-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let state = open(&dir).unwrap();
+        let conf = b"[MyBible]\nDataPath=./modules/texts/ztext/mybible/\nModDrv=zText\nCompressType=ZIP\nLang=en\n";
+        let refused = |bytes: &[u8]| import_check(&state, bytes, None).expect_err("must be refused");
+
+        assert!(refused(b"this is not a book").contains("isn't a zip"));
+        assert!(refused(b"%PDF-1.7 ...").contains("damaged"));
+        // a PDF book goes the same way as an e-book
+        let r = import_check(&state, &pdf::tests::sample(Some("Grace and Truth")), Some("g.pdf")).unwrap();
+        assert_eq!((r.kind.as_str(), r.title.as_str()), ("book", "Grace and Truth — A. Writer"));
+        assert!(r.warnings.iter().any(|w| w.contains("PDF stores printed pages")));
+        let pdf_book = import_install(&state, &|_| {}).unwrap();
+        {
+            let conn = state.conn.lock().unwrap();
+            let books = installed(&conn, Some("book")).unwrap();
+            assert_eq!((books.len(), books[0].pages), (1, 8));
+            let (id, page) = book_page(&conn, &pdf_book.name, 5).unwrap().unwrap();
+            assert!(page == 5 && section(&conn, id).unwrap().unwrap().text.contains("⟪5⟫"));
+            assert_eq!(book_page(&conn, &pdf_book.name, 500).unwrap(), None);
+        }
+        remove(&mut state.conn.lock().unwrap(), &pdf_book.name).unwrap();
+
+        // an EPUB e-book: checked first (nothing added), then added as a book of the reader's own
+        let book = epub::tests::sample();
+        let r = import_check(&state, &book, Some("grace.epub")).unwrap();
+        assert_eq!((r.kind.as_str(), r.entries, r.title.as_str(), r.language.as_str()), ("book", 2, "Grace & Truth — A. Writer", "English"));
+        assert!(installed(&state.conn.lock().unwrap(), None).unwrap().is_empty(), "the check adds nothing");
+        let done = import_install(&state, &|_| {}).unwrap();
+        {
+            let conn = state.conn.lock().unwrap();
+            let m = &installed(&conn, Some("book")).unwrap()[0];
+            assert_eq!((m.name.as_str(), m.source.as_str()), (done.name.as_str(), SOURCE_FILE));
+            let contents = toc(&conn, &m.name).unwrap();
+            assert_eq!(contents.iter().map(|e| e.title.as_str()).collect::<Vec<_>>(), ["One: The Beginning", "Two"]);
+            let first = section(&conn, contents[0].id).unwrap().unwrap();
+            assert!(first.text.contains("⟦John|3|16||John 3:16⟧") && first.next == Some(contents[1].id));
+            assert_eq!(search_books(&conn, "quoted", None, 5).unwrap().len(), 1);
+        }
+        assert!(import_check(&state, &book, None).unwrap().replaces.is_some(), "adding it again says what it replaces");
+        import_cancel(&state);
+        remove(&mut state.conn.lock().unwrap(), &done.name).unwrap();
+        assert!(refused(&zip_of(&[("book.epub", b"x")])).contains("isn't a SWORD module"));
+        assert!(refused(&zip_of(&[("modules/texts/x.bzz", b"x")])).contains("no module description"));
+        // something extra beside the module
+        assert!(refused(&zip_of(&[("mods.d/my.conf", conf), ("setup.exe", b"MZ")])).contains("setup.exe"));
+        assert!(refused(&zip_of(&[("mods.d/a.conf", conf), ("mods.d/b.conf", conf)])).contains("2 modules"));
+        // a description with no data behind it
+        refused(&zip_of(&[("mods.d/my.conf", conf)]));
+        // drivers, locks and names the app can't use
+        assert!(refused(&zip_of(&[("mods.d/my.conf", b"[My]\nModDrv=HREFCom\n")])).contains("isn't supported"));
+        assert!(refused(&zip_of(&[("mods.d/my.conf", b"[My]\nModDrv=zText\nCipherKey=\n")])).contains("Locked"));
+        assert!(refused(&zip_of(&[("mods.d/my.conf", b"[My Bible!]\nModDrv=zText\n")])).contains("name"));
+        // a second copy of something built in
+        assert!(refused(&zip_of(&[("mods.d/kjv.conf", b"[KJV]\nModDrv=zText\nDataPath=./modules/texts/ztext/kjv/\n")])).contains("built in"));
+
+        assert!(installed(&state.conn.lock().unwrap(), None).unwrap().is_empty());
+        assert!(!import_dir(&state).exists(), "a refused file leaves nothing behind");
+        assert!(import_install(&state, &|_| {}).is_err(), "nothing is waiting to be installed");
+        assert!(SOURCES.iter().all(|s| s.catalog_url.starts_with("https://") && s.zip_url.starts_with("https://") && s.zip_url.ends_with('/')));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// A real module added from a file: the check changes nothing, the install does, and
+    /// it's recorded as the reader's own. Also installs one real module from each of the
+    /// other sources (zips in ...\library-probe\other):
+    ///   cargo test import_real -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn import_real_modules() {
+        let probe = PathBuf::from(std::env::var("LOCALAPPDATA").unwrap()).join("bible-concordance-build/library-probe");
+        let dir = std::env::temp_dir().join(format!("bc-import-real-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let state = open(&dir).unwrap();
+        for (file, kind) in [("zips/Geneva1599.zip", "bible"), ("zips/Barnes.zip", "commentary"), ("zips/Hitchcock.zip", "dictionary"), ("zips/Pilgrim.zip", "book"), ("zips/Daily.zip", "devotional")] {
+            let bytes = std::fs::read(probe.join(file)).unwrap();
+            let r = import_check(&state, &bytes, None).unwrap();
+            println!("check {file}: {} {} entries, {} books, {:?}", r.kind, r.entries, r.books, r.warnings);
+            assert_eq!(r.kind, kind);
+            assert!(installed(&state.conn.lock().unwrap(), None).unwrap().iter().all(|m| m.name != r.name), "the check installs nothing");
+            let done = import_install(&state, &|_| {}).unwrap();
+            assert_eq!((done.entries, done.replaces.clone()), (r.entries, None));
+            let m = installed(&state.conn.lock().unwrap(), None).unwrap().into_iter().find(|m| m.name == r.name).unwrap();
+            assert_eq!(m.source, SOURCE_FILE);
+        }
+        // adding the same file again says what it replaces
+        let again = import_check(&state, &std::fs::read(probe.join("zips/Hitchcock.zip")).unwrap(), None).unwrap();
+        assert!(again.replaces.is_some());
+        import_cancel(&state);
+        assert_eq!(verse(&state.conn.lock().unwrap(), "Geneva1599", "John", 3, 16).unwrap().map(|t| t.contains("God so loued")), Some(true));
+
+        for (file, source) in [("aai2009eb", "ebible"), ("NETfree", "netbible"), ("amu_BL_1999", "wycliffe"), ("Aleppo", "attic"), ("ACDC", "beta")] {
+            let bytes = std::fs::read(probe.join(format!("other/{file}.zip"))).unwrap();
+            match install_zip(&state, &bytes, file, source, &|_| {}) {
+                Ok(r) => println!("{source:<9} {file:<12} {:<10} {:>6} entries {:>2} books  {} [{}] {:?}", r.kind, r.entries, r.books, r.title, r.language, r.warnings),
+                Err(e) => panic!("{source} {file}: {e}"),
+            }
+        }
+        let conn = state.conn.lock().unwrap();
+        for (code, b, c, v) in [("NETfree", "John", 3, 16), ("aai2009eb", "John", 3, 16), ("amu_BL_1999", "Mark", 1, 1), ("Aleppo", "Genesis", 1, 1)] {
+            println!("{code} {b} {c}:{v}: {:?}", verse(&conn, code, b, c, v).unwrap().map(|t| t.chars().take(90).collect::<String>()));
+        }
+        drop(conn);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     /// Installs real downloaded modules (one per format) into a temporary library and
@@ -1026,7 +1502,7 @@ mod tests {
         for name in &names {
             let bytes = std::fs::read(zips.join(format!("{name}.zip"))).unwrap();
             let t = std::time::Instant::now();
-            match install_zip(&state, &bytes, name, &noop) {
+            match install_zip(&state, &bytes, name, "crosswire", &noop) {
                 Ok(r) => println!("{name:<12} {:<11} {:>7} entries  {:>6.1?}  {}", r.kind, r.entries, t.elapsed(), r.title),
                 Err(e) => println!("{name:<12} FAILED: {e}"),
             }

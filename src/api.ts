@@ -1,10 +1,10 @@
-import { invoke as tauriInvoke, InvokeArgs } from "@tauri-apps/api/core";
+import { invoke as tauriInvoke, InvokeArgs, InvokeOptions } from "@tauri-apps/api/core";
 import { logEvent } from "./errorLog";
 
 // Every command goes through here so a failure is also written to the app's log (many
 // callers deliberately swallow errors, which would otherwise leave no trace at all).
-function invoke<T>(cmd: string, args?: InvokeArgs): Promise<T> {
-  return tauriInvoke<T>(cmd, args).catch((e) => {
+function invoke<T>(cmd: string, args?: InvokeArgs, options?: InvokeOptions): Promise<T> {
+  return tauriInvoke<T>(cmd, args, options).catch((e) => {
     logEvent("warn", `${cmd} failed:`, e);
     throw e;
   });
@@ -476,11 +476,18 @@ export interface BasketVerseMeta {
   version: string;
 }
 
-// ---------------------------------------------------------------- the Library (CrossWire)
+// ---------------------------------------------------------------- the Library (SWORD modules)
 
 export type LibraryKind = "bible" | "commentary" | "dictionary" | "devotional" | "book" | "other";
 
-/** A module in CrossWire's catalogue. */
+/** A repository the Library can browse (CrossWire, eBible.org, ...). */
+export interface LibrarySource {
+  id: string;
+  name: string;
+  about: string;
+}
+
+/** A module in a source's catalogue. */
 export interface CatalogItem {
   name: string;
   kind: LibraryKind;
@@ -500,6 +507,8 @@ export interface CatalogItem {
   built_in: boolean;
   installed: boolean;
   installed_version: string | null;
+  /** id of the source this entry comes from */
+  source: string;
 }
 
 export interface InstalledModule {
@@ -512,6 +521,10 @@ export interface InstalledModule {
   version: string;
   entries: number;
   installed_at: string;
+  /** a source id, or "file" for something added from the reader's own file */
+  source: string;
+  /** a book added from a PDF: its number of printed pages (0 = no page numbers) */
+  pages: number;
 }
 
 export interface InstallReport {
@@ -519,6 +532,13 @@ export interface InstallReport {
   kind: LibraryKind;
   title: string;
   entries: number;
+  /** Bibles and commentaries: how many of the 66 books have text */
+  books: number;
+  language: string;
+  licence: string;
+  warnings: string[];
+  /** title of an installed work this one would replace */
+  replaces: string | null;
 }
 
 export interface LibraryProgress {
@@ -532,6 +552,8 @@ export interface TocEntry {
   parent: number | null;
   title: string;
   has_text: boolean;
+  /** length of the section's text */
+  chars: number;
 }
 
 export interface BookSection {
@@ -771,12 +793,21 @@ export const api = {
   picturesDownload: (collection: string) => invoke<number>("pictures_download", { collection }),
   picturesCancel: (collection: string) => invoke<void>("pictures_cancel", { collection }),
   picturesRemove: (collection: string) => invoke<void>("pictures_remove", { collection }),
-  libraryCatalog: (refresh: boolean) => invoke<CatalogItem[]>("library_catalog", { refresh }),
-  libraryInstall: (name: string) => invoke<InstallReport>("library_install", { name }),
+  librarySources: () => invoke<LibrarySource[]>("library_sources"),
+  libraryCatalog: (refresh: boolean, source = "crosswire") => invoke<CatalogItem[]>("library_catalog", { refresh, source }),
+  libraryInstall: (name: string, source = "crosswire") => invoke<InstallReport>("library_install", { name, source }),
+  /** "Add from file", step 1: checks an e-book (EPUB) or module zip and reports what it holds; installs nothing */
+  libraryImportCheck: (file: Uint8Array, fileName: string) =>
+    invoke<InstallReport>("library_import_check", file, { headers: { "x-file-name": encodeURIComponent(fileName) } }),
+  /** step 2: installs the file that was just checked */
+  libraryImportInstall: () => invoke<InstallReport>("library_import_install"),
+  libraryImportCancel: () => invoke<void>("library_import_cancel"),
   libraryRemove: (name: string) => invoke<void>("library_remove", { name }),
   libraryInstalled: (kind: LibraryKind | null = null) => invoke<InstalledModule[]>("library_installed", { kind }),
   libraryToc: (name: string) => invoke<TocEntry[]>("library_toc", { name }),
   librarySection: (id: number) => invoke<BookSection | null>("library_section", { id }),
+  /** where printed page `page` of a PDF book starts: [section id, the page found] */
+  libraryBookPage: (name: string, page: number) => invoke<[number, number] | null>("library_book_page", { name, page }),
   /** entries for a Strong's number ("G25") in installed Library lexicons */
   libraryLexiconEntries: (strongs: string) => invoke<DictionaryEntry[]>("library_lexicon_entries", { strongs }),
   librarySearchBooks: (query: string, name: string | null, limit: number) =>
