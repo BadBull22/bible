@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { BookInfo } from "../api";
+import { BookInfo, InstalledModule } from "../api";
 
 interface Props {
   books: BookInfo[];
@@ -7,6 +7,11 @@ interface Props {
   selectedChapter: number;
   chapterCounts: Record<string, number>;
   onSelect: (book: string, chapter: number) => void;
+  /** installed Library books and devotionals, listed under Books */
+  libraryBooks: InstalledModule[];
+  readingBook: string | null;
+  onOpenLibraryBook: (name: string) => void;
+  onGetMoreBooks: () => void;
   width: number;
 }
 
@@ -22,7 +27,18 @@ const SECTIONS: SectionDef[] = [
   { key: "Apocrypha", title: "Apocrypha", note: "Not part of the Bible's canon (Genesis–Revelation above) in most traditions." },
 ];
 
-export function Sidebar({ books, selectedBook, selectedChapter, chapterCounts, onSelect, width }: Props) {
+export function Sidebar({
+  books,
+  selectedBook,
+  selectedChapter,
+  chapterCounts,
+  onSelect,
+  libraryBooks,
+  readingBook,
+  onOpenLibraryBook,
+  onGetMoreBooks,
+  width,
+}: Props) {
   return (
     <aside className="sidebar" aria-label="Books" style={{ width: `min(${width}px, 40vw)` }}>
       {SECTIONS.map((section) => {
@@ -37,7 +53,7 @@ export function Sidebar({ books, selectedBook, selectedChapter, chapterCounts, o
                 <BookRow
                   key={b.name}
                   book={b}
-                  isOpen={b.name === selectedBook}
+                  isOpen={!readingBook && b.name === selectedBook}
                   selectedChapter={selectedChapter}
                   chapterCount={chapterCounts[b.name] ?? 0}
                   onSelect={onSelect}
@@ -47,6 +63,29 @@ export function Sidebar({ books, selectedBook, selectedChapter, chapterCounts, o
           </div>
         );
       })}
+      <div className="sidebar-section">
+        <h3>Books</h3>
+        <p className="sidebar-note">
+          {libraryBooks.length ? "Books and devotionals you've downloaded from the Library." : "Nothing downloaded yet."}
+        </p>
+        <div className="book-list">
+          {libraryBooks.map((m) => (
+            <button
+              key={m.name}
+              className={"book-btn library-book-btn" + (m.name === readingBook ? " active" : "")}
+              aria-current={m.name === readingBook ? "true" : undefined}
+              onClick={() => onOpenLibraryBook(m.name)}
+              title={m.title}
+            >
+              {m.title}
+              {m.kind === "devotional" && <span className="book-count">daily</span>}
+            </button>
+          ))}
+        </div>
+        <button className="text-btn sidebar-more" onClick={onGetMoreBooks}>
+          Get more books ›
+        </button>
+      </div>
     </aside>
   );
 }

@@ -5,6 +5,8 @@ import { CloseIcon } from "./icons";
 
 interface Props {
   initialTab?: "mine" | "more";
+  /** start "Get more" filtered to this kind (e.g. from the sidebar's "Get more books") */
+  onlyKind?: LibraryKind;
   onUseVersion: (code: string) => void;
   onOpenCommentary: (id: string) => void;
   onOpenDictionary: () => void;
@@ -51,13 +53,13 @@ function readFilters(): { kind: LibraryKind | "all"; language: string; questiona
   }
 }
 
-export function LibraryPanel({ initialTab, onUseVersion, onOpenCommentary, onOpenDictionary, onOpenBook, onClose }: Props) {
+export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenCommentary, onOpenDictionary, onOpenBook, onClose }: Props) {
   const [tab, setTab] = useState<"mine" | "more">(initialTab ?? "mine");
   const [installed, setInstalled] = useState<InstalledModule[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[] | null>(null);
   const [loadingCatalog, setLoadingCatalog] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
-  const [filters, setFilters] = useState(readFilters);
+  const [filters, setFilters] = useState(() => (onlyKind ? { ...readFilters(), kind: onlyKind } : readFilters()));
   const [query, setQuery] = useState("");
   const [progress, setProgress] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -232,7 +234,7 @@ export function LibraryPanel({ initialTab, onUseVersion, onOpenCommentary, onOpe
           )}
           <p className="search-hint">
             Installed Bibles appear in the translation list, commentaries in the Commentary panel, dictionaries in the
-            Dictionary panel; books and devotionals open here. Everything works offline once installed.
+            Dictionary panel; books and devotionals are listed under Books in the left-hand list and open in the reading area. Everything works offline once installed.
           </p>
         </>
       )}
