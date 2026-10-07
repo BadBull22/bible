@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { api, HIGHLIGHT_COLOR_NAMES, HIGHLIGHT_COLORS, HighlightColor } from "../api";
 import { CloseIcon } from "./icons";
@@ -83,6 +83,10 @@ interface Props {
   highlightTitles: Record<string, string>;
   onHighlightTitlesChange: (titles: Record<string, string>) => void;
   onOpenHelp: () => void;
+  /** reopen the Getting started window (voice, Library, pictures, API keys) */
+  onOpenWelcome: () => void;
+  /** open scrolled to this section (used by Getting started's "Show me") */
+  focus?: "online";
   onClose: () => void;
 }
 
@@ -177,7 +181,22 @@ function HighlightTitleField({ color, defaultTitle, onSave }: { color: Highlight
   );
 }
 
-export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChange, highlightTitles, onHighlightTitlesChange, onOpenHelp, onClose }: Props) {
+export function SettingsPanel({
+  prefs,
+  onPrefsChange,
+  readPrefs,
+  onReadPrefsChange,
+  highlightTitles,
+  onHighlightTitlesChange,
+  onOpenHelp,
+  onOpenWelcome,
+  focus,
+  onClose,
+}: Props) {
+  const onlineRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (focus === "online") onlineRef.current?.scrollIntoView({ block: "start" });
+  }, [focus]);
   const [apiBibleKey, setApiBibleKey] = useState("");
   const [hasApiBible, setHasApiBible] = useState(false);
   const [esvKey, setEsvKey] = useState("");
@@ -233,6 +252,10 @@ export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChan
 
       <button className="pill-btn help-open" onClick={onOpenHelp}>
         Help &amp; user guide — how to use every feature
+      </button>
+      <button className="outline-btn help-open" onClick={onOpenWelcome}>
+        Getting started — natural voice, Library, pictures and API keys
+        <span className="click-hint">Click here ›</span>
       </button>
 
       <h4 className="section-label">Reading comfort</h4>
@@ -330,7 +353,9 @@ export function SettingsPanel({ prefs, onPrefsChange, readPrefs, onReadPrefsChan
         ))}
       </div>
 
-      <h4 className="section-label">Online translations</h4>
+      <h4 className="section-label" ref={onlineRef}>
+        Online translations
+      </h4>
       <p className="search-hint" style={{ marginTop: 0 }}>
         Everything in this app works offline: the bundled public-domain translations, Strong's dictionaries, cross
         references, commentaries and people/places data. The options below add <strong>online-only</strong> copyrighted

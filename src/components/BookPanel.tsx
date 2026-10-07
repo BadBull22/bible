@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { api, BookHit, BookSection, InstalledModule, TocEntry } from "../api";
 import { addToBasket } from "../basket";
 import { BasketButton } from "./BasketButton";
@@ -9,6 +9,8 @@ import { plainText, RichText } from "./RichText";
 
 interface Props {
   name: string;
+  /** "main": fills the reading pane in place of the Bible text; "panel" (default): a side panel */
+  layout?: "panel" | "main";
   onJump: (book: string, chapter: number, verse: number) => void;
   onOpenLibrary: () => void;
   onClose: () => void;
@@ -49,7 +51,8 @@ function rememberSection(name: string, id: number) {
 
 /** Reads an installed Library book or devotional: contents, one section at a time,
  * Previous/Next, search inside the book, and Listen / Copy / Basket for the section. */
-export function BookPanel({ name, onJump, onOpenLibrary, onClose }: Props) {
+export function BookPanel({ name, layout = "panel", onJump, onOpenLibrary, onClose }: Props) {
+  const inMain = layout === "main";
   const [info, setInfo] = useState<InstalledModule | null>(null);
   const [toc, setToc] = useState<TocEntry[]>([]);
   const [section, setSection] = useState<BookSection | null>(null);
@@ -93,7 +96,7 @@ export function BookPanel({ name, onJump, onOpenLibrary, onClose }: Props) {
         if (!s) return;
         setSection(s);
         rememberSection(name, id);
-        document.querySelector(".book-panel .book-text")?.scrollTo({ top: 0 });
+        document.querySelector(inMain ? ".main-pane" : ".book-panel .book-text")?.scrollTo({ top: 0 });
       })
       .catch((e) => setError(String(e)));
   }
@@ -119,13 +122,22 @@ export function BookPanel({ name, onJump, onOpenLibrary, onClose }: Props) {
   const copyText = section ? `${title} — ${section.module_title}\n\n${plainText(section.text)}` : "";
 
   return (
-    <aside className="side-panel wide book-panel">
-      <div className="side-panel-header">
-        <h3>{info?.title ?? name}</h3>
-        <button onClick={onClose} aria-label="Close panel">
-          <CloseIcon size={14} />
-        </button>
-      </div>
+    <Shell inMain={inMain}>
+      {inMain ? (
+        <div className="book-main-head">
+          <h2>{info?.title ?? name}</h2>
+          <button className="text-btn" onClick={onClose} title="Back to the Bible text">
+            <ChevronLeftIcon size={14} /> Back to the Bible
+          </button>
+        </div>
+      ) : (
+        <div className="side-panel-header">
+          <h3>{info?.title ?? name}</h3>
+          <button onClick={onClose} aria-label="Close panel">
+            <CloseIcon size={14} />
+          </button>
+        </div>
+      )}
       <div className="book-bar">
         <button className="text-btn" onClick={() => setShowToc((s) => !s)} aria-expanded={showToc}>
           {showToc ? "Hide contents" : devotional ? "All dates" : "Contents"}
@@ -140,7 +152,7 @@ export function BookPanel({ name, onJump, onOpenLibrary, onClose }: Props) {
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={devotional ? "Search…" : "Search this book…"} aria-label="Search this book" />
         </form>
         <button className="text-btn" onClick={onOpenLibrary} title="Your installed books, and more to download">
-          Library
+          {inMain ? "Get more books" : "Library"}
         </button>
       </div>
       {error && <p className="status-error">{error}</p>}
@@ -239,6 +251,10 @@ export function BookPanel({ name, onJump, onOpenLibrary, onClose }: Props) {
           {info?.licence && <p className="search-hint">{info.title} · {info.licence} · from the CrossWire Bible Society library.</p>}
         </div>
       )}
-    </aside>
+    </Shell>
   );
+}
+
+function Shell({ inMain, children }: { inMain: boolean; children: ReactNode }) {
+  return inMain ? <article className="book-panel book-main">{children}</article> : <aside className="side-panel wide book-panel">{children}</aside>;
 }

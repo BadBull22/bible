@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { api, BookInfo, ChapterMarks, resolveReference, Version, VerseWithWords } from "./api";
+import { api, BookInfo, ChapterMarks, InstalledModule, LibraryKind, resolveReference, Version, VerseWithWords } from "./api";
 import { addSearchHistory } from "./searchHistory";
 import { Sidebar } from "./components/Sidebar";
 import { ChapterView } from "./components/ChapterView";
@@ -14,6 +14,7 @@ import { EntitiesPanel } from "./components/EntitiesPanel";
 import { ResizeHandle } from "./components/ResizeHandle";
 import { SplashScreen } from "./components/SplashScreen";
 import { ClosingSplash } from "./components/ClosingSplash";
+import { WELCOME_COUNT_KEY, WELCOME_MAX_AUTO, WELCOME_OFF_KEY, WELCOME_SEEN_KEY, WelcomeWindow } from "./components/WelcomeWindow";
 import { InterlinearPanel } from "./components/InterlinearPanel";
 import { DictionaryPanel } from "./components/DictionaryPanel";
 import { StudyPanel } from "./components/StudyPanel";
@@ -59,7 +60,7 @@ type SidePanel =
   | { kind: "xref"; book: string; chapter: number; verse: number }
   | { kind: "parallel"; book: string; chapter: number; verse: number }
   | { kind: "search"; initialQuery?: string }
-  | { kind: "settings" }
+  | { kind: "settings"; focus?: "online" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
   | { kind: "map" }
@@ -73,8 +74,7 @@ type SidePanel =
   | { kind: "help" }
   | { kind: "sheet"; book: string; chapter: number; verseStart: number; verseEnd: number }
   | { kind: "basket" }
-  | { kind: "library"; tab?: "mine" | "more" }
-  | { kind: "book"; name: string }
+  | { kind: "library"; tab?: "mine" | "more"; only?: LibraryKind }
   | { kind: "pictures"; tab?: "chapter" | "gallery" | "download" }
   | { kind: "original"; strongs?: string }
   | null;
@@ -116,6 +116,7 @@ const HISTORY_LIMIT = 50;
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
   // The close button is intercepted in Rust, which emits `app-close-requested` instead of
   // closing; the farewell verse then shows for three seconds and calls exit_app.
   const [closing, setClosing] = useState(false);
@@ -130,6 +131,10 @@ function App() {
   const [loadingChapter, setLoadingChapter] = useState(true);
   const [chapterError, setChapterError] = useState<string | null>(null);
   const [panel, setPanel] = useState<SidePanel>(null);
+  // An installed Library book or devotional shown in the reading pane instead of the
+  // Bible text; picking any Bible passage puts the Bible back.
+  const [readingBook, setReadingBook] = useState<string | null>(null);
+  const [libraryBooks, setLibraryBooks] = useState<InstalledModule[]>([]);
   // The app opens on a search prompt instead of straight into Genesis 1 -- this flips to
   // false the moment the reader picks somewhere to go, and never flips back this session.
   const [homeActive, setHomeActive] = useState(true);
@@ -214,8 +219,20 @@ function App() {
   useEffect(() => {
     api.listVersions().then(setVersions).catch(console.error);
     api.listBooks().then(setBooks).catch(console.error);
-    // a Bible installed or removed in the Library changes the translation list
+    const loadLibraryBooks = () =>
+      api
+        .libraryInstalled()
+        .then((all) => {
+          const list = all.filter((m) => m.kind === "book" || m.kind === "devotional");
+          setLibraryBooks(list);
+          setReadingBook((cur) => (cur && list.some((m) => m.name === cur) ? cur : null));
+        })
+        .catch(() => undefined);
+    loadLibraryBooks();
+    // a Bible installed or removed in the Library changes the translation list, and a
+    // book or devotional the Books list in the sidebar
     const unlisten = listenEvent("library-changed", () => {
+      loadLibraryBooks();
       api.listVersions().then((vs) => {
         setVersions(vs);
         setVersionCode((cur) => (vs.some((v) => v.code === cur) ? cur : "BSB"));
@@ -331,6 +348,7 @@ function App() {
     }
     setBook(b);
     setChapter(c);
+    setReadingBook(null);
     // Every path that lands somewhere real (sidebar, top search, cross-refs, the opening
     // prompt itself) should retire the opening screen, not just its own search box.
     setHomeActive(false);
@@ -464,6 +482,53 @@ function App() {
     navigate(to.book, to.chapter, true);
   }
 
+  // Getting started window: once the launch video is gone, it opens by itself at most
+  // WELCOME_MAX_AUTO times -- always on a first run, and on the next starts only while the
+  // natural voice still isn't installed -- then never again. "Don't show this again" stops
+  // it sooner. Settings › Getting started opens it any time.
+  useEffect(() => {
+    if (showSplash) return;
+    let stored: { seen: boolean; off: boolean; count: number };
+    try {
+      stored = {
+        seen: localStorage.getItem(WELCOME_SEEN_KEY) === "1",
+        off: localStorage.getItem(WELCOME_OFF_KEY) === "1",
+        count: Number(localStorage.getItem(WELCOME_COUNT_KEY)) || 0,
+      };
+    } catch {
+      return;
+    }
+    if (stored.off || stored.count >= WELCOME_MAX_AUTO) return;
+    const open = () => {
+      setWelcomeOpen(true);
+      try {
+        localStorage.setItem(WELCOME_COUNT_KEY, String(stored.count + 1));
+      } catch {
+        /* per-viewer convenience only */
+      }
+    };
+    if (!stored.seen) {
+      open();
+      return;
+    }
+    api
+      .voiceStatus()
+      .then((v) => {
+        if (!v.available && v.download_bytes) open();
+      })
+      .catch(() => undefined);
+  }, [showSplash]);
+
+  function closeWelcome(dontShowAgain: boolean) {
+    setWelcomeOpen(false);
+    try {
+      localStorage.setItem(WELCOME_SEEN_KEY, "1");
+      if (dontShowAgain) localStorage.setItem(WELCOME_OFF_KEY, "1");
+    } catch {
+      /* per-viewer convenience only */
+    }
+  }
+
   function goBack() {
     if (history.length === 0) return;
     const prev = history[history.length - 1];
@@ -479,7 +544,13 @@ function App() {
   // up exactly where they were if the reader navigates away from home again.
   function goHome() {
     setPanel(null);
+    setReadingBook(null);
     setHomeActive(true);
+  }
+
+  function openLibraryBook(name: string) {
+    setReadingBook(name);
+    setPanel(null);
   }
 
   function changeVersion(code: string) {
@@ -510,8 +581,8 @@ function App() {
 
   // Keyboard shortcuts. Handlers are read through a ref so the listener is attached
   // once but always sees the latest state without re-subscribing on every render.
-  const shortcuts = useRef({ adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus });
-  shortcuts.current = { adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus };
+  const shortcuts = useRef({ adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus, readingBook });
+  shortcuts.current = { adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus, readingBook };
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const t = e.target as HTMLElement | null;
@@ -533,7 +604,8 @@ function App() {
         shortcuts.current.setFocus(!shortcuts.current.focusMode);
         return;
       }
-      if (typing || e.altKey || e.ctrlKey || e.metaKey) return;
+      // the arrows flip Bible chapters, which would swap a book being read for the Bible
+      if (typing || e.altKey || e.ctrlKey || e.metaKey || shortcuts.current.readingBook) return;
       if (e.key === "ArrowLeft") shortcuts.current.flipChapter(shortcuts.current.adjacent.prev);
       else if (e.key === "ArrowRight") shortcuts.current.flipChapter(shortcuts.current.adjacent.next);
     }
@@ -544,6 +616,23 @@ function App() {
   return (
     <>
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+      {welcomeOpen && (
+        <WelcomeWindow
+          onClose={closeWelcome}
+          onShowLibrary={() => {
+            closeWelcome(false);
+            setPanel({ kind: "library", tab: "more" });
+          }}
+          onShowPictures={() => {
+            closeWelcome(false);
+            setPanel({ kind: "pictures", tab: "download" });
+          }}
+          onShowKeys={() => {
+            closeWelcome(false);
+            setPanel({ kind: "settings", focus: "online" });
+          }}
+        />
+      )}
       {closing && (
         <ClosingSplash
           verse={farewellVerse}
@@ -608,7 +697,7 @@ function App() {
           <button
             className="text-btn"
             onClick={goHome}
-            disabled={homeActive}
+            disabled={homeActive && !readingBook}
             title="Back to the opening screen"
             aria-label="Home"
           >
@@ -680,6 +769,10 @@ function App() {
                 selectedChapter={chapter}
                 chapterCounts={chapterCounts}
                 onSelect={goTo}
+                libraryBooks={libraryBooks}
+                readingBook={readingBook}
+                onOpenLibraryBook={openLibraryBook}
+                onGetMoreBooks={() => setPanel({ kind: "library", tab: "more", only: "book" })}
                 width={sidebarWidth}
               />
               <ResizeHandle
@@ -694,7 +787,16 @@ function App() {
             </>
           )}
           <main className="main-pane">
-            {homeActive ? (
+            {readingBook ? (
+              <BookPanel
+                key={readingBook}
+                name={readingBook}
+                layout="main"
+                onJump={jumpTo}
+                onOpenLibrary={() => setPanel({ kind: "library", tab: "more", only: "book" })}
+                onClose={() => setReadingBook(null)}
+              />
+            ) : homeActive ? (
               <HomeScreen
                 books={books}
                 chapterCounts={chapterCounts}
@@ -755,7 +857,7 @@ function App() {
               />
             )}
             <SelectionMenu
-              chapterLabel={homeActive ? null : `${book} ${chapter}`}
+              chapterLabel={homeActive || readingBook ? null : `${book} ${chapter}`}
               onListen={listenSelection}
               onSearch={(q) => setPanel({ kind: "search", initialQuery: q })}
             />
@@ -850,6 +952,8 @@ function App() {
               highlightTitles={highlightTitles}
               onHighlightTitlesChange={setHighlightTitles}
               onOpenHelp={() => setPanel({ kind: "help" })}
+              onOpenWelcome={() => setWelcomeOpen(true)}
+              focus={panel.focus}
               onClose={() => setPanel(null)}
             />
           )}
@@ -899,14 +1003,16 @@ function App() {
           {panel?.kind === "basket" && <BasketPanel onJump={jumpTo} onClose={() => setPanel(null)} />}
           {panel?.kind === "library" && (
             <LibraryPanel
+              key={`${panel.tab ?? ""}:${panel.only ?? ""}`}
               initialTab={panel.tab}
+              onlyKind={panel.only}
               onUseVersion={(code) => {
                 setVersionCode(code);
                 setHomeActive(false);
               }}
               onOpenCommentary={(id) => setPanel({ kind: "commentary", verse: null, commentaryId: id })}
               onOpenDictionary={() => setPanel({ kind: "dictionary" })}
-              onOpenBook={(name) => setPanel({ kind: "book", name })}
+              onOpenBook={openLibraryBook}
               onClose={() => setPanel(null)}
             />
           )}
@@ -921,9 +1027,6 @@ function App() {
               onWordStudy={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
               onClose={() => setPanel(null)}
             />
-          )}
-          {panel?.kind === "book" && (
-            <BookPanel key={panel.name} name={panel.name} onJump={jumpTo} onOpenLibrary={() => setPanel({ kind: "library" })} onClose={() => setPanel(null)} />
           )}
           {panel?.kind === "genealogy" && (
             <Suspense fallback={<PanelFallback />}>
@@ -959,7 +1062,7 @@ function App() {
 /** Mirrors the CSS defaults (.side-panel / .side-panel.wide) so the handle's first drag
  * starts from the width actually on screen. */
 function panelDefaultWidth(kind: NonNullable<SidePanel>["kind"]): number {
-  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket", "library", "book", "pictures", "original"].includes(kind);
+  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket", "library", "pictures", "original"].includes(kind);
   const vw = window.innerWidth;
   return wide ? Math.min(640, vw * 0.42) : Math.min(400, vw * 0.36);
 }
