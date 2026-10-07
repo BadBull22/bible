@@ -15,9 +15,9 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-16 done — v2.4.2 committed 2026-10-07, installer not built yet (v2.4.1 is the latest release) (Library, Pictures, side by side, Hebrew & Greek search, range notes + tags, error log, in-app updates, voice as a download)
+## Current status: Phases 1-16 done — v2.4.2 released 2026-10-07 (Library, Pictures, side by side, Hebrew & Greek search, range notes + tags, error log, in-app updates, voice as a download)
 
-> **Start here next session:** `HANDOVER_2026-10-07_V2_4_2.md` (what changed in 2.4.2 and the steps to build and release it), then `HANDOVER_2026-10-06_V2_4_0.md` — what's in 2.4.0, how to
+> **Start here next session:** `HANDOVER_2026-10-07_V2_4_2.md` (what changed in 2.4.2), then `HANDOVER_2026-10-06_V2_4_0.md` — what's in 2.4.0, how to
 > ship the next version (`scripts/release.ps1`, the updater signing key that must never be
 > lost or committed), the real email still in the old pushed commit `ac15e08`, and the open
 > ideas. A Mac build and a phone app are deferred (user's decision, 2026-10-06).
