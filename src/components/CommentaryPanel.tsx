@@ -134,7 +134,7 @@ export function CommentaryPanel({ book, chapter, focusVerse, verseCount, initial
       {current && (
         <p className="search-hint" style={{ marginTop: 0 }}>
           {current.id.startsWith("lib:")
-            ? `${current.license_name || "See the module's notes"} · installed from the Library (CrossWire Bible Society).`
+            ? `${current.license_name || "See the module's notes"} · installed from the Library.`
             : `${current.license_name ?? "Open licence"} · bundled offline via the Free Use Bible API (AO Lab).`}
           {current.website && !current.id.startsWith("lib:") && (
             <>

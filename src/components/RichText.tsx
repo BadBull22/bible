@@ -8,8 +8,30 @@ type OnJump = (book: string, chapter: number, verse: number) => void;
 // and jumps to verse 1.
 const MARKER = /⟦([^|⟧]*)\|(\d+)\|(\d*)\|(\d*)\|([^⟧]*)⟧/g;
 
-/** One line of text with its reference markers turned into links. */
+// ⟪47⟫ marks where page 47 of a printed book starts (books added from a PDF).
+const PAGE_MARK = /⟪(\d+)⟫/g;
+
+/** One line of text with its reference markers turned into links, and page marks into
+ * small page numbers. */
 export function Line({ text, onJump }: { text: string; onJump: OnJump }) {
+  if (!text.includes("⟪")) return <RefLine text={text} onJump={onJump} />;
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  for (const m of text.matchAll(PAGE_MARK)) {
+    const i = m.index ?? 0;
+    if (i > last) parts.push(<RefLine key={`t${i}`} text={text.slice(last, i)} onJump={onJump} />);
+    parts.push(
+      <span key={`p${i}`} className="page-mark" data-page={m[1]} title={`Page ${m[1]} of the printed book starts here`}>
+        {m[1]}
+      </span>,
+    );
+    last = i + m[0].length;
+  }
+  if (last < text.length) parts.push(<RefLine key="end" text={text.slice(last)} onJump={onJump} />);
+  return <>{parts}</>;
+}
+
+function RefLine({ text, onJump }: { text: string; onJump: OnJump }) {
   const parts: React.ReactNode[] = [];
   let last = 0;
   for (const m of text.matchAll(MARKER)) {
@@ -50,5 +72,5 @@ export function RichText({ text, onJump }: { text: string; onJump: OnJump }) {
 
 /** Marker-free plain text (for copying). */
 export function plainText(text: string): string {
-  return text.replace(MARKER, (_m, _b, _c, _v, _e, label) => label);
+  return text.replace(PAGE_MARK, "").replace(/ {2,}/g, " ").replace(MARKER, (_m, _b, _c, _v, _e, label) => label);
 }

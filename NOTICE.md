@@ -71,6 +71,20 @@ them free of charge (e.g. the 1933/1953 Afrikaans Bybel, © Bible Society of Sou
 The verse-numbering tables used to read them come from the SWORD engine via the pysword
 package (MIT).
 
+The Library can also browse other free SWORD repositories, again downloading only what the
+user chooses: **eBible.org** (Bibles in many languages), the **NET Bible** free edition from
+bible.org (© Biblical Studies Press), **Wycliffe Bible Translators**' minority-language
+Bibles, and CrossWire's Attic and Beta collections. Each item's licence is shown before
+installing.
+
+### The user's own books ("Add from file")
+
+A user can add an EPUB e-book, a PDF book or a SWORD module they already have. These files
+are never bundled, uploaded or shared; they are converted to text and kept only on that
+user's computer. The app does not remove copy protection: copy-protected or
+password-protected files are refused. Users are responsible for having the right to use
+the files they add.
+
 ### Bible pictures (downloaded on request)
 
 Downloaded from Wikimedia Commons only when the user chooses a collection; each picture keeps

@@ -212,12 +212,38 @@ export function ChapterView({
     }
   }
 
+  // The interlinear (Hebrew/Greek word by word) exists for the 66 books.
+  const hasInterlinear = book !== "Enoch";
+
+  /** Text with no Strong's tagging (a Library Bible such as the Afrikaanse Bybel, or a
+   * side-by-side column): each word opens the Hebrew/Greek words of its verse, since the
+   * app can't know which original word a single untagged word translates. */
+  function plainWords(text: string, verse: number) {
+    if (!hasInterlinear) return text;
+    return text.split(/(\s+)/).map((w, i) =>
+      /[\p{L}\p{N}]/u.test(w) ? (
+        <span key={i} className="word plain-word" title="See the Hebrew/Greek words of this verse" onClick={() => !window.getSelection()?.toString() && onShowInterlinear(verse)}>
+          {w}
+        </span>
+      ) : (
+        w
+      ),
+    );
+  }
+
   /** A column's text with the words of Jesus marked (plain text, no Strong's links). */
   function redText(code: string, n: number, text: string) {
     const ranges = redData ? chapterRedLetter(redData, code, book, chapter)[String(n)] : undefined;
     const parts = splitRed([{ text: tidyPunctuation(text), word: null }], ranges)[0];
-    return parts.map((p, i) => (p.red ? <span key={i} className="wj">{p.text}</span> : <span key={i}>{p.text}</span>));
+    return parts.map((p, i) => (
+      <span key={i} className={p.red ? "wj" : undefined}>
+        {plainWords(p.text, n)}
+      </span>
+    ));
   }
+
+  // a translation with no word tagging at all (most Library Bibles)
+  const untagged = hasInterlinear && verses.length > 0 && !verses.some((v) => v.words?.some((w) => w.strongs_numbers.length > 0));
 
   // Scroll handling runs once the new chapter's verses are actually on screen:
   // either bring the jump target into view with a highlight flash, or (for plain
@@ -426,10 +452,11 @@ export function ChapterView({
           {(() => {
             const segs = segmentVerse(v.text, v.words);
             const parts = splitRed(segs, redRanges[String(v.verse)]);
+            const tx = (s: string) => (untagged ? plainWords(s, v.verse) : s);
             const body = (i: number) =>
               parts[i].length === 1 && !parts[i][0].red
-                ? parts[i][0].text
-                : parts[i].map((p, j) => (p.red ? <span key={j} className="wj">{p.text}</span> : p.text));
+                ? tx(parts[i][0].text)
+                : parts[i].map((p, j) => (p.red ? <span key={j} className="wj">{tx(p.text)}</span> : <span key={j}>{tx(p.text)}</span>));
             return segs.map((seg, i) =>
               seg.word && seg.word.strongs_numbers.length > 0 ? (
                 <span
