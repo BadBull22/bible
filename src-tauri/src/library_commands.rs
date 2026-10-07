@@ -204,6 +204,12 @@ pub fn library_section(state: State<LibraryState>, id: i64) -> Result<Option<Sec
     library::section(&*lib_conn(&state)?, id)
 }
 
+/// The books beyond the 66 (the Apocrypha) in an installed Bible: (name, chapters).
+#[tauri::command]
+pub fn library_extra_books(state: State<LibraryState>, version: String) -> Result<Vec<(String, i64)>, String> {
+    library::extra_books(&*lib_conn(&state)?, &version)
+}
+
 /// Where printed page `page` of a book added from a PDF starts: (section id, page found).
 #[tauri::command]
 pub fn library_book_page(state: State<LibraryState>, name: String, page: i64) -> Result<Option<(i64, i64)>, String> {

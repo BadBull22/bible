@@ -522,7 +522,17 @@ const SECTIONS: Section[] = [
           </li>
           <li>
             Some Bibles number verses differently (e.g. the Jewish and Catholic traditions), so a verse can sit under a
-            slightly different number than in the KJV; books outside the 66 (the Apocrypha) aren't shown in the reader.
+            slightly different number than in the KJV. A Bible that includes the Apocrypha (Tobit, Judith, Wisdom, Sirach,
+            Maccabees…) lists those books under <strong>Apocrypha</strong> in the left-hand list while you're reading that
+            Bible; they have no interlinear.
+          </li>
+          <li>
+            <strong>Apocrypha cross-references</strong>: the link button beside a verse in an Apocrypha book lists the
+            passages that older printed Bibles connected with it — the 66 books first, then other Apocrypha books — and
+            each entry names the Bible whose notes it comes from (mainly the Swedish Bible of 1917). For a verse in the 66
+            books, the cross-reference panel has a separate box, <em>Related passages in the Apocrypha</em>, when there are
+            any. The Apocrypha are always marked <em>not Scripture</em>: these links give history and background, and
+            don't mean the Bible treats those books as Scripture.
           </li>
         </ul>
       </>

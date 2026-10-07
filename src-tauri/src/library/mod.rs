@@ -650,13 +650,16 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: In
     let replaces: Option<String> = tx.query_row("SELECT title FROM modules WHERE name = ?1", params![module], |r| r.get(0)).optional().map_err(err)?;
     delete_module_rows(&tx, &module)?;
     let mut entries: i64 = 0;
-    // books of a Bible/commentary outside the 66 the app knows (e.g. the Apocrypha)
+    // books of a Bible/commentary the app has no name for
     let mut other_books: HashSet<String> = HashSet::new();
+    // books of a Bible beyond the 66 (the Apocrypha) that are kept
+    let mut apocrypha: HashSet<&'static str> = HashSet::new();
     match kind {
         "bible" => {
             let mut stmt = tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)").map_err(err)?;
             for e in sword::read_verse_module(root, &conf)? {
-                let Some(book) = refs::osis_book(&e.osis_book) else {
+                let extra = refs::apocrypha_book(&e.osis_book);
+                let Some(book) = refs::osis_book(&e.osis_book).or(extra) else {
                     other_books.insert(e.osis_book.clone());
                     continue;
                 };
@@ -666,6 +669,9 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: In
                 let text = markup::to_text(&e.text, &source, Kind::Bible);
                 if text.is_empty() {
                     continue;
+                }
+                if let Some(x) = extra {
+                    apocrypha.insert(x);
                 }
                 stmt.execute(params![module, book, e.chapter, e.verse, text]).map_err(err)?;
                 entries += 1;
@@ -757,12 +763,19 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: In
         if kind == "bible" && entries < 20 {
             return Err(format!("Only {entries} verses could be read, which is too few to be a Bible or a Bible book."));
         }
-        if kind == "bible" && books < 66 {
-            warnings.push(format!("It has {books} of the 66 books of the Bible."));
+        let canonical = books - apocrypha.len() as i64;
+        if kind == "bible" && canonical < 66 {
+            warnings.push(format!("It has {canonical} of the 66 books of the Bible."));
         }
     }
+    if !apocrypha.is_empty() {
+        warnings.push(format!(
+            "It also has {} book(s) of the Apocrypha. They are listed under Apocrypha in the book list while you read this Bible.",
+            apocrypha.len()
+        ));
+    }
     if !other_books.is_empty() {
-        warnings.push(format!("{} book(s) outside the 66 (such as the Apocrypha) are left out.", other_books.len()));
+        warnings.push(format!("{} book(s) the app has no name for are left out.", other_books.len()));
     }
     progress("saving");
     for (table, fts, cols) in [
@@ -1031,6 +1044,14 @@ pub fn versions(conn: &Connection) -> Result<Vec<Version>, String> {
 
 pub fn is_bible(conn: &Connection, code: &str) -> bool {
     conn.query_row("SELECT 1 FROM modules WHERE name = ?1 AND kind = 'bible'", params![code], |_| Ok(())).optional().ok().flatten().is_some()
+}
+
+/// The books beyond the 66 that an installed Bible has, in customary order, each with
+/// its number of chapters.
+pub fn extra_books(conn: &Connection, code: &str) -> Result<Vec<(String, i64)>, String> {
+    let mut stmt = conn.prepare("SELECT book, max(chapter) FROM lib_verses WHERE module = ?1 GROUP BY book").map_err(err)?;
+    let found: HashMap<String, i64> = stmt.query_map(params![code], |r| Ok((r.get(0)?, r.get(1)?))).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    Ok(refs::APOCRYPHA.iter().filter_map(|(_, name)| found.get(*name).map(|n| (name.to_string(), *n))).collect())
 }
 
 pub fn chapter(conn: &Connection, code: &str, book: &str, chapter: i64) -> Result<Vec<Verse>, String> {
@@ -1363,6 +1384,79 @@ mod tests {
         let afr = items.iter().find(|i| i.name == "Afr1953").unwrap();
         println!("Afr1953: {} / {} / {} KB / {} / about: {}", afr.language, afr.licence, afr.size_kb, afr.kind, afr.about.chars().take(120).collect::<String>());
         assert!(items.len() > 400);
+    }
+
+    /// A real Bible with the Apocrypha (eBible's KJV 1769), if the reader's download is
+    /// still there:  cargo test apocrypha_real -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn apocrypha_real() {
+        let file = PathBuf::from(std::env::var("USERPROFILE").unwrap()).join("Downloads/engKJV1769eb.zip");
+        let dir = std::env::temp_dir().join(format!("bc-apoc-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let state = open(&dir).unwrap();
+        let r = import_check(&state, &std::fs::read(file).unwrap(), None).unwrap();
+        println!("{} {} entries, {} books, {:?}", r.title, r.entries, r.books, r.warnings);
+        let done = import_install(&state, &|_| {}).unwrap();
+        let conn = state.conn.lock().unwrap();
+        let extra = extra_books(&conn, &done.name).unwrap();
+        println!("{extra:?}");
+        assert!(extra.iter().any(|(b, n)| b == "Tobit" && *n == 14));
+        println!("Tobit 1:1 {:?}", verse(&conn, &done.name, "Tobit", 1, 1).unwrap());
+        println!("Sirach 1:1 {:?}", verse(&conn, &done.name, "Sirach", 1, 1).unwrap());
+        assert!(verse(&conn, &done.name, "John", 3, 16).unwrap().is_some());
+        drop(conn);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Data-pipeline helper, not a test of the app: dumps every cross-reference note in the
+    /// Bibles in ...\library-probe\xref (public-domain Bibles that include the Apocrypha) to
+    /// xref\notes.tsv as  module, versification, book, chapter, verse, note-markup.
+    ///   cargo test dump_xref_notes -- --ignored --nocapture
+    #[test]
+    #[ignore]
+    fn dump_xref_notes() {
+        use std::io::Write;
+        let dir = PathBuf::from(std::env::var("LOCALAPPDATA").unwrap()).join("bible-concordance-build/library-probe/xref");
+        let note = regex::Regex::new(r#"(?s)<note\b[^>]*>.*?</note>|<reference\b[^>]*>.*?</reference>|<RX>.*?<Rx>|<scripRef\b[^>]*>.*?</scripRef>"#).unwrap();
+        let mut out = std::fs::File::create(dir.join("notes.tsv")).unwrap();
+        let mut zips: Vec<PathBuf> = std::fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "zip")).collect();
+        zips.sort();
+        for zip_path in zips {
+            let tmp = std::env::temp_dir().join(format!("bc-xref-{}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&tmp);
+            std::fs::create_dir_all(&tmp).unwrap();
+            unzip(&std::fs::read(&zip_path).unwrap(), &tmp, false).unwrap();
+            let conf = find_conf(&tmp, "").unwrap();
+            let entries = match sword::read_verse_module(&tmp, &conf) {
+                Ok(e) => e,
+                Err(e) => {
+                    println!("{}: {e}", conf.name);
+                    continue;
+                }
+            };
+            let (mut verses, mut with, mut apoc_with) = (0, 0, 0);
+            let mut sample = String::new();
+            for e in &entries {
+                verses += 1;
+                let notes: Vec<&str> = note.find_iter(&e.text).map(|m| m.as_str()).filter(|n| n.contains("crossReference") || n.contains("osisRef") || n.starts_with("<RX") || n.starts_with("<scripRef")).collect();
+                if notes.is_empty() {
+                    continue;
+                }
+                with += 1;
+                if refs::apocrypha_book(&e.osis_book).is_some() {
+                    apoc_with += 1;
+                    if sample.is_empty() {
+                        sample = format!("{} {}:{} {}", e.osis_book, e.chapter, e.verse, notes[0].chars().take(400).collect::<String>());
+                    }
+                }
+                for n in notes {
+                    writeln!(out, "{}\t{}\t{}\t{}\t{}\t{}", conf.name, conf.versification(), e.osis_book, e.chapter, e.verse, n.replace(['\t', '\n', '\r'], " ")).unwrap();
+                }
+            }
+            println!("{:<16} {:<8} {:>6} verses, {:>6} with notes, {:>5} of them in the Apocrypha\n      {}", conf.name, conf.versification(), verses, with, apoc_with, sample);
+            let _ = std::fs::remove_dir_all(&tmp);
+        }
     }
 
     fn zip_of(files: &[(&str, &[u8])]) -> Vec<u8> {

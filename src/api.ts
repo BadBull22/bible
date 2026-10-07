@@ -23,6 +23,32 @@ export interface BookInfo {
   order_index: number;
 }
 
+/** A cross-reference that involves the Apocrypha, from the reference notes of older Bibles. */
+export interface ApocryphaRef {
+  book: string;
+  chapter: number;
+  /** null = the whole chapter */
+  verse: number | null;
+  verse_end: number | null;
+  /** that passage is in the Apocrypha (outside the canon) */
+  apocrypha: boolean;
+  /** "out": this verse's note points there; "in": that passage's note points here */
+  direction: "out" | "in";
+  /** the Bible(s) whose printed notes make the link */
+  sources: string[];
+  text: string;
+  version: string;
+}
+
+/** Books outside the 66: the built-in Enoch, and the Apocrypha of a Library Bible that has
+ * them (the names library/refs.rs gives them). They have no interlinear or cross references. */
+export const NON_CANON_BOOKS = new Set([
+  "Enoch", "Tobit", "Judith", "Additions to Esther", "Esther (Greek)", "Wisdom of Solomon", "Sirach", "Baruch",
+  "Letter of Jeremiah", "Prayer of Azariah", "Susanna", "Bel and the Dragon", "Additions to Daniel", "1 Maccabees",
+  "2 Maccabees", "3 Maccabees", "4 Maccabees", "1 Esdras", "2 Esdras", "Prayer of Manasseh", "Psalm 151",
+  "Psalms of Solomon", "Odes", "Letter to the Laodiceans", "1 Enoch (Greek)",
+]);
+
 export interface Verse {
   book: string;
   chapter: number;
@@ -807,6 +833,11 @@ export const api = {
   libraryToc: (name: string) => invoke<TocEntry[]>("library_toc", { name }),
   librarySection: (id: number) => invoke<BookSection | null>("library_section", { id }),
   /** where printed page `page` of a PDF book starts: [section id, the page found] */
+  /** cross-references between this verse and the Apocrypha (and, for an Apocrypha verse, all its references) */
+  apocryphaXrefs: (book: string, chapter: number, verse: number, version: string) =>
+    invoke<ApocryphaRef[]>("apocrypha_xrefs", { book, chapter, verse, version }),
+  /** the Apocrypha books an installed Bible has: [name, chapters] ([] for the built-in Bibles) */
+  libraryExtraBooks: (version: string) => invoke<[string, number][]>("library_extra_books", { version }),
   libraryBookPage: (name: string, page: number) => invoke<[number, number] | null>("library_book_page", { name, page }),
   /** entries for a Strong's number ("G25") in installed Library lexicons */
   libraryLexiconEntries: (strongs: string) => invoke<DictionaryEntry[]>("library_lexicon_entries", { strongs }),
