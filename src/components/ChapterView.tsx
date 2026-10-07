@@ -1,5 +1,5 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
-import { api, ChapterMarks, highlightLabel, HIGHLIGHT_COLORS_BRIGHT, HIGHLIGHT_COLORS_SOFT, HighlightColor, Version, VerseWithWords } from "../api";
+import { api, NON_CANON_BOOKS, ChapterMarks, highlightLabel, HIGHLIGHT_COLORS_BRIGHT, HIGHLIGHT_COLORS_SOFT, HighlightColor, Version, VerseWithWords } from "../api";
 import { copyText, formatVerseForCopy } from "../clipboard";
 import { chapterRedLetter, loadRedLetter, splitRed } from "../redLetter";
 import { segmentVerse, tidyPunctuation } from "../verseSegments";
@@ -213,7 +213,7 @@ export function ChapterView({
   }
 
   // The interlinear (Hebrew/Greek word by word) exists for the 66 books.
-  const hasInterlinear = book !== "Enoch";
+  const hasInterlinear = !NON_CANON_BOOKS.has(book);
 
   /** Text with no Strong's tagging (a Library Bible such as the Afrikaanse Bybel, or a
    * side-by-side column): each word opens the Hebrew/Greek words of its verse, since the

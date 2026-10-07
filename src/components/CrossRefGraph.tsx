@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import cytoscape, { Core, ElementDefinition, Layouts } from "cytoscape";
 // @ts-expect-error no type defs published for the cola layout extension itself
 import cola from "cytoscape-cola";
-import { api, BookInfo, CrossReference } from "../api";
+import { api, ApocryphaRef, BookInfo, CrossReference, NON_CANON_BOOKS } from "../api";
 import { addVersesToBasket } from "../basket";
 import { BasketButton } from "./BasketButton";
 import { CopyButton } from "./CopyButton";
 import { CloseIcon } from "./icons";
+import { ApocryphaRefsBody, ApocryphaRefsSection } from "./ApocryphaRefs";
 
 cytoscape.use(cola);
 
@@ -15,6 +16,9 @@ interface Props {
   chapter: number;
   verse: number;
   books: BookInfo[];
+  /** the translation being read */
+  versionCode: string;
+  onOpenIn: (version: string, book: string, chapter: number, verse: number) => void;
   onClose: () => void;
   onJump: (book: string, chapter: number, verse: number) => void;
 }
@@ -23,7 +27,12 @@ interface NodeRef {
   book: string;
   chapter: number;
   verse: number;
+  /** an installed Bible that has this passage, for an Apocrypha book */
+  version?: string;
 }
+
+/** The Apocrypha of Library Bibles (Enoch is built in and has its own colour). */
+const isApocrypha = (book: string) => NON_CANON_BOOKS.has(book) && book !== "Enoch";
 
 // Semantic 3-way (plus Enoch) colour code for the graph -- deliberately independent
 // of the app's accent colour, since these carry meaning (testament), not emphasis.
@@ -32,11 +41,13 @@ const COLORS = {
   nt: "#5c7cba",
   ot: "#9c5b3c",
   enoch: "#9b6bd4",
+  apocrypha: "#d9a441",
   edge: "#7c786f",
 };
 
 const ROOT_LIST_LIMIT = 12;
 const EXPAND_LIMIT = 10;
+const APOCRYPHA_LIMIT = 14;
 
 function refId(r: NodeRef) {
   return `${r.book} ${r.chapter}:${r.verse}`;
@@ -50,7 +61,7 @@ async function xrefCopyText(r: CrossReference): Promise<string> {
   return `${r.to_book} ${r.to_chapter}:${r.to_verse_start}${range} (${version})${text ? ` — ${text}` : ""}`;
 }
 
-export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: Props) {
+export function CrossRefGraph({ book, chapter, verse, books, versionCode, onOpenIn, onClose, onJump }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,6 +69,9 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
   const [topRefs, setTopRefs] = useState<CrossReference[]>([]);
   const [snippets, setSnippets] = useState<Record<string, string>>({});
   const [selected, setSelected] = useState<NodeRef | null>(null);
+  // how many links between this verse and the Apocrypha the older Bibles' notes record
+  const [apocCount, setApocCount] = useState(0);
+  const apocRoot = isApocrypha(book);
   const expanded = useRef<Set<string>>(new Set());
   // bumped after each expansion so UI derived from `expanded` (a ref) re-renders
   const [, setExpansionCount] = useState(0);
@@ -72,6 +86,7 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
   function nodeColor(ref: NodeRef, isCenter: boolean) {
     if (isCenter) return COLORS.center;
     if (ref.book === "Enoch") return COLORS.enoch;
+    if (isApocrypha(ref.book)) return COLORS.apocrypha;
     return testamentOf[ref.book] === "NT" ? COLORS.nt : COLORS.ot;
   }
 
@@ -80,8 +95,14 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
     if (expanded.current.has(id)) return;
     expanded.current.add(id);
 
-    const refs = await api.crossReferencesFor(center.book, center.chapter, center.verse);
+    // The main data covers the 66 books; links that involve the Apocrypha come from the
+    // reference notes of older Bibles and are drawn as their own kind of node and edge.
+    const [refs, apocRefs] = await Promise.all([
+      isApocrypha(center.book) ? Promise.resolve([] as CrossReference[]) : api.crossReferencesFor(center.book, center.chapter, center.verse),
+      api.apocryphaXrefs(center.book, center.chapter, center.verse, versionCode).catch(() => [] as ApocryphaRef[]),
+    ]);
     if (cy.destroyed()) return;
+    if (isRoot) setApocCount(apocRefs.length);
     if (isRoot) {
       const top = refs.slice(0, ROOT_LIST_LIMIT);
       setTopRefs(top);
@@ -121,7 +142,19 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
         });
       }
     }
+    for (const r of apocRefs.slice(0, isRoot ? APOCRYPHA_LIMIT : EXPAND_LIMIT)) {
+      const target: NodeRef = { book: r.book, chapter: r.chapter, verse: r.verse ?? 1, version: r.apocrypha ? r.version : undefined };
+      const tid = refId(target);
+      if (cy.getElementById(tid).empty() && !newEls.some((e) => e.data.id === tid)) {
+        newEls.push({ data: { id: tid, label: tid, ref: target, color: nodeColor(target, false) }, classes: r.apocrypha ? "apoc" : undefined });
+      }
+      const eid = `${id}->${tid}`;
+      if (cy.getElementById(eid).empty() && cy.getElementById(`${tid}->${id}`).empty()) {
+        newEls.push({ data: { id: eid, source: id, target: tid, votes: 10 }, classes: "apoc-edge" });
+      }
+    }
     cy.add(newEls);
+    if (isRoot && isApocrypha(center.book)) cy.getElementById(id).addClass("apoc");
     setExpansionCount((n) => n + 1);
     // stop any still-animating previous layout before starting a new one, and before
     // the component might unmount -- cola keeps ticking via requestAnimationFrame and
@@ -149,6 +182,7 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
     expanded.current.clear();
     setSelected(null);
     setTopRefs([]);
+    setApocCount(0);
     setError(null);
     const cy = cytoscape({
       container: containerRef.current,
@@ -179,6 +213,10 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
           },
         },
         { selector: "edge[?crossTestament]", style: { "line-color": COLORS.center, opacity: 0.9 } },
+        // the Apocrypha: a different shape and a dashed line, so it is never mistaken for Scripture
+        { selector: "node.apoc", style: { shape: "diamond", width: 26, height: 26, "border-width": 2, "border-style": "dashed", "border-color": "#6b4208" } },
+        { selector: "node.apoc.center", style: { width: 36, height: 36 } },
+        { selector: "edge.apoc-edge", style: { "line-style": "dashed", "line-color": COLORS.apocrypha, width: 2, opacity: 0.9 } },
       ],
       minZoom: 0.2,
       maxZoom: 2.5,
@@ -206,7 +244,7 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book, chapter, verse]);
 
-  const noRefs = !loading && !error && topRefs.length === 0;
+  const noRefs = !loading && !error && topRefs.length === 0 && !apocRoot;
 
   return (
     <aside className="side-panel wide">
@@ -223,24 +261,53 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
         <span><i className="swatch" style={{ background: COLORS.ot }} /> Old Testament</span>
         <span><i className="swatch" style={{ background: COLORS.nt }} /> New Testament</span>
         <span><i className="swatch" style={{ background: COLORS.enoch }} /> Enoch (non-canonical)</span>
+        <span title="Shown as a diamond with a dashed link: these books are outside the canon of Scripture">
+          <i className="swatch swatch-diamond" style={{ background: COLORS.apocrypha }} /> Apocrypha (not Scripture)
+        </span>
         <span><i className="swatch swatch-line" style={{ background: COLORS.center }} /> Crosses testaments</span>
       </div>
       <div ref={containerRef} className="cy-graph" role="img" aria-label="Cross-reference graph" />
       <p className="search-hint" style={{ marginTop: 0 }}>
         Click a node to select it, double-click to expand its own links. Gold edges often mark prophecy ↔ fulfilment.
       </p>
+      {!loading && apocCount > 0 && !apocRoot && (
+        <p className="apoc-flag">
+          <span className="apoc-badge outside">Apocrypha · not Scripture</span> {apocCount} link{apocCount === 1 ? "" : "s"} between this verse
+          and the Apocrypha, shown as diamonds. Details are in the box below the list.
+        </p>
+      )}
       {loading && <p className="muted">Loading…</p>}
-      {error && <p className="status-error">Couldn't load cross-references: {error}</p>}
+      {error &&
+        (/unknown book/i.test(error) ? (
+          <p className="muted">
+            This book is outside the 66 books the app's cross-reference data covers, so there are no cross-references to show
+            for it.
+          </p>
+        ) : (
+          <p className="status-error">Couldn't load cross-references: {error}</p>
+        ))}
       {noRefs && <p className="muted">No cross-references are recorded for this verse.</p>}
       {selected && (
         <div className="graph-selection">
           <strong>
             {selected.book} {selected.chapter}:{selected.verse}
-          </strong>
+          </strong>{" "}
+          {isApocrypha(selected.book) && <span className="apoc-badge outside">Apocrypha · not Scripture</span>}
           <div className="btn-row">
-            <button className="pill-btn" onClick={() => onJump(selected.book, selected.chapter, selected.verse)}>
-              Read this verse
-            </button>
+            {books.some((b) => b.name === selected.book) ? (
+              <button className="pill-btn" onClick={() => onJump(selected.book, selected.chapter, selected.verse)}>
+                Read this verse
+              </button>
+            ) : (
+              <button
+                className="pill-btn"
+                disabled={!selected.version}
+                title={selected.version ? `The Bible you're reading doesn't have this book; this opens it in ${selected.version}` : "Install a Bible that includes the Apocrypha (such as the KJVA from the Library) to read this"}
+                onClick={() => selected.version && onOpenIn(selected.version, selected.book, selected.chapter, selected.verse)}
+              >
+                {selected.version ? `Read in ${selected.version}` : "Not in an installed Bible"}
+              </button>
+            )}
             <button
               className="outline-btn"
               disabled={expanded.current.has(refId(selected))}
@@ -287,6 +354,11 @@ export function CrossRefGraph({ book, chapter, verse, books, onClose, onJump }: 
             })}
           </ul>
         </>
+      )}
+      {apocRoot ? (
+        <ApocryphaRefsBody book={book} chapter={chapter} verse={verse} versionCode={versionCode} books={books} onJump={onJump} onOpenIn={onOpenIn} />
+      ) : (
+        <ApocryphaRefsSection book={book} chapter={chapter} verse={verse} versionCode={versionCode} books={books} onJump={onJump} onOpenIn={onOpenIn} />
       )}
     </aside>
   );

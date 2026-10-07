@@ -26,6 +26,23 @@ pub fn osis_book(id: &str) -> Option<&'static str> {
     OSIS.iter().find(|(o, _)| o.eq_ignore_ascii_case(id)).map(|(_, n)| *n)
 }
 
+/// Books some Bibles carry beyond the 66 (the Apocrypha / deuterocanonical books), in a
+/// customary order. They are kept when such a Bible is installed and listed under
+/// "Apocrypha" while it is being read; they are not part of reference parsing, cross
+/// references or the interlinear.
+pub const APOCRYPHA: &[(&str, &str)] = &[
+    ("Tob", "Tobit"), ("Jdt", "Judith"), ("AddEsth", "Additions to Esther"), ("EsthGr", "Esther (Greek)"),
+    ("Wis", "Wisdom of Solomon"), ("Sir", "Sirach"), ("Bar", "Baruch"), ("EpJer", "Letter of Jeremiah"),
+    ("PrAzar", "Prayer of Azariah"), ("Sus", "Susanna"), ("Bel", "Bel and the Dragon"), ("AddDan", "Additions to Daniel"),
+    ("1Macc", "1 Maccabees"), ("2Macc", "2 Maccabees"), ("3Macc", "3 Maccabees"), ("4Macc", "4 Maccabees"),
+    ("1Esd", "1 Esdras"), ("2Esd", "2 Esdras"), ("PrMan", "Prayer of Manasseh"), ("AddPs", "Psalm 151"),
+    ("PssSol", "Psalms of Solomon"), ("Odes", "Odes"), ("EpLao", "Letter to the Laodiceans"), ("1En", "1 Enoch (Greek)"),
+];
+
+pub fn apocrypha_book(id: &str) -> Option<&'static str> {
+    APOCRYPHA.iter().find(|(o, _)| o.eq_ignore_ascii_case(id)).map(|(_, n)| *n)
+}
+
 /// Abbreviations seen in ThML/TEI free text (lower-case, no spaces or dots).
 const ABBR: &[(&str, &str)] = &[
     ("gen", "Genesis"), ("ge", "Genesis"), ("gn", "Genesis"), ("exo", "Exodus"), ("exod", "Exodus"), ("ex", "Exodus"),

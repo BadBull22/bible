@@ -55,6 +55,7 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "1 Enoch, Charles & Oesterley 1917 (Project Gutenberg)", licence: "Public domain" },
   { name: "Strong's Hebrew & Greek Dictionaries (openscriptures)", licence: "CC BY-SA" },
   { name: "Cross references (OpenBible.info)", licence: "CC BY 4.0" },
+  { name: "Apocrypha cross-references: reference notes of the Swedish Bible (1917), the World English Bible / Revised Version (1895) and the Menge-Bibel (1939)", licence: "Public domain" },
   { name: "Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke, John Gill, Calvin, Keil & Delitzsch (via Free Use Bible API, AO Lab)", licence: "Public domain" },
   { name: "Tyndale Open Study Notes (via Free Use Bible API)", licence: "CC BY-SA 4.0" },
   { name: "John Wesley's Explanatory Notes (1754–65) and Scofield Reference Notes (1917) — via CrossWire SWORD modules", licence: "Public domain" },

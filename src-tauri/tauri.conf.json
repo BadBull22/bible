@@ -35,7 +35,8 @@
       "resources/qa.json",
       "resources/qa_index.json",
       "resources/pictures.json",
-      "resources/voice.json"
+      "resources/voice.json",
+      "resources/apocrypha_xrefs.json"
     ],
     "icon": [
       "icons/32x32.png",

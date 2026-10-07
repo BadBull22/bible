@@ -25,6 +25,7 @@ user's own key from the publisher's platform, and remain the property of their p
 | 1 Enoch, tr. R.H. Charles & W.O.E. Oesterley (1917) | Project Gutenberg #77935 | Public domain |
 | Strong's Hebrew & Greek Dictionaries (1890) | `openscriptures/strongs` | CC BY-SA |
 | Cross-reference dataset (TSK-derived) | OpenBible.info, via `scrollmapper/bible_databases` | CC BY 4.0 |
+| Cross-references involving the Apocrypha (2,990 links, each naming its source) | Reference notes of the Swedish Bible of 1917 (CrossWire module `Swe1917`), the World English Bible, whose Apocrypha notes follow the Revised Version of 1895 (eBible.org `engwebu2025eb`), and the Menge-Bibel of 1939 (CrossWire `GerMenge`); extracted by `data-pipeline/build_apocrypha_xrefs.py` | Public domain |
 | Matthew Henry, Jamieson-Fausset-Brown, Adam Clarke, John Gill, Calvin, Keil & Delitzsch commentaries | Free Use Bible API (bible.helloao.org, AO Lab) | Public domain (CC PDM 1.0) |
 | Tyndale Open Study Notes | Free Use Bible API (bible.helloao.org, AO Lab) | CC BY-SA 4.0 |
 | John Wesley's Explanatory Notes on the Bible (1754–65); Scofield Reference Notes (1917 edition) | CrossWire Bible Society SWORD modules `Wesley`, `Scofield` | Public domain |

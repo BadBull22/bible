@@ -1,3 +1,4 @@
+mod apocrypha;
 mod commands;
 mod commentaries;
 mod db;
@@ -102,6 +103,12 @@ pub fn run() {
                 .expect("failed to resolve firsts.json resource path");
             let firsts = FirstsData::load(&firsts_path).expect("failed to load firsts.json");
             app.manage(FirstsState(firsts));
+
+            let apocrypha_path = app
+                .path()
+                .resolve("resources/apocrypha_xrefs.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve apocrypha_xrefs.json resource path");
+            app.manage(apocrypha::ApocryphaXrefs::load(&apocrypha_path).expect("failed to load apocrypha_xrefs.json"));
 
             let qa_path = app
                 .path()
@@ -223,6 +230,7 @@ pub fn run() {
             voice::voice_remove,
             update::update_check,
             update::update_install,
+            apocrypha::apocrypha_xrefs,
             library_commands::library_catalog,
             library_commands::library_sources,
             library_commands::library_import_check,
@@ -233,6 +241,7 @@ pub fn run() {
             library_commands::library_installed,
             library_commands::library_toc,
             library_commands::library_section,
+            library_commands::library_extra_books,
             library_commands::library_book_page,
             library_commands::library_search_books,
             library_commands::library_lexicon_entries,

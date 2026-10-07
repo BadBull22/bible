@@ -122,8 +122,17 @@ function App() {
   const [closing, setClosing] = useState(false);
   const [farewellVerse, setFarewellVerse] = useState<string | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
-  const [books, setBooks] = useState<BookInfo[]>([]);
-  const [chapterCounts, setChapterCounts] = useState<Record<string, number>>({});
+  // The built-in book list, plus the Apocrypha books of the Bible being read when it's a
+  // Library Bible that has them (they appear under Apocrypha only for that Bible).
+  const [baseBooks, setBooks] = useState<BookInfo[]>([]);
+  const [baseCounts, setChapterCounts] = useState<Record<string, number>>({});
+  const [extraBooks, setExtraBooks] = useState<{ version: string; list: [string, number][] }>({ version: "", list: [] });
+  const [libraryTick, setLibraryTick] = useState(0);
+  const books = useMemo(
+    () => [...baseBooks, ...extraBooks.list.map(([name], i) => ({ name, testament: "Apocrypha", order_index: 10_000 + i }))],
+    [baseBooks, extraBooks],
+  );
+  const chapterCounts = useMemo(() => ({ ...baseCounts, ...Object.fromEntries(extraBooks.list) }), [baseCounts, extraBooks]);
   const [versionCode, setVersionCode] = useState("BSB");
   const [book, setBook] = useState("Genesis");
   const [chapter, setChapter] = useState(1);
@@ -233,6 +242,7 @@ function App() {
     // book or devotional the Books list in the sidebar
     const unlisten = listenEvent("library-changed", () => {
       loadLibraryBooks();
+      setLibraryTick((n) => n + 1);
       api.listVersions().then((vs) => {
         setVersions(vs);
         setVersionCode((cur) => (vs.some((v) => v.code === cur) ? cur : "BSB"));
@@ -309,6 +319,31 @@ function App() {
         },
       );
   }, [versionCode, book, chapter, homeActive]);
+
+  useEffect(() => {
+    let stale = false;
+    api
+      .libraryExtraBooks(versionCode)
+      .then((list) => !stale && setExtraBooks({ version: versionCode, list }))
+      .catch(() => !stale && setExtraBooks({ version: versionCode, list: [] }));
+    return () => {
+      stale = true;
+    };
+  }, [versionCode, libraryTick]);
+
+  // switched to a Bible that doesn't have the Apocrypha book being read: back to Genesis
+  useEffect(() => {
+    if (baseBooks.length && extraBooks.version === versionCode && !books.some((b) => b.name === book)) {
+      setBook("Genesis");
+      setChapter(1);
+    }
+  }, [books, baseBooks, extraBooks, versionCode, book]);
+
+  /** Opens a passage in another installed Bible -- one that has a book this one lacks. */
+  function openInVersion(version: string, b: string, c: number, v: number) {
+    setVersionCode(version);
+    jumpTo(b, c, v);
+  }
 
   // Neighbouring chapters for Previous/Next, crossing book boundaries (Genesis 50 ->
   // Exodus 1, Malachi 4 -> Matthew 1) but never crossing between the biblical canon
@@ -893,6 +928,8 @@ function App() {
                 chapter={panel.chapter}
                 verse={panel.verse}
                 books={books}
+                versionCode={versionCode}
+                onOpenIn={openInVersion}
                 onClose={() => setPanel(null)}
                 onJump={jumpTo}
               />
