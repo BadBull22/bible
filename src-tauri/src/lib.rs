@@ -14,6 +14,7 @@ mod models;
 mod online;
 pub mod qa;
 mod qa_parser;
+mod sermon;
 mod settings;
 mod sheet;
 mod study;
@@ -202,6 +203,10 @@ pub fn run() {
             study_commands::get_note,
             study_commands::save_note,
             study_commands::chapter_notes,
+            study_commands::sermon_list,
+            study_commands::sermon_get,
+            study_commands::sermon_save,
+            study_commands::sermon_delete,
             logging::log_event,
             logging::log_recent,
             logging::log_path,
@@ -231,6 +236,7 @@ pub fn run() {
             update::update_check,
             update::update_install,
             apocrypha::apocrypha_xrefs,
+            sermon::sermon_verses,
             library_commands::library_catalog,
             library_commands::library_sources,
             library_commands::library_import_check,

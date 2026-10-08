@@ -458,6 +458,33 @@ export interface ImportResult {
   highlights: number;
   bookmarks: number;
   plans: number;
+  sermons: number;
+}
+
+/** A passage the sermon search found. `why`: core | phrase | words | some | topical. */
+export interface SermonVerse {
+  book: string;
+  chapter: number;
+  verse: number;
+  verse_end: number;
+  score: number;
+  why: string[];
+  text: string;
+}
+
+/** A sermon saved from the sermon builder. `body` (JSON, see sermon.ts) is empty in a list. */
+export interface SavedSermon {
+  /** 0 = not saved yet */
+  id: number;
+  title: string;
+  series: string;
+  /** "YYYY-MM-DD" or "" */
+  preached_on: string;
+  topics: string;
+  /** the Scripture passages it uses, "John 3:16; Romans 8:28" */
+  passages: string;
+  body: string;
+  updated_at: string;
 }
 
 /** One run of text inside a study-sheet paragraph. */
@@ -781,6 +808,13 @@ export const api = {
   /** an empty body deletes the note; `verseEnd` past `verse` makes it a note on the range */
   saveNote: (book: string, chapter: number, verse: number, body: string, verseEnd?: number, tags?: string[]) =>
     invoke<void>("save_note", { book, chapter, verse, body, verseEnd: verseEnd ?? null, tags: tags ?? null }),
+  /** the Scripture for one subject of a sermon, best first, each with why it was found */
+  sermonVerses: (topic: string, limit = 160) => invoke<SermonVerse[]>("sermon_verses", { topic, limit }),
+  sermonList: () => invoke<SavedSermon[]>("sermon_list"),
+  sermonGet: (id: number) => invoke<SavedSermon | null>("sermon_get", { id }),
+  /** saves a new sermon (id 0) or changes to an existing one; returns its id */
+  sermonSave: (sermon: SavedSermon) => invoke<number>("sermon_save", { sermon }),
+  sermonDelete: (id: number) => invoke<void>("sermon_delete", { id }),
   chapterNotes: (book: string, chapter: number) => invoke<Note[]>("chapter_notes", { book, chapter }),
   /** every tag used on a note, with its count, most used first */
   noteTags: () => invoke<[string, number][]>("note_tags"),

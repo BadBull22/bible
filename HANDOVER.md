@@ -17,7 +17,7 @@ contents here if you need it from a different machine, since that path is local 
 
 ## Current status: Phases 1-16 done — v2.4.2 released 2026-10-07 (Library, Pictures, side by side, Hebrew & Greek search, range notes + tags, error log, in-app updates, voice as a download)
 
-> **Start here next session:** `HANDOVER_2026-10-07_V2_4_2.md` (what changed in 2.4.2), then `HANDOVER_2026-10-06_V2_4_0.md` — what's in 2.4.0, how to
+> **Start here next session:** `HANDOVER_2026-10-08_V2_5_0_SERMON_BUILDER.md` (the sermon builder and other work built after 2.4.2: uncommitted, to review, then release as 2.5.0), then `HANDOVER_2026-10-07_V2_4_2.md` (what changed in 2.4.2), then `HANDOVER_2026-10-06_V2_4_0.md` — what's in 2.4.0, how to
 > ship the next version (`scripts/release.ps1`, the updater signing key that must never be
 > lost or committed), the real email still in the old pushed commit `ac15e08`, and the open
 > ideas. A Mac build and a phone app are deferred (user's decision, 2026-10-06).

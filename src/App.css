@@ -4508,3 +4508,248 @@ body.is-resizing .leaflet-container {
   font-size: 0.82rem;
   color: var(--text-muted);
 }
+
+/* ---------- sermon builder ---------- */
+
+.sermon-builder {
+  max-width: 62rem;
+  margin: 0 auto;
+  font-family: var(--sans);
+}
+
+.sermon-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.sermon-meta label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+}
+
+.sermon-meta .sermon-title {
+  flex: 1 1 16rem;
+}
+
+.sermon-meta input,
+.sermon-ask input,
+.sermon-shape select,
+.sermon-arrange input,
+.sermon-arrange textarea {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.92rem;
+}
+
+.sermon-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sermon-ask {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 0.6rem;
+}
+
+.sermon-ask input {
+  flex: 1;
+  font-size: 1rem;
+}
+
+.sermon-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+}
+
+.sermon-group {
+  margin-top: 1.2rem;
+}
+
+.sermon-group-about {
+  margin: -0.3rem 0 0.5rem;
+  font-size: 0.78rem;
+}
+
+.sermon-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sermon-list li {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+}
+
+.sermon-list li.ticked {
+  border-color: var(--accent-500);
+  box-shadow: inset 3px 0 0 var(--accent-500);
+}
+
+.sermon-tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+
+.sermon-tick input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent-500);
+}
+
+.sermon-item-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.sermon-list .votes,
+.sermon-list .note-tag,
+.sermon-open {
+  margin-left: 0.6rem;
+}
+
+.sermon-open {
+  font-size: 0.78rem;
+}
+
+.sermon-body {
+  margin-top: 0.3rem;
+  font-family: var(--serif);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.sermon-more {
+  margin-left: 0.4rem;
+  font-family: var(--sans);
+  font-size: 0.76rem;
+}
+
+.sermon-shape,
+.sermon-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin: 0.9rem 0 0.5rem;
+  font-size: 0.84rem;
+}
+
+.sermon-shape label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sermon-facts {
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-md);
+  background: var(--chrome-bg);
+}
+
+.sermon-suggest {
+  margin: 0.4rem 0 0.8rem;
+  padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--accent-500);
+  background: var(--paper-raised);
+  font-size: 0.86rem;
+}
+
+.sermon-arrange {
+  list-style: none;
+  margin: 0.6rem 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sermon-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+}
+
+.sermon-row-heading {
+  margin-top: 0.7rem;
+  background: var(--chrome-bg);
+}
+
+.sermon-row-note {
+  border-style: dashed;
+}
+
+.sermon-grip {
+  cursor: grab;
+  color: var(--text-faint);
+  padding-top: 0.25rem;
+}
+
+.sermon-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.sermon-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+.sermon-arrange .sermon-heading-input {
+  width: 100%;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.sermon-arrange textarea {
+  width: 100%;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.sermon-row-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.1rem;
+  max-width: 9.5rem;
+  font-size: 0.76rem;
+}
+
+.sermon-row-tools .text-btn {
+  padding: 0.15rem 0.35rem;
+}
+
+@media print {
+  .sermon-builder {
+    display: none;
+  }
+}

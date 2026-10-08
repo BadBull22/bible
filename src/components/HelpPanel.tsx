@@ -417,6 +417,50 @@ const SECTIONS: Section[] = [
     ),
   },
   {
+    id: "sermon",
+    title: "Sermon builder",
+    keywords: "sermon builder preach preacher pastor minister message outline points topic gather prepare series word document",
+    body: (
+      <>
+        <p>
+          <strong>Study → Sermon builder</strong> gathers material on a subject and lays out what you choose as a document to
+          preach from. It finds and arranges; it does not write anything. The sermon is yours.
+        </p>
+        <ul>
+          <li>
+            <strong>1 · Gather.</strong> Type what the sermon is about: one topic (<em>healing</em>), several separated by
+            semicolons (<em>sin; forgiveness</em>), a passage by name or reference (<em>sermon on the mount</em>,{" "}
+            <em>Romans 8</em>), or a plain sentence (<em>how do I forgive someone who hurt me</em>). The app lists key
+            passages, supporting verses, cross-references, commentary, dictionary and topical articles, word studies, your
+            own notes and passages from your Library books. Tick what you want to keep. <em>Gather more</em> with another
+            subject adds to the list.
+          </li>
+          <li>
+            <strong>2 · Arrange.</strong> Choose a shape — points, through a passage, problem → God's answer → response, or
+            no headings — and the ticked material is laid out under headings, Scripture first. Drag items (or use ▲ ▼) to
+            reorder, rename headings, and add your own notes and headings anywhere. The bar shows how many passages come
+            from each Testament, suggests one from the other if all are from one, and estimates how long the material takes
+            to read aloud.
+          </li>
+          <li>
+            <strong>3 · Document.</strong> A preview with Print, Copy and Save as Word, and optional blank lines under each
+            heading for handwriting. Scripture is set apart from commentary, and commentary always carries its author's
+            name, since it is that author's view.
+          </li>
+          <li>
+            <strong>My sermons.</strong> Give the sermon a title and press <em>Save</em> to keep it. Add a series name and the
+            date preached if you like; sermons are grouped by series, with the passages the series has covered. Saved
+            sermons are included in My Study → Export.
+          </li>
+          <li>
+            <em>Open</em> beside a passage shows it in the Bible. Your work in the builder is kept while the app is open;
+            use <em>Save</em> to keep it for good.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: "read-aloud",
     title: "Read aloud (listen to the Bible)",
     keywords: "listen audio read aloud voice speak speech kokoro narrator hear download natural voice",
