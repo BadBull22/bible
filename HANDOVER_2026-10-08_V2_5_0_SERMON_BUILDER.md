@@ -1,30 +1,25 @@
-# Handover — for 2026-10-08: v2.5.0 (sermon builder), built but not committed
+# Handover — 2026-10-08: v2.5.0 released (sermon builder)
 
-**Start here.** v2.4.2 is the released version (GitHub and website). Everything below was
-built on 2026-10-07 after that release and is **uncommitted, unreleased, and only partly
-tried by the user**. The plan for the next session is: review this, test in the dev app,
-then commit and build the 2.5.0 installer.
-
-The release process, signing key and git rules are unchanged:
-`HANDOVER_2026-10-06_V2_4_0.md` sections 3 and 5. What 2.4.2 contains:
+**Start here.** v2.5.0 is the released version. The release process, signing key and git
+rules are unchanged: `HANDOVER_2026-10-06_V2_4_0.md` sections 3 and 5. What 2.4.2 contains:
 `HANDOVER_2026-10-07_V2_4_2.md`.
 
 ## 1. State of things
 
-- **Version** is already bumped to **2.5.0** in `package.json`, `package-lock.json` (lines 3
-  and 9), `src-tauri/Cargo.toml`, `Cargo.lock` and `src-tauri/tauri.conf.json`.
-- **Uncommitted files** (stage by explicit path, never `git add -A`):
-  - modified: the five version files, `src-tauri/src/{lib.rs, userdata.rs, study_commands.rs}`,
-    `src-tauri/src/library/epub.rs`, `src/{App.tsx, App.css, api.ts}`,
-    `src/components/{HelpPanel.tsx, StudyPanel.tsx}`
-  - new: `src-tauri/src/sermon.rs`, `src/sermon.ts`, `src/components/SermonBuilder.tsx`, and
-    this file
-- **Checks:** `npx tsc --noEmit` and `npx vite build` pass; `cargo test --lib` 53 passed,
-  11 ignored.
-- **What the user has seen:** the first version of the sermon builder in the dev app. They
-  found the search too thin (see section 3). The improved search, and the scanned-book
-  importer changes, were built afterwards and **have not been seen on screen by anyone**.
-- The dev app may still be running; closing it is fine.
+- **v2.5.0 is released** (2026-10-08): https://github.com/BadBull22/bible/releases/tag/v2.5.0,
+  marked Latest, tag on commit `b2c0954`. Assets: `BibleConcordance_2.5.0_x64-setup.exe`
+  (376,182,314 bytes), `BibleConcordance_2.5.0_x64_en-US.msi` (437,067,776 bytes), their
+  `.sig` files and `latest.json`. The voice zip stays on the v2.4.0 release.
+- **Checked after publishing:** the "latest" `latest.json` is byte-identical to the local one
+  and announces 2.5.0; both installer links answer 200 with the right sizes; both update
+  signatures verify against the public key in `tauri.conf.json`.
+- **Website:** https://www.ghost-claw.com/bible.html shows 2.5.0 with a Sermon builder card;
+  both download links work (website commit `f866063`).
+- **Before release:** `npx tsc --noEmit`, `npx vite build` and `cargo test` (53 passed, 11
+  ignored) passed. The user tested the sermon builder in the dev app and then the installed
+  build and said both looked good.
+- **Not confirmed:** the in-app update from 2.4.2 to 2.5.0 on an installed copy.
+- The working tree is clean and level with `origin/master`.
 
 ## 2. The sermon builder (Study → Sermon builder)
 
@@ -128,16 +123,16 @@ Test files: `%LOCALAPPDATA%\bible-concordance-build\library-probe\rev`. To print
 importer makes of them:
 `$env:BC_EPUB_DIR="bible-concordance-build/library-probe/rev"; cargo test real_epubs -- --ignored --nocapture`
 
-## 5. For tomorrow
+## 5. Next release
 
-1. `npm run tauri dev` and try the sermon builder with the improved search: the user's two
-   examples, a few subjects outside the 27, a sentence, and several topics with `;`.
-2. Arrange, add notes, look at the Document tab, Save as Word, Save and reopen a sermon.
-3. Add one scanned EPUB (rename the file to the book's title first) and check its chapters.
-4. Fix what the review turns up.
-5. Commit and push (BadBull22 noreply; scan the staged diff), then
-   `pwsh -File scripts\release.ps1 -Notes "…"`, install and smoke test, publish with the
-   printed `gh release create v2.5.0 …`, and update the website page.
+Bump the version in the five files, run the tests, `pwsh -File scripts\release.ps1 -Notes "…"`,
+install and smoke test, commit and push, run the printed `gh release create` with a notes
+file (the v2.5.0 release's notes are the pattern), then update the website page and its
+handover in the `ghostclaw-website` repo.
+
+Things the user was asked to report back on, none raised so far: subjects that come back
+thin in the sermon builder (candidates for a core list), and core lists that are wrong or
+missing a passage.
 
 ## 6. Other things discussed, not started
 
