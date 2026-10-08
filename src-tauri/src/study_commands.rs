@@ -111,6 +111,27 @@ pub fn save_note(
 }
 
 #[tauri::command]
+pub fn sermon_list(state: State<UserDataState>) -> Result<Vec<userdata::Sermon>, String> {
+    userdata::sermon_list(&*user_conn(&state)?)
+}
+
+#[tauri::command]
+pub fn sermon_get(state: State<UserDataState>, id: i64) -> Result<Option<userdata::Sermon>, String> {
+    userdata::sermon_get(&*user_conn(&state)?, id)
+}
+
+/// Saves a sermon (id 0 = a new one) and returns its id.
+#[tauri::command]
+pub fn sermon_save(state: State<UserDataState>, sermon: userdata::Sermon) -> Result<i64, String> {
+    userdata::sermon_save(&*user_conn(&state)?, &sermon)
+}
+
+#[tauri::command]
+pub fn sermon_delete(state: State<UserDataState>, id: i64) -> Result<(), String> {
+    userdata::sermon_delete(&*user_conn(&state)?, id)
+}
+
+#[tauri::command]
 pub fn chapter_notes(state: State<UserDataState>, book: String, chapter: i64) -> Result<Vec<userdata::Note>, String> {
     userdata::chapter_notes(&*user_conn(&state)?, &book, chapter)
 }
@@ -199,6 +220,7 @@ pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbStat
             highlights: userdata::list_highlights(&u)?,
             notes: userdata::list_notes(&u)?,
             plans: userdata::plan_progress(&u)?,
+            sermons: userdata::sermons_all(&u)?,
         };
         (b, stamp)
     };

@@ -27,13 +27,14 @@ import { BookPanel } from "./components/BookPanel";
 import { PicturesPanel } from "./components/PicturesPanel";
 import { OriginalSearchPanel } from "./components/OriginalSearchPanel";
 import { UpdateBanner } from "./components/Updates";
+import { SermonBuilder } from "./components/SermonBuilder";
 import { useBasket } from "./basket";
 import { ReadAloudBar } from "./components/ReadAloudBar";
 import { chapterAnnouncement, chunkText, LISTEN_EVENT, LISTEN_FINISHED_EVENT, loadReadPrefs, ReadAloud, ReaderState, ReadItem, speechText } from "./readAloud";
 import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
 import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { BackIcon, BasketIcon, DictionaryIcon, InterlinearIcon, LibraryIcon, PictureIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
+import { SheetIcon, BackIcon, BasketIcon, DictionaryIcon, InterlinearIcon, LibraryIcon, PictureIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import { TopMenu } from "./components/TopMenu";
 import "./App.css";
 
@@ -87,6 +88,9 @@ interface Location {
 }
 
 const ENOCH_BOOK = "Enoch";
+// The sermon builder fills the reading area the way a Library book does: this stands in
+// for a book's name in `readingBook` (no module can be called this).
+const SERMON_BUILDER = "@sermon";
 
 // Resizable layout: sidebar and side-panel widths are per-viewer conveniences kept in
 // localStorage (with try/catch: storage can be unavailable) and clamped to sane bounds.
@@ -760,6 +764,7 @@ function App() {
             icon={<NotebookIcon size={15} />}
             items={[
               { key: "study", label: "My Study", icon: <NotebookIcon size={14} />, onClick: () => setPanel({ kind: "study" }) },
+              { key: "sermon", label: "Sermon builder", icon: <SheetIcon size={14} />, onClick: () => setReadingBook(SERMON_BUILDER) },
               { key: "basket", label: "Basket", icon: <BasketIcon size={14} />, onClick: () => setPanel({ kind: "basket" }), badge: basketItems.length },
               { key: "library", label: "Library", icon: <LibraryIcon size={14} />, onClick: () => setPanel({ kind: "library" }) },
             ]}
@@ -823,7 +828,9 @@ function App() {
             </>
           )}
           <main className="main-pane">
-            {readingBook ? (
+            {readingBook === SERMON_BUILDER ? (
+              <SermonBuilder versionCode={versionCode} versions={versions} books={books} onJump={jumpTo} onClose={() => setReadingBook(null)} />
+            ) : readingBook ? (
               <BookPanel
                 key={readingBook}
                 name={readingBook}

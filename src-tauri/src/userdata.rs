@@ -38,6 +38,12 @@ CREATE TABLE IF NOT EXISTS basket (
     kind TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL,
     meta TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
+CREATE TABLE IF NOT EXISTS sermons (
+    id INTEGER PRIMARY KEY, title TEXT NOT NULL, series TEXT NOT NULL DEFAULT '',
+    preached_on TEXT NOT NULL DEFAULT '', topics TEXT NOT NULL DEFAULT '',
+    passages TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
 ";
 
 /// Highlight colours the UI offers; anything else is rejected so a bad value can't be
@@ -385,6 +391,105 @@ pub fn basket_reorder(conn: &mut Connection, ids: &[i64]) -> Result<(), String> 
     tx.commit().map_err(err)
 }
 
+// ---------------------------------------------------------------- sermons
+//
+// The sermon builder's saved work: what the preacher gathered and arranged (`body`, JSON
+// the page owns), with a few fields beside it for the list -- its series, the date it
+// was preached, and the passages it uses (so a series can show what has been covered).
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Sermon {
+    /// 0 = not saved yet
+    #[serde(default)]
+    pub id: i64,
+    pub title: String,
+    #[serde(default)]
+    pub series: String,
+    /// "YYYY-MM-DD", or empty
+    #[serde(default)]
+    pub preached_on: String,
+    /// what was typed into the builder
+    #[serde(default)]
+    pub topics: String,
+    /// the Scripture passages used, "John 3:16; Romans 8:28"
+    #[serde(default)]
+    pub passages: String,
+    /// the arranged material (JSON); empty in a list
+    #[serde(default)]
+    pub body: String,
+    #[serde(default)]
+    pub updated_at: String,
+}
+
+const MAX_SERMON_BYTES: usize = 4 * 1024 * 1024;
+
+/// Every saved sermon, newest first, without its body.
+pub fn sermon_list(conn: &Connection) -> Result<Vec<Sermon>, String> {
+    let mut s = conn.prepare("SELECT id, title, series, preached_on, topics, passages, updated_at FROM sermons ORDER BY updated_at DESC, id DESC").map_err(err)?;
+    let rows = s
+        .query_map([], |r| {
+            Ok(Sermon { id: r.get(0)?, title: r.get(1)?, series: r.get(2)?, preached_on: r.get(3)?, topics: r.get(4)?, passages: r.get(5)?, body: String::new(), updated_at: r.get(6)? })
+        })
+        .map_err(err)?
+        .collect::<Result<_, _>>()
+        .map_err(err)?;
+    Ok(rows)
+}
+
+pub fn sermon_get(conn: &Connection, id: i64) -> Result<Option<Sermon>, String> {
+    conn.query_row("SELECT id, title, series, preached_on, topics, passages, body, updated_at FROM sermons WHERE id = ?1", params![id], |r| {
+        Ok(Sermon { id: r.get(0)?, title: r.get(1)?, series: r.get(2)?, preached_on: r.get(3)?, topics: r.get(4)?, passages: r.get(5)?, body: r.get(6)?, updated_at: r.get(7)? })
+    })
+    .optional()
+    .map_err(err)
+}
+
+/// Saves a new sermon (id 0) or the changes to an existing one; returns its id.
+pub fn sermon_save(conn: &Connection, s: &Sermon) -> Result<i64, String> {
+    let title = s.title.trim();
+    if title.is_empty() {
+        return Err("Give the sermon a title before saving it.".into());
+    }
+    if s.body.len() > MAX_SERMON_BYTES {
+        return Err("This sermon is too large to save. Remove some of the gathered material.".into());
+    }
+    let preached = if s.preached_on.len() == 10 && s.preached_on.chars().all(|c| c.is_ascii_digit() || c == '-') { s.preached_on.as_str() } else { "" };
+    if s.id > 0 {
+        let n = conn
+            .execute(
+                "UPDATE sermons SET title=?2, series=?3, preached_on=?4, topics=?5, passages=?6, body=?7, updated_at=datetime('now','localtime') WHERE id=?1",
+                params![s.id, title, s.series.trim(), preached, s.topics, s.passages, s.body],
+            )
+            .map_err(err)?;
+        if n > 0 {
+            return Ok(s.id);
+        }
+    }
+    conn.execute(
+        "INSERT INTO sermons (title, series, preached_on, topics, passages, body) VALUES (?1,?2,?3,?4,?5,?6)",
+        params![title, s.series.trim(), preached, s.topics, s.passages, s.body],
+    )
+    .map_err(err)?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn sermon_delete(conn: &Connection, id: i64) -> Result<(), String> {
+    conn.execute("DELETE FROM sermons WHERE id = ?1", params![id]).map_err(err)?;
+    Ok(())
+}
+
+/// All sermons with their bodies, for the backup.
+pub fn sermons_all(conn: &Connection) -> Result<Vec<Sermon>, String> {
+    let ids: Vec<i64> = sermon_list(conn)?.into_iter().map(|s| s.id).collect();
+    let mut out = Vec::new();
+    for id in ids {
+        if let Some(s) = sermon_get(conn, id)? {
+            out.push(s);
+        }
+    }
+    Ok(out)
+}
+
 // ---------------------------------------------------------------- export / import
 
 #[derive(Serialize, Deserialize, Default)]
@@ -399,6 +504,9 @@ pub struct Backup {
     pub notes: Vec<StudyItem>,
     #[serde(default)]
     pub plans: Vec<PlanProgress>,
+    /// saved sermons (sermon builder); absent in backups from before 2.5
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sermons: Vec<Sermon>,
 }
 
 pub const BACKUP_FORMAT: &str = "bible-concordance-study/1";
@@ -465,6 +573,7 @@ pub struct ImportResult {
     pub highlights: usize,
     pub bookmarks: usize,
     pub plans: usize,
+    pub sermons: usize,
 }
 
 /// Merge a JSON backup into the current data. Existing notes are only overwritten when the
@@ -475,7 +584,7 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
         return Err(format!("Unrecognised backup format \"{}\".", b.format));
     }
     let tx = conn.transaction().map_err(err)?;
-    let mut r = ImportResult { notes: 0, highlights: 0, bookmarks: 0, plans: 0 };
+    let mut r = ImportResult { notes: 0, highlights: 0, bookmarks: 0, plans: 0, sermons: 0 };
     for k in &b.bookmarks {
         r.bookmarks += tx
             .execute("INSERT OR IGNORE INTO bookmarks (book, chapter, verse, created_at) VALUES (?1,?2,?3,?4)", params![k.book, k.chapter, k.verse, k.created_at])
@@ -517,6 +626,35 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
         }
         r.plans += 1;
     }
+    // a sermon already here (same title and series) is replaced only by a newer copy
+    for s in &b.sermons {
+        if s.title.trim().is_empty() || s.body.len() > MAX_SERMON_BYTES {
+            continue;
+        }
+        let existing: Option<(i64, String)> = tx
+            .query_row("SELECT id, updated_at FROM sermons WHERE title = ?1 AND series = ?2", params![s.title.trim(), s.series.trim()], |r| Ok((r.get(0)?, r.get(1)?)))
+            .optional()
+            .map_err(err)?;
+        match existing {
+            Some((_, at)) if at >= s.updated_at => {}
+            Some((id, _)) => {
+                tx.execute(
+                    "UPDATE sermons SET preached_on=?2, topics=?3, passages=?4, body=?5, updated_at=?6 WHERE id=?1",
+                    params![id, s.preached_on, s.topics, s.passages, s.body, s.updated_at],
+                )
+                .map_err(err)?;
+                r.sermons += 1;
+            }
+            None => {
+                tx.execute(
+                    "INSERT INTO sermons (title, series, preached_on, topics, passages, body, updated_at) VALUES (?1,?2,?3,?4,?5,?6, CASE WHEN ?7 = '' THEN datetime('now','localtime') ELSE ?7 END)",
+                    params![s.title.trim(), s.series.trim(), s.preached_on, s.topics, s.passages, s.body, s.updated_at],
+                )
+                .map_err(err)?;
+                r.sermons += 1;
+            }
+        }
+    }
     tx.commit().map_err(err)?;
     Ok(r)
 }
@@ -549,6 +687,14 @@ mod tests {
         save_note(&c, "John", 3, 16, "God's love -- the gift of the Son.", None, &[]).unwrap();
         save_note(&c, "John", 3, 1, "Nicodemus by night", Some(8), &["#New birth, nicodemus".into(), "new BIRTH".into()]).unwrap();
         start_plan(&c, "nt90", "2026-09-26").unwrap();
+        let mut sermon = Sermon { id: 0, title: " Healing ".into(), series: "Faith".into(), preached_on: "2026-10-11".into(), topics: "healing; faith".into(), passages: "James 5:14".into(), body: "{\"items\":[]}".into(), updated_at: String::new() };
+        assert!(sermon_save(&c, &Sermon { title: "  ".into(), ..sermon.clone() }).is_err());
+        sermon.id = sermon_save(&c, &sermon).unwrap();
+        sermon.passages = "James 5:14; Isaiah 53:5".into();
+        assert_eq!(sermon_save(&c, &sermon).unwrap(), sermon.id, "saving again updates, it doesn't add");
+        let listed = sermon_list(&c).unwrap();
+        assert_eq!((listed.len(), listed[0].title.as_str(), listed[0].body.as_str()), (1, "Healing", ""));
+        assert_eq!(sermon_get(&c, sermon.id).unwrap().unwrap().passages, "James 5:14; Isaiah 53:5");
         set_plan_day(&c, "nt90", 1, true).unwrap();
 
         let m = chapter_marks(&c, "John", 3).unwrap();
@@ -571,6 +717,7 @@ mod tests {
             highlights: list_highlights(&c).unwrap(),
             notes: list_notes(&c).unwrap(),
             plans: plan_progress(&c).unwrap(),
+            sermons: sermons_all(&c).unwrap(),
         };
         let res = write_export(&dir, &stamp, &backup).unwrap();
         let md = std::fs::read_to_string(&res.markdown_path).unwrap();
@@ -580,13 +727,16 @@ mod tests {
 
         let (mut c2, dir2) = temp_db();
         let r = import_backup(&mut c2, &json).unwrap();
-        assert_eq!((r.bookmarks, r.highlights, r.notes, r.plans), (1, 2, 2, 1));
+        assert_eq!((r.bookmarks, r.highlights, r.notes, r.plans, r.sermons), (1, 2, 2, 1, 1));
+        assert_eq!(sermon_list(&c2).unwrap()[0].series, "Faith");
         assert_eq!(get_note(&c2, "John", 3, 16).unwrap().map(|n| n.body).as_deref(), Some("God's love -- the gift of the Son."));
         assert_eq!(get_note(&c2, "John", 3, 1).unwrap(), get_note(&c, "John", 3, 1).unwrap());
         assert_eq!(plan_progress(&c2).unwrap()[0].done_days, vec![1]);
         // importing the same backup again adds nothing new
         let again = import_backup(&mut c2, &json).unwrap();
-        assert_eq!((again.bookmarks, again.notes), (0, 0));
+        assert_eq!((again.bookmarks, again.notes, again.sermons), (0, 0, 0));
+        sermon_delete(&c, sermon.id).unwrap();
+        assert!(sermon_list(&c).unwrap().is_empty());
 
         // toggling/clearing
         assert!(!toggle_bookmark(&c, "John", 3, 16).unwrap());

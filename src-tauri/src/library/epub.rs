@@ -220,6 +220,213 @@ pub fn split_long(sections: Vec<(String, String)>) -> (Vec<(String, String)>, bo
     (out, split)
 }
 
+/// Letters and digits only, lower case: what two readings of the same heading share when
+/// the scan has misread a character or two.
+fn squash(s: &str) -> String {
+    s.chars().filter(|c| c.is_alphanumeric()).flat_map(char::to_lowercase).collect()
+}
+
+/// How alike two short strings are, 0..1 (edit distance against the longer one).
+fn alike(a: &str, b: &str) -> f64 {
+    let (a, b): (Vec<char>, Vec<char>) = (a.chars().collect(), b.chars().collect());
+    if a.is_empty() || b.is_empty() {
+        return 0.0;
+    }
+    let mut row: Vec<usize> = (0..=b.len()).collect();
+    for i in 1..=a.len() {
+        let mut prev = row[0];
+        row[0] = i;
+        for j in 1..=b.len() {
+            let cur = row[j];
+            row[j] = if a[i - 1] == b[j - 1] { prev } else { 1 + prev.min(row[j]).min(row[j - 1]) };
+            prev = cur;
+        }
+    }
+    1.0 - row[b.len()] as f64 / a.len().max(b.len()) as f64
+}
+
+fn page_number(token: &str) -> Option<u32> {
+    let t = token.trim_matches(|c: char| !c.is_ascii_digit());
+    (t.len() <= 4 && !t.is_empty() && token.chars().filter(|c| c.is_ascii_digit()).count() == t.len() && token.len() <= t.len() + 2).then(|| t.parse().ok()).flatten()
+}
+
+/// Two readings of a running header are the same header when they match apart from a
+/// misread letter or two -- but never when their numbers differ ("Lecture I. Chap. 1:1-3"
+/// and "Lecture II. Chap. 1:4-8" are different chapters).
+fn same_header(a: &str, b: &str) -> bool {
+    let digits = |s: &str| s.chars().filter(char::is_ascii_digit).collect::<String>();
+    a == b || (digits(a) == digits(b) && alike(a, b) >= 0.7)
+}
+
+/// The pages of a scanned book -> chapters.
+///
+/// Every printed page starts with its running header, which the scan leaves in the text:
+/// a left-hand page with its number and a title ("36 Lectures on the Revelation"), a
+/// right-hand page with a title and its number ("The Seven Churches (chap. 2) 39"). The
+/// headers are removed, and a new chapter begins wherever the title changes to something
+/// other than the book's own name.
+fn scan_sections(pages: Vec<String>) -> Vec<(String, String)> {
+    const NOTICE: &str = "This book was produced in EPUB format by the Internet Archive";
+    let estimate = rx!(r"The text on this page is estimated to be only [\d.]+% accurate\s*");
+    let pages: Vec<String> = pages.into_iter().filter(|p| !p.trim_start().starts_with(NOTICE)).map(|p| estimate.replace_all(&p, "").into_owned()).collect();
+    let heads: Vec<Vec<&str>> = pages.iter().map(|p| p.split_whitespace().take(16).collect()).collect();
+
+    // --- the titles that follow the number on left-hand pages: phrases many pages start with
+    let mut counts: HashMap<(usize, String), usize> = HashMap::new();
+    for h in heads.iter().filter(|h| h.len() > 4 && page_number(h[0]).is_some()) {
+        for len in 1..=8.min(h.len() - 1) {
+            *counts.entry((len, squash(&h[1..=len].join(" ")))).or_default() += 1;
+        }
+    }
+    // how many words of `after` (the words following a page number) are a running title
+    let title_len = |after: &[&str]| -> usize {
+        let count = |len: usize| after.get(..len).map_or(0, |w| counts.get(&(len, squash(&w.join(" ")))).copied().unwrap_or(0));
+        let mut len = 0;
+        while len < 8 && count(len + 1) >= 4 && (len == 0 || count(len + 1) * 100 >= count(len) * 15) {
+            len += 1;
+        }
+        // a title is words, not the start of a sentence that happens to recur
+        if after.get(..len).is_some_and(|w| w.join("").chars().filter(|c| c.is_alphabetic()).count() >= 4) {
+            len
+        } else {
+            0
+        }
+    };
+    // the book's own name: the left-hand title most pages carry, if one dominates
+    let mut by_title: HashMap<String, usize> = HashMap::new();
+    let mut titled = 0;
+    for h in &heads {
+        if h.len() > 4 && page_number(h[0]).is_some() {
+            let len = title_len(&h[1..]);
+            if len > 0 {
+                *by_title.entry(squash(&h[1..=len].join(" "))).or_default() += 1;
+                titled += 1;
+            }
+        }
+    }
+    let book_key = by_title.iter().max_by_key(|(_, n)| **n).filter(|(_, n)| **n * 2 > titled).map(|(k, _)| k.clone()).unwrap_or_default();
+
+    // --- pass 1: each page's header (removed from its text) and the title it carries
+    struct Page<'a> {
+        body: &'a str,
+        title: Option<String>,
+        header: bool,
+    }
+    let mut read: Vec<Page> = Vec::with_capacity(pages.len());
+    let mut expected: Option<u32> = None;
+    for (page, head) in pages.iter().zip(&heads) {
+        let skip = |words: usize| -> &str {
+            let mut rest = page.trim_start();
+            for _ in 0..words {
+                rest = rest.trim_start();
+                rest = rest.find(char::is_whitespace).map_or("", |i| &rest[i..]);
+            }
+            rest.trim_start()
+        };
+        let near = |n: u32| expected.is_some_and(|e| n + 3 >= e && n <= e + 6);
+        let mut out = Page { body: page.as_str(), title: None, header: false };
+
+        // a left-hand page: its number (which the scan may have misread: "5g"), then a title
+        let first = head.first().copied().unwrap_or("");
+        let numberish = page_number(first).is_some() || (first.len() <= 3 && first.chars().any(|c| c.is_ascii_digit()));
+        let left_len = if numberish && head.len() > 1 { title_len(&head[1..]) } else { 0 };
+        if numberish && (left_len > 0 || page_number(first).is_some_and(near)) {
+            if left_len > 0 {
+                out.title = Some(head[1..=left_len].join(" "));
+            }
+            out.body = skip(1 + left_len);
+            out.header = true;
+            expected = page_number(first).or(expected.map(|e| e + 1)).map(|n| n + 1);
+        } else if let Some((i, n)) = head.iter().enumerate().skip(1).take(12).find_map(|(i, t)| {
+            // a right-hand page: a title, then its number
+            let n = page_number(t)?;
+            let words = head[..i].join(" ");
+            let known = !book_key.is_empty() && same_header(&squash(&words), &book_key);
+            ((near(n) || known) && words.chars().filter(|c| c.is_alphabetic()).count() >= 4).then_some((i, n))
+        }) {
+            out.title = Some(head[..i].join(" "));
+            out.body = skip(i + 1);
+            out.header = true;
+            expected = Some(n + 1);
+        } else if let Some(e) = expected {
+            expected = Some(e + 1);
+        }
+        // the book's own name tells nothing about the chapter
+        // (nor does a cut-short reading of it: "Lectures on" for "Lectures on the Revelation")
+        out.title = out.title.map(|t| t.trim_end_matches(['.', ',', ':', ' ']).to_string()).filter(|t| {
+            let key = squash(t);
+            book_key.is_empty() || !(same_header(&key, &book_key) || book_key.starts_with(&key))
+        });
+        read.push(out);
+    }
+
+    // --- chapter titles are the ones several pages agree on; a title seen once or twice is
+    //     a misreading of its neighbours' and is ignored
+    let mut groups: Vec<(String, HashMap<String, usize>, usize)> = Vec::new(); // (key, readings, pages)
+    for p in &read {
+        if let Some(t) = &p.title {
+            let key = squash(t);
+            let at = match groups.iter().position(|(k, _, _)| same_header(k, &key)) {
+                Some(at) => at,
+                None => {
+                    groups.push((key, HashMap::new(), 0));
+                    groups.len() - 1
+                }
+            };
+            *groups[at].1.entry(t.clone()).or_default() += 1;
+            groups[at].2 += 1;
+        }
+    }
+    // (key, the reading most pages agree on, pages)
+    let titles: Vec<(String, String, usize)> = groups
+        .into_iter()
+        .filter(|(_, _, n)| *n >= 3)
+        .map(|(key, readings, n)| {
+            let best = readings.into_iter().max_by(|a, b| a.1.cmp(&b.1).then(b.0.len().cmp(&a.0.len()))).map(|r| r.0).unwrap_or_default();
+            (key, best, n)
+        })
+        .collect();
+    let chapter_of = |t: &str| {
+        let key = squash(t);
+        titles.iter().position(|(k, _, _)| same_header(k, &key))
+    };
+
+    // --- pass 2: the chapters. A chapter's opening page usually has no header, and a page
+    //     after it may name only the book: both go with the chapter the next header names.
+    let mut sections: Vec<(String, String)> = Vec::new();
+    let mut current: Option<usize> = None;
+    // where, in the chapter being built, a page with no chapter title began
+    let mut opening_at: Option<usize> = None;
+    for p in &read {
+        let chapter = p.title.as_deref().and_then(chapter_of);
+        if let Some(c) = chapter {
+            if current != Some(c) {
+                let carried = opening_at.take().and_then(|at| sections.last_mut().map(|s| s.1.split_off(at))).unwrap_or_default();
+                sections.push((titles[c].1.clone(), carried.trim().to_string()));
+                current = Some(c);
+            } else {
+                opening_at = None; // still in the same chapter
+            }
+        }
+        if sections.is_empty() {
+            sections.push(("Beginning".to_string(), String::new()));
+        }
+        let last = sections.last_mut().unwrap();
+        if !p.header && opening_at.is_none() {
+            opening_at = Some(last.1.len());
+        }
+        if p.body.trim().is_empty() {
+            continue;
+        }
+        if !last.1.is_empty() {
+            last.1.push_str("\n\n");
+        }
+        last.1.push_str(p.body.trim());
+    }
+    sections.retain(|s| !s.1.trim().is_empty());
+    sections
+}
+
 /// A title from the file's own name ("with-christ_in the school.epub" -> "with christ in the school").
 pub fn title_from_file(name: &str) -> String {
     let stem = name.rsplit(['/', '\\']).next().unwrap_or(name);
@@ -335,7 +542,7 @@ pub fn read(bytes: &[u8], file_name: Option<&str>) -> Result<Epub, String> {
 
     // --- the pages, in reading order. A page with no title of its own continues the
     //     chapter before it (many e-books split one chapter over several files).
-    let mut sections: Vec<(String, String)> = Vec::new();
+    let mut docs: Vec<(Option<String>, String)> = Vec::new();
     let (mut images, mut missing) = (0usize, 0usize);
     for item in spine {
         let Some(html) = read_text(&mut zip, &item.path, MAX_PAGE_BYTES) else {
@@ -347,13 +554,24 @@ pub fn read(bytes: &[u8], file_name: Option<&str>) -> Result<Epub, String> {
         if text.is_empty() {
             continue;
         }
-        let title = titles.get(&item.path).cloned().or(heading);
-        match (title, sections.last_mut()) {
-            (None, Some(last)) => {
-                last.1.push_str("\n\n");
-                last.1.push_str(&text);
+        docs.push((titles.get(&item.path).cloned().or(heading), text));
+    }
+    // A scanned book (the Internet Archive's automatic e-books) is one file per printed page
+    // with no chapters marked: rebuild them from the running page headers instead.
+    let scanned = docs.len() >= 30 && docs.iter().filter(|d| d.0.is_some()).count() * 10 <= docs.len();
+    let mut sections: Vec<(String, String)> = Vec::new();
+    if scanned {
+        sections = scan_sections(docs.into_iter().map(|d| d.1).collect());
+        warnings.push("This is a scanned book: its text was read by machine, so expect some misspelt words. Chapters are taken from the page headings.".to_string());
+    } else {
+        for (title, text) in docs {
+            match (title, sections.last_mut()) {
+                (None, Some(last)) => {
+                    last.1.push_str("\n\n");
+                    last.1.push_str(&text);
+                }
+                (title, _) => sections.push((title.unwrap_or_else(|| "Beginning".to_string()), text)),
             }
-            (title, _) => sections.push((title.unwrap_or_else(|| "Beginning".to_string()), text)),
         }
     }
     let chars: usize = sections.iter().map(|(_, t)| t.chars().count()).sum();
@@ -414,6 +632,7 @@ pub mod tests {
         z.finish().unwrap().into_inner()
     }
 
+    pub const NOTICE_TEXT: &str = "This book was produced in EPUB format by the Internet Archive";
     pub const CONTAINER: &str = r#"<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>"#;
     pub const OPF: &str = r#"<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Grace &amp; Truth</dc:title><dc:creator>A. Writer</dc:creator><dc:language>en-GB</dc:language></metadata>
 <manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="c1" href="text/ch%201.xhtml" media-type="application/xhtml+xml"/><item id="c1b" href="text/ch1b.xhtml" media-type="application/xhtml+xml"/><item id="c2" href="text/ch2.xhtml" media-type="application/xhtml+xml"/><item id="css" href="s.css" media-type="text/css"/></manifest>
@@ -457,7 +676,7 @@ pub mod tests {
     #[test]
     #[ignore]
     fn real_epubs() {
-        let dir = std::path::PathBuf::from(std::env::var("LOCALAPPDATA").unwrap()).join("bible-concordance-build/library-probe/epub");
+        let dir = std::path::PathBuf::from(std::env::var("LOCALAPPDATA").unwrap()).join(std::env::var("BC_EPUB_DIR").unwrap_or_else(|_| "bible-concordance-build/library-probe/epub".into()));
         for e in std::fs::read_dir(dir).unwrap().flatten() {
             let bytes = std::fs::read(e.path()).unwrap();
             match read(&bytes, e.file_name().to_str()) {
@@ -472,6 +691,31 @@ pub mod tests {
                 Err(err) => println!("{:?}: REFUSED {err}", e.file_name()),
             }
         }
+    }
+
+    #[test]
+    fn a_scanned_book_gets_its_chapters_from_the_page_headers() {
+        let para = "Grace and truth came by Jesus Christ, and of his fulness have we all received. ".repeat(8);
+        let mut pages: Vec<String> = vec![format!("{} and so on.", NOTICE_TEXT)];
+        let mut n = 9;
+        for (chapter, count) in [("The First Vision (chap. 1: 9-20)", 10), ("The Seven Churches (chap. 2)", 12), ("The Throne in Heaven (chap. 4)", 10)] {
+            pages.push(format!("LECTURE. Opening words of this chapter. {para}")); // a chapter opening: no header
+            n += 1;
+            for i in 0..count {
+                n += 1;
+                // the scan misreads a letter now and then
+                let head = if i == 3 { chapter.replace('e', "c") } else { chapter.to_string() };
+                pages.push(if n % 2 == 0 { format!("{n} Lectures on the Revelation {para}") } else { format!("{head} {n} {para}") });
+            }
+        }
+        let sections = scan_sections(pages);
+        let titles: Vec<&str> = sections.iter().map(|s| s.0.as_str()).collect();
+        assert_eq!(titles, ["The First Vision (chap. 1: 9-20)", "The Seven Churches (chap. 2)", "The Throne in Heaven (chap. 4)"], "{titles:?}");
+        assert!(same_header("lectureichap118", "lecturcichap118") && !same_header("lectureichap113", "lectureiichap148"));
+        let all = sections.iter().map(|s| s.1.as_str()).collect::<Vec<_>>().join(" ");
+        assert!(!all.contains("Lectures on the Revelation") && !all.contains("(chap. 2) 2") && !all.contains("Internet Archive"), "headers and the notice are gone");
+        assert!(sections[1].1.starts_with("LECTURE. Opening words"), "a chapter's opening page goes with its chapter: {}", &sections[1].1[..60]);
+        assert_eq!(all.matches("Opening words").count(), 3);
     }
 
     #[test]

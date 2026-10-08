@@ -120,7 +120,7 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
     reader.onload = async () => {
       try {
         const r = await api.importStudy(String(reader.result ?? ""));
-        setStatus(`Imported ${r.notes} notes, ${r.highlights} highlights, ${r.bookmarks} bookmarks and ${r.plans} reading plans. Nothing already here was deleted.`);
+        setStatus(`Imported ${r.notes} notes, ${r.highlights} highlights, ${r.bookmarks} bookmarks, ${r.plans} reading plans and ${r.sermons} sermons. Nothing already here was deleted.`);
         reload();
         onPlansChanged();
       } catch (e) {
