@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-open-text"
+description = "Enables the open_text command without any pre-configured scope."
+commands.allow = ["open_text"]
+
+[[permission]]
+identifier = "deny-open-text"
+description = "Denies the open_text command without any pre-configured scope."
+commands.deny = ["open_text"]

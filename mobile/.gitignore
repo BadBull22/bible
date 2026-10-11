@@ -1,0 +1,14 @@
+node_modules
+dist
+*.tsbuildinfo
+# built by data/build_phone_db.py from the desktop app's databases
+src-tauri/resources/phone.db.gz
+# machine-specific Cargo target-dir override
+src-tauri/.cargo/config.toml
+# the generated Android Studio project (`npm run tauri android init`) and build output
+src-tauri/gen/
+src-tauri/target/
+# the app's signing key must never be committed
+*.jks
+*.keystore
+keystore.properties

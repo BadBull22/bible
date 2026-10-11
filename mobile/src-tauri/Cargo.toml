@@ -1,0 +1,32 @@
+[package]
+name = "bible-pocket"
+version = "0.2.0"
+description = "Bible Concordance for phones: read, search, bookmark and highlight, offline"
+authors = ["BadBull22"]
+edition = "2021"
+
+# A project of its own, not part of any workspace above it.
+[workspace]
+
+[lib]
+name = "bible_pocket_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+flate2 = "1"
+# the share sheet, the phone's voice, saving and opening a file (Kotlin, in plugins/phone/android)
+tauri-plugin-phone = { path = "plugins/phone" }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
