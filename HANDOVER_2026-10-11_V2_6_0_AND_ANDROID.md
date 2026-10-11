@@ -1,4 +1,4 @@
-# Handover — 2026-10-11: desktop 2.6.0 (built, not released) and the Android app (0.2.0)
+# Handover — 2026-10-11: desktop 2.6.0 (released) and the Android app (0.2.0, Beta)
 
 Read this first. The older handovers still hold for everything they cover:
 `HANDOVER_2026-10-08_V2_5_0_SERMON_BUILDER.md`, `HANDOVER_2026-10-07_V2_4_2.md`,
@@ -8,9 +8,8 @@ Read this first. The older handovers still hold for everything they cover:
 
 | Thing | State |
 |---|---|
-| Desktop **2.5.0** | The live release (GitHub `v2.5.0`, the website's Windows download, what installed copies update to). |
-| Desktop **2.6.0** | Committed (`3a2d943`), installer built in `installer\` (gitignored), installed and being tested by the owner. **Not published**: no GitHub release, website still offers 2.5.0. Publish only when the owner says so (process: 2.4.0 handover, sections 3 and 5). |
-| Android **0.2.0** | In `mobile/`, committed with this handover. Signed APK built; the owner installed 0.1.0 on their own phone and reported it "works fully". Published as GitHub release `android-v0.2.0` and linked from the website (see section 5 for whether that step completed). |
+| Desktop **2.6.0** | **The live release** since 2026-10-11: GitHub `v2.6.0` (marked latest, built from commit `3a2d943`), the website's Windows download, and what installed copies are offered. Tested by the owner on their own PC before release. |
+| Android **0.2.0** | In `mobile/`. Published as GitHub release `android-v0.2.0` (not "latest") and offered on the website, marked **(Beta)** at the owner's request. The owner tested 0.1.0 and 0.2.0 on their own phone and reported both working. |
 
 Nobody has confirmed the desktop in-app update (2.5.0 → a newer version) on an installed copy.
 
@@ -133,6 +132,11 @@ USB debugging was never confirmed on. Installs so far were done by copying the A
 
 ## 5. Publishing done on 2026-10-11
 
+- GitHub release **`v2.6.0`** (desktop), marked latest, with both installers, their `.sig`
+  files and `latest.json`. Checked afterwards: `releases/latest/download/latest.json` is
+  byte-identical to `installer\latest.json`, both installer links return the right sizes,
+  and both updater signatures verify against the public key in `tauri.conf.json`. The
+  website's Windows card moved to 2.6.0.
 - GitHub release **`android-v0.2.0`** on `BadBull22/bible`, asset
   `BibleConcordance_Android_0.2.0.apk` (SHA-256
   `babe20cf05a333ceb5bacaf17304c7d81b1fcdaf14bc3b010711efde36ea2f43`). It is **not** marked
