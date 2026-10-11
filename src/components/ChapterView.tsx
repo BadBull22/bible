@@ -3,6 +3,7 @@ import { api, NON_CANON_BOOKS, ChapterMarks, highlightLabel, HIGHLIGHT_COLORS_BR
 import { copyText, formatVerseForCopy } from "../clipboard";
 import { chapterRedLetter, loadRedLetter, splitRed } from "../redLetter";
 import { segmentVerse, tidyPunctuation } from "../verseSegments";
+import { sentencesIn, showReading, watchForManualScroll } from "../readHighlight";
 import { addVersesToBasket } from "../basket";
 import {
   BasketIcon,
@@ -102,6 +103,8 @@ interface Props {
   onListen: ((fromVerse: number) => void) | null;
   /** the verse being read aloud right now, if in this chapter */
   readingVerse: number | null;
+  /** the reader's tag for the piece being spoken ("v16/3#1": verse 16, second of three sentences) */
+  readingTag?: string | null;
   /** downloaded Bible pictures for this chapter (0 hides the button) */
   pictureCount: number;
   onShowPictures: () => void;
@@ -131,6 +134,7 @@ export function ChapterView({
   onPrepareSheet,
   onListen,
   readingVerse,
+  readingTag = null,
   pictureCount,
   onShowPictures,
 }: Props) {
@@ -270,18 +274,39 @@ export function ChapterView({
     }
   }, [loading, verses, targetVerse, locationKey]);
 
-  // Keep the verse being read aloud in view (only scrolls when it has moved off screen,
-  // so reading along isn't jolted verse by verse).
+  // Following the reading: the page keeps the verse being read in view, until the reader
+  // scrolls for themselves; "Back to where it's reading" picks it up again.
+  const [following, setFollowing] = useState(true);
+  const isReading = readingVerse != null;
   useEffect(() => {
-    if (readingVerse == null) return;
+    const pane = rootRef.current?.parentElement;
+    if (!isReading || !pane) return;
+    setFollowing(true);
+    return watchForManualScroll(pane, () => setFollowing(false));
+  }, [isReading]);
+
+  // Keep the verse being read aloud in view (only scrolls when it has moved off screen,
+  // so reading along isn't jolted verse by verse), and tint the sentence being spoken
+  // when the verse is long enough to be read in several.
+  useEffect(() => {
+    if (readingVerse == null) {
+      showReading(null);
+      return;
+    }
     const el = verseRefs.current[readingVerse];
     const pane = rootRef.current?.parentElement;
     if (!el || !pane) return;
+    const m = /^v\d+\/(\d+)#(\d+)$/.exec(readingTag ?? "");
+    const sentences = m && Number(m[1]) > 1 ? sentencesIn(el, ".verse-num, .verse-actions, .verse-mark") : [];
+    // only when the page splits the verse the same way the reader did
+    showReading(m && sentences.length === Number(m[1]) ? sentences[Number(m[2])]?.range() ?? null : null);
+    if (!following) return;
     const r = el.getBoundingClientRect();
     const p = pane.getBoundingClientRect();
     const header = stickyRef.current?.offsetHeight ?? 0; // the pinned chapter heading
     if (r.top < p.top + header + 10 || r.bottom > p.bottom - 140) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [readingVerse]);
+  }, [readingVerse, readingTag, following]);
+  useEffect(() => () => void showReading(null), []);
 
   // Changing chapter closes any open verse menu / note editor.
   useEffect(() => {
@@ -692,6 +717,11 @@ export function ChapterView({
           <div className="reader-flash" role="status" dir="ltr" lang="en">
             {flash}
           </div>
+        )}
+        {isReading && !following && (
+          <button className="back-to-reading" onClick={() => setFollowing(true)} dir="ltr" lang="en">
+            Back to where it's reading
+          </button>
         )}
         {parallelMode && (
           <div className="sbs-head" dir="ltr" lang="en">

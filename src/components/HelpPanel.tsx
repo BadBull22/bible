@@ -468,7 +468,23 @@ const SECTIONS: Section[] = [
       <>
         <p>
           Press <strong>Listen</strong> beside a chapter's title, or ⋯ → <strong>Listen from here</strong> on any verse. The
-          chapter is read in a natural voice, fully offline; the verse being read is highlighted and kept in view.
+          chapter is read in a natural voice, fully offline; the verse being read is highlighted and kept in view, and in a
+          long verse the sentence being spoken is tinted. You can also right-click any verse and choose{" "}
+          <strong>Listen from here</strong>.
+        </p>
+        <p>
+          <strong>Books in your Library are read the same way.</strong> The sentence being spoken is tinted, its paragraph
+          lightly marked, and the page scrolls along. Scroll away yourself and the page stops following — press{" "}
+          <strong>Back to where it's reading</strong> to pick it up again. To start somewhere else, point at a paragraph
+          and press the small 🔊 beside it, or right-click it and choose <strong>Listen from here</strong>. The book
+          remembers where the reading stopped: <strong>Continue listening</strong> carries on from that sentence, even
+          after closing the app.
+        </p>
+        <p>
+          <strong>Your own bookmarks in a book:</strong> press <strong>Bookmark</strong> at the top (it marks the paragraph
+          at the top of the window), the small bookmark beside a paragraph, or right-click → <strong>Bookmark this place</strong>.
+          Give it a name if you like. Your bookmarks are listed at the top of the book's <strong>Contents</strong> and
+          under <strong>My Study → Bookmarks</strong>, and are included in the My Study backup.
         </p>
         <p>
           <strong>The natural voice is a one-time download</strong> (about 200 MB), so the app itself stays smaller: go to{" "}
@@ -482,6 +498,14 @@ const SECTIONS: Section[] = [
             anything in a side panel — a commentary note, a Word Study, a dictionary entry, an answer. The same menu can
             copy the selection, add it to the study basket, or search for it. Commentary notes, Word Study entries,
             dictionary entries and answers also have their own 🔊 <strong>Listen</strong> button.
+          </li>
+          <li>
+            <strong>Keys while it reads:</strong> <kbd>Space</kbd> pauses and continues; <kbd>←</kbd> and <kbd>→</kbd> go
+            back or skip ahead one sentence. The double arrows on the player skip a whole paragraph (or verse).
+          </li>
+          <li>
+            <strong>Sleep timer:</strong> on the player, choose to stop after 15, 30 or 60 minutes, or at the end of the
+            chapter being read.
           </li>
           <li>
             The floating player has pause / continue, back and skip, stop, the <strong>voice</strong> (28 English voices,

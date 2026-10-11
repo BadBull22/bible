@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { addToBasket } from "../basket";
 import { copyText } from "../clipboard";
-import { BasketIcon, CopyIcon, SearchIcon, SpeakerIcon } from "./icons";
+import { BOOKMARK_HERE_EVENT, LISTEN_FROM_EVENT } from "../readAloud";
+import { BasketIcon, BookmarkIcon, CopyIcon, SearchIcon, SpeakerIcon } from "./icons";
 
 /** A selection inside the chapter being read, split at verse boundaries (so read-aloud can
  * highlight each verse as it goes). */
@@ -45,11 +46,23 @@ function selectedVerses(range: Range): SelectedVerse[] | null {
   return out.length ? out : null;
 }
 
+/** A place that can be read aloud from: a paragraph of a book, or a verse of the chapter. */
+type Place = { kind: "book"; para: number } | { kind: "verse"; verse: number };
+
+function placeAt(target: HTMLElement): Place | null {
+  const p = target.closest<HTMLElement>(".book-body .rich-text > p");
+  if (p?.parentElement) return { kind: "book", para: [...p.parentElement.children].indexOf(p) };
+  const row = target.closest<HTMLElement>(".chapter-view .verse-row[data-verse]");
+  return row ? { kind: "verse", verse: Number(row.dataset.verse) } : null;
+}
+
 /** Replaces the browser's right-click menu when text is selected, anywhere in the app:
- * Listen to it, copy it, add it to the study basket, or search for it. In a text box the
- * normal menu appears; with no selection there is none (except in dev builds). */
+ * Listen to it, copy it, add it to the study basket, or search for it. On a paragraph of a
+ * book or a verse it also offers "Listen from here" (and, in a book, a bookmark), with or
+ * without a selection. In a text box the normal menu appears; elsewhere with no selection
+ * there is none (except in dev builds). */
 export function SelectionMenu({ chapterLabel, onListen, onSearch }: Props) {
-  const [menu, setMenu] = useState<{ x: number; y: number; sel: SelectionPayload } | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number; sel: SelectionPayload | null; place: Place | null } | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -59,6 +72,13 @@ export function SelectionMenu({ chapterLabel, onListen, onSearch }: Props) {
       if (target.closest("input, textarea, select, [contenteditable='true']")) return; // keep Cut/Copy/Paste
       const s = window.getSelection();
       const text = s?.toString().trim() ?? "";
+      const place = placeAt(target);
+      if ((!s || s.rangeCount === 0 || !text) && place) {
+        e.preventDefault();
+        setFlash(null);
+        setMenu({ x: e.clientX, y: e.clientY, sel: null, place });
+        return;
+      }
       if (!s || s.rangeCount === 0 || !text) {
         // Nothing selected: the browser's own menu (Back, Refresh, Print, Inspect…) makes no
         // sense in an app, so it's suppressed in the installed build; kept in dev for Inspect.
@@ -67,7 +87,7 @@ export function SelectionMenu({ chapterLabel, onListen, onSearch }: Props) {
       }
       e.preventDefault();
       setFlash(null);
-      setMenu({ x: e.clientX, y: e.clientY, sel: { text, verses: selectedVerses(s.getRangeAt(0)) } });
+      setMenu({ x: e.clientX, y: e.clientY, sel: { text, verses: selectedVerses(s.getRangeAt(0)) }, place });
     };
     window.addEventListener("contextmenu", open);
     return () => window.removeEventListener("contextmenu", open);
@@ -101,16 +121,16 @@ export function SelectionMenu({ chapterLabel, onListen, onSearch }: Props) {
   }, [menu]);
 
   if (!menu) return null;
-  const { sel } = menu;
+  const { sel, place } = menu;
   const done = (msg: string) => {
     setFlash(msg);
     window.setTimeout(() => setMenu(null), 900);
   };
   const verseRef =
-    sel.verses && chapterLabel
+    sel?.verses && chapterLabel
       ? `${chapterLabel}:${sel.verses[0].verse}${sel.verses.length > 1 ? `–${sel.verses[sel.verses.length - 1].verse}` : ""}`
       : null;
-  const short = sel.text.length <= 60 && !sel.text.includes("\n");
+  const short = !!sel && sel.text.length <= 60 && !sel.text.includes("\n");
 
   return (
     <div className="selection-menu" ref={ref} role="menu" style={{ left: menu.x, top: menu.y }}>
@@ -118,25 +138,51 @@ export function SelectionMenu({ chapterLabel, onListen, onSearch }: Props) {
         <div className="selection-menu-flash">{flash}</div>
       ) : (
         <>
-          <button
-            role="menuitem"
-            onClick={() => {
-              onListen(sel);
-              setMenu(null);
-            }}
-          >
-            <SpeakerIcon size={14} /> Listen to selection
-          </button>
-          <button role="menuitem" onClick={async () => done((await copyText(sel.text)) ? "Copied" : "Couldn't copy")}>
-            <CopyIcon size={14} /> Copy
-          </button>
-          <button
-            role="menuitem"
-            onClick={async () => done((await addToBasket("text", verseRef ?? "", sel.text)) ? "Added to the study basket" : "Couldn't add")}
-          >
-            <BasketIcon size={14} /> Add to study basket
-          </button>
-          {short && (
+          {place && (
+            <button
+              role="menuitem"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent(LISTEN_FROM_EVENT, { detail: place.kind === "book" ? { book: { para: place.para } } : { verse: place.verse } }));
+                setMenu(null);
+              }}
+            >
+              <SpeakerIcon size={14} /> Listen from here
+            </button>
+          )}
+          {place?.kind === "book" && (
+            <button
+              role="menuitem"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent(BOOKMARK_HERE_EVENT, { detail: { para: place.para } }));
+                setMenu(null);
+              }}
+            >
+              <BookmarkIcon size={14} /> Bookmark this place
+            </button>
+          )}
+          {sel && (
+            <>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  onListen(sel);
+                  setMenu(null);
+                }}
+              >
+                <SpeakerIcon size={14} /> Listen to selection
+              </button>
+              <button role="menuitem" onClick={async () => done((await copyText(sel.text)) ? "Copied" : "Couldn't copy")}>
+                <CopyIcon size={14} /> Copy
+              </button>
+              <button
+                role="menuitem"
+                onClick={async () => done((await addToBasket("text", verseRef ?? "", sel.text)) ? "Added to the study basket" : "Couldn't add")}
+              >
+                <BasketIcon size={14} /> Add to study basket
+              </button>
+            </>
+          )}
+          {sel && short && (
             <button
               role="menuitem"
               onClick={() => {

@@ -11,6 +11,17 @@ export interface ReadItem {
    * verse (a commentary note, a word study... read from a selection) */
   verse: number;
   text: string;
+  /** Where this piece is on the page, "group#sentence": the group is a paragraph of a book
+   * ("412|7") or a verse ("v16"), so the page can tint the sentence being spoken and the
+   * player can skip by paragraph. Absent for text with no place on the page. */
+  tag?: string;
+}
+
+/** The paragraph or verse a tag belongs to (everything before its "#sentence"). */
+export function tagGroup(tag: string | null | undefined): string | null {
+  if (!tag) return null;
+  const at = tag.lastIndexOf("#");
+  return at < 0 ? tag : tag.slice(0, at);
 }
 
 /** Splits longer prose (a commentary note, a dictionary entry) into sentence-sized pieces
@@ -41,9 +52,18 @@ export type ReaderStatus = "idle" | "preparing" | "playing" | "paused" | "error"
 export interface ReaderState {
   status: ReaderStatus;
   verse: number | null;
+  /** the tag of the piece being read, if it has one */
+  tag: string | null;
   message: string | null;
   engine: "natural" | "windows";
 }
+
+/** The reader's state, sent to the page whenever it changes (detail: ReaderState), so a
+ * book or chapter can show what is being read. */
+export const READ_STATE_EVENT = "read-aloud-state";
+
+/** What a page asks the reader to read: plain text, or pieces with their places on the page. */
+export type ListenRequest = string | { items: { tag: string; text: string }[]; /** what is being read, for the player */ label?: string };
 
 export interface ReadAloudPrefs {
   voice: string;
@@ -110,9 +130,17 @@ export const LISTEN_EVENT = "read-aloud-request";
  * it is stopped), so a book can carry on into its next chapter. */
 export const LISTEN_FINISHED_EVENT = "read-aloud-finished";
 
-export function requestListen(text: string) {
-  window.dispatchEvent(new CustomEvent<string>(LISTEN_EVENT, { detail: text }));
+export function requestListen(what: ListenRequest) {
+  window.dispatchEvent(new CustomEvent<ListenRequest>(LISTEN_EVENT, { detail: what }));
 }
+
+/** "Listen from here", chosen from the right-click menu on a paragraph or a verse
+ * (detail: { book?: { section, para }, verse?: number }). */
+export const LISTEN_FROM_EVENT = "read-aloud-from-here";
+
+/** "Bookmark this place", chosen from the right-click menu on a paragraph of a book
+ * (detail: { para }). */
+export const BOOKMARK_HERE_EVENT = "book-bookmark-here";
 
 export function chapterAnnouncement(book: string, chapter: number): string {
   if (book === "Psalms") return `Psalm ${chapter}.`;
@@ -132,7 +160,7 @@ export class ReadAloud {
   private cache = new Map<number, Promise<string>>();
   private prefs: ReadAloudPrefs = loadReadPrefs();
   private natural: boolean | null = null;
-  state: ReaderState = { status: "idle", verse: null, message: null, engine: "natural" };
+  state: ReaderState = { status: "idle", verse: null, tag: null, message: null, engine: "natural" };
 
   constructor(
     private onChange: (s: ReaderState) => void,
@@ -213,7 +241,7 @@ export class ReadAloud {
     this.set({ engine: natural ? "natural" : "windows", message: null });
     if (natural) {
       const s = await invoke<VoiceStatus>("voice_status").catch(() => null);
-      if (!s?.running) this.set({ status: "preparing", verse: this.items[i]?.verse ?? null });
+      if (!s?.running) this.set({ status: "preparing", verse: this.items[i]?.verse ?? null, tag: this.items[i]?.tag ?? null });
     }
     this.playIndex(i, gen);
   }
@@ -221,7 +249,7 @@ export class ReadAloud {
   private async playIndex(i: number, gen: number) {
     if (gen !== this.generation) return;
     if (i >= this.items.length) {
-      this.set({ status: "idle", verse: null });
+      this.set({ status: "idle", verse: null, tag: null });
       this.onFinished();
       return;
     }
@@ -240,7 +268,7 @@ export class ReadAloud {
         this.cache.delete(i);
         this.playIndex(i + 1, gen);
       };
-      this.set({ status: "playing", verse: item.verse });
+      this.set({ status: "playing", verse: item.verse, tag: item.tag ?? null });
       await audio.play();
     } catch (e) {
       if (gen !== this.generation) return;
@@ -261,7 +289,7 @@ export class ReadAloud {
     const en = window.speechSynthesis.getVoices().find((v) => v.lang.startsWith("en"));
     if (en) u.voice = en;
     u.onend = () => gen === this.generation && this.playIndex(i + 1, gen);
-    this.set({ status: "playing", verse: item.verse });
+    this.set({ status: "playing", verse: item.verse, tag: item.tag ?? null });
     window.speechSynthesis.speak(u);
   }
 
@@ -283,7 +311,27 @@ export class ReadAloud {
     this.generation++;
     this.haltAudio();
     this.revokeCache();
-    this.set({ status: "idle", verse: null, message: null });
+    this.set({ status: "idle", verse: null, tag: null, message: null });
+  }
+
+  /** Back or forward a whole paragraph (or verse): to the start of this one first when
+   * going back from its middle, like a music player's "previous". */
+  skipGroup(direction: -1 | 1) {
+    const group = (i: number) => tagGroup(this.items[i]?.tag) ?? `#${i}`;
+    const here = group(this.index);
+    let i = this.index;
+    if (direction > 0) {
+      while (i < this.items.length && group(i) === here) i++;
+      if (i >= this.items.length) return;
+    } else {
+      while (i > 0 && group(i - 1) === here) i--; // start of this paragraph
+      if (i === this.index && i > 0) {
+        const before = group(i - 1);
+        i--;
+        while (i > 0 && group(i - 1) === before) i--;
+      }
+    }
+    this.playFrom(i);
   }
 
   next() {

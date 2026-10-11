@@ -23,14 +23,15 @@ import { StudySheetPanel } from "./components/StudySheetPanel";
 import { BasketPanel } from "./components/BasketPanel";
 import { LibraryPanel } from "./components/LibraryPanel";
 import { listen as listenEvent } from "@tauri-apps/api/event";
-import { BookPanel } from "./components/BookPanel";
+import { BookPanel, goToBookPlace } from "./components/BookPanel";
 import { PicturesPanel } from "./components/PicturesPanel";
 import { OriginalSearchPanel } from "./components/OriginalSearchPanel";
 import { UpdateBanner } from "./components/Updates";
 import { SermonBuilder } from "./components/SermonBuilder";
 import { useBasket } from "./basket";
 import { ReadAloudBar } from "./components/ReadAloudBar";
-import { chapterAnnouncement, chunkText, LISTEN_EVENT, LISTEN_FINISHED_EVENT, loadReadPrefs, ReadAloud, ReaderState, ReadItem, speechText } from "./readAloud";
+import { splitSentences } from "./readHighlight";
+import { chapterAnnouncement, chunkText, LISTEN_EVENT, LISTEN_FINISHED_EVENT, LISTEN_FROM_EVENT, ListenRequest, READ_STATE_EVENT, loadReadPrefs, ReadAloud, ReaderState, ReadItem, speechText } from "./readAloud";
 import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
 import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -436,7 +437,13 @@ function App() {
   // One reader for the whole app. It reads the chapter on screen verse by verse; at the
   // end it can turn to the next chapter and carry on. Navigating elsewhere yourself (or
   // changing translation) stops it.
-  const [readState, setReadState] = useState<ReaderState>({ status: "idle", verse: null, message: null, engine: "natural" });
+  const [readState, setReadState] = useState<ReaderState>({ status: "idle", verse: null, tag: null, message: null, engine: "natural" });
+  // Sleep: stop reading after a while ("time", with when), or where this chapter ends ("end").
+  const [sleep, setSleep] = useState<{ kind: "time"; minutes: number; until: number } | { kind: "end" } | null>(null);
+  // the book being read aloud, for the player's label (null: a chapter or a selection)
+  const readingLabel = useRef<string | null>(null);
+  const sleepRef = useRef(sleep);
+  sleepRef.current = sleep;
   const [readPrefs, setReadPrefs] = useState(loadReadPrefs);
   const readFinished = useRef<() => void>(() => undefined);
   const readerRef = useRef<ReadAloud | null>(null);
@@ -453,7 +460,14 @@ function App() {
   function listen(fromVerse: number) {
     const items: ReadItem[] = [];
     if (fromVerse <= (verses[0]?.verse ?? 1)) items.push({ verse: 0, text: chapterAnnouncement(book, chapter) });
-    for (const v of verses) if (v.verse >= fromVerse) items.push({ verse: v.verse, text: speechText(v.text) });
+    for (const v of verses) {
+      if (v.verse < fromVerse) continue;
+      // a long verse is read (and shown) sentence by sentence: "v16/3#1" = verse 16, the
+      // second of its three sentences
+      const parts = v.text.length > 160 ? splitSentences(v.text) : [];
+      if (parts.length > 1) parts.forEach((s, i) => items.push({ verse: v.verse, tag: `v${v.verse}/${parts.length}#${i}`, text: speechText(v.text.slice(s.start, s.end)) }));
+      else items.push({ verse: v.verse, tag: `v${v.verse}/1#0`, text: speechText(v.text) });
+    }
     readMode.current = "chapter";
     listening.current = { book, chapter, version: versionCode };
     reader.start(items, 0);
@@ -461,6 +475,7 @@ function App() {
 
   function listenSelection(sel: SelectionPayload) {
     readMode.current = "selection";
+    readingLabel.current = null;
     if (sel.verses && !homeActive) {
       // Bible text in the chapter: read it verse by verse, highlighting as it goes
       listening.current = { book, chapter, version: versionCode };
@@ -475,14 +490,54 @@ function App() {
   // the 🔊 Listen buttons in side panels (commentary, Word Study, dictionary, answers)
   const listenSelectionRef = useRef(listenSelection);
   listenSelectionRef.current = listenSelection;
+  const listenRef = useRef(listen);
+  listenRef.current = listen;
   useEffect(() => {
-    const onRequest = (e: Event) => listenSelectionRef.current({ text: (e as CustomEvent<string>).detail, verses: null });
+    const onRequest = (e: Event) => {
+      const what = (e as CustomEvent<ListenRequest>).detail;
+      if (typeof what === "string") return listenSelectionRef.current({ text: what, verses: null });
+      // a book: its sentences, each with its place on the page
+      readMode.current = "selection";
+      listening.current = null;
+      readingLabel.current = what.label ?? null;
+      reader.start(what.items.map((i) => ({ verse: -1, tag: i.tag, text: speechText(i.text) })).filter((i) => /[\p{L}\p{N}]/u.test(i.text)));
+    };
+    // "Listen from here" on a verse, from the right-click menu
+    const onFrom = (e: Event) => {
+      const verse = (e as CustomEvent<{ verse?: number }>).detail?.verse;
+      if (typeof verse === "number") listenRef.current(verse);
+    };
     window.addEventListener(LISTEN_EVENT, onRequest);
-    return () => window.removeEventListener(LISTEN_EVENT, onRequest);
+    window.addEventListener(LISTEN_FROM_EVENT, onFrom);
+    return () => {
+      window.removeEventListener(LISTEN_EVENT, onRequest);
+      window.removeEventListener(LISTEN_FROM_EVENT, onFrom);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // the page (a book, the chapter) shows what is being read from this
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent<ReaderState>(READ_STATE_EVENT, { detail: readState }));
+  }, [readState]);
+
+  // the sleep timer: pause when the time is up (Continue on the player carries on)
+  useEffect(() => {
+    if (sleep?.kind !== "time") return;
+    const t = window.setTimeout(() => {
+      reader.pause();
+      setSleep(null);
+    }, Math.max(0, sleep.until - Date.now()));
+    return () => window.clearTimeout(t);
+  }, [sleep, reader]);
+
   readFinished.current = () => {
-    if (readMode.current === "chapter" && reader.prefsNow.continueChapters && adjacent.next) {
+    const stopHere = sleepRef.current?.kind === "end";
+    if (stopHere) setSleep(null);
+    if (stopHere) {
+      listening.current = null;
+      window.dispatchEvent(new CustomEvent(LISTEN_FINISHED_EVENT, { detail: { stop: true } }));
+    } else if (readMode.current === "chapter" && reader.prefsNow.continueChapters && adjacent.next) {
       continueTo.current = `${adjacent.next.book}/${adjacent.next.chapter}`;
       flipChapter(adjacent.next);
     } else {
@@ -621,8 +676,8 @@ function App() {
 
   // Keyboard shortcuts. Handlers are read through a ref so the listener is attached
   // once but always sees the latest state without re-subscribing on every render.
-  const shortcuts = useRef({ adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus, readingBook });
-  shortcuts.current = { adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus, readingBook };
+  const shortcuts = useRef({ adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus, readingBook, readStatus: readState.status });
+  shortcuts.current = { adjacent, flipChapter, closePanel: () => setPanel(null), focusMode, setFocus, readingBook, readStatus: readState.status };
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const t = e.target as HTMLElement | null;
@@ -643,6 +698,23 @@ function App() {
         e.preventDefault();
         shortcuts.current.setFocus(!shortcuts.current.focusMode);
         return;
+      }
+      // while something is being read aloud: Space pauses and continues, the arrows skip a sentence
+      const status = shortcuts.current.readStatus;
+      if (!typing && !e.altKey && !e.ctrlKey && !e.metaKey && (status === "playing" || status === "paused")) {
+        // also with a button focused (the Listen just pressed), which Space would press again
+        if (e.key === " ") {
+          e.preventDefault();
+          if (status === "playing") reader.pause();
+          else reader.resume();
+          return;
+        }
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+          e.preventDefault();
+          if (e.key === "ArrowLeft") reader.prev();
+          else reader.next();
+          return;
+        }
       }
       // the arrows flip Bible chapters, which would swap a book being read for the Bible
       if (typing || e.altKey || e.ctrlKey || e.metaKey || shortcuts.current.readingBook) return;
@@ -874,6 +946,7 @@ function App() {
                 pictureCount={chapterPictureCount}
                 onShowPictures={() => setPanel({ kind: "pictures" })}
                 readingVerse={readingHere}
+                readingTag={readingHere != null ? readState.tag : null}
                 marks={marks}
                 onMarksChanged={() => setStudyVersion((n) => n + 1)}
                 highlightTitles={highlightTitles}
@@ -883,7 +956,7 @@ function App() {
               <ReadAloudBar
                 state={readState}
                 prefs={readPrefs}
-                label={listening.current ? `${listening.current.book} ${listening.current.chapter}` : "the selection"}
+                label={listening.current ? `${listening.current.book} ${listening.current.chapter}` : readingLabel.current ?? "the selection"}
                 showContinue={readMode.current === "chapter"}
                 onPrefs={(p) => {
                   setReadPrefs(p);
@@ -894,9 +967,15 @@ function App() {
                 onStop={() => {
                   reader.stop();
                   listening.current = null;
+                  setSleep(null);
                 }}
                 onPrev={() => reader.prev()}
                 onNext={() => reader.next()}
+                onPrevGroup={() => reader.skipGroup(-1)}
+                onNextGroup={() => reader.skipGroup(1)}
+                groupName={listening.current ? "verse" : "paragraph"}
+                sleep={sleep?.kind === "end" ? "end" : sleep ? sleep.minutes : 0}
+                onSleep={(v) => setSleep(v === "end" ? { kind: "end" } : v ? { kind: "time", minutes: v, until: Date.now() + v * 60_000 } : null)}
               />
             )}
             <SelectionMenu
@@ -1028,6 +1107,10 @@ function App() {
               refreshKey={studyVersion}
               onJump={jumpTo}
               onPlansChanged={() => setStudyVersion((n) => n + 1)}
+              onOpenBook={(name, section, para) => {
+                goToBookPlace(name, section, para);
+                setReadingBook(name);
+              }}
               onClose={() => setPanel(null)}
               highlightTitles={highlightTitles}
             />
