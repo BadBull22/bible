@@ -15,6 +15,14 @@ interface Props {
   onStop: () => void;
   onPrev: () => void;
   onNext: () => void;
+  /** back / forward a whole paragraph or verse */
+  onPrevGroup: () => void;
+  onNextGroup: () => void;
+  /** what a group is called here: "paragraph" or "verse" */
+  groupName: string;
+  /** minutes left to choose from (0 = off), or "end" = stop where this chapter ends */
+  sleep: number | "end";
+  onSleep: (v: number | "end") => void;
 }
 
 const SPEEDS = [0.8, 0.9, 1, 1.1, 1.25, 1.5];
@@ -42,7 +50,7 @@ function savePos(p: Pos) {
 
 /** The read-aloud controls: a floating panel that can be dragged anywhere by its grip
  * (the position is remembered; double-click the grip to put it back at the bottom). */
-export function ReadAloudBar({ state, prefs, label, showContinue, onPrefs, onPause, onResume, onStop, onPrev, onNext }: Props) {
+export function ReadAloudBar({ state, prefs, label, showContinue, onPrefs, onPause, onResume, onStop, onPrev, onNext, onPrevGroup, onNextGroup, groupName, sleep, onSleep }: Props) {
   const playing = state.status === "playing";
   const [pos, setPos] = useState<Pos>(readPos);
   const barRef = useRef<HTMLDivElement>(null);
@@ -114,20 +122,28 @@ export function ReadAloudBar({ state, prefs, label, showContinue, onPrefs, onPau
         >
           <GripIcon size={16} />
         </div>
-        <button className="icon-round" onClick={onPrev} title="Back one" aria-label="Previous">
+        <button className="icon-round skip-group" onClick={onPrevGroup} title={`Back to the start of this ${groupName}, then the one before`} aria-label={`Previous ${groupName}`}>
+          <ChevronLeftIcon size={13} />
+          <ChevronLeftIcon size={13} />
+        </button>
+        <button className="icon-round" onClick={onPrev} title="Back one sentence (←)" aria-label="Previous sentence">
           <ChevronLeftIcon size={16} />
         </button>
         <button
           className="icon-round primary"
           onClick={playing ? onPause : onResume}
           disabled={state.status === "preparing"}
-          title={playing ? "Pause" : "Continue"}
+          title={playing ? "Pause (Space)" : "Continue (Space)"}
           aria-label={playing ? "Pause" : "Continue"}
         >
           {playing ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
         </button>
-        <button className="icon-round" onClick={onNext} title="Skip ahead one" aria-label="Next">
+        <button className="icon-round" onClick={onNext} title="Skip ahead one sentence (→)" aria-label="Next sentence">
           <ChevronRightIcon size={16} />
+        </button>
+        <button className="icon-round skip-group" onClick={onNextGroup} title={`Skip to the next ${groupName}`} aria-label={`Next ${groupName}`}>
+          <ChevronRightIcon size={13} />
+          <ChevronRightIcon size={13} />
         </button>
         <span className="read-aloud-label" aria-live="polite">
           {state.status === "preparing" ? "Preparing the voice…" : `${state.status === "paused" ? "Paused" : "Reading"} ${where}`}
@@ -156,6 +172,20 @@ export function ReadAloudBar({ state, prefs, label, showContinue, onPrefs, onPau
               {s === 1 ? "Normal speed" : `${s}×`}
             </option>
           ))}
+        </select>
+        <select
+          value={sleep}
+          onChange={(e) => onSleep(e.target.value === "end" ? "end" : Number(e.target.value))}
+          aria-label="Sleep timer"
+          title="Stop reading by itself after a while"
+        >
+          <option value={0}>No sleep timer</option>
+          {[15, 30, 60].map((m) => (
+            <option key={m} value={m}>
+              Stop after {m} min
+            </option>
+          ))}
+          <option value="end">Stop at the end of this chapter</option>
         </select>
         {showContinue && (
           <label className="read-aloud-check">

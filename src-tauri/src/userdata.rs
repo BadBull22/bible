@@ -44,6 +44,11 @@ CREATE TABLE IF NOT EXISTS sermons (
     passages TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
+CREATE TABLE IF NOT EXISTS book_bookmarks (
+    id INTEGER PRIMARY KEY, module TEXT NOT NULL, section INTEGER NOT NULL, para INTEGER NOT NULL,
+    label TEXT NOT NULL DEFAULT '', snippet TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
+CREATE INDEX IF NOT EXISTS book_bookmarks_module ON book_bookmarks(module);
 ";
 
 /// Highlight colours the UI offers; anything else is rejected so a bad value can't be
@@ -391,6 +396,66 @@ pub fn basket_reorder(conn: &mut Connection, ids: &[i64]) -> Result<(), String> 
     tx.commit().map_err(err)
 }
 
+// ---------------------------------------------------------------- bookmarks in books
+//
+// The reader's own bookmarks in a Library book (or one they added). A place is the
+// section's position in the book's contents and the paragraph within it -- positions, not
+// database ids, so bookmarks survive the book being installed again. `snippet` is the start
+// of the paragraph, to recognise the place by.
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct BookBookmark {
+    #[serde(default)]
+    pub id: i64,
+    pub module: String,
+    pub section: i64,
+    pub para: i64,
+    #[serde(default)]
+    pub label: String,
+    #[serde(default)]
+    pub snippet: String,
+    #[serde(default)]
+    pub created_at: String,
+}
+
+fn bookmark_row(r: &rusqlite::Row) -> rusqlite::Result<BookBookmark> {
+    Ok(BookBookmark { id: r.get(0)?, module: r.get(1)?, section: r.get(2)?, para: r.get(3)?, label: r.get(4)?, snippet: r.get(5)?, created_at: r.get(6)? })
+}
+
+/// One book's bookmarks in reading order, or every book's (newest first) with `None`.
+pub fn book_bookmarks(conn: &Connection, module: Option<&str>) -> Result<Vec<BookBookmark>, String> {
+    let sql = format!(
+        "SELECT id, module, section, para, label, snippet, created_at FROM book_bookmarks {}",
+        if module.is_some() { "WHERE module = ?1 ORDER BY section, para, id" } else { "WHERE ?1 IS NULL ORDER BY created_at DESC, id DESC" }
+    );
+    let mut s = conn.prepare(&sql).map_err(err)?;
+    let rows = s.query_map(params![module], bookmark_row).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    Ok(rows)
+}
+
+pub fn book_bookmark_add(conn: &Connection, b: &BookBookmark) -> Result<i64, String> {
+    if b.module.trim().is_empty() || b.section < 0 || b.para < 0 {
+        return Err("That place can't be bookmarked.".into());
+    }
+    let clip = |s: &str, n: usize| s.trim().chars().take(n).collect::<String>();
+    conn.execute(
+        "INSERT INTO book_bookmarks (module, section, para, label, snippet) VALUES (?1,?2,?3,?4,?5)",
+        params![b.module, b.section, b.para, clip(&b.label, 120), clip(&b.snippet, 200)],
+    )
+    .map_err(err)?;
+    Ok(conn.last_insert_rowid())
+}
+
+pub fn book_bookmark_rename(conn: &Connection, id: i64, label: &str) -> Result<(), String> {
+    conn.execute("UPDATE book_bookmarks SET label = ?2 WHERE id = ?1", params![id, label.trim().chars().take(120).collect::<String>()]).map_err(err)?;
+    Ok(())
+}
+
+pub fn book_bookmark_remove(conn: &Connection, id: i64) -> Result<(), String> {
+    conn.execute("DELETE FROM book_bookmarks WHERE id = ?1", params![id]).map_err(err)?;
+    Ok(())
+}
+
 // ---------------------------------------------------------------- sermons
 //
 // The sermon builder's saved work: what the preacher gathered and arranged (`body`, JSON
@@ -507,6 +572,9 @@ pub struct Backup {
     /// saved sermons (sermon builder); absent in backups from before 2.5
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub sermons: Vec<Sermon>,
+    /// the reader's bookmarks in books; absent in backups from before 2.6
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub book_bookmarks: Vec<BookBookmark>,
 }
 
 pub const BACKUP_FORMAT: &str = "bible-concordance-study/1";
@@ -626,6 +694,20 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
         }
         r.plans += 1;
     }
+    for m in &b.book_bookmarks {
+        let exists: bool = tx
+            .query_row("SELECT 1 FROM book_bookmarks WHERE module = ?1 AND section = ?2 AND para = ?3", params![m.module, m.section, m.para], |_| Ok(true))
+            .optional()
+            .map_err(err)?
+            .unwrap_or(false);
+        if !exists && !m.module.trim().is_empty() {
+            tx.execute(
+                "INSERT INTO book_bookmarks (module, section, para, label, snippet, created_at) VALUES (?1,?2,?3,?4,?5, CASE WHEN ?6 = '' THEN datetime('now','localtime') ELSE ?6 END)",
+                params![m.module, m.section, m.para, m.label, m.snippet, m.created_at],
+            )
+            .map_err(err)?;
+        }
+    }
     // a sermon already here (same title and series) is replaced only by a newer copy
     for s in &b.sermons {
         if s.title.trim().is_empty() || s.body.len() > MAX_SERMON_BYTES {
@@ -692,6 +774,15 @@ mod tests {
         sermon.id = sermon_save(&c, &sermon).unwrap();
         sermon.passages = "James 5:14; Isaiah 53:5".into();
         assert_eq!(sermon_save(&c, &sermon).unwrap(), sermon.id, "saving again updates, it doesn't add");
+        let mark = BookBookmark { id: 0, module: "own-grace".into(), section: 3, para: 7, label: " The key point ".into(), snippet: "Grace and truth came".into(), created_at: String::new() };
+        let mark_id = book_bookmark_add(&c, &mark).unwrap();
+        book_bookmark_add(&c, &BookBookmark { section: 1, para: 0, label: String::new(), ..mark.clone() }).unwrap();
+        assert!(book_bookmark_add(&c, &BookBookmark { module: " ".into(), ..mark.clone() }).is_err());
+        let marks = book_bookmarks(&c, Some("own-grace")).unwrap();
+        assert_eq!(marks.iter().map(|m| (m.section, m.para)).collect::<Vec<_>>(), [(1, 0), (3, 7)], "in reading order");
+        assert_eq!(marks[1].label, "The key point");
+        book_bookmark_rename(&c, mark_id, "Renamed").unwrap();
+        assert_eq!(book_bookmarks(&c, None).unwrap().iter().find(|m| m.id == mark_id).unwrap().label, "Renamed");
         let listed = sermon_list(&c).unwrap();
         assert_eq!((listed.len(), listed[0].title.as_str(), listed[0].body.as_str()), (1, "Healing", ""));
         assert_eq!(sermon_get(&c, sermon.id).unwrap().unwrap().passages, "James 5:14; Isaiah 53:5");
@@ -718,6 +809,7 @@ mod tests {
             notes: list_notes(&c).unwrap(),
             plans: plan_progress(&c).unwrap(),
             sermons: sermons_all(&c).unwrap(),
+            book_bookmarks: book_bookmarks(&c, None).unwrap(),
         };
         let res = write_export(&dir, &stamp, &backup).unwrap();
         let md = std::fs::read_to_string(&res.markdown_path).unwrap();
@@ -729,12 +821,16 @@ mod tests {
         let r = import_backup(&mut c2, &json).unwrap();
         assert_eq!((r.bookmarks, r.highlights, r.notes, r.plans, r.sermons), (1, 2, 2, 1, 1));
         assert_eq!(sermon_list(&c2).unwrap()[0].series, "Faith");
+        assert_eq!(book_bookmarks(&c2, Some("own-grace")).unwrap().len(), 2, "bookmarks in books come back from a backup");
         assert_eq!(get_note(&c2, "John", 3, 16).unwrap().map(|n| n.body).as_deref(), Some("God's love -- the gift of the Son."));
         assert_eq!(get_note(&c2, "John", 3, 1).unwrap(), get_note(&c, "John", 3, 1).unwrap());
         assert_eq!(plan_progress(&c2).unwrap()[0].done_days, vec![1]);
         // importing the same backup again adds nothing new
         let again = import_backup(&mut c2, &json).unwrap();
         assert_eq!((again.bookmarks, again.notes, again.sermons), (0, 0, 0));
+        assert_eq!(book_bookmarks(&c2, None).unwrap().len(), 2, "importing again adds no duplicates");
+        book_bookmark_remove(&c, mark_id).unwrap();
+        assert_eq!(book_bookmarks(&c, Some("own-grace")).unwrap().len(), 1);
         sermon_delete(&c, sermon.id).unwrap();
         assert!(sermon_list(&c).unwrap().is_empty());
 

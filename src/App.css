@@ -4753,3 +4753,226 @@ body.is-resizing .leaflet-container {
     display: none;
   }
 }
+
+/* ---------- read aloud: what is being read, following it, bookmarks in books ---------- */
+
+/* the sentence being spoken (painted over the text by the CSS Custom Highlight API) */
+::highlight(reading) {
+  background-color: #c4daf7;
+  color: inherit;
+}
+
+.verse-row--reading {
+  background: #e3edfb;
+}
+
+.sbs-row--reading {
+  background: #e3edfb;
+  box-shadow: -6px 0 0 0 var(--accent-500);
+}
+
+/* the paragraph of a book being read: a light mark; the whole of it when no sentence can be shown */
+.book-body .rich-text > p.reading-para {
+  box-shadow: -0.7rem 0 0 -0.45rem var(--accent-500);
+  background: color-mix(in srgb, var(--accent-500) 6%, transparent);
+  border-radius: 2px;
+}
+
+.book-body .rich-text > p.reading-para--whole {
+  background: color-mix(in srgb, var(--accent-500) 22%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  ::highlight(reading) {
+    background-color: #2f5591;
+    color: #ffffff;
+  }
+
+  .verse-row--reading,
+  .sbs-row--reading {
+    background: #24364f;
+  }
+}
+
+.back-to-reading {
+  position: sticky;
+  top: 3.6rem;
+  z-index: 7;
+  display: block;
+  width: fit-content;
+  margin: 0 auto 0.5rem;
+  padding: 0.3rem 0.9rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent-600);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.back-to-reading:hover {
+  background: var(--accent-500);
+}
+
+.chapter-sticky .back-to-reading {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  margin: 0;
+}
+
+.icon-round.skip-group svg + svg {
+  margin-left: -0.5rem;
+}
+
+.pill-btn.small.quiet {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.pill-btn.small.quiet:hover:not(:disabled) {
+  background: var(--accent-100);
+  color: var(--text);
+  box-shadow: none;
+}
+
+/* the text of a book, with room on the left for a paragraph's own buttons */
+.book-body {
+  position: relative;
+  padding-left: 1.9rem;
+}
+
+.para-tools {
+  position: absolute;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.15rem;
+}
+
+.para-tools button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--paper-raised);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.para-tools button:hover,
+.para-tools button.on {
+  color: var(--accent-500);
+  border-color: var(--accent-500);
+}
+
+/* a paragraph the reader has bookmarked: a small ribbon in the margin */
+.book-body .rich-text > p.has-bookmark {
+  position: relative;
+}
+
+.book-body .rich-text > p.has-bookmark::before {
+  content: "";
+  position: absolute;
+  left: -1.05rem;
+  top: 0.25em;
+  width: 0.55rem;
+  height: 1.05rem;
+  background: #c98a1b;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 72%, 0 100%);
+}
+
+.book-mark-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 100%;
+}
+
+.book-mark-name input,
+.book-marks input {
+  flex: 0 1 16rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  color: var(--text);
+}
+
+.book-flash {
+  flex: 1 1 100%;
+  color: var(--status-ok);
+}
+
+.book-marks {
+  margin: 0 0 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  font-size: 0.86rem;
+}
+
+.book-marks h4 {
+  margin: 0 0 0.4rem;
+}
+
+.book-marks ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.book-marks li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.2rem 0;
+  color: #c98a1b;
+}
+
+.book-marks li .link-btn {
+  text-align: left;
+}
+
+.book-marks li form {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.book-mark-where {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.read-aloud-options select[aria-label="Sleep timer"] {
+  max-width: 11rem;
+}
+
+@media print {
+  .para-tools,
+  .back-to-reading,
+  .book-marks,
+  .book-body .rich-text > p.has-bookmark::before {
+    display: none;
+  }
+
+  .book-body {
+    padding-left: 0;
+  }
+}

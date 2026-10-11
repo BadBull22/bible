@@ -472,6 +472,18 @@ export interface SermonVerse {
   text: string;
 }
 
+/** The reader's own bookmark in a Library book: the section's position in the contents and
+ * the paragraph in it, with the start of that paragraph to recognise it by. */
+export interface BookBookmark {
+  id: number;
+  module: string;
+  section: number;
+  para: number;
+  label: string;
+  snippet: string;
+  created_at: string;
+}
+
 /** A sermon saved from the sermon builder. `body` (JSON, see sermon.ts) is empty in a list. */
 export interface SavedSermon {
   /** 0 = not saved yet */
@@ -810,6 +822,11 @@ export const api = {
     invoke<void>("save_note", { book, chapter, verse, body, verseEnd: verseEnd ?? null, tags: tags ?? null }),
   /** the Scripture for one subject of a sermon, best first, each with why it was found */
   sermonVerses: (topic: string, limit = 160) => invoke<SermonVerse[]>("sermon_verses", { topic, limit }),
+  /** one book's bookmarks in reading order, or (null) every book's, newest first */
+  bookBookmarks: (module: string | null) => invoke<BookBookmark[]>("book_bookmarks", { module }),
+  bookBookmarkAdd: (bookmark: BookBookmark) => invoke<number>("book_bookmark_add", { bookmark }),
+  bookBookmarkRename: (id: number, label: string) => invoke<void>("book_bookmark_rename", { id, label }),
+  bookBookmarkRemove: (id: number) => invoke<void>("book_bookmark_remove", { id }),
   sermonList: () => invoke<SavedSermon[]>("sermon_list"),
   sermonGet: (id: number) => invoke<SavedSermon | null>("sermon_get", { id }),
   /** saves a new sermon (id 0) or changes to an existing one; returns its id */

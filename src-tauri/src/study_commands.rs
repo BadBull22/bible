@@ -111,6 +111,26 @@ pub fn save_note(
 }
 
 #[tauri::command]
+pub fn book_bookmarks(state: State<UserDataState>, module: Option<String>) -> Result<Vec<userdata::BookBookmark>, String> {
+    userdata::book_bookmarks(&*user_conn(&state)?, module.as_deref())
+}
+
+#[tauri::command]
+pub fn book_bookmark_add(state: State<UserDataState>, bookmark: userdata::BookBookmark) -> Result<i64, String> {
+    userdata::book_bookmark_add(&*user_conn(&state)?, &bookmark)
+}
+
+#[tauri::command]
+pub fn book_bookmark_rename(state: State<UserDataState>, id: i64, label: String) -> Result<(), String> {
+    userdata::book_bookmark_rename(&*user_conn(&state)?, id, &label)
+}
+
+#[tauri::command]
+pub fn book_bookmark_remove(state: State<UserDataState>, id: i64) -> Result<(), String> {
+    userdata::book_bookmark_remove(&*user_conn(&state)?, id)
+}
+
+#[tauri::command]
 pub fn sermon_list(state: State<UserDataState>) -> Result<Vec<userdata::Sermon>, String> {
     userdata::sermon_list(&*user_conn(&state)?)
 }
@@ -221,6 +241,7 @@ pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbStat
             notes: userdata::list_notes(&u)?,
             plans: userdata::plan_progress(&u)?,
             sermons: userdata::sermons_all(&u)?,
+            book_bookmarks: userdata::book_bookmarks(&u, None)?,
         };
         (b, stamp)
     };

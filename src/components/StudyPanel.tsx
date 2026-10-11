@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { api, BookInfo, HIGHLIGHT_COLORS, highlightLabel, PlanProgress, StudyItem, StudyLists } from "../api";
+import { api, BookBookmark, BookInfo, HIGHLIGHT_COLORS, highlightLabel, PlanProgress, StudyItem, StudyLists } from "../api";
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "../readingPlans";
 import { addToBasket, addVersesToBasket } from "../basket";
 import { BasketButton } from "./BasketButton";
@@ -16,6 +16,8 @@ interface Props {
   refreshKey: number;
   onJump: (book: string, chapter: number, verse: number) => void;
   onPlansChanged: () => void;
+  /** opens a Library book at one of the reader's bookmarks in it */
+  onOpenBook: (name: string, section: number, para: number) => void;
   onClose: () => void;
   /** The reader's own names for the highlight colours (e.g. "yellow" -> "Love"), if set. */
   highlightTitles: Record<string, string>;
@@ -33,10 +35,13 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "plans", label: "Reading plans" },
 ];
 
-export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJump, onPlansChanged, onClose, highlightTitles }: Props) {
+export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJump, onPlansChanged, onOpenBook, onClose, highlightTitles }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab ?? "notes");
   const [lists, setLists] = useState<StudyLists | null>(null);
   const [plans, setPlans] = useState<PlanProgress[]>([]);
+  // bookmarks in Library books, and those books' titles
+  const [bookMarks, setBookMarks] = useState<BookBookmark[]>([]);
+  const [bookTitles, setBookTitles] = useState<Record<string, string>>({});
   const [filter, setFilter] = useState("");
   const [tag, setTag] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -56,6 +61,11 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
   function reload() {
     api.listStudy().then(setLists).catch((e) => setError(String(e)));
     api.planProgress().then(setPlans).catch((e) => setError(String(e)));
+    api.bookBookmarks(null).then(setBookMarks).catch(() => undefined);
+    api
+      .libraryInstalled()
+      .then((all) => setBookTitles(Object.fromEntries(all.map((m) => [m.name, m.title]))))
+      .catch(() => undefined);
   }
   useEffect(reload, [refreshKey]);
   useEffect(() => {
@@ -148,7 +158,12 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
     onPlansChanged();
   }
 
-  const counts = lists ? { notes: lists.notes.length, highlights: lists.highlights.length, bookmarks: lists.bookmarks.length, plans: plans.length } : null;
+  const counts = lists ? { notes: lists.notes.length, highlights: lists.highlights.length, bookmarks: lists.bookmarks.length + bookMarks.length, plans: plans.length } : null;
+
+  const shownBookMarks = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    return bookMarks.filter((m) => !q || `${bookTitles[m.module] ?? m.module} ${m.label} ${m.snippet}`.toLowerCase().includes(q));
+  }, [bookMarks, bookTitles, filter]);
 
   return (
     <aside className="side-panel wide study-panel">
@@ -202,7 +217,7 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
               ))}
             </div>
           )}
-          {lists && items.length === 0 && (
+          {lists && items.length === 0 && !(tab === "bookmarks" && bookMarks.length > 0) && (
             <p className="muted">
               {filter.trim() || (tab === "notes" && tag)
                 ? "Nothing matches that filter."
@@ -210,7 +225,7 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
                   ? "No notes yet. Use the ⋯ menu beside any verse and choose Add note."
                   : tab === "highlights"
                     ? "No highlights yet. Use the ⋯ menu beside any verse to highlight it."
-                    : "No bookmarks yet. Use the ⋯ menu beside any verse to bookmark it."}
+                    : "No bookmarks yet. Use the ⋯ menu beside any verse to bookmark it, or the bookmark button beside a paragraph of a book."}
             </p>
           )}
           {tab === "highlights" ? (
@@ -287,6 +302,43 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
                 </li>
               ))}
             </ul>
+          )}
+          {tab === "bookmarks" && shownBookMarks.length > 0 && (
+            <>
+              <h4 className="section-label">In your books</h4>
+              <ul className="xref-list study-list">
+                {shownBookMarks.map((m) => (
+                  <li key={`book-${m.id}`}>
+                    <div className="xref-item-head">
+                      <button
+                        className="link-btn"
+                        disabled={!(m.module in bookTitles)}
+                        title={m.module in bookTitles ? "Open the book at this bookmark" : "This book isn't installed at the moment"}
+                        onClick={() => onOpenBook(m.module, m.section, m.para)}
+                      >
+                        {m.label || bookTitles[m.module] || m.module}
+                      </button>
+                      <span className="votes">{m.created_at.slice(0, 10)}</span>
+                      <button
+                        className="text-btn"
+                        title="Remove this bookmark"
+                        aria-label="Remove this bookmark"
+                        onClick={() =>
+                          api
+                            .bookBookmarkRemove(m.id)
+                            .then(reload)
+                            .catch((e) => setError(String(e)))
+                        }
+                      >
+                        <CloseIcon size={12} />
+                      </button>
+                    </div>
+                    {m.label && <div className="muted">{bookTitles[m.module] ?? m.module}</div>}
+                    {m.snippet && <div className="snippet">{m.snippet}…</div>}
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </>
       )}
