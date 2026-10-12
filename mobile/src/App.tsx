@@ -18,6 +18,8 @@ interface Saved {
   dayVerse: boolean;
   /** how fast the phone's voice reads */
   rate: number;
+  /** the words of Jesus in red */
+  red: boolean;
 }
 
 const SAVED_KEY = "pocket:state";
@@ -25,7 +27,7 @@ const RECENT_KEY = "pocket:recent";
 const DAY_SEEN_KEY = "pocket:day-verse-seen";
 
 function loadSaved(): Saved {
-  const start: Saved = { version: "BSB", book: "John", chapter: 1, size: 1, theme: "system", dayVerse: true, rate: 1 };
+  const start: Saved = { version: "BSB", book: "John", chapter: 1, size: 1, theme: "system", dayVerse: true, rate: 1, red: true };
   try {
     return { ...start, ...(JSON.parse(localStorage.getItem(SAVED_KEY) ?? "{}") as Partial<Saved>) };
   } catch {
@@ -106,6 +108,39 @@ const RATES: [number, string][] = [
 const refLabel = (h: { book: string; chapter: number; verse: number; verse_end?: number }) =>
   `${h.book} ${h.chapter}:${h.verse}${h.verse_end && h.verse_end > h.verse ? `–${h.verse_end}` : ""}`;
 
+// --- the words of Jesus. A verse says which of its words are His, as [first, last] ranges
+// counting words (runs of letters and digits) -- the desktop app's rule (src/redLetter.ts),
+// which this follows, widening each range over the punctuation and quotation marks touching it.
+const WORD = /[\p{L}\p{N}]+/gu;
+const WORD_CHAR = /[\p{L}\p{N}]/u;
+
+function redParts(text: string, ranges: [number, number][]): { text: string; red: boolean }[] {
+  const words = [...text.matchAll(WORD)].map((m) => [m.index, m.index + m[0].length] as const);
+  const spans: [number, number][] = [];
+  for (const [a, b] of ranges) {
+    const first = words[a];
+    const last = words[Math.min(b, words.length - 1)];
+    if (!first || !last) continue;
+    let s = first[0];
+    let e = last[1];
+    while (s > 0 && !/\s/.test(text[s - 1]) && !WORD_CHAR.test(text[s - 1])) s--;
+    while (e < text.length && !/\s/.test(text[e]) && !WORD_CHAR.test(text[e])) e++;
+    spans.push([s, e]);
+  }
+  spans.sort((x, y) => x[0] - y[0]);
+  const parts: { text: string; red: boolean }[] = [];
+  let at = 0;
+  for (const [s, e] of spans) {
+    if (e <= at) continue;
+    const from = Math.max(s, at);
+    if (from > at) parts.push({ text: text.slice(at, from), red: false });
+    parts.push({ text: text.slice(from, e), red: true });
+    at = e;
+  }
+  if (at < text.length) parts.push({ text: text.slice(at), red: false });
+  return parts;
+}
+
 async function copy(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
@@ -134,6 +169,7 @@ export function App() {
   const [theme, setTheme] = useState<Theme>(saved.theme);
   const [dayVerse, setDayVerse] = useState(saved.dayVerse);
   const [rate, setRate] = useState(saved.rate);
+  const [red, setRed] = useState(saved.red);
   const [tab, setTab] = useState<Tab>("read");
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -190,8 +226,8 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    store(SAVED_KEY, JSON.stringify({ version, ...place, size, theme, dayVerse, rate } satisfies Saved));
-  }, [version, place, size, theme, dayVerse, rate]);
+    store(SAVED_KEY, JSON.stringify({ version, ...place, size, theme, dayVerse, rate, red } satisfies Saved));
+  }, [version, place, size, theme, dayVerse, rate, red]);
 
   useEffect(() => {
     if (theme === "system") delete document.documentElement.dataset.theme;
@@ -562,7 +598,7 @@ export function App() {
                   >
                     <sup>{v.verse}</sup>
                     {marks.bookmarks.includes(v.verse) && <span className="ribbon" aria-label="Bookmarked" />}
-                    {v.text}
+                    {red && v.red.length > 0 ? redParts(v.text, v.red).map((p, i) => (p.red ? <span key={i} className="wj">{p.text}</span> : p.text)) : v.text}
                     {marks.notes.includes(v.verse) && <span className="has-note" aria-label="Has a note">✎</span>}
                   </p>
                 );
@@ -832,6 +868,9 @@ export function App() {
               ))}
             </div>
             <p className="hint">Tap a verse and choose Listen. It uses this phone's own voice; a better one can be chosen in the phone's settings under Text-to-speech.</p>
+            <label className="toggle">
+              <input type="checkbox" checked={red} onChange={(e) => setRed(e.target.checked)} /> Words of Jesus in red
+            </label>
             <label className="toggle">
               <input type="checkbox" checked={dayVerse} onChange={(e) => setDayVerse(e.target.checked)} /> Show a verse for the day when the app opens
             </label>

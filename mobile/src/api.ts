@@ -15,6 +15,8 @@ export interface Book {
 export interface Verse {
   verse: number;
   text: string;
+  /** the words of Jesus in it: inclusive [first, last] ranges of its words; usually empty */
+  red: [number, number][];
 }
 
 /** A verse (or short passage) a search found. `why`: core | phrase | words | topical | some. */

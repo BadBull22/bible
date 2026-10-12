@@ -895,3 +895,19 @@ button {
   background: #b3261e;
   color: #fff;
 }
+
+/* ---------- the words of Jesus ---------- */
+
+.wj {
+  color: #b0261c;
+}
+
+:root[data-theme="dark"] .wj {
+  color: #f08a80;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .wj {
+    color: #f08a80;
+  }
+}
