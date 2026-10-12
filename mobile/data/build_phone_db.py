@@ -5,14 +5,17 @@
 Reads  src-tauri/resources/bible.db and study.db (never changes them) and writes
 mobile/src-tauri/resources/phone.db.gz: the English translations with their full-text
 index, the two topical Bibles' headings and references, the two Bible dictionaries, and
-the best cross-references for each verse. Nothing else -- no Strong's tagging,
+the best cross-references for each verse, and which words are the words of Jesus (from
+src/redLetter.json, the desktop app's red-letter data). Nothing else -- no Strong's tagging,
 commentaries or search-by-meaning vectors -- which is what keeps the phone app small.
 
 The database is built on local disk (SQLite's random writes are unreliable over the
 network share the project lives on) and only the finished .gz is copied in.
 """
 import gzip
+import json
 import os
+import re
 import shutil
 import sqlite3
 import sys
@@ -23,6 +26,7 @@ from pathlib import Path
 ROOT = Path(os.path.abspath(__file__)).parents[2]
 BIBLE = ROOT / "src-tauri" / "resources" / "bible.db"
 STUDY = ROOT / "src-tauri" / "resources" / "study.db"
+RED = ROOT / "src" / "redLetter.json"
 OUT = ROOT / "mobile" / "src-tauri" / "resources" / "phone.db.gz"
 
 # Public-domain English translations already bundled with the desktop app.
@@ -32,6 +36,16 @@ TOPICAL = ["nave", "torrey"]
 DICTIONARIES = ["easton", "smith"]
 # Cross-references kept for each verse: the ones most readers agreed on.
 XREFS_PER_VERSE = 12
+
+
+def tidy(text: str) -> str:
+    """The stored text has spaces left by the way it was put together, as in `“ Let there be
+    light, ”`. No space after an opening quote or bracket, none before a closing one or before
+    punctuation -- what the desktop app does when it shows a verse (tidyPunctuation in
+    src/verseSegments.ts). The words, and so the red-letter word ranges, are unchanged."""
+    text = re.sub(r"([“‘(\[]) +", r"\1", text)
+    text = re.sub(r" +([”’)\]])", r"\1", text)
+    return re.sub(r" +([,.;:!?])", r"\1", text)
 
 
 def ro(path: Path) -> sqlite3.Connection:
@@ -57,6 +71,10 @@ def main() -> None:
         -- body: the article, for the dictionaries ('' for a topical heading, which is only its references)
         CREATE TABLE dict_entries (id INTEGER PRIMARY KEY, dict_code TEXT NOT NULL, headword TEXT NOT NULL, headword_fold TEXT NOT NULL,
             body TEXT NOT NULL DEFAULT '');
+        -- the words of Jesus in a verse: inclusive [first, last] word ranges as JSON, counting words
+        -- (runs of letters and digits) in the verse's text, as the desktop app's red-letter data does
+        CREATE TABLE red_letter (version_id INTEGER NOT NULL, book_id INTEGER NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL,
+            ranges TEXT NOT NULL, PRIMARY KEY (version_id, book_id, chapter, verse)) WITHOUT ROWID;
         CREATE TABLE xrefs (book_id INTEGER NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, rank INTEGER NOT NULL,
             to_book_id INTEGER NOT NULL, to_chapter INTEGER NOT NULL, to_verse INTEGER NOT NULL, to_verse_end INTEGER NOT NULL,
             PRIMARY KEY (book_id, chapter, verse, rank)) WITHOUT ROWID;
@@ -70,16 +88,34 @@ def main() -> None:
     out.executemany("INSERT INTO books VALUES (?,?,?,?)", bible.execute("SELECT * FROM books WHERE testament IN ('OT','NT')"))
     out.executemany(
         "INSERT INTO verses VALUES (?,?,?,?,?,?)",
-        bible.execute(
+        (
+            (*row[:5], tidy(row[5]))
+            for row in bible.execute(
             f"""SELECT v.id, v.version_id, v.book_id, v.chapter, v.verse, v.text FROM verses v
                 JOIN versions ver ON ver.id = v.version_id JOIN books b ON b.id = v.book_id
                 WHERE ver.code IN ({marks}) AND b.testament IN ('OT','NT')
                 ORDER BY v.version_id, b.order_index, v.chapter, v.verse""",
             VERSIONS,
+            )
         ),
     )
     out.execute("INSERT INTO verses_fts(verses_fts) VALUES ('rebuild')")
     out.execute("INSERT INTO verses_fts(verses_fts) VALUES ('optimize')")
+
+    red = json.loads(RED.read_text(encoding="utf-8"))
+    version_ids = dict(out.execute("SELECT code, id FROM versions"))
+    book_ids = dict(out.execute("SELECT name, id FROM books"))
+    out.executemany(
+        "INSERT INTO red_letter VALUES (?,?,?,?,?)",
+        (
+            (version_ids[code], book_ids[book], int(chapter), int(verse), json.dumps(ranges, separators=(",", ":")))
+            for code in VERSIONS
+            for book, chapters in red.get(code, {}).items()
+            if book in book_ids
+            for chapter, verses in chapters.items()
+            for verse, ranges in verses.items()
+        ),
+    )
 
     study = ro(STUDY)
     codes = ",".join("?" * len(TOPICAL))
@@ -116,6 +152,7 @@ def main() -> None:
         "topic refs": out.execute("SELECT count(*) FROM dict_refs").fetchone()[0],
         "dictionary articles": out.execute("SELECT count(*) FROM dict_entries WHERE body <> ''").fetchone()[0],
         "cross-references": out.execute("SELECT count(*) FROM xrefs").fetchone()[0],
+        "verses with words of Jesus": out.execute("SELECT count(*) FROM red_letter").fetchone()[0],
     }
     assert counts["versions"] == len(VERSIONS) and counts["books"] == 66, counts
     assert out.execute("PRAGMA integrity_check").fetchone()[0] == "ok"

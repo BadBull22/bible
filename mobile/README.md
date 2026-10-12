@@ -23,7 +23,8 @@ highlights. It is a project of its own in this folder and changes nothing in the
 - **Bible dictionary**: Easton's and Smith's, from the search results or under More; the
   references in an article are links.
 - **Reading plans** (the desktop app's four), recent searches, and a verse for the day.
-- Five public-domain translations (BSB, KJV, ASV, WEB, YLT), text size, light and dark.
+- Five public-domain translations (BSB, KJV, ASV, WEB, YLT), with the words of Jesus in red
+  (it can be switched off), text size, light and dark.
 - `src-tauri/plugins/phone` is the small Android (Kotlin) part: the share sheet, the phone's
   voice, and saving or opening a file the reader chooses.
 

@@ -28,6 +28,17 @@ fn reads_the_bible() {
     let john3 = search::chapter(&d, "KJV", "John", 3).unwrap();
     assert_eq!(john3.len(), 36);
     assert!(john3[15].text.starts_with("For God so loved the world"));
+
+    // the words of Jesus: all of John 3:16, none of the narrator's 3:1, and only the part
+    // He speaks in 3:3 ("Jesus replied, ..."), in every translation
+    assert!(john3[0].red.is_empty());
+    assert!(!john3[15].red.is_empty() && john3[15].red[0].0 == 0);
+    assert!(john3[2].red[0].0 > 0, "not the words that introduce Him");
+    for v in ["BSB", "ASV", "WEB", "YLT"] {
+        assert!(!search::chapter(&d, v, "John", 3).unwrap()[15].red.is_empty(), "{v}");
+    }
+    assert!(search::chapter(&d, "BSB", "Genesis", 1).unwrap().iter().all(|v| v.red.is_empty()));
+    assert!(search::chapter(&d, "BSB", "Revelation", 22).unwrap().iter().any(|v| !v.red.is_empty()));
 }
 
 #[test]

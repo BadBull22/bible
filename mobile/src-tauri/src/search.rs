@@ -53,16 +53,25 @@ pub fn books(conn: &Connection) -> Result<Vec<Book>, String> {
 pub struct Verse {
     pub verse: i64,
     pub text: String,
+    /// the words of Jesus in it: inclusive [first, last] ranges of its words (a word is a run
+    /// of letters and digits); empty for most verses
+    pub red: Vec<(usize, usize)>,
 }
 
 pub fn chapter(conn: &Connection, version: &str, book: &str, chapter: i64) -> Result<Vec<Verse>, String> {
     let mut s = conn
         .prepare(
-            "SELECT v.verse, v.text FROM verses v JOIN books b ON b.id = v.book_id JOIN versions ver ON ver.id = v.version_id
+            "SELECT v.verse, v.text, r.ranges FROM verses v JOIN books b ON b.id = v.book_id JOIN versions ver ON ver.id = v.version_id
+             LEFT JOIN red_letter r ON r.version_id = v.version_id AND r.book_id = v.book_id AND r.chapter = v.chapter AND r.verse = v.verse
              WHERE ver.code = ?1 AND b.name = ?2 AND v.chapter = ?3 ORDER BY v.verse",
         )
         .map_err(err)?;
-    let rows = s.query_map(params![version, book, chapter], |r| Ok(Verse { verse: r.get(0)?, text: r.get(1)? })).map_err(err)?;
+    let rows = s
+        .query_map(params![version, book, chapter], |r| {
+            let ranges: Option<String> = r.get(2)?;
+            Ok(Verse { verse: r.get(0)?, text: r.get(1)?, red: ranges.and_then(|j| serde_json::from_str(&j).ok()).unwrap_or_default() })
+        })
+        .map_err(err)?;
     rows.collect::<Result<_, _>>().map_err(err)
 }
 

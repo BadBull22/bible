@@ -1,4 +1,4 @@
-# Handover — 2026-10-11: desktop 2.6.0 (released) and the Android app (0.2.0, Beta)
+# Handover — 2026-10-11: desktop 2.6.0 (released) and the Android app (0.2.1, Beta)
 
 Read this first. The older handovers still hold for everything they cover:
 `HANDOVER_2026-10-08_V2_5_0_SERMON_BUILDER.md`, `HANDOVER_2026-10-07_V2_4_2.md`,
@@ -9,7 +9,7 @@ Read this first. The older handovers still hold for everything they cover:
 | Thing | State |
 |---|---|
 | Desktop **2.6.0** | **The live release** since 2026-10-11: GitHub `v2.6.0` (marked latest, built from commit `3a2d943`), the website's Windows download, and what installed copies are offered. Tested by the owner on their own PC before release. |
-| Android **0.2.0** | In `mobile/`. Published as GitHub release `android-v0.2.0` (not "latest") and offered on the website, marked **(Beta)** at the owner's request. The owner tested 0.1.0 and 0.2.0 on their own phone and reported both working. |
+| Android **0.2.1** | In `mobile/`. Published 2026-10-12 as GitHub release `android-v0.2.1` (not "latest"; 0.2.0 before it) and offered on the website, marked **(Beta)** at the owner's request. The owner tested 0.1.0, 0.2.0 and 0.2.1 on their own phone and reported each working. |
 
 Nobody has confirmed the desktop in-app update (2.5.0 → a newer version) on an installed copy.
 
@@ -46,7 +46,7 @@ on purpose.
 ## 3. The Android app (`mobile/`)
 
 A small offline companion, a project of its own: it changes nothing in the desktop app.
-`mobile/README.md` has the layout and the commands. Version 0.2.0, identifier
+`mobile/README.md` has the layout and the commands. Version 0.2.1, identifier
 `com.ghostclaw.bibleconcordance`, Android 7+ (minSdk 24).
 
 **What it has:** reading (swipe or buttons to turn chapters, a book/chapter picker); one
@@ -56,7 +56,14 @@ bookmark, five highlight colours, a note, cross-references (the 12 most agreed-o
 across the five translations, listen from here (the phone's own voice, on into the next
 chapter), share, copy; My Study (bookmarks, highlights, notes); reading plans (the desktop's
 four); Easton's and Smith's Bible dictionaries; backup and restore; recent searches; a verse
-for the day; text size and theme. BSB, KJV, ASV, WEB, YLT.
+for the day; text size and theme. BSB, KJV, ASV, WEB, YLT, with the words of Jesus in red
+(0.2.1; a switch under More).
+
+**Red letters** come from the desktop's `src/redLetter.json`: `build_phone_db.py` puts its
+word ranges in a `red_letter` table and the `chapter` command returns them with each verse;
+`redParts` in `mobile/src/App.tsx` follows the desktop's rule in `src/redLetter.ts`. The same
+script tidies the stored text's stray spaces around quotation marks, as the desktop does
+when it shows a verse (`tidyPunctuation`); word counts, and so the ranges, are unaffected.
 
 **How it is built**
 
@@ -115,10 +122,14 @@ USB debugging was never confirmed on. Installs so far were done by copying the A
 
 ## 4. Decisions and open items
 
+- **Afrikaans: permission asked.** On 2026-10-12 the owner wrote to the Bible Society of South
+  Africa through its website, asking to include the 1933/1953 text in the free app (Windows
+  and Android). No reply yet. Until there is written permission:
 - **Afrikaans is not bundled.** The 1933/1953 Afrikaans Bible (`Afr1953`) is copyrighted by
   the Bible Society of South Africa, with distribution permission given to CrossWire only. It
   stays a Library download on the desktop. Putting it in the phone app needs the Bible
-  Society's permission (offered to draft the request; not asked for yet).
+  Society's permission. If it comes: follow its conditions exactly, show the notice it asks
+  for, and keep the text itself out of this public repository.
 - **No Play Store** for now (owner's decision); the APK is offered from the website.
 - The APK carries the app for 64-bit and 32-bit ARM, each with the database inside, hence
   52 MB. A 64-bit-only build would be about half.
@@ -137,9 +148,9 @@ USB debugging was never confirmed on. Installs so far were done by copying the A
   byte-identical to `installer\latest.json`, both installer links return the right sizes,
   and both updater signatures verify against the public key in `tauri.conf.json`. The
   website's Windows card moved to 2.6.0.
-- GitHub release **`android-v0.2.0`** on `BadBull22/bible`, asset
-  `BibleConcordance_Android_0.2.0.apk` (SHA-256
-  `babe20cf05a333ceb5bacaf17304c7d81b1fcdaf14bc3b010711efde36ea2f43`). It is **not** marked
+- GitHub release **`android-v0.2.1`** on `BadBull22/bible` (2026-10-12; `android-v0.2.0`
+  the day before, still there), asset `BibleConcordance_Android_0.2.1.apk` (SHA-256
+  `cd090605021cbe803c1c2cb145f2c0f9d4d498f553c8ed6e92afd4909308ed5d`). It is **not** marked
   "latest": the desktop updater reads `releases/latest/download/latest.json`, which must keep
   pointing at the newest *desktop* release. Create every Android release with
   `--latest=false`.
