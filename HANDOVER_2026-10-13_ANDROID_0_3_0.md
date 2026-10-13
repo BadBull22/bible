@@ -164,6 +164,9 @@ app, and chose installing from inside the app.
   edit `docs/android/latest.json` (version, url, sha256, size in bytes, notes) and push. That
   push is what makes installed copies offer it, so do it last, when the release's file is up.
   Copies of 0.3.0 and older have no checker and must be updated by hand once.
+- **Confirmed by the owner on their phone**: the test build, installed over 0.3.0, offered
+  0.3.2 as soon as it was opened. The website then moved to 0.3.2 (download, checksum, the
+  updating notes, a feature card, and the comparison table's last row).
 - **A test build** like the one used here: set the version one lower with
   `mobile` version files, build with `-Release -Targets aarch64,armv7,x86_64` (one APK for
   phone and emulator), then set the version back. It is kept as
