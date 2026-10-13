@@ -287,6 +287,23 @@ details.help li strong { color: var(--text); }
 }
 .thanks cite { display: block; margin-top: 6px; font-family: var(--sans); font-style: normal; font-weight: 600; font-size: 0.95rem; color: var(--accent-600); }
 
+/* the thank-you to the church that inspired the app, under the verse */
+.inspiration {
+  margin-top: 14px;
+  text-align: center;
+}
+.inspiration p {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.inspiration img {
+  display: block;
+  width: min(380px, 100%);
+  height: auto;
+  margin: 0 auto;
+}
+
 .other-device {
   margin-top: 36px;
   padding: 16px 20px;
