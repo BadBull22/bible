@@ -27,6 +27,7 @@ import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "./plan
 import { parseReference, Reference } from "./refs";
 import { canRemind, setReminder } from "./reminder";
 import { Translations } from "./Translations";
+import { UpdateBanner, UpdateSettings, useUpdates } from "./Updates";
 import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
 import { WordStudy } from "./WordStudy";
@@ -54,6 +55,8 @@ interface Saved {
   second: string | null;
   /** the daily reminder's time ("07:30"), or null when it is off */
   reminder: string | null;
+  /** look for a newer version of the app once a day */
+  updates: boolean;
 }
 
 const SAVED_KEY = "pocket:state";
@@ -73,6 +76,7 @@ function loadSaved(): Saved {
     red: true,
     second: null,
     reminder: null,
+    updates: true,
   };
   try {
     return { ...start, ...(JSON.parse(localStorage.getItem(SAVED_KEY) ?? "{}") as Partial<Saved>) };
@@ -229,6 +233,8 @@ export function App() {
   const [contrast, setContrast] = useState<Contrast>(saved.contrast);
   const [font, setFont] = useState<Font>(saved.font);
   const [dayVerse, setDayVerse] = useState(saved.dayVerse);
+  const [autoUpdates, setAutoUpdates] = useState(saved.updates);
+  const updates = useUpdates(saved.updates);
   const [rate, setRate] = useState(saved.rate);
   const [voice, setVoice] = useState<string | null>(saved.voice);
   const [voices, setVoices] = useState<PhoneVoice[] | null>(null);
@@ -319,9 +325,9 @@ export function App() {
   useEffect(() => {
     store(
       SAVED_KEY,
-      JSON.stringify({ version, ...place, size, theme, textColor, contrast, font, dayVerse, rate, voice, red, second, reminder } satisfies Saved),
+      JSON.stringify({ version, ...place, size, theme, textColor, contrast, font, dayVerse, rate, voice, red, second, reminder, updates: autoUpdates } satisfies Saved),
     );
-  }, [version, place, size, theme, textColor, contrast, font, dayVerse, rate, voice, red, second, reminder]);
+  }, [version, place, size, theme, textColor, contrast, font, dayVerse, rate, voice, red, second, reminder, autoUpdates]);
 
   // the look: applied now, and again when the phone switches between light and dark
   useEffect(() => {
@@ -814,6 +820,7 @@ export function App() {
           {error}
         </p>
       )}
+      <UpdateBanner updates={updates} />
 
       <main ref={pane} className="pane" onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={tab === "read" ? swiped : undefined}>
         {tab === "read" && (
@@ -1288,6 +1295,8 @@ export function App() {
               <input type="checkbox" checked={dayVerse} onChange={(e) => setDayVerse(e.target.checked)} /> Show a verse for the day when the app opens
             </label>
 
+            <UpdateSettings updates={updates} enabled={autoUpdates} onEnabled={setAutoUpdates} />
+
             <h2>About</h2>
             <ul className="about">
               {versions.map((v) => (
@@ -1300,7 +1309,7 @@ export function App() {
               Topics: Nave's Topical Bible and Torrey's New Topical Textbook. Dictionary: Easton's and Smith's Bible Dictionaries. Word study: Strong's Exhaustive Concordance.
               Cross-references: OpenBible.info (CC BY 4.0).{" "}
               {about && about.name ? `Study notes and book introductions: ${about.name} (${about.licence}), ${about.website}.` : ""} The rest is public domain. Everything works offline;
-              only downloading more translations (from eBible.org) needs the internet.
+              only downloading more translations (from eBible.org), the nature backgrounds and a new version of the app needs the internet.
             </p>
           </>
         )}

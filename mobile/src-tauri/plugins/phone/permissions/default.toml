@@ -1,3 +1,3 @@
 [default]
-description = "Sharing text or a picture, reading aloud with the phone's voices, and saving or opening a file the reader chooses."
-permissions = ["allow-share", "allow-speak", "allow-stop-speaking", "allow-save-text", "allow-open-text", "allow-voices", "allow-share-image", "allow-save-image"]
+description = "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, and handing a downloaded update to Android's installer."
+permissions = ["allow-share", "allow-speak", "allow-stop-speaking", "allow-save-text", "allow-open-text", "allow-voices", "allow-share-image", "allow-save-image", "allow-install-update"]

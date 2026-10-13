@@ -1,6 +1,6 @@
 ## Default Permission
 
-Sharing text or a picture, reading aloud with the phone's voices, and saving or opening a file the reader chooses.
+Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, and handing a downloaded update to Android's installer.
 
 #### This default permission set includes the following:
 
@@ -12,6 +12,7 @@ Sharing text or a picture, reading aloud with the phone's voices, and saving or 
 - `allow-voices`
 - `allow-share-image`
 - `allow-save-image`
+- `allow-install-update`
 
 ## Permission Table
 
@@ -21,6 +22,32 @@ Sharing text or a picture, reading aloud with the phone's voices, and saving or 
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`phone:allow-install-update`
+
+</td>
+<td>
+
+Enables the install_update command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-install-update`
+
+</td>
+<td>
+
+Denies the install_update command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>

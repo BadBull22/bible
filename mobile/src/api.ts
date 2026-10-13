@@ -248,7 +248,23 @@ export const api = {
   backgroundImage: (id: string) => invoke<[string, BackgroundInfo]>("background_image", { id }),
   backgroundsRemove: () => invoke<void>("backgrounds_remove"),
   readingStats: (today: string) => invoke<ReadingStats>("reading_stats", { today }),
+
+  /** the newer version of the app on offer, if there is one (asks bible4me.org) */
+  updateCheck: () => invoke<UpdateOffer | null>("update_check"),
+  /** downloads it ("update-progress" events report the percentage); returns the file's path */
+  updateDownload: () => invoke<string>("update_download"),
 };
+
+/** A newer version of the app, as the website describes it. */
+export interface UpdateOffer {
+  version: string;
+  url: string;
+  sha256: string;
+  /** bytes */
+  size: number;
+  /** a line or two on what is new */
+  notes: string;
+}
 
 /** What only the phone itself can do (see src-tauri/plugins/phone). */
 export const phone = {
@@ -265,4 +281,6 @@ export const phone = {
   saveText: (name: string, text: string) => invoke<{ saved: boolean }>("plugin:phone|save_text", { name, text }),
   /** asks for a file; `text` is null if the reader cancelled */
   openText: () => invoke<{ text: string | null }>("plugin:phone|open_text"),
+  /** hands a downloaded update to Android's installer; `allow`: the reader must first let this app install apps */
+  installUpdate: (path: string) => invoke<{ started: boolean; allow: boolean }>("plugin:phone|install_update", { path }),
 };

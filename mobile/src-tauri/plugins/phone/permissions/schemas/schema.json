@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the install_update command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-install-update",
+          "markdownDescription": "Enables the install_update command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the install_update command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-install-update",
+          "markdownDescription": "Denies the install_update command without any pre-configured scope."
+        },
+        {
           "description": "Enables the open_text command without any pre-configured scope.",
           "type": "string",
           "const": "allow-open-text",
@@ -391,10 +403,10 @@
           "markdownDescription": "Denies the voices command without any pre-configured scope."
         },
         {
-          "description": "Sharing text or a picture, reading aloud with the phone's voices, and saving or opening a file the reader chooses.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`",
+          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, and saving or opening a file the reader chooses.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`"
+          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`"
         }
       ]
     }

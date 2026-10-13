@@ -20,6 +20,7 @@ pub mod db;
 pub mod search;
 pub mod study;
 pub mod study_extra;
+pub mod update;
 pub mod userdata;
 
 // The desktop app's subject search, used from its source so both apps search alike. It
@@ -461,6 +462,39 @@ fn restore(core: State<Core>, json: String) -> Result<userdata::Counts, String> 
     userdata::restore(&mut *core.get()?.user.lock().map_err(err)?, &json)
 }
 
+// ---------------------------------------------------------------- a newer version of the app
+
+/// Where a downloaded update waits for Android's installer: the app's cache, in the folder
+/// the phone plugin's file provider may hand over (res/xml/phone_file_paths.xml).
+fn updates_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    Ok(app.path().cache_dir().map_err(err)?.join("updates"))
+}
+
+/// The newer version on offer, if there is one (asks the website).
+#[tauri::command(async)]
+fn update_check(app: AppHandle) -> Result<Option<update::Offer>, String> {
+    let offer = update::check(env!("CARGO_PKG_VERSION"))?;
+    if offer.is_none() {
+        // up to date: an update downloaded earlier has been installed, or is no longer wanted
+        if let Ok(dir) = updates_dir(&app) {
+            update::clear(&dir, None);
+        }
+    }
+    Ok(offer)
+}
+
+/// Downloads the version on offer ("update-progress" events report the percentage) and
+/// returns the file's path, for the phone plugin's `install_update`. The website is asked
+/// again here, so the page cannot name a file of its own.
+#[tauri::command(async)]
+fn update_download(app: AppHandle) -> Result<String, String> {
+    let offer = update::check(env!("CARGO_PKG_VERSION"))?.ok_or("You already have the newest version.")?;
+    let path = update::download(&offer, &updates_dir(&app)?, &|pct| {
+        let _ = app.emit("update-progress", pct);
+    })?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -518,7 +552,9 @@ pub fn run() {
             backgrounds_install,
             backgrounds_thumbs,
             background_image,
-            backgrounds_remove
+            backgrounds_remove,
+            update_check,
+            update_download
         ])
         .run(tauri::generate_context!())
         .expect("error while running the app");
