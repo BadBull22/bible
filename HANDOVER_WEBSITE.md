@@ -39,6 +39,10 @@ The versions are typed by hand; nothing reads "the latest release".
   - `docs/android/index.html`: the `version-line`, the download `href`, the size, the file
     name in install step 2, and the SHA-256 under "Checking the file".
   - `docs/index.html`: the Android card's `meta` line.
+  - `docs/android/latest.json`: the file the phone app (0.3.2 and later) reads to learn of a
+    new version — `version`, `url`, `sha256`, `size` (bytes), `notes`. Change it **last**,
+    once the release's APK is downloadable: pushing it is what makes installed copies offer
+    the update. It is not linked from any page; don't remove it.
 - Keep the **Beta** marks (badge, heading line, note) until the owner says they can go.
 - Commit and push to `master`; Pages republishes in a minute or two.
 - Don't link the updater's files (`.sig`, `latest.json`) or the voice zip from the site.
