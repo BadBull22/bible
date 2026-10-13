@@ -15,11 +15,11 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-16 done — v2.6.1 released 2026-10-13 (Appearance settings, readable buttons); Android 0.3.0 Beta (released 2026-10-13); website at https://bible4me.org
+## Current status: Phases 1-16 done — v2.6.1 released 2026-10-13 (Appearance settings, readable buttons); Android 0.3.2 Beta (released 2026-10-13; it looks for its own updates); website at https://bible4me.org
 
 > **Website:** `bible4me.org`, served by GitHub Pages from `docs/` — see `HANDOVER_WEBSITE.md` (it replaces the old `ghost-claw.com/bible.html` page).
 >
-> **Android 0.3.0 (released 2026-10-13):** `HANDOVER_2026-10-13_ANDROID_0_3_0.md` — what is in it, how it was built, and section 5 for the release and the two build fixes.
+> **Android 0.3.0 (released 2026-10-13):** `HANDOVER_2026-10-13_ANDROID_0_3_0.md` — what is in it, how it was built, and section 5 for the release and the two build fixes, section 6 for 0.3.2 and the update check (and the extra step in every phone release: `docs/android/latest.json`).
 >
 > **Start here next session:** `HANDOVER_2026-10-13_V2_6_1.md` (2.6.1: Settings → Appearance and the pale-button fix; the updater key now also on this PC; Android ideas list), then `HANDOVER_2026-10-11_V2_6_0_AND_ANDROID.md` (desktop 2.6.0, released 2026-10-11: read aloud that shows and follows what it reads, bookmarks in books; and the Android app in `mobile/`, version 0.2.1, on the website as a Beta), then `HANDOVER_2026-10-08_V2_5_0_SERMON_BUILDER.md` (v2.5.0: the sermon builder, its search, scanned e-book import), then `HANDOVER_2026-10-07_V2_4_2.md` (what changed in 2.4.2), then `HANDOVER_2026-10-06_V2_4_0.md` — what's in 2.4.0, how to
 > ship the next version (`scripts/release.ps1`, the updater signing key that must never be

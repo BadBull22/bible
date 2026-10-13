@@ -1,4 +1,4 @@
-# Handover — 2026-10-13: Android app 0.3.0 (released 2026-10-13)
+# Handover — 2026-10-13: Android app 0.3.0, and 0.3.2 with its own update check
 
 **0.3.0 is released** (section 5). Sections 1 and 3 are kept as the record of how it was
 built. Background: the Android app's own
@@ -129,4 +129,43 @@ the owner, not decided.
   "Which one is for me?" table, which the owner called important: it now lists word study,
   study notes, more Bibles, side by side, themes, verse pictures, the reminder and streak,
   and says where the two apps differ rather than only ticks and dashes).
+
+## 6. 0.3.2 — the app looks for its own updates (2026-10-13)
+
+The owner asked for the phone app to check for a new version once a day, like the Windows
+app, and chose installing from inside the app.
+
+- **How it works.** `docs/android/latest.json` on the website names the newest version: its
+  number, the APK's address (must be under this repository's `releases/download/`), its
+  SHA-256 and size, and a line of notes. `mobile/src-tauri/src/update.rs` reads it, downloads
+  the APK and keeps it only if the hash matches; the phone plugin's `installUpdate` hands it
+  to Android's installer through the plugin's file provider. Android asks the reader, and
+  installs only a file signed with the app's own key. `src/Updates.tsx` is the banner
+  ("Version X is ready — Later / Install") and More ▸ Updates (the version, a switch, Check now).
+- **When.** At most once a day, when the app is opened (localStorage `pocket:update-checked`),
+  if the switch is on (default on). No answer, or no connection, is silent. Nothing about the
+  reader is sent. An app outside the Play Store cannot install silently or check while closed.
+- **The first time**, Android wants the reader to allow this app to install apps
+  (`REQUEST_INSTALL_PACKAGES`): the plugin opens that setting and the banner explains; the
+  reader comes back and taps Install again (the download is kept, not repeated).
+- **0.3.1 was withdrawn.** It downloaded into `app.path().cache_dir()`, which on Android is
+  not `Context.cacheDir`, so `installUpdate` refused the file. Now the plugin names the folder
+  (`updatesDir`) and `tauri_plugin_phone::updates_dir` is what the app uses. The 0.3.1 release
+  and tag were deleted (it had been public for a few minutes and linked from nowhere).
+- **Tested end to end on the emulator** (antivirus off for the session, so HTTPS worked): a
+  release-signed test build labelled 0.3.1 offered 0.3.2 on opening, downloaded it, sent the
+  reader to "Allow from this source", then on the second tap Android asked "Do you want to
+  update this app?", installed it, and the app reopened as 0.3.2 saying "You have the newest
+  version." Release builds cannot be driven through the WebView debugger; `uiautomator dump`
+  and `input tap` were used instead.
+- **Released**: `android-v0.3.2` (not latest), `BibleConcordance_Android_0.3.2.apk`, 69 MB,
+  SHA-256 `7cd0c4cac29a206d98d5cc2f62bbf77bdce85ee9cf909a14f5a84a3697301d80`.
+- **For every later phone release**: after `gh release create android-vX.Y.Z ... --latest=false`,
+  edit `docs/android/latest.json` (version, url, sha256, size in bytes, notes) and push. That
+  push is what makes installed copies offer it, so do it last, when the release's file is up.
+  Copies of 0.3.0 and older have no checker and must be updated by hand once.
+- **A test build** like the one used here: set the version one lower with
+  `mobile` version files, build with `-Release -Targets aarch64,armv7,x86_64` (one APK for
+  phone and emulator), then set the version back. It is kept as
+  `installer\BibleConcordance_Android_0.3.1_update-test.apk` for the owner to try on a phone.
 
