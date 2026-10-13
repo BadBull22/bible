@@ -64,9 +64,12 @@ Mirror-Dir $mobile "$Mirror\mobile" @("node_modules", "dist", "gen", "target", "
 Copy-Item "$root\src-tauri\src\sermon.rs" "$Mirror\src-tauri\src\sermon.rs" -Force
 
 Set-Location "$Mirror\mobile"
-if (-not (Test-Path node_modules)) {
-    npm install
+# the mirror has its own node_modules: install when there is none, or when the packages asked for have changed
+$lock = (Get-FileHash package-lock.json).Hash
+if (-not (Test-Path node_modules) -or -not (Test-Path node_modules\.installed-for) -or (Get-Content node_modules\.installed-for -Raw).Trim() -ne $lock) {
+    npm install --no-audit --no-fund
     if ($LASTEXITCODE -ne 0) { throw "npm install failed" }
+    Set-Content -Path node_modules\.installed-for -Value $lock -Encoding ascii
 }
 if (-not (Test-Path "src-tauri\gen\android")) {
     npx tauri android init --ci

@@ -9,7 +9,7 @@
     <application>
         <!-- hands a verse picture to the app it is shared with (PhonePlugin.shareImage) -->
         <provider
-            android:name="androidx.core.content.FileProvider"
+            android:name="com.ghostclaw.phone.PhoneFileProvider"
             android:authorities="${applicationId}.phone.files"
             android:exported="false"
             android:grantUriPermissions="true">
