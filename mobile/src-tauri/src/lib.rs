@@ -464,10 +464,10 @@ fn restore(core: State<Core>, json: String) -> Result<userdata::Counts, String> 
 
 // ---------------------------------------------------------------- a newer version of the app
 
-/// Where a downloaded update waits for Android's installer: the app's cache, in the folder
-/// the phone plugin's file provider may hand over (res/xml/phone_file_paths.xml).
+/// Where a downloaded update waits for Android's installer: the folder the phone plugin
+/// names (Android's own idea of the app's cache is not the one Tauri's paths give).
 fn updates_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    Ok(app.path().cache_dir().map_err(err)?.join("updates"))
+    tauri_plugin_phone::updates_dir(app)
 }
 
 /// The newer version on offer, if there is one (asks the website).

@@ -234,6 +234,18 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
    * and asks the reader; it refuses any file not signed with this app's own key. The first
    * time, the reader has to allow this app to install apps: their settings are opened at
    * that switch, and the answer says so ({ allow: true }) for the page to explain. */
+  /** Where a downloaded update is to be put (the app's cache, under updates/): the folder
+   * `installUpdate` accepts a file from, and the file provider may hand to the installer. */
+  @Command
+  fun updatesDir(invoke: Invoke) {
+    try {
+      val dir = File(activity.cacheDir, "updates").apply { mkdirs() }
+      invoke.resolve(JSObject().put("path", dir.absolutePath))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
   @Command
   fun installUpdate(invoke: Invoke) {
     try {
