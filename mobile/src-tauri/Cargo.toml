@@ -1,6 +1,6 @@
 [package]
 name = "bible-pocket"
-version = "0.2.1"
+version = "0.3.0"
 description = "Bible Concordance for phones: read, search, bookmark and highlight, offline"
 authors = ["BadBull22"]
 edition = "2021"
@@ -23,6 +23,14 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 flate2 = "1"
 # the share sheet, the phone's voice, saving and opening a file (Kotlin, in plugins/phone/android)
 tauri-plugin-phone = { path = "plugins/phone" }
+# the daily reading reminder (since 0.3.0)
+tauri-plugin-notification = "2"
+# downloading more translations from eBible.org (since 0.3.0): plain HTTPS, and the zip they come in
+ureq = { version = "2", default-features = false, features = ["tls"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+# the nature backgrounds for verse pictures (since 0.3.0): checked by SHA-256, handed to the page as base64
+sha2 = "0.10"
+base64 = "0.22"
 
 [profile.release]
 codegen-units = 1

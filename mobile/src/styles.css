@@ -3,45 +3,30 @@
   --raised: #ffffff;
   --border: #e2ded4;
   --text: #22252b;
-  --muted: #6c6a63;
+  --muted: #5f5d57;
   --accent: #2e5fa3;
   --accent-soft: #e4edf9;
   --navy: #101a2e;
   --serif: Georgia, "Noto Serif", "Times New Roman", serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* the reading font: Settings → Appearance → Font */
+  --reading: var(--serif);
   --hl-yellow: rgba(255, 221, 87, 0.5);
   --hl-green: rgba(140, 214, 150, 0.48);
   --hl-blue: rgba(143, 188, 245, 0.5);
   --hl-pink: rgba(246, 168, 204, 0.5);
   --hl-orange: rgba(255, 184, 108, 0.5);
+  --on-accent: #ffffff;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #15161a;
-    --raised: #1f2126;
-    --border: #2e3038;
-    --text: #e9e7e0;
-    --muted: #a39f95;
-    --accent: #7fa9e6;
-    --accent-soft: #223149;
-    --navy: #0b0e17;
-    --hl-yellow: rgba(234, 196, 53, 0.3);
-    --hl-green: rgba(92, 184, 112, 0.28);
-    --hl-blue: rgba(79, 134, 207, 0.34);
-    --hl-pink: rgba(224, 108, 158, 0.3);
-    --hl-orange: rgba(232, 143, 58, 0.3);
-    color-scheme: dark;
-  }
-}
-
+/* appearance.ts always sets data-theme to light, dark or sepia ("Same as phone" resolved) */
 :root[data-theme="dark"] {
   --paper: #15161a;
   --raised: #1f2126;
   --border: #2e3038;
   --text: #e9e7e0;
-  --muted: #a39f95;
+  --muted: #b3afa5;
   --accent: #7fa9e6;
   --accent-soft: #223149;
   --navy: #0b0e17;
@@ -50,8 +35,42 @@
   --hl-blue: rgba(79, 134, 207, 0.34);
   --hl-pink: rgba(224, 108, 158, 0.3);
   --hl-orange: rgba(232, 143, 58, 0.3);
+  --on-accent: #101a2e;
   color-scheme: dark;
 }
+
+/* a warm, paper-like page for long reading */
+:root[data-theme="sepia"] {
+  --paper: #f4ecd8;
+  --raised: #fbf5e6;
+  --border: #dfd1b2;
+  --text: #3b2f20;
+  --muted: #6b5a43;
+  --accent: #8a5a1c;
+  --accent-soft: #eddcbc;
+  --navy: #3b2a17;
+  --hl-yellow: rgba(240, 200, 60, 0.45);
+  --hl-green: rgba(130, 190, 110, 0.42);
+  --hl-blue: rgba(120, 165, 220, 0.42);
+  --hl-pink: rgba(230, 150, 180, 0.42);
+  --hl-orange: rgba(240, 160, 90, 0.45);
+  color-scheme: light;
+}
+
+/* text colour: each choice has a version for the dark page */
+:root[data-text="strong"] { --text: #000000; }
+:root[data-theme="dark"][data-text="strong"] { --text: #ffffff; }
+:root[data-text="sepia"] { --text: #4a3420; }
+:root[data-theme="dark"][data-text="sepia"] { --text: #ecd9b8; }
+:root[data-text="blue"] { --text: #1a2747; }
+:root[data-theme="dark"][data-text="blue"] { --text: #d3defa; }
+
+/* high contrast: the greys of labels, hints and borders come close to the text */
+:root[data-contrast="high"] { --muted: #35332e; --border: #b9b3a5; }
+:root[data-theme="dark"][data-contrast="high"] { --muted: #e2ded5; --border: #565a66; }
+:root[data-theme="sepia"][data-contrast="high"] { --muted: #3f3120; --border: #c4b08a; }
+
+:root[data-font="sans"] { --reading: var(--sans); }
 
 * {
   box-sizing: border-box;
@@ -214,7 +233,7 @@ button {
 }
 
 .chapter {
-  font-family: var(--serif);
+  font-family: var(--reading);
   font-size: calc(1.08rem * var(--scale, 1));
   line-height: 1.7;
 }
@@ -321,7 +340,7 @@ button {
 .chips button.on {
   border-color: var(--accent);
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .chips.topics button {
@@ -363,7 +382,7 @@ button {
   border: 1px solid var(--border);
   border-radius: 0.7rem;
   background: var(--raised);
-  font-family: var(--serif);
+  font-family: var(--reading);
   font-size: calc(0.98rem * var(--scale, 1));
   line-height: 1.5;
 }
@@ -502,7 +521,7 @@ button {
 
 .sheet-text {
   margin: 0 0 0.9rem;
-  font-family: var(--serif);
+  font-family: var(--reading);
   line-height: 1.55;
   max-height: 9.5rem;
   overflow-y: auto;
@@ -609,7 +628,7 @@ button {
 
 .today p {
   margin: 0.25rem 0 0.3rem;
-  font-family: var(--serif);
+  font-family: var(--reading);
   font-size: calc(1rem * var(--scale, 1));
   line-height: 1.55;
 }
@@ -634,18 +653,8 @@ button {
   gap: 0.6rem;
   padding: 0.45rem 0.6rem 0.45rem 1rem;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 0.9rem;
-}
-
-:root[data-theme="dark"] .playing {
-  color: #101a2e;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .playing {
-    color: #101a2e;
-  }
 }
 
 .playing span {
@@ -739,25 +748,8 @@ button {
   border: none;
   border-radius: 0.7rem;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 700;
-}
-
-:root[data-theme="dark"] .primary {
-  color: #101a2e;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .primary,
-  :root:not([data-theme="light"]) .actions button.primary,
-  :root:not([data-theme="light"]) .chips button.on {
-    color: #101a2e;
-  }
-}
-
-:root[data-theme="dark"] .actions button.primary,
-:root[data-theme="dark"] .chips button.on {
-  color: #101a2e;
 }
 
 .chips.segmented {
@@ -861,7 +853,7 @@ button {
 /* ---------- dictionary articles ---------- */
 
 .article-body {
-  font-family: var(--serif);
+  font-family: var(--reading);
   font-size: calc(1rem * var(--scale, 1));
   line-height: 1.6;
 }
@@ -906,8 +898,332 @@ button {
   color: #f08a80;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .wj {
-    color: #f08a80;
-  }
+/* ---------- 0.3.0: tools under the chapter heading ---------- */
+
+.read-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+}
+
+.read-tools button,
+.read-tools select {
+  min-height: 2.2rem;
+  padding: 0.2rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.read-tools .on {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* the second translation, under each verse */
+.verse-second {
+  display: block;
+  margin: 0.15rem 0 0.2rem;
+  padding-left: 0.6rem;
+  border-left: 3px solid var(--accent-soft);
+  color: var(--muted);
+  font-size: 0.92em;
+}
+
+.verse-second b {
+  margin-right: 0.35rem;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 0.68em;
+}
+
+[dir="rtl"] .verse-second {
+  padding-left: 0;
+  padding-right: 0.6rem;
+  border-left: none;
+  border-right: 3px solid var(--accent-soft);
+}
+
+/* ---------- word study ---------- */
+
+.words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
+}
+
+.words button {
+  min-height: 2.3rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--raised);
+  font-family: var(--reading);
+}
+
+.words button small {
+  display: block;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.lemma {
+  margin: 0.2rem 0 0.1rem;
+  font-size: 1.6rem;
+  line-height: 1.3;
+}
+
+.entry dl {
+  margin: 0.6rem 0;
+}
+
+.entry dt {
+  margin-top: 0.6rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.entry dd {
+  margin: 0.15rem 0 0;
+  line-height: 1.5;
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0;
+}
+
+.counts span {
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 0.82rem;
+}
+
+mark.used {
+  padding: 0 0.1em;
+  border-radius: 0.2em;
+  background: var(--hl-yellow);
+  color: inherit;
+}
+
+/* ---------- commentary ---------- */
+
+.commentary p {
+  margin: 0 0 0.8rem;
+  font-family: var(--reading);
+  font-size: calc(1rem * var(--scale, 1));
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.commentary h4 {
+  margin: 1rem 0 0.3rem;
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+.attribution {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+/* ---------- tags ---------- */
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.2rem 0 0.3rem;
+}
+
+.tag {
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.72rem;
+}
+
+.tag-edit {
+  margin-bottom: 0.9rem;
+}
+
+/* ---------- streak ---------- */
+
+.streak {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  text-align: center;
+}
+
+.streak div {
+  padding: 0.6rem 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--raised);
+}
+
+.streak strong {
+  display: block;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.streak span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.streak .hot strong {
+  color: #c4621b;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.3rem 0 0.6rem;
+}
+
+.time-row input {
+  height: 2.6rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--raised);
+  color: var(--text);
+  font: inherit;
+}
+
+/* ---------- verse picture ---------- */
+
+.picture-preview {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  margin: 0 auto 0.8rem;
+  border-radius: 0.6rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+
+.swatches button {
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+}
+
+.swatches button.on {
+  box-shadow: 0 0 0 3px var(--accent);
+}
+
+/* ---------- more translations ---------- */
+
+.offer {
+  cursor: default;
+}
+
+.offer .hit-head strong {
+  color: var(--text);
+}
+
+.offer p {
+  margin: 0.15rem 0 0.4rem;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.offer button {
+  min-height: 2.3rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: none;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-weight: 600;
+}
+
+.select-field {
+  width: 100%;
+  height: 2.8rem;
+  margin: 0 0 0.7rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--raised);
+  color: var(--text);
+}
+
+.playing select {
+  height: 2.3rem;
+  padding: 0 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  font-size: 0.82rem;
+}
+
+.playing select option {
+  color: #1b1d22;
+  background: #fff;
+}
+
+/* the nature backgrounds to choose from */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.3rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  margin-bottom: 0.6rem;
+}
+
+.photo-grid button {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 0.4rem;
+  background: var(--border);
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.photo-grid button.on {
+  border-color: var(--accent);
+}
+
+.photo-grid img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }

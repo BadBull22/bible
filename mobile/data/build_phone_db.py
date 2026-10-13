@@ -6,8 +6,11 @@ Reads  src-tauri/resources/bible.db and study.db (never changes them) and writes
 mobile/src-tauri/resources/phone.db.gz: the English translations with their full-text
 index, the two topical Bibles' headings and references, the two Bible dictionaries, and
 the best cross-references for each verse, and which words are the words of Jesus (from
-src/redLetter.json, the desktop app's red-letter data). Nothing else -- no Strong's tagging,
-commentaries or search-by-meaning vectors -- which is what keeps the phone app small.
+src/redLetter.json, the desktop app's red-letter data). Since 0.3.0 also: Strong's numbers
+for the BSB and KJV words with the Strong's dictionary, and one small commentary (the
+Tyndale Open Study Notes, with its book introductions, from commentaries.db). Nothing else
+-- no other translations' tagging, other commentaries or search-by-meaning vectors -- which
+is what keeps the phone app small.
 
 The database is built on local disk (SQLite's random writes are unreliable over the
 network share the project lives on) and only the finished .gz is copied in.
@@ -20,6 +23,7 @@ import shutil
 import sqlite3
 import sys
 import tempfile
+import zlib
 from pathlib import Path
 
 # not resolve(): that turns the mapped drive into its network path, which SQLite cannot open by URI
@@ -27,6 +31,7 @@ ROOT = Path(os.path.abspath(__file__)).parents[2]
 BIBLE = ROOT / "src-tauri" / "resources" / "bible.db"
 STUDY = ROOT / "src-tauri" / "resources" / "study.db"
 RED = ROOT / "src" / "redLetter.json"
+COMMENTARIES = ROOT / "src-tauri" / "resources" / "commentaries.db"
 OUT = ROOT / "mobile" / "src-tauri" / "resources" / "phone.db.gz"
 
 # Public-domain English translations already bundled with the desktop app.
@@ -36,6 +41,10 @@ TOPICAL = ["nave", "torrey"]
 DICTIONARIES = ["easton", "smith"]
 # Cross-references kept for each verse: the ones most readers agreed on.
 XREFS_PER_VERSE = 12
+# Translations whose words carry Strong's numbers on the phone (the others' tagging is large).
+TAGGED = ["BSB", "KJV"]
+# The commentary: short, modern notes (CC BY-SA 4.0, attributed in the app).
+COMMENTARY = "tyndale"
 
 
 def tidy(text: str) -> str:
@@ -79,6 +88,20 @@ def main() -> None:
             to_book_id INTEGER NOT NULL, to_chapter INTEGER NOT NULL, to_verse INTEGER NOT NULL, to_verse_end INTEGER NOT NULL,
             PRIMARY KEY (book_id, chapter, verse, rank)) WITHOUT ROWID;
         CREATE TABLE dict_refs (entry_id INTEGER NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER, verse_end INTEGER);
+        -- a verse's words with their Strong's numbers, in order: JSON [[surface, "H1 H2"], ...]
+        -- (one surface word can carry several numbers; untranslated particles are left out)
+        CREATE TABLE strongs_words (version_id INTEGER NOT NULL, book_id INTEGER NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL,
+            words TEXT NOT NULL, PRIMARY KEY (version_id, book_id, chapter, verse)) WITHOUT ROWID;
+        CREATE TABLE strongs_dict (strongs_number TEXT PRIMARY KEY, language TEXT NOT NULL, lemma TEXT, xlit TEXT, pronunciation TEXT,
+            derivation TEXT, strongs_def TEXT, kjv_def TEXT) WITHOUT ROWID;
+        -- how often a number occurs in a tagged translation: in how many verses, how many times
+        CREATE TABLE strongs_counts (strongs_number TEXT NOT NULL, version_id INTEGER NOT NULL, verses INTEGER NOT NULL, occurrences INTEGER NOT NULL,
+            PRIMARY KEY (strongs_number, version_id)) WITHOUT ROWID;
+        -- the commentary: a note covers its verse_start up to the next note's
+        CREATE TABLE notes (book_id INTEGER NOT NULL, chapter INTEGER NOT NULL, verse_start INTEGER NOT NULL, seq INTEGER NOT NULL, text TEXT NOT NULL,
+            PRIMARY KEY (book_id, chapter, verse_start, seq)) WITHOUT ROWID;
+        CREATE TABLE book_intros (book_id INTEGER PRIMARY KEY, text TEXT NOT NULL);
+        CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
         """
     )
 
@@ -140,6 +163,73 @@ def main() -> None:
         "INSERT INTO dict_refs VALUES (?,?,?,?,?)",
         study.execute(f"SELECT entry_id, book, chapter, verse, verse_end FROM dict_refs WHERE entry_id IN (SELECT id FROM dict_entries WHERE dict_code IN ({codes}))", TOPICAL),
     )
+    # Strong's: the words of the tagged translations, grouped per verse as the desktop app groups
+    # them (consecutive rows with one word_order are one surface word with several numbers)
+    tagged = ",".join("?" * len(TAGGED))
+    rows = bible.execute(
+        f"""SELECT v.version_id, v.book_id, v.chapter, v.verse, s.word_order, s.surface_text, s.strongs_number
+            FROM strongs_links s JOIN verses v ON v.id = s.verse_id JOIN versions ver ON ver.id = v.version_id
+            JOIN books b ON b.id = v.book_id
+            WHERE ver.code IN ({tagged}) AND b.testament IN ('OT','NT')
+            ORDER BY v.id, s.word_order, s.id""",
+        TAGGED,
+    )
+    per_verse: dict = {}
+    counts: dict = {}
+    for version_id, book_id, chapter, verse, order, surface, number in rows:
+        words = per_verse.setdefault((version_id, book_id, chapter, verse), [])
+        if words and words[-1][0] == order:
+            words[-1][2].append(number)
+        else:
+            words.append([order, surface.strip(), [number]])
+        c = counts.setdefault((number, version_id), [set(), 0])
+        c[0].add((book_id, chapter, verse))
+        c[1] += 1
+    out.executemany(
+        "INSERT INTO strongs_words VALUES (?,?,?,?,?)",
+        (
+            (*key, json.dumps([[w[1], " ".join(w[2])] for w in words if w[1]], ensure_ascii=False, separators=(",", ":")))
+            for key, words in per_verse.items()
+        ),
+    )
+    out.executemany("INSERT INTO strongs_counts VALUES (?,?,?,?)", ((n, v, len(c[0]), c[1]) for (n, v), c in counts.items()))
+    out.executemany(
+        "INSERT INTO strongs_dict VALUES (?,?,?,?,?,?,?,?)",
+        bible.execute("SELECT strongs_number, language, lemma, xlit, pronunciation, derivation, strongs_def, kjv_def FROM strongs_dict"),
+    )
+
+    # the commentary and its book introductions (stored zlib-compressed in the desktop database)
+    comm = ro(COMMENTARIES)
+    seq: dict = {}
+    note_rows = []
+    for book, chapter, verse_start, blob in comm.execute(
+        "SELECT book, chapter, verse_start, text_gz FROM commentary_sections WHERE commentary_id = ? ORDER BY book_order, chapter, verse_start, id",
+        (COMMENTARY,),
+    ):
+        if book not in book_ids:
+            continue
+        key = (book_ids[book], chapter, verse_start)
+        seq[key] = seq.get(key, 0) + 1
+        note_rows.append((*key, seq[key], zlib.decompress(blob).decode("utf-8").strip()))
+    out.executemany("INSERT INTO notes VALUES (?,?,?,?,?)", note_rows)
+    out.executemany(
+        "INSERT INTO book_intros VALUES (?,?)",
+        (
+            (book_ids[book], zlib.decompress(blob).decode("utf-8").strip())
+            for book, blob in comm.execute(
+                "SELECT book, introduction_gz FROM commentary_books WHERE commentary_id = ? AND introduction_gz IS NOT NULL", (COMMENTARY,)
+            )
+            if book in book_ids
+        ),
+    )
+    name, licence, licence_url, website = comm.execute(
+        "SELECT name, license_name, license_url, website FROM commentaries WHERE id = ?", (COMMENTARY,)
+    ).fetchone()
+    out.executemany(
+        "INSERT INTO meta VALUES (?,?)",
+        [("commentary_name", name), ("commentary_licence", licence), ("commentary_licence_url", licence_url or ""), ("commentary_website", website or "")],
+    )
+
     out.execute("CREATE INDEX dict_refs_entry ON dict_refs(entry_id)")
     out.execute("CREATE INDEX dict_entries_fold ON dict_entries(headword_fold)")
     out.commit()
@@ -153,6 +243,10 @@ def main() -> None:
         "dictionary articles": out.execute("SELECT count(*) FROM dict_entries WHERE body <> ''").fetchone()[0],
         "cross-references": out.execute("SELECT count(*) FROM xrefs").fetchone()[0],
         "verses with words of Jesus": out.execute("SELECT count(*) FROM red_letter").fetchone()[0],
+        "tagged verses": out.execute("SELECT count(*) FROM strongs_words").fetchone()[0],
+        "strong's entries": out.execute("SELECT count(*) FROM strongs_dict").fetchone()[0],
+        "commentary notes": out.execute("SELECT count(*) FROM notes").fetchone()[0],
+        "book introductions": out.execute("SELECT count(*) FROM book_intros").fetchone()[0],
     }
     assert counts["versions"] == len(VERSIONS) and counts["books"] == 66, counts
     assert out.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
