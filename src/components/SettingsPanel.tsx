@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { api, HIGHLIGHT_COLOR_NAMES, HIGHLIGHT_COLORS, HighlightColor } from "../api";
 import { CloseIcon } from "./icons";
-import { DEFAULT_PREFS, ReadingPrefs } from "../readingPrefs";
+import { DEFAULT_PREFS, ReadingPrefs, TextColor, Theme } from "../readingPrefs";
 import { NATURAL_VOICES, ReadAloudPrefs } from "../readAloud";
 import { invoke } from "@tauri-apps/api/core";
 import { copyText } from "../clipboard";
@@ -259,6 +259,51 @@ export function SettingsPanel({
         <span className="click-hint">Click here ›</span>
       </button>
 
+      <h4 className="section-label">Appearance</h4>
+      <div className="reading-prefs">
+        <label>
+          <span>Theme</span>
+          <select value={prefs.theme} onChange={(e) => onPrefsChange({ ...prefs, theme: e.target.value as Theme })} aria-label="Theme">
+            <option value="system">Match Windows</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        <label>
+          <span>Text colour</span>
+          <select
+            value={prefs.textColor}
+            onChange={(e) => onPrefsChange({ ...prefs, textColor: e.target.value as TextColor })}
+            aria-label="Text colour"
+          >
+            <option value="default">Standard</option>
+            <option value="strong">Strongest ({prefs.theme === "dark" ? "white" : prefs.theme === "light" ? "black" : "black, or white when dark"})</option>
+            <option value="sepia">Warm sepia</option>
+            <option value="blue">Blue-black</option>
+          </select>
+        </label>
+        <label>
+          <span>Contrast</span>
+          <select
+            value={prefs.contrast}
+            onChange={(e) => onPrefsChange({ ...prefs, contrast: e.target.value as ReadingPrefs["contrast"] })}
+            aria-label="Contrast"
+          >
+            <option value="standard">Standard</option>
+            <option value="high">High — darker headings, labels and hints</option>
+          </select>
+        </label>
+        <button
+          className="text-btn"
+          onClick={() => onPrefsChange({ ...prefs, theme: DEFAULT_PREFS.theme, textColor: DEFAULT_PREFS.textColor, contrast: DEFAULT_PREFS.contrast })}
+        >
+          Back to the standard look
+        </button>
+      </div>
+      <p className="search-hint" style={{ marginTop: "0.3rem" }}>
+        If headings or small labels are hard to read, try <strong>Contrast: High</strong>, or a stronger text colour.
+      </p>
+
       <h4 className="section-label">Reading comfort</h4>
       <div className="reading-prefs">
         <label>
@@ -305,7 +350,10 @@ export function SettingsPanel({
             <option value="plain">Same colour as the rest</option>
           </select>
         </label>
-        <button className="text-btn" onClick={() => onPrefsChange(DEFAULT_PREFS)}>
+        <button
+          className="text-btn"
+          onClick={() => onPrefsChange({ ...DEFAULT_PREFS, theme: prefs.theme, textColor: prefs.textColor, contrast: prefs.contrast })}
+        >
           Reset to defaults
         </button>
       </div>

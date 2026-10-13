@@ -1,4 +1,5 @@
-// Reading comfort: text size, line spacing and reading width for the chapter view.
+// Reading comfort and appearance: text size, line spacing and reading width for the chapter
+// view, plus the theme, text colour and contrast for the whole app.
 // Per-viewer conveniences, so localStorage (wrapped -- storage can be unavailable), applied
 // as CSS custom properties on the document root that App.css's reading styles read.
 
@@ -11,10 +12,28 @@ export interface ReadingPrefs {
   width: "normal" | "wide";
   /** Words of Jesus in red (applied by CSS, so turning it off costs nothing). */
   redLetter: boolean;
+  /** "system" follows Windows' light/dark setting. */
+  theme: Theme;
+  /** Colour of the text and headings; each choice has a light and a dark version. */
+  textColor: TextColor;
+  /** "high" darkens (or, in dark mode, lightens) the greys used for labels and headings. */
+  contrast: "standard" | "high";
 }
 
+export type Theme = "system" | "light" | "dark";
+export type TextColor = "default" | "strong" | "sepia" | "blue";
+const TEXT_COLORS: TextColor[] = ["default", "strong", "sepia", "blue"];
+
 const KEY = "reading:prefs";
-export const DEFAULT_PREFS: ReadingPrefs = { fontScale: 1, lineHeight: 1.75, width: "normal", redLetter: true };
+export const DEFAULT_PREFS: ReadingPrefs = {
+  fontScale: 1,
+  lineHeight: 1.75,
+  width: "normal",
+  redLetter: true,
+  theme: "system",
+  textColor: "default",
+  contrast: "standard",
+};
 
 export function loadPrefs(): ReadingPrefs {
   try {
@@ -26,6 +45,9 @@ export function loadPrefs(): ReadingPrefs {
         lineHeight: clamp(Number(p.lineHeight) || DEFAULT_PREFS.lineHeight, 1.5, 2.2),
         width: p.width === "wide" ? "wide" : "normal",
         redLetter: p.redLetter !== false,
+        theme: p.theme === "light" || p.theme === "dark" ? p.theme : "system",
+        textColor: TEXT_COLORS.includes(p.textColor as TextColor) ? (p.textColor as TextColor) : "default",
+        contrast: p.contrast === "high" ? "high" : "standard",
       };
     }
   } catch {
@@ -48,6 +70,24 @@ export function applyPrefs(p: ReadingPrefs) {
   root.style.setProperty("--reader-line-height", String(p.lineHeight));
   root.dataset.readingWidth = p.width;
   root.dataset.redLetter = p.redLetter ? "on" : "off";
+  root.dataset.theme = resolveTheme(p.theme);
+  root.dataset.text = p.textColor;
+  root.dataset.contrast = p.contrast;
+}
+
+const systemDark = () => typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+/** The theme actually shown: "system" becomes Windows' current setting. */
+export function resolveTheme(t: Theme): "light" | "dark" {
+  return t === "system" ? (systemDark() ? "dark" : "light") : t;
+}
+
+/** Calls `onChange` when Windows switches between light and dark; returns the unsubscribe. */
+export function watchSystemTheme(onChange: () => void): () => void {
+  if (typeof window.matchMedia !== "function") return () => undefined;
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
 }
 
 function clamp(v: number, lo: number, hi: number) {

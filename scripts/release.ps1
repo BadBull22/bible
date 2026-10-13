@@ -12,10 +12,18 @@
 # The natural voice is not in the installer: scripts\package_voice.py packs it once into
 # installer\voice-<platform>-v<n>.zip and records its URL + SHA-256 in
 # src-tauri\resources\voice.json; that zip is uploaded with the release its URL names.
+#
+# Run it in a visible window. Windows PowerShell 5.1 can't hold an empty environment
+# variable, so the key's (empty) password is lost and the build stops at "Decrypting updater
+# signing key, expect a prompt for password": press Enter there. If a build already finished
+# but its bundles weren't signed or collected, sign each bundle with
+# `npx tauri signer sign -f <key> -p "" <bundle>` and run this again with -SkipBuild.
 
 param(
     [string]$Notes = "",
-    [string]$Key = "$HOME\.tauri\bible-concordance-updater.key"
+    [string]$Key = "$HOME\.tauri\bible-concordance-updater.key",
+    # collect the bundles (and their .sig files) of a build that already ran, without building
+    [switch]$SkipBuild
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
@@ -33,13 +41,15 @@ Write-Host "Building Bible Concordance $version" -ForegroundColor Cyan
 
 # --- sign the updater artifacts with the private key (kept outside the repo)
 if (-not (Test-Path $Key)) { throw "Signing key not found at $Key" }
-$env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content $Key -Raw).Trim()
-$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
-try {
-    npm run tauri build
-    if ($LASTEXITCODE -ne 0) { throw "tauri build failed" }
-} finally {
-    Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY, Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
+if (-not $SkipBuild) {
+    $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content $Key -Raw).Trim()
+    $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
+    try {
+        npm run tauri build
+        if ($LASTEXITCODE -ne 0) { throw "tauri build failed" }
+    } finally {
+        Remove-Item Env:TAURI_SIGNING_PRIVATE_KEY, Env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD -ErrorAction SilentlyContinue
+    }
 }
 
 # --- collect the bundles (the cargo target dir is on local disk, see src-tauri\.cargo)

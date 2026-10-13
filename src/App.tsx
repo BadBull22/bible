@@ -33,7 +33,7 @@ import { ReadAloudBar } from "./components/ReadAloudBar";
 import { splitSentences } from "./readHighlight";
 import { chapterAnnouncement, chunkText, LISTEN_EVENT, LISTEN_FINISHED_EVENT, LISTEN_FROM_EVENT, ListenRequest, READ_STATE_EVENT, loadReadPrefs, ReadAloud, ReaderState, ReadItem, speechText } from "./readAloud";
 import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
-import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs } from "./readingPrefs";
+import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs, watchSystemTheme } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { SheetIcon, BackIcon, BasketIcon, DictionaryIcon, InterlinearIcon, LibraryIcon, PictureIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import { TopMenu } from "./components/TopMenu";
@@ -205,6 +205,15 @@ function App() {
   useEffect(() => {
     applyPrefs(prefs);
     savePrefs(prefs);
+  }, [prefs]);
+  // "Match Windows": follow Windows when it switches between light and dark while the app is
+  // open. The window's own title bar follows the chosen theme too (null = Windows' setting).
+  useEffect(() => {
+    getCurrentWindow()
+      .setTheme(prefs.theme === "system" ? null : prefs.theme)
+      .catch(() => undefined);
+    if (prefs.theme !== "system") return;
+    return watchSystemTheme(() => applyPrefs(prefs));
   }, [prefs]);
   useEffect(() => {
     if (homeActive) return;
