@@ -1,7 +1,7 @@
 {
-  "version": "0.3.1",
-  "url": "https://github.com/BadBull22/bible/releases/download/android-v0.3.1/BibleConcordance_Android_0.3.1.apk",
-  "sha256": "a4588a9a00a4dd7098a17a360e840d30fa45f540719954be41c1a8dc93ee7e36",
+  "version": "0.3.2",
+  "url": "https://github.com/BadBull22/bible/releases/download/android-v0.3.2/BibleConcordance_Android_0.3.2.apk",
+  "sha256": "7cd0c4cac29a206d98d5cc2f62bbf77bdce85ee9cf909a14f5a84a3697301d80",
   "size": 72574912,
   "notes": "The app now looks for new versions itself, once a day, and installs them when you say so."
 }

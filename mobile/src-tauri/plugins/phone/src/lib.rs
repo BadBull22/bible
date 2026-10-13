@@ -82,6 +82,22 @@ fn open_text<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
     app.state::<Phone<R>>().run("openText", json!({}))
 }
 
+/// The folder a downloaded update must be put in for `install_update` to hand it to Android's
+/// installer: `updates` in the app's cache, as Android itself names that folder (it is the
+/// one the plugin's file provider may share). On a computer, where nothing is installed, a
+/// folder beside the app's other cached files.
+pub fn updates_dir<R: Runtime>(app: &AppHandle<R>) -> Result<std::path::PathBuf, String> {
+    #[cfg(target_os = "android")]
+    {
+        let answer = app.state::<Phone<R>>().run("updatesDir", json!({}))?;
+        answer.get("path").and_then(Value::as_str).map(std::path::PathBuf::from).ok_or_else(|| "The phone didn't say where to keep the update.".to_string())
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        app.path().app_cache_dir().map(|d| d.join("updates")).map_err(|e| e.to_string())
+    }
+}
+
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("phone")
         .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, voices, share_image, save_image, install_update])
