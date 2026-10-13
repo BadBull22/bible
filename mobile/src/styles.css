@@ -1227,3 +1227,43 @@ mark.used {
   height: 100%;
   object-fit: cover;
 }
+
+/* ---------- a newer version of the app ---------- */
+
+.update {
+  padding: 0.75rem 1rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.update p {
+  margin: 0 0 0.6rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.update .actions {
+  margin-bottom: 0.5rem;
+}
+
+.update .update-message {
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.5rem;
+  background: var(--raised);
+}
+
+.update .update-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.update-progress {
+  margin-bottom: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.update-progress .bar {
+  margin-bottom: 0.35rem;
+}

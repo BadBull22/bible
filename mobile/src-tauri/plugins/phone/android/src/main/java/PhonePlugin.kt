@@ -3,7 +3,10 @@ package com.ghostclaw.phone
 import android.app.Activity
 import android.content.ClipData
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
@@ -41,6 +44,12 @@ class ImageArgs {
   /** the picture, PNG, base64 */
   lateinit var base64: String
   var text: String? = null
+}
+
+@InvokeArg
+class InstallArgs {
+  /** the downloaded APK, in the app's cache under updates/ */
+  lateinit var path: String
 }
 
 @InvokeArg
@@ -214,6 +223,39 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
       }
       activity.startActivity(Intent.createChooser(send, null))
       invoke.resolve(JSObject().put("shared", true))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  // ---------------------------------------------------------------- a newer version of the app
+
+  /** Hands a downloaded update to Android's installer. Android shows what is being installed
+   * and asks the reader; it refuses any file not signed with this app's own key. The first
+   * time, the reader has to allow this app to install apps: their settings are opened at
+   * that switch, and the answer says so ({ allow: true }) for the page to explain. */
+  @Command
+  fun installUpdate(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(InstallArgs::class.java)
+      val dir = File(activity.cacheDir, "updates").canonicalFile
+      val file = File(args.path).canonicalFile
+      if (file.parentFile != dir || !file.name.endsWith(".apk") || !file.isFile) {
+        invoke.reject("The downloaded update could not be found. Please try again.")
+        return
+      }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !activity.packageManager.canRequestPackageInstalls()) {
+        activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + activity.packageName)))
+        invoke.resolve(JSObject().put("started", false).put("allow", true))
+        return
+      }
+      val uri = FileProvider.getUriForFile(activity, activity.packageName + ".phone.files", file)
+      val install = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, "application/vnd.android.package-archive")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+      activity.startActivity(install)
+      invoke.resolve(JSObject().put("started", true).put("allow", false))
     } catch (ex: Exception) {
       invoke.reject(ex.message)
     }

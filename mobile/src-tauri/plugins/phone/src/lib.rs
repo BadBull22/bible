@@ -57,6 +57,14 @@ fn save_image<R: Runtime>(app: AppHandle<R>, name: String, base64: String) -> Re
     app.state::<Phone<R>>().run("saveImage", json!({ "name": name, "base64": base64 }))
 }
 
+/// Hands a downloaded update (an APK in the app's cache, see the app's `update.rs`) to
+/// Android's installer, which asks the reader. { started: true }, or { allow: true } when
+/// the reader must first let this app install apps (their settings are opened for it).
+#[tauri::command(async)]
+fn install_update<R: Runtime>(app: AppHandle<R>, path: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("installUpdate", json!({ "path": path }))
+}
+
 #[tauri::command(async)]
 fn stop_speaking<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
     app.state::<Phone<R>>().run("stopSpeaking", json!({}))
@@ -76,7 +84,7 @@ fn open_text<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("phone")
-        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, voices, share_image, save_image])
+        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, voices, share_image, save_image, install_update])
         .setup(|app, _api| {
             #[cfg(target_os = "android")]
             app.manage(Phone { handle: _api.register_android_plugin("com.ghostclaw.phone", "PhonePlugin")? });

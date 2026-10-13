@@ -6,8 +6,12 @@
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
     </queries>
+    <!-- to hand a downloaded update of this app to Android's installer (PhonePlugin.installUpdate);
+         the reader must still allow it for this app, and confirm each install -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <application>
-        <!-- hands a verse picture to the app it is shared with (PhonePlugin.shareImage) -->
+        <!-- hands a verse picture to the app it is shared with (PhonePlugin.shareImage), and a
+             downloaded update to the installer (PhonePlugin.installUpdate) -->
         <provider
             android:name="com.ghostclaw.phone.PhoneFileProvider"
             android:authorities="${applicationId}.phone.files"
