@@ -13,9 +13,14 @@ an unrelated project, which must not link here or be linked from here.
 | `docs/windows/index.html` | Windows download, the free extras after installing, updating, features |
 | `docs/android/index.html` | Android (Beta) download, install steps, updating, file check, features, what it leaves out |
 | `docs/assets/site.css` | Shared styles (the app's palette; the fixed photo behind a frosted column; Android in green) |
-| `docs/assets/` | `icon.png`, `favicon-32.png`, `hero-bg.jpg` |
+| `docs/assets/` | `icon.png`, `favicon-32.png`, `hero-bg.jpg`, `south-point-church.png` (the church logo, trimmed, 760 px wide) |
+| `docs/assets/originals/` | full-size originals the web images were made from (the church logo, 8000 px) — not linked from the pages |
 | `docs/CNAME` | `bible4me.org` — GitHub Pages reads the custom domain from it; don't delete |
 | `docs/.nojekyll` | serve the files as they are |
+
+The home page ends with the owner's thank-you to **Pastor Mike & South Point Church** (the
+church that inspired the app), with the church's logo, under the Matthew 10:8 verse
+(`.inspiration` in `site.css`). Keep it; the wording is the owner's.
 
 Plain HTML and CSS, no build step. Every page carries the same header (logo, Windows,
 Android); the current page's button has `aria-current="page"`. Links between pages are
