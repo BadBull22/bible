@@ -15,7 +15,7 @@ Full original plan (data sources, phasing, architecture rationale) is at:
 a local Claude plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
-## Current status: Phases 1-16 done — v2.6.1 built 2026-10-13 (Appearance settings, readable buttons); Android 0.2.1 Beta; website at https://bible4me.org
+## Current status: Phases 1-16 done — v2.6.1 released 2026-10-13 (Appearance settings, readable buttons); Android 0.2.1 Beta (0.3.0 in progress); website at https://bible4me.org
 
 > **Website:** `bible4me.org`, served by GitHub Pages from `docs/` — see `HANDOVER_WEBSITE.md` (it replaces the old `ghost-claw.com/bible.html` page).
 >
