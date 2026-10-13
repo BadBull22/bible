@@ -25,16 +25,46 @@ highlights. It is a project of its own in this folder and changes nothing in the
 - **Reading plans** (the desktop app's four), recent searches, and a verse for the day.
 - Five public-domain translations (BSB, KJV, ASV, WEB, YLT), with the words of Jesus in red
   (it can be switched off), text size, light and dark.
+
+Since 0.3.0:
+
+- **Appearance** (More): theme Same as phone / Light / Sepia / Dark, text colour, contrast
+  (High darkens the greys), font Classic (serif) or Modern (sans). `src/appearance.ts`.
+- **Daily reminder** (Plans): a notification every day at a chosen time, through the official
+  notification plugin (`src/reminder.ts`; scheduling works only on the phone).
+- **Reading streak** (Plans): days in a row, best run, days read, chapters of the Bible read.
+  A chapter counts when its end is reached after 15 s, or when it was listened to the end
+  (`reading_log` in `my-study.db`; in the backup as `reading`, which the desktop ignores).
+- **Verse pictures** (tap a verse): the verse on one of six colour gradients or on a nature
+  photo, shared or saved as a PNG (`src/VersePicture.tsx`; `shareImage`/`saveImage` in the
+  plugin, with a FileProvider in its manifest). The 100 nature photos (CC0, Wikimedia
+  Commons) are a one-time download from the GitHub release `backgrounds-v1`
+  (`src-tauri/src/backgrounds.rs`, checked by SHA-256; made by `data/backgrounds_candidates.py`
+  and `data/build_backgrounds.py` from `data/backgrounds.json`).
+- **Read aloud**: choose among the phone's English voices, a Slow speed, a sleep timer.
+- **Word study** (tap a verse): each word's Strong's number, the Hebrew/Greek entry, how often
+  it is used, every verse using it — for the BSB and KJV (`src/WordStudy.tsx`,
+  `src-tauri/src/study_extra.rs`).
+- **Study notes**: the Tyndale Open Study Notes (CC BY-SA 4.0, attributed) on a verse or a
+  whole chapter, and each book's introduction ("About <book>", "Study notes" under the heading).
+- **Side by side**: a second translation under each verse.
+- **More translations** (More): any Bible eBible.org marks as free to redistribute (1,200+,
+  hundreds of languages), downloaded once into `my-bibles.db` (`src-tauri/src/bibles.rs`,
+  `src/Translations.tsx`). They are read, compared and shown side by side; search uses the
+  built-in English.
+- **Tags** on bookmarks and notes, with a filter in My Study (the desktop's note tags).
 - `src-tauri/plugins/phone` is the small Android (Kotlin) part: the share sheet, the phone's
   voice, and saving or opening a file the reader chooses.
 
-No account, no network access, no adverts.
+No account, no adverts. The internet is used only when the reader downloads a translation or
+the nature backgrounds.
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `data/build_phone_db.py` | builds `src-tauri/resources/phone.db.gz` (16 MB) from the desktop app's `bible.db` and `study.db` |
+| `data/build_phone_db.py` | builds `src-tauri/resources/phone.db.gz` (28 MB since 0.3.0) from the desktop app's `bible.db`, `study.db` and `commentaries.db` |
+| `data/backgrounds_candidates.py`, `data/build_backgrounds.py`, `data/backgrounds.json` | the nature photos for verse pictures (see above) |
 | `src-tauri/` | the Rust side: `search.rs` (reading, search), `userdata.rs` (bookmarks, highlights), `lib.rs` (commands; unpacks the database on first run) |
 | `src/` | the screens (React): `App.tsx`, `refs.ts` (reading a typed reference), `styles.css` |
 | `scripts/android.ps1` | builds the APK (mirrors the source to local disk first; see the script) |

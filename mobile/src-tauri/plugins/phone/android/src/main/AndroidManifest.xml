@@ -6,4 +6,16 @@
             <action android:name="android.intent.action.TTS_SERVICE" />
         </intent>
     </queries>
+    <application>
+        <!-- hands a verse picture to the app it is shared with (PhonePlugin.shareImage) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.phone.files"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/phone_file_paths" />
+        </provider>
+    </application>
 </manifest>

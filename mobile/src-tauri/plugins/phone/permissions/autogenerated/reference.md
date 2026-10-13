@@ -1,6 +1,6 @@
 ## Default Permission
 
-Sharing text, reading aloud with the phone's voice, and saving or opening a file the reader chooses.
+Sharing text or a picture, reading aloud with the phone's voices, and saving or opening a file the reader chooses.
 
 #### This default permission set includes the following:
 
@@ -9,6 +9,9 @@ Sharing text, reading aloud with the phone's voice, and saving or opening a file
 - `allow-stop-speaking`
 - `allow-save-text`
 - `allow-open-text`
+- `allow-voices`
+- `allow-share-image`
+- `allow-save-image`
 
 ## Permission Table
 
@@ -41,6 +44,32 @@ Enables the open_text command without any pre-configured scope.
 <td>
 
 Denies the open_text command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-save-image`
+
+</td>
+<td>
+
+Enables the save_image command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-save-image`
+
+</td>
+<td>
+
+Denies the save_image command without any pre-configured scope.
 
 </td>
 </tr>
@@ -100,6 +129,32 @@ Denies the share command without any pre-configured scope.
 <tr>
 <td>
 
+`phone:allow-share-image`
+
+</td>
+<td>
+
+Enables the share_image command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-share-image`
+
+</td>
+<td>
+
+Denies the share_image command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `phone:allow-speak`
 
 </td>
@@ -145,6 +200,32 @@ Enables the stop_speaking command without any pre-configured scope.
 <td>
 
 Denies the stop_speaking command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-voices`
+
+</td>
+<td>
+
+Enables the voices command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-voices`
+
+</td>
+<td>
+
+Denies the voices command without any pre-configured scope.
 
 </td>
 </tr>

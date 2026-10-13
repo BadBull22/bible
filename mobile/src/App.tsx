@@ -1,12 +1,37 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { exit, onBackButtonPress } from "@tauri-apps/api/app";
-import { api, Article, ArticleHead, Book, ChapterMarks, COLORS, Counts, Hit, Mark, MarkKind, phone, PlanProgress, SearchResult, Topic, Verse, Version } from "./api";
+import {
+  api,
+  Article,
+  ArticleHead,
+  Book,
+  ChapterMarks,
+  COLORS,
+  CommentaryAbout,
+  CommentaryNote,
+  Counts,
+  Hit,
+  Mark,
+  MarkKind,
+  phone,
+  PhoneVoice,
+  PlanProgress,
+  ReadingStats,
+  SearchResult,
+  Topic,
+  Verse,
+  Version,
+} from "./api";
+import { applyAppearance, Contrast, DEFAULT_APPEARANCE, Font, TextColor, Theme, watchSystemTheme } from "./appearance";
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "./plans";
 import { parseReference, Reference } from "./refs";
+import { canRemind, setReminder } from "./reminder";
+import { Translations } from "./Translations";
+import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
+import { WordStudy } from "./WordStudy";
 
 type Tab = "read" | "search" | "study" | "plans" | "more";
-type Theme = "system" | "light" | "dark";
 
 interface Saved {
   version: string;
@@ -14,12 +39,21 @@ interface Saved {
   chapter: number;
   size: number;
   theme: Theme;
+  textColor: TextColor;
+  contrast: Contrast;
+  font: Font;
   /** show the verse for the day when the app opens */
   dayVerse: boolean;
   /** how fast the phone's voice reads */
   rate: number;
+  /** the phone voice chosen (one of phone.voices' names), or null for the default */
+  voice: string | null;
   /** the words of Jesus in red */
   red: boolean;
+  /** a second translation shown under each verse, or null */
+  second: string | null;
+  /** the daily reminder's time ("07:30"), or null when it is off */
+  reminder: string | null;
 }
 
 const SAVED_KEY = "pocket:state";
@@ -27,7 +61,19 @@ const RECENT_KEY = "pocket:recent";
 const DAY_SEEN_KEY = "pocket:day-verse-seen";
 
 function loadSaved(): Saved {
-  const start: Saved = { version: "BSB", book: "John", chapter: 1, size: 1, theme: "system", dayVerse: true, rate: 1, red: true };
+  const start: Saved = {
+    version: "BSB",
+    book: "John",
+    chapter: 1,
+    size: 1,
+    ...DEFAULT_APPEARANCE,
+    dayVerse: true,
+    rate: 1,
+    voice: null,
+    red: true,
+    second: null,
+    reminder: null,
+  };
   try {
     return { ...start, ...(JSON.parse(localStorage.getItem(SAVED_KEY) ?? "{}") as Partial<Saved>) };
   } catch {
@@ -99,6 +145,7 @@ function useBack(active: boolean, close: () => void) {
 const WHY: Record<string, string> = { core: "Key passage", phrase: "Exact words", topical: "Topic" };
 const COLOR_NAMES: Record<string, string> = { yellow: "Yellow", green: "Green", blue: "Blue", pink: "Pink", orange: "Orange" };
 const RATES: [number, string][] = [
+  [0.65, "Slow"],
   [0.8, "Slower"],
   [1, "Normal"],
   [1.2, "Faster"],
@@ -156,6 +203,17 @@ async function copy(text: string): Promise<boolean> {
   }
 }
 
+const SLEEP: [string, string][] = [
+  ["off", "No timer"],
+  ["15", "Stop in 15 min"],
+  ["30", "Stop in 30 min"],
+  ["60", "Stop in 60 min"],
+  ["chapter", "Stop after this chapter"],
+];
+
+/** Chapters in the 66 books, for "how much of the Bible have I read". */
+const ALL_CHAPTERS = 1189;
+
 const countsText = (c: Counts) =>
   `${c.bookmarks} bookmark${c.bookmarks === 1 ? "" : "s"}, ${c.highlights} highlight${c.highlights === 1 ? "" : "s"}, ${c.notes} note${c.notes === 1 ? "" : "s"} and ${c.plans} reading plan${c.plans === 1 ? "" : "s"}`;
 
@@ -167,9 +225,16 @@ export function App() {
   const [place, setPlace] = useState({ book: saved.book, chapter: saved.chapter });
   const [size, setSize] = useState(saved.size);
   const [theme, setTheme] = useState<Theme>(saved.theme);
+  const [textColor, setTextColor] = useState<TextColor>(saved.textColor);
+  const [contrast, setContrast] = useState<Contrast>(saved.contrast);
+  const [font, setFont] = useState<Font>(saved.font);
   const [dayVerse, setDayVerse] = useState(saved.dayVerse);
   const [rate, setRate] = useState(saved.rate);
+  const [voice, setVoice] = useState<string | null>(saved.voice);
+  const [voices, setVoices] = useState<PhoneVoice[] | null>(null);
   const [red, setRed] = useState(saved.red);
+  const [second, setSecond] = useState<string | null>(saved.second);
+  const [reminder, setReminderTime] = useState<string | null>(saved.reminder);
   const [tab, setTab] = useState<Tab>("read");
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -186,11 +251,19 @@ export function App() {
   const [picker, setPicker] = useState<null | { book: Book | null; testament: "OT" | "NT" }>(null);
   const [today, setToday] = useState<null | { label: string; text: string; book: string; chapter: number; verse: number }>(null);
   const pane = useRef<HTMLDivElement>(null);
+  const [secondVerses, setSecondVerses] = useState<Map<number, string>>(new Map());
+  // the book's introduction, or the commentary's notes on the chapter
+  const [study, setStudy] = useState<null | { kind: "intro"; text: string } | { kind: "notes"; notes: CommentaryNote[] }>(null);
+  const [about, setAbout] = useState<CommentaryAbout | null>(null);
+  const [showTranslations, setShowTranslations] = useState(false);
 
   // reading aloud: the verse being spoken; each run has a number, so an old one knows to stop
   const [speaking, setSpeaking] = useState<number | null>(null);
   const run = useRef(0);
   const thenListen = useRef(false);
+  // the sleep timer: "off", minutes ("15"), or "chapter" (stop at the end of this one)
+  const [sleep, setSleep] = useState("off");
+  const sleepAt = useRef<number | null>(null);
 
   // searching
   const [typed, setTyped] = useState("");
@@ -205,9 +278,12 @@ export function App() {
   // my study
   const [kind, setKind] = useState<MarkKind>("bookmarks");
   const [list, setList] = useState<Mark[]>([]);
+  const [tags, setTags] = useState<[string, number][]>([]);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
 
-  // reading plans
+  // reading plans, and the streak
   const [progress, setProgress] = useState<PlanProgress[]>([]);
+  const [stats, setStats] = useState<ReadingStats | null>(null);
 
   // dictionary and backup (More)
   const [word, setWord] = useState("");
@@ -220,19 +296,39 @@ export function App() {
     window.setTimeout(() => setToast((t) => (t === message ? null : t)), 1800);
   };
 
+  const loadVersions = () =>
+    api
+      .versions()
+      .then((vs) => {
+        setVersions(vs);
+        // a translation removed from the phone gives way to the BSB
+        setVersion((v) => (vs.some((x) => x.code === v) ? v : "BSB"));
+        setSecond((v) => (v && vs.some((x) => x.code === v) ? v : null));
+      })
+      .catch(fail);
+
   useEffect(() => {
-    api.versions().then(setVersions).catch(fail);
+    void loadVersions();
     api.books().then(setBooks).catch(fail);
+    api.commentaryAbout().then(setAbout).catch(() => undefined);
+    // the plans now, so the daily reminder can name the one being read
+    api.planProgress().then(setProgress).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    store(SAVED_KEY, JSON.stringify({ version, ...place, size, theme, dayVerse, rate, red } satisfies Saved));
-  }, [version, place, size, theme, dayVerse, rate, red]);
+    store(
+      SAVED_KEY,
+      JSON.stringify({ version, ...place, size, theme, textColor, contrast, font, dayVerse, rate, voice, red, second, reminder } satisfies Saved),
+    );
+  }, [version, place, size, theme, textColor, contrast, font, dayVerse, rate, voice, red, second, reminder]);
 
+  // the look: applied now, and again when the phone switches between light and dark
   useEffect(() => {
-    if (theme === "system") delete document.documentElement.dataset.theme;
-    else document.documentElement.dataset.theme = theme;
-  }, [theme]);
+    const a = { theme, textColor, contrast, font };
+    applyAppearance(a);
+    return theme === "system" ? watchSystemTheme(() => applyAppearance(a)) : undefined;
+  }, [theme, textColor, contrast, font]);
 
   // --- the verse for the day, once a day when the app opens
   useEffect(() => {
@@ -265,6 +361,74 @@ export function App() {
     api.chapterMarks(place.book, place.chapter).then(setMarks).catch(fail);
   }, [place, marksVersion]);
 
+  // the second translation, verse by verse
+  useEffect(() => {
+    if (!second || second === version) {
+      setSecondVerses(new Map());
+      return;
+    }
+    let current = true;
+    api
+      .chapter(second, place.book, place.chapter)
+      .then((v) => current && setSecondVerses(new Map(v.map((x) => [x.verse, x.text]))))
+      .catch(() => current && setSecondVerses(new Map()));
+    return () => {
+      current = false;
+    };
+  }, [second, version, place]);
+
+  // --- the reading streak: a chapter counts as read when its end has been reached and it
+  // has been open for a little while (or it was listened to the end)
+  const loadStats = () => api.readingStats(todayIso()).then(setStats).catch(() => undefined);
+  useEffect(() => {
+    void loadStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const reading = useRef({ key: "", openedAt: 0, endSeen: false, done: false });
+  const endRef = useRef<HTMLElement>(null);
+
+  function markRead(book: string, chapter: number) {
+    const before = stats;
+    api
+      .markRead(book, chapter, todayIso())
+      .then(() => api.readingStats(todayIso()))
+      .then((s) => {
+        setStats(s);
+        if (before && !before.read_today && s.read_today) say(s.streak > 1 ? `${s.streak} days in a row` : "Read today ✓");
+      })
+      .catch(() => undefined);
+  }
+
+  function tryMarkRead() {
+    const r = reading.current;
+    if (r.done || !r.endSeen || Date.now() - r.openedAt < 15000) return;
+    r.done = true;
+    markRead(place.book, place.chapter);
+  }
+
+  useEffect(() => {
+    if (tab !== "read" || verses.length === 0) return;
+    const key = `${version}|${place.book}|${place.chapter}`;
+    if (reading.current.key !== key) reading.current = { key, openedAt: Date.now(), endSeen: false, done: false };
+    const el = endRef.current;
+    const seen = el
+      ? new IntersectionObserver((entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            reading.current.endSeen = true;
+            tryMarkRead();
+          }
+        })
+      : null;
+    if (el && seen) seen.observe(el);
+    const t = window.setInterval(tryMarkRead, 5000);
+    return () => {
+      seen?.disconnect();
+      window.clearInterval(t);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verses, tab]);
+
   // land on the verse asked for (and show which it is), or at the top of a new chapter
   useEffect(() => {
     if (tab !== "read" || verses.length === 0) return;
@@ -290,6 +454,7 @@ export function App() {
     setChosen(null);
     setPicker(null);
     setArticle(null);
+    setStudy(null);
     setTarget(verse);
     setPlace({ book, chapter });
     setTab("read");
@@ -326,7 +491,7 @@ export function App() {
       setSpeaking(v.verse);
       let done = false;
       try {
-        done = (await phone.speak(v.text, rate)).finished;
+        done = (await phone.speak(v.text, rate, voice)).finished;
       } catch (e) {
         if (mine === run.current) {
           setSpeaking(null);
@@ -341,6 +506,15 @@ export function App() {
       }
     }
     setSpeaking(null);
+    // listened to the end: that counts as read
+    if (reading.current.key.endsWith(`|${place.book}|${place.chapter}`) && !reading.current.done) {
+      reading.current.done = true;
+      markRead(place.book, place.chapter);
+    }
+    if (sleepRef.current === "chapter") {
+      setSleep("off");
+      return;
+    }
     const to = nextRef.current;
     if (to) {
       thenListen.current = true;
@@ -350,12 +524,36 @@ export function App() {
   }
 
   function stopListening() {
+    setSleep("off");
     if (speaking == null && !thenListen.current) return;
     run.current++;
     thenListen.current = false;
     setSpeaking(null);
     void phone.stopSpeaking().catch(() => undefined);
   }
+
+  // the sleep timer
+  const sleepRef = useRef(sleep);
+  sleepRef.current = sleep;
+  useEffect(() => {
+    const minutes = Number(sleep);
+    sleepAt.current = minutes > 0 ? Date.now() + minutes * 60000 : null;
+    if (!sleepAt.current) return;
+    const t = window.setInterval(() => {
+      if (sleepAt.current && Date.now() >= sleepAt.current) stopListening();
+    }, 5000);
+    return () => window.clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sleep]);
+
+  // the phone's voices, the first time More is opened
+  useEffect(() => {
+    if (tab !== "more" || voices) return;
+    phone
+      .voices()
+      .then((r) => setVoices(r.voices))
+      .catch(() => setVoices([]));
+  }, [tab, voices]);
 
   useEffect(() => {
     if (speaking == null) return;
@@ -426,6 +624,7 @@ export function App() {
   useEffect(() => {
     if (tab !== "study") return;
     api.marks(kind, version).then(setList).catch(fail);
+    api.allTags().then(setTags).catch(() => undefined);
   }, [tab, kind, version, marksVersion]);
 
   const highlightOf = useMemo(() => new Map(marks.highlights), [marks]);
@@ -445,9 +644,47 @@ export function App() {
   // --- reading plans
   const loadPlans = () => api.planProgress().then(setProgress).catch(fail);
   useEffect(() => {
-    if (tab === "plans") void loadPlans();
+    if (tab === "plans") {
+      void loadPlans();
+      void loadStats();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  // the daily reminder: scheduled again whenever its time or the plans change
+  const reminderBody = () => {
+    const plan = PLANS.find((p) => progress.some((x) => x.plan_id === p.id));
+    return plan ? `Today's reading in “${plan.name}” is waiting.` : "A few minutes with the Bible today?";
+  };
+  async function chooseReminder(time: string | null) {
+    const ok = await setReminder(time, reminderBody()).catch((e) => {
+      fail(e);
+      return false;
+    });
+    if (time && !ok) {
+      say("Notifications aren't allowed for this app");
+      setReminderTime(null);
+      return;
+    }
+    setReminderTime(time);
+    if (time) say(`Reminder set for ${time} every day`);
+  }
+  useEffect(() => {
+    if (reminder) void setReminder(reminder, reminderBody()).catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progress]);
+
+  // --- the book's introduction and the chapter's notes
+  const openIntro = () =>
+    api
+      .bookIntro(place.book)
+      .then((text) => setStudy({ kind: "intro", text }))
+      .catch(fail);
+  const openChapterNotes = () =>
+    api
+      .chapterNotes(place.book, place.chapter)
+      .then((notes) => setStudy({ kind: "notes", notes }))
+      .catch(fail);
 
   // --- the dictionary (More)
   useEffect(() => {
@@ -501,10 +738,14 @@ export function App() {
   useBack(article != null, () => setArticle(null));
   useBack(chosen != null, () => setChosen(null));
   useBack(asking != null, () => setAsking(null));
+  useBack(study != null, () => setStudy(null));
+  useBack(showTranslations, () => setShowTranslations(false));
 
   const chosenVerse = chosen != null ? verses.find((v) => v.verse === chosen) : undefined;
   const shown = topic ? topic.hits : (result?.hits ?? []);
   const versionName = versions.find((v) => v.code === version);
+  const secondName = versions.find((v) => v.code === second);
+  const shownList = tagFilter ? list.filter((m) => m.tags.some((t) => t.toLowerCase() === tagFilter.toLowerCase())) : list;
 
   return (
     <div className="app" style={{ ["--scale" as string]: size }}>
@@ -533,11 +774,26 @@ export function App() {
           )}
         </form>
         <select value={version} onChange={(e) => setVersion(e.target.value)} aria-label="Translation">
-          {versions.map((v) => (
-            <option key={v.code} value={v.code}>
-              {v.code}
-            </option>
-          ))}
+          <optgroup label="Built in">
+            {versions
+              .filter((v) => !v.downloaded)
+              .map((v) => (
+                <option key={v.code} value={v.code}>
+                  {v.code}
+                </option>
+              ))}
+          </optgroup>
+          {versions.some((v) => v.downloaded) && (
+            <optgroup label="Downloaded">
+              {versions
+                .filter((v) => v.downloaded)
+                .map((v) => (
+                  <option key={v.code} value={v.code}>
+                    {v.name.length > 14 ? v.code : v.name}
+                  </option>
+                ))}
+            </optgroup>
+          )}
         </select>
       </header>
       {typed.trim() && typed.trim() !== query && (
@@ -565,6 +821,25 @@ export function App() {
             <button className="place" onClick={() => setPicker({ book: null, testament: bookInfo?.testament ?? "NT" })}>
               {place.book} {place.chapter} <span aria-hidden>▾</span>
             </button>
+            <div className="read-tools">
+              <button onClick={() => void openIntro()}>About {place.book}</button>
+              <button onClick={() => void openChapterNotes()}>Study notes</button>
+              <select
+                className={second ? "on" : ""}
+                value={second ?? ""}
+                onChange={(e) => setSecond(e.target.value || null)}
+                aria-label="A second translation under each verse"
+              >
+                <option value="">Side by side…</option>
+                {versions
+                  .filter((v) => v.code !== version)
+                  .map((v) => (
+                    <option key={v.code} value={v.code}>
+                      + {v.downloaded ? v.name : v.code}
+                    </option>
+                  ))}
+              </select>
+            </div>
             {today && (
               <aside className="today">
                 <div className="hit-head">
@@ -586,7 +861,7 @@ export function App() {
                 </button>
               </aside>
             )}
-            <div className="chapter">
+            <div className="chapter" dir={versionName?.rtl ? "rtl" : undefined}>
               {verses.map((v) => {
                 const color = highlightOf.get(v.verse);
                 return (
@@ -600,11 +875,17 @@ export function App() {
                     {marks.bookmarks.includes(v.verse) && <span className="ribbon" aria-label="Bookmarked" />}
                     {red && v.red.length > 0 ? redParts(v.text, v.red).map((p, i) => (p.red ? <span key={i} className="wj">{p.text}</span> : p.text)) : v.text}
                     {marks.notes.includes(v.verse) && <span className="has-note" aria-label="Has a note">✎</span>}
+                    {secondVerses.has(v.verse) && (
+                      <span className="verse-second" dir={secondName?.rtl ? "rtl" : undefined}>
+                        <b>{second}</b>
+                        {secondVerses.get(v.verse)}
+                      </span>
+                    )}
                   </p>
                 );
               })}
             </div>
-            <nav className="turn">
+            <nav className="turn" ref={endRef}>
               <button disabled={!prev} onClick={() => prev && go(prev.book, prev.chapter)}>
                 ‹ {prev ? `${prev.book} ${prev.chapter}` : ""}
               </button>
@@ -612,7 +893,10 @@ export function App() {
                 {next ? `${next.book} ${next.chapter}` : ""} ›
               </button>
             </nav>
-            <p className="licence">{versionName?.name} · {versionName?.license_note}</p>
+            <p className="licence">
+              {versionName?.name} · {versionName?.license_note}
+              {secondName && ` — ${secondName.name} · ${secondName.license_note}`}
+            </p>
           </>
         )}
 
@@ -711,12 +995,26 @@ export function App() {
                 </button>
               ))}
             </div>
+            {kind !== "highlights" && tags.length > 0 && (
+              <div className="chips" role="group" aria-label="Tags">
+                <button className={tagFilter == null ? "on" : ""} onClick={() => setTagFilter(null)}>
+                  All
+                </button>
+                {tags.map(([t, n]) => (
+                  <button key={t} className={tagFilter === t ? "on" : ""} onClick={() => setTagFilter(tagFilter === t ? null : t)}>
+                    {t} <small>{n}</small>
+                  </button>
+                ))}
+              </div>
+            )}
             {list.length === 0 && (
               <p className="hint">
                 {kind === "bookmarks" ? "No bookmarks yet." : kind === "highlights" ? "No highlights yet." : "No notes yet."} Tap a verse while reading to{" "}
                 {kind === "bookmarks" ? "bookmark it" : kind === "highlights" ? "highlight it" : "write a note on it"}.
+                {kind !== "highlights" && " Bookmarks and notes can have tags, to group them (“Prayer”, “Sunday's sermon”)."}
               </p>
             )}
+            {list.length > 0 && shownList.length === 0 && <p className="hint">Nothing here has the tag “{tagFilter}”.</p>}
             {(kind === "highlights" ? COLORS.filter((c) => list.some((m) => m.color === c)) : [null]).map((color) => (
               <section key={color ?? "all"}>
                 {color && (
@@ -725,7 +1023,7 @@ export function App() {
                   </h3>
                 )}
                 <ul className="hits">
-                  {list
+                  {(kind === "highlights" ? list : shownList)
                     .filter((m) => color == null || m.color === color)
                     .map((m) => (
                       <li key={`${m.book}-${m.chapter}-${m.verse}`} className={color ? `hl-${color}` : ""} onClick={() => go(m.book, m.chapter, m.verse)}>
@@ -745,6 +1043,15 @@ export function App() {
                           </button>
                         </div>
                         {kind === "notes" && <p className="note-body">{m.color}</p>}
+                        {m.tags.length > 0 && (
+                          <div className="tag-row">
+                            {m.tags.map((t) => (
+                              <span key={t} className="tag">
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         <span>{m.text}</span>
                       </li>
                     ))}
@@ -756,6 +1063,48 @@ export function App() {
 
         {tab === "plans" && (
           <>
+            <h2>Your reading</h2>
+            {stats && (
+              <>
+                <div className="streak">
+                  <div className={stats.streak > 0 ? "hot" : ""}>
+                    <strong>{stats.streak > 0 ? `🔥 ${stats.streak}` : "0"}</strong>
+                    <span>day{stats.streak === 1 ? "" : "s"} in a row</span>
+                  </div>
+                  <div>
+                    <strong>{stats.best_streak}</strong>
+                    <span>best run</span>
+                  </div>
+                  <div>
+                    <strong>{stats.days}</strong>
+                    <span>day{stats.days === 1 ? "" : "s"} read</span>
+                  </div>
+                </div>
+                <p className="hint">
+                  {stats.chapters.toLocaleString()} of {ALL_CHAPTERS.toLocaleString()} chapters of the Bible read ({Math.floor((stats.chapters / ALL_CHAPTERS) * 100)}%).{" "}
+                  {stats.read_today ? "You've read today." : "A chapter counts once you reach its end."}
+                </p>
+                <div className="bar" aria-hidden>
+                  <i style={{ width: `${Math.min(100, (stats.chapters / ALL_CHAPTERS) * 100)}%` }} />
+                </div>
+              </>
+            )}
+
+            <h3>Daily reminder</h3>
+            {canRemind ? (
+              <>
+                <div className="time-row">
+                  <label className="toggle" style={{ margin: 0 }}>
+                    <input type="checkbox" checked={reminder != null} onChange={(e) => void chooseReminder(e.target.checked ? "07:00" : null)} /> Remind me every day at
+                  </label>
+                  <input type="time" value={reminder ?? "07:00"} disabled={reminder == null} onChange={(e) => e.target.value && void chooseReminder(e.target.value)} aria-label="Reminder time" />
+                </div>
+                <p className="hint">A notification once a day, even when the app is closed.</p>
+              </>
+            ) : (
+              <p className="hint">The daily reminder works on the phone.</p>
+            )}
+
             <h2>Reading plans</h2>
             {PLANS.map((plan) => {
               const mine = progress.find((p) => p.plan_id === plan.id);
@@ -780,7 +1129,8 @@ export function App() {
                 <section key={plan.id} className="card">
                   <h3>{plan.name}</h3>
                   <p className="hint">
-                    Day {day} of {plan.days} · {done.size} day{done.size === 1 ? "" : "s"} read
+                    Day {day} of {plan.days} · {done.size} day{done.size === 1 ? "" : "s"} read · {Math.round((done.size / plan.days) * 100)}% done
+                    {behindCount(day, done) > 0 && ` · ${behindCount(day, done)} day${behindCount(day, done) === 1 ? "" : "s"} to catch up`}
                   </p>
                   <div className="bar" aria-hidden>
                     <i style={{ width: `${Math.round((done.size / plan.days) * 100)}%` }} />
@@ -832,6 +1182,15 @@ export function App() {
               </ul>
             )}
 
+            <h2>Translations</h2>
+            <p className="hint">
+              Built in: {versions.filter((v) => !v.downloaded).map((v) => v.code).join(", ")}.
+              {versions.some((v) => v.downloaded) && ` Downloaded: ${versions.filter((v) => v.downloaded).map((v) => v.name).join(", ")}.`}
+            </p>
+            <div className="actions">
+              <button onClick={() => setShowTranslations(true)}>More translations (other languages)</button>
+            </div>
+
             <h2>Backup</h2>
             <p className="hint">Your bookmarks, highlights, notes and reading plans live only on this phone. Save a backup file now and then; the same file works in the desktop app.</p>
             <div className="actions">
@@ -851,15 +1210,52 @@ export function App() {
                 A+
               </button>
             </div>
+            <h2>Appearance</h2>
             <h3>Theme</h3>
             <div className="chips">
-              {(["system", "light", "dark"] as const).map((t) => (
+              {(["system", "light", "sepia", "dark"] as const).map((t) => (
                 <button key={t} className={theme === t ? "on" : ""} onClick={() => setTheme(t)}>
-                  {t === "system" ? "Same as phone" : t === "light" ? "Light" : "Dark"}
+                  {t === "system" ? "Same as phone" : t === "light" ? "Light" : t === "sepia" ? "Sepia" : "Dark"}
                 </button>
               ))}
             </div>
-            <h3>Read aloud speed</h3>
+            <h3>Text colour</h3>
+            <div className="chips">
+              {(
+                [
+                  ["default", "Standard"],
+                  ["strong", "Strongest"],
+                  ["sepia", "Warm"],
+                  ["blue", "Blue-black"],
+                ] as const
+              ).map(([value, label]) => (
+                <button key={value} className={textColor === value ? "on" : ""} onClick={() => setTextColor(value)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            <h3>Contrast</h3>
+            <div className="chips">
+              <button className={contrast === "standard" ? "on" : ""} onClick={() => setContrast("standard")}>
+                Standard
+              </button>
+              <button className={contrast === "high" ? "on" : ""} onClick={() => setContrast("high")}>
+                High
+              </button>
+            </div>
+            <p className="hint">High contrast makes the grey labels and hints darker (lighter on the dark page), for reading in bright light.</p>
+            <h3>Font</h3>
+            <div className="chips">
+              <button className={font === "serif" ? "on" : ""} onClick={() => setFont("serif")} style={{ fontFamily: "var(--serif)" }}>
+                Classic
+              </button>
+              <button className={font === "sans" ? "on" : ""} onClick={() => setFont("sans")} style={{ fontFamily: "var(--sans)" }}>
+                Modern
+              </button>
+            </div>
+
+            <h2>Read aloud</h2>
+            <h3>Speed</h3>
             <div className="chips">
               {RATES.map(([value, label]) => (
                 <button key={value} className={rate === value ? "on" : ""} onClick={() => setRate(value)}>
@@ -867,7 +1263,24 @@ export function App() {
                 </button>
               ))}
             </div>
-            <p className="hint">Tap a verse and choose Listen. It uses this phone's own voice; a better one can be chosen in the phone's settings under Text-to-speech.</p>
+            <h3>Voice</h3>
+            {voices && voices.length > 0 ? (
+              <select className="select-field" value={voice ?? ""} onChange={(e) => setVoice(e.target.value || null)} aria-label="Voice">
+                <option value="">The phone's default voice</option>
+                {voices.map((v) => (
+                  <option key={v.name} value={v.name}>
+                    {v.label}
+                    {v.local ? "" : " (needs internet)"}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="hint">{voices ? "This phone offers one voice. More can be added in the phone's settings under Text-to-speech." : "Looking for the phone's voices…"}</p>
+            )}
+            <div className="actions">
+              <button onClick={() => void phone.speak("For God so loved the world, that he gave his only begotten Son.", rate, voice).catch(fail)}>Try this voice</button>
+            </div>
+            <p className="hint">Tap a verse and choose Listen from here. While it reads, the bar at the bottom has a sleep timer.</p>
             <label className="toggle">
               <input type="checkbox" checked={red} onChange={(e) => setRed(e.target.checked)} /> Words of Jesus in red
             </label>
@@ -884,8 +1297,10 @@ export function App() {
               ))}
             </ul>
             <p className="licence">
-              Topics: Nave's Topical Bible and Torrey's New Topical Textbook. Dictionary: Easton's and Smith's Bible Dictionaries. Cross-references: OpenBible.info (CC BY 4.0). The rest is public domain.
-              Everything works offline.
+              Topics: Nave's Topical Bible and Torrey's New Topical Textbook. Dictionary: Easton's and Smith's Bible Dictionaries. Word study: Strong's Exhaustive Concordance.
+              Cross-references: OpenBible.info (CC BY 4.0).{" "}
+              {about && about.name ? `Study notes and book introductions: ${about.name} (${about.licence}), ${about.website}.` : ""} The rest is public domain. Everything works offline;
+              only downloading more translations (from eBible.org) needs the internet.
             </p>
           </>
         )}
@@ -896,6 +1311,13 @@ export function App() {
           <span>
             Reading {place.book} {place.chapter}:{speaking}
           </span>
+          <select value={sleep} onChange={(e) => setSleep(e.target.value)} aria-label="Sleep timer">
+            {SLEEP.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
           <button onClick={stopListening}>Stop</button>
         </div>
       )}
@@ -938,6 +1360,7 @@ export function App() {
           onListen={() => void listenFrom(chosenVerse.verse)}
           onGo={go}
           onChanged={changed}
+          about={about}
           ask={ask}
           say={say}
           fail={fail}
@@ -1004,6 +1427,47 @@ export function App() {
         </Sheet>
       )}
 
+      {study && (
+        <Sheet tall onClose={() => setStudy(null)}>
+          <h3>
+            {study.kind === "intro" ? `About ${place.book}` : `Study notes on ${place.book} ${place.chapter}`} <small>{about?.name}</small>
+          </h3>
+          <div className="commentary">
+            {study.kind === "intro" &&
+              (study.text ? study.text.split(/\n{2,}/).map((para, i) => <p key={i}>{para}</p>) : <p className="hint">No introduction for this book.</p>)}
+            {study.kind === "notes" &&
+              (study.notes.length > 0 ? (
+                study.notes.map((n, i) => (
+                  <div key={i}>
+                    {(i === 0 || study.notes[i - 1].verse_start !== n.verse_start) && (
+                      <h4>
+                        <button className="link" onClick={() => go(place.book, place.chapter, n.verse_start)}>
+                          Verse {n.verse_start}
+                        </button>
+                      </h4>
+                    )}
+                    <p>{n.text}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="hint">No notes on this chapter.</p>
+              ))}
+          </div>
+          {about && (
+            <p className="attribution">
+              {about.name} © Tyndale House Publishers, {about.licence} ({about.licence_url}). Shown here unchanged.
+            </p>
+          )}
+        </Sheet>
+      )}
+
+      {showTranslations && (
+        <Sheet tall onClose={() => setShowTranslations(false)}>
+          <h3>More translations</h3>
+          <Translations onChanged={() => void loadVersions()} ask={ask} say={say} />
+        </Sheet>
+      )}
+
       {article && (
         <Sheet tall onClose={() => setArticle(null)}>
           <h3>
@@ -1014,6 +1478,13 @@ export function App() {
       )}
     </div>
   );
+}
+
+/** Earlier days of a plan not ticked off yet. */
+function behindCount(day: number, done: Set<number>): number {
+  let n = 0;
+  for (let d = 1; d < day; d++) if (!done.has(d)) n++;
+  return n;
 }
 
 function HitList({ hits, showWhy, onOpen }: { hits: Hit[]; showWhy: boolean; onOpen: (book: string, chapter: number, verse: number) => void }) {
@@ -1073,19 +1544,31 @@ interface VerseSheetProps {
   onListen: () => void;
   onGo: (book: string, chapter: number, verse: number | null) => void;
   onChanged: () => void;
+  about: CommentaryAbout | null;
   ask: (message: string, yes: string, then: () => void) => void;
   say: (message: string) => void;
   fail: (e: unknown) => void;
 }
 
+/** "Prayer, hope" <-> ["Prayer", "hope"] */
+const tagText = (tags: string[]) => tags.join(", ");
+const textTags = (text: string) =>
+  text
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+
 /** Everything that can be done with one verse: mark it, write a note on it, pass it on,
  * hear it, and see what else Scripture says alongside it. */
-function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose, onBookmark, onHighlight, onListen, onGo, onChanged, ask, say, fail }: VerseSheetProps) {
-  const [view, setView] = useState<"main" | "note" | "refs" | "compare">("main");
+function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose, onBookmark, onHighlight, onListen, onGo, onChanged, about, ask, say, fail }: VerseSheetProps) {
+  const [view, setView] = useState<"main" | "note" | "refs" | "compare" | "words" | "notes" | "picture" | "tags">("main");
   const [note, setNote] = useState("");
   const [had, setHad] = useState(false);
+  const [noteTags, setNoteTags] = useState("");
+  const [bookmarkTags, setBookmarkTags] = useState("");
   const [refs, setRefs] = useState<Hit[] | null>(null);
   const [all, setAll] = useState<[string, string][] | null>(null);
+  const [comments, setComments] = useState<CommentaryNote[] | null>(null);
   const label = `${book} ${chapter}:${verse.verse}`;
   const quoted = `${label} (${version}) — ${verse.text}`;
 
@@ -1097,18 +1580,22 @@ function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose,
         setHad(!!n);
       })
       .catch(fail);
+    api.tagsOf("notes", book, chapter, verse.verse).then((t) => setNoteTags(tagText(t))).catch(() => undefined);
+    api.tagsOf("bookmarks", book, chapter, verse.verse).then((t) => setBookmarkTags(tagText(t))).catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book, chapter, verse.verse]);
 
   useEffect(() => {
     if (view === "refs" && !refs) api.crossRefs(version, book, chapter, verse.verse).then(setRefs).catch(fail);
     if (view === "compare" && !all) api.compare(book, chapter, verse.verse).then(setAll).catch(fail);
+    if (view === "notes" && !comments) api.verseNotes(book, chapter, verse.verse).then(setComments).catch(fail);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
   const saveNote = (body: string) =>
     api
       .setNote(book, chapter, verse.verse, body)
+      .then(() => (body.trim() ? api.setTags("notes", book, chapter, verse.verse, textTags(noteTags)) : undefined))
       .then(() => {
         onChanged();
         say(body.trim() ? "Note saved" : "Note deleted");
@@ -1146,10 +1633,14 @@ function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose,
           </div>
           <div className="actions wrap">
             <button onClick={onBookmark}>{bookmarked ? "Remove bookmark" : "Bookmark"}</button>
+            {bookmarked && <button onClick={() => setView("tags")}>{bookmarkTags ? `Tags: ${bookmarkTags}` : "Tag the bookmark"}</button>}
             <button onClick={() => setView("note")}>{had ? "Edit note" : "Add a note"}</button>
+            <button onClick={() => setView("words")}>Word study</button>
+            <button onClick={() => setView("notes")}>Study notes</button>
             <button onClick={() => setView("refs")}>Cross-references</button>
             <button onClick={() => setView("compare")}>Compare translations</button>
             <button onClick={onListen}>Listen from here</button>
+            <button onClick={() => setView("picture")}>Verse picture</button>
             <button
               onClick={() =>
                 phone
@@ -1180,6 +1671,7 @@ function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose,
         <>
           <p className="sheet-text small">{verse.text}</p>
           <textarea className="field note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Your note on this verse" rows={6} autoFocus={!had} />
+          <input className="field tag-edit" value={noteTags} onChange={(e) => setNoteTags(e.target.value)} placeholder="Tags, e.g. Prayer, Sunday's sermon" aria-label="Tags for this note" />
           <div className="actions">
             {had && <button onClick={() => ask(`Delete your note on ${label}?`, "Delete", () => void saveNote(""))}>Delete</button>}
             <button className="primary" disabled={!note.trim() && !had} onClick={() => void saveNote(note)}>
@@ -1195,6 +1687,45 @@ function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose,
           <HitList hits={refs ?? []} showWhy={false} onOpen={onGo} />
         </>
       )}
+      {view === "tags" && (
+        <>
+          <p className="hint">Tags group your bookmarks (and notes) in My Study. Separate them with commas.</p>
+          <input className="field" value={bookmarkTags} onChange={(e) => setBookmarkTags(e.target.value)} placeholder="e.g. Prayer, Promises" aria-label="Tags for this bookmark" autoFocus />
+          <div className="actions">
+            <button
+              className="primary"
+              onClick={() =>
+                void api
+                  .setTags("bookmarks", book, chapter, verse.verse, textTags(bookmarkTags))
+                  .then(() => {
+                    onChanged();
+                    say("Tags saved");
+                    onClose();
+                  })
+                  .catch(fail)
+              }
+            >
+              Save
+            </button>
+          </div>
+        </>
+      )}
+      {view === "words" && <WordStudy book={book} chapter={chapter} verse={verse.verse} version={version} onGo={onGo} fail={fail} />}
+      {view === "notes" && (
+        <div className="commentary">
+          {!comments && <p className="hint">Loading…</p>}
+          {comments && comments.length === 0 && <p className="hint">No study note on this verse.</p>}
+          {(comments ?? []).map((n, i) => (
+            <p key={i}>{n.text}</p>
+          ))}
+          {about && comments && comments.length > 0 && (
+            <p className="attribution">
+              {about.name} © Tyndale House Publishers, {about.licence}.
+            </p>
+          )}
+        </div>
+      )}
+      {view === "picture" && <VersePicture label={label} version={version} text={verse.text} say={say} fail={fail} />}
       {view === "compare" && (
         <ul className="hits plain">
           {(all ?? []).map(([code, text]) => (

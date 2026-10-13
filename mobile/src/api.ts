@@ -4,6 +4,11 @@ export interface Version {
   code: string;
   name: string;
   license_note: string;
+  language: string;
+  /** written right to left (Hebrew, Arabic, ...) */
+  rtl: boolean;
+  /** downloaded by the reader, not built in */
+  downloaded: boolean;
 }
 
 export interface Book {
@@ -72,6 +77,95 @@ export interface Mark {
   color: string;
   created_at: string;
   text: string;
+  /** a bookmark's or note's tags */
+  tags: string[];
+}
+
+/** A word of a verse with its Strong's number(s). */
+export interface Word {
+  text: string;
+  numbers: string[];
+}
+
+export interface StrongsEntry {
+  number: string;
+  language: string;
+  lemma: string;
+  xlit: string;
+  pronunciation: string;
+  derivation: string;
+  definition: string;
+  kjv_usage: string;
+  /** [translation, verses, occurrences] */
+  counts: [string, number, number][];
+}
+
+export interface StrongsUse {
+  book: string;
+  chapter: number;
+  verse: number;
+  words: string[];
+  text: string;
+}
+
+/** A commentary note: it covers verse_start up to the next note's start. */
+export interface CommentaryNote {
+  verse_start: number;
+  text: string;
+}
+
+export interface CommentaryAbout {
+  name: string;
+  licence: string;
+  licence_url: string;
+  website: string;
+}
+
+/** A translation eBible.org offers for download. */
+export interface Offer {
+  id: string;
+  language: string;
+  language_own: string;
+  title: string;
+  description: string;
+  copyright: string;
+  ot_books: number;
+  nt_books: number;
+  rtl: boolean;
+  installed: boolean;
+}
+
+export interface ReadingStats {
+  streak: number;
+  best_streak: number;
+  read_today: boolean;
+  days: number;
+  chapters: number;
+  /** [book, chapters of it read] */
+  books: [string, number][];
+}
+
+export interface BackgroundThumb {
+  id: string;
+  theme: string;
+  /** JPEG, base64 */
+  thumb: string;
+}
+
+export interface BackgroundInfo {
+  id: string;
+  theme: string;
+  title: string;
+  author: string;
+  licence: string;
+  source: string;
+}
+
+export interface PhoneVoice {
+  name: string;
+  label: string;
+  /** works without the internet */
+  local: boolean;
 }
 
 export interface PlanProgress {
@@ -123,13 +217,49 @@ export const api = {
   backup: () => invoke<[string, Counts]>("backup"),
   /** adds a backup's contents to what is here; returns how much was new */
   restore: (json: string) => invoke<Counts>("restore", { json }),
+
+  /** the verse's tagged words, and the translation they come from (the BSB when `version` isn't tagged) */
+  verseWords: (version: string, book: string, chapter: number, verse: number) => invoke<[string, Word[]]>("verse_words", { version, book, chapter, verse }),
+  strongsEntry: (number: string) => invoke<StrongsEntry | null>("strongs_entry", { number }),
+  strongsUses: (version: string, number: string) => invoke<StrongsUse[]>("strongs_uses", { version, number }),
+  chapterNotes: (book: string, chapter: number) => invoke<CommentaryNote[]>("chapter_notes", { book, chapter }),
+  verseNotes: (book: string, chapter: number, verse: number) => invoke<CommentaryNote[]>("verse_notes", { book, chapter, verse }),
+  bookIntro: (book: string) => invoke<string>("book_intro", { book }),
+  commentaryAbout: () => invoke<CommentaryAbout>("commentary_about"),
+
+  bibleCatalog: (today: string, refresh = false) => invoke<Offer[]>("bible_catalog", { today, refresh }),
+  /** downloads a translation ("bible-progress" events report { id, pct }); returns its verse count */
+  bibleInstall: (id: string, today: string) => invoke<number>("bible_install", { id, today }),
+  bibleRemove: (code: string) => invoke<void>("bible_remove", { code }),
+
+  setTags: (kind: "bookmarks" | "notes", book: string, chapter: number, verse: number, tags: string[]) => invoke<void>("set_tags", { kind, book, chapter, verse, tags }),
+  tagsOf: (kind: "bookmarks" | "notes", book: string, chapter: number, verse: number) => invoke<string[]>("tags_of", { kind, book, chapter, verse }),
+  /** [tag, how many bookmarks and notes carry it] */
+  allTags: () => invoke<[string, number][]>("all_tags"),
+
+  markRead: (book: string, chapter: number, day: string) => invoke<void>("mark_read", { book, chapter, day }),
+
+  /** how many nature backgrounds are downloaded (0: none yet), and the download's size */
+  backgroundsStatus: () => invoke<{ count: number; size_mb: number }>("backgrounds_status"),
+  /** downloads them ("backgrounds-progress" events report the percentage); returns how many */
+  backgroundsInstall: () => invoke<number>("backgrounds_install"),
+  backgroundsThumbs: () => invoke<BackgroundThumb[]>("backgrounds_thumbs"),
+  /** one background, full size: [JPEG base64, where it is from] */
+  backgroundImage: (id: string) => invoke<[string, BackgroundInfo]>("background_image", { id }),
+  backgroundsRemove: () => invoke<void>("backgrounds_remove"),
+  readingStats: (today: string) => invoke<ReadingStats>("reading_stats", { today }),
 };
 
 /** What only the phone itself can do (see src-tauri/plugins/phone). */
 export const phone = {
   share: (text: string, title: string | null = null) => invoke<unknown>("plugin:phone|share", { text, title }),
-  /** speaks with the phone's voice; resolves when it has finished, or was stopped */
-  speak: (text: string, rate: number) => invoke<{ finished: boolean }>("plugin:phone|speak", { text, rate }),
+  /** speaks with the phone's voice (`voice`: one of `voices`, or null for the default); resolves when it has finished, or was stopped */
+  speak: (text: string, rate: number, voice: string | null = null) => invoke<{ finished: boolean }>("plugin:phone|speak", { text, rate, voice }),
+  voices: () => invoke<{ voices: PhoneVoice[] }>("plugin:phone|voices"),
+  /** a PNG (base64) to the share sheet */
+  shareImage: (name: string, base64: string, text: string | null = null) => invoke<unknown>("plugin:phone|share_image", { name, base64, text }),
+  /** asks where to save a PNG (base64); `saved` is false if the reader cancelled */
+  saveImage: (name: string, base64: string) => invoke<{ saved: boolean }>("plugin:phone|save_image", { name, base64 }),
   stopSpeaking: () => invoke<unknown>("plugin:phone|stop_speaking"),
   /** asks where to save; `saved` is false if the reader cancelled */
   saveText: (name: string, text: string) => invoke<{ saved: boolean }>("plugin:phone|save_text", { name, text }),
