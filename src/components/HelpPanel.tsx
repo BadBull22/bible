@@ -667,8 +667,8 @@ const SECTIONS: Section[] = [
   },
   {
     id: "comfort",
-    title: "Reading comfort and focus mode",
-    keywords: "text size font line spacing width focus full screen f11 dark mode red letter words of jesus",
+    title: "Appearance, reading comfort and focus mode",
+    keywords: "text size font line spacing width focus full screen f11 dark mode light mode theme colour color contrast pale grey faint red letter words of jesus",
     body: (
       <>
         <p>
@@ -684,7 +684,12 @@ const SECTIONS: Section[] = [
         </p>
         <p>
           <strong>Focus</strong> in the top bar (or <K>F11</K>) goes full screen with just the text — no book list or panels.{" "}
-          <K>Esc</K> comes back. The app follows your Windows light or dark setting.
+          <K>Esc</K> comes back.
+        </p>
+        <p>
+          <strong>Settings → Appearance</strong> chooses a light or dark <strong>theme</strong> (or matches Windows), the{" "}
+          <strong>text colour</strong> (standard, strongest black or white, warm sepia, or blue-black) and the{" "}
+          <strong>contrast</strong>. If headings or small labels look too pale, set Contrast to <em>High</em>.
         </p>
       </>
     ),

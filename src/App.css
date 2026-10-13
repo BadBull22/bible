@@ -28,7 +28,7 @@
   --border: #e4e0d6;
   --text: #232017;
   --text-muted: #6b6558;
-  --text-faint: #948d7c;
+  --text-faint: #756e5f; /* 4.5:1 on --chrome-bg: small labels must stay readable */
   /* Headings/emphasis text on paper-raised or chrome surfaces: must be re-declared (not
      derived from --navy-900) in dark mode, since --navy-900 itself stays dark there and
      would otherwise sit unreadably on the equally-dark surfaces it decorates. */
@@ -358,13 +358,15 @@ kbd {
   opacity: 0.55;
 }
 
+/* Text buttons sit on the page (chapter heading, panels, Settings) in a readable grey that
+   follows the theme and contrast settings; the dark top bar re-colours its own below. */
 .text-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   background: none;
   border: none;
-  color: rgba(243, 241, 234, 0.85);
+  color: var(--text-muted);
   font-weight: 600;
   font-size: 0.88rem;
   padding: 0.4rem 0.3rem;
@@ -376,13 +378,26 @@ kbd {
   color: var(--accent-500);
 }
 
-.text-btn:disabled {
-  color: rgba(243, 241, 234, 0.3);
+.text-btn:disabled,
+.text-btn:disabled:hover {
+  color: var(--text-faint);
+  opacity: 0.6;
   cursor: default;
 }
 
-.text-btn:disabled:hover {
+/* on the dark navy top bar: light text */
+.top-bar .text-btn {
+  color: rgba(243, 241, 234, 0.85);
+}
+
+.top-bar .text-btn:hover {
+  color: var(--accent-500);
+}
+
+.top-bar .text-btn:disabled,
+.top-bar .text-btn:disabled:hover {
   color: rgba(243, 241, 234, 0.3);
+  opacity: 1;
 }
 
 /* Below ~1400px the top bar can't fit every labelled button next to the version
@@ -1999,94 +2014,93 @@ body.is-resizing .leaflet-container {
 
 /* ---------- dark mode ---------- */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #17181c;
-    --paper-raised: #1f2126;
-    --chrome-bg: #1b1c20;
-    --border: #2e3038;
-    --text: #e9e7e0;
-    --text-muted: #a8a49a;
-    --text-faint: #7c786f;
-    --accent-100: #1f2d42;
-    --ink-strong: #f3f1ea;
-    --status-ok: #6fc37d;
-    --status-error: #e07a7a;
-    --word-hint: rgba(79, 134, 207, 0.3);
-    color: var(--text);
-    background-color: var(--paper);
-  }
+/* dark theme (Settings → Appearance → Theme, or Windows' setting) */
+:root:where([data-theme="dark"]) {
+  --paper: #17181c;
+  --paper-raised: #1f2126;
+  --chrome-bg: #1b1c20;
+  --border: #2e3038;
+  --text: #e9e7e0;
+  --text-muted: #a8a49a;
+  --text-faint: #9a958b;
+  --accent-100: #1f2d42;
+  --ink-strong: #f3f1ea;
+  --status-ok: #6fc37d;
+  --status-error: #e07a7a;
+  --word-hint: rgba(79, 134, 207, 0.3);
+  color: var(--text);
+  background-color: var(--paper);
+}
 
-  /* --navy-900 text on --accent-100 is navy-on-navy in dark mode */
-  .frequency-summary {
-    color: var(--ink-strong);
-  }
+/* --navy-900 text on --accent-100 is navy-on-navy in dark mode */
+:where(:root[data-theme="dark"]) .frequency-summary {
+  color: var(--ink-strong);
+}
 
-  .chapter-nav-btn {
-    background: var(--chrome-bg);
-  }
+:where(:root[data-theme="dark"]) .chapter-nav-btn {
+  background: var(--chrome-bg);
+}
 
-  .top-bar {
-    background: linear-gradient(180deg, #10141f, #0b0e17);
-  }
+:where(:root[data-theme="dark"]) .top-bar {
+  background: linear-gradient(180deg, #10141f, #0b0e17);
+}
 
-  .book-btn:hover {
-    background: #2a2c33;
-  }
+:where(:root[data-theme="dark"]) .book-btn:hover {
+  background: #2a2c33;
+}
 
-  .chapter-view h2 {
-    border-bottom-color: #33301f;
-  }
+:where(:root[data-theme="dark"]) .chapter-view h2 {
+  border-bottom-color: #33301f;
+}
 
-  .verse-num {
-    color: var(--accent-500);
-  }
+:where(:root[data-theme="dark"]) .verse-num {
+  color: var(--accent-500);
+}
 
-  .link-btn {
-    color: #cdd3f0;
-  }
+:where(:root[data-theme="dark"]) .link-btn {
+  color: #cdd3f0;
+}
 
-  .search-controls select,
-  .search-controls input {
-    background: var(--paper-raised);
-    color: var(--text);
-    border-color: var(--border);
-  }
+:where(:root[data-theme="dark"]) .search-controls select,
+:where(:root[data-theme="dark"]) .search-controls input {
+  background: var(--paper-raised);
+  color: var(--text);
+  border-color: var(--border);
+}
 
-  /* highlight colours tuned to stay readable on the dark page */
-  .hl-yellow { --hl: rgba(234, 196, 53, 0.24); }
-  .hl-green { --hl: rgba(92, 184, 112, 0.22); }
-  .hl-blue { --hl: rgba(79, 134, 207, 0.26); }
-  .hl-pink { --hl: rgba(224, 108, 158, 0.24); }
-  .hl-orange { --hl: rgba(232, 143, 58, 0.24); }
-  .hl-lemon { --hl: rgba(255, 230, 0, 0.3); }
-  .hl-lime { --hl: rgba(118, 230, 64, 0.3); }
-  .hl-sky { --hl: rgba(40, 180, 255, 0.32); }
-  .hl-rose { --hl: rgba(255, 64, 160, 0.32); }
-  .hl-red { --hl: rgba(255, 70, 70, 0.32); }
-  .hl-violet { --hl: rgba(160, 90, 255, 0.34); }
+/* highlight colours tuned to stay readable on the dark page */
+:where(:root[data-theme="dark"]) .hl-yellow { --hl: rgba(234, 196, 53, 0.24); }
+:where(:root[data-theme="dark"]) .hl-green { --hl: rgba(92, 184, 112, 0.22); }
+:where(:root[data-theme="dark"]) .hl-blue { --hl: rgba(79, 134, 207, 0.26); }
+:where(:root[data-theme="dark"]) .hl-pink { --hl: rgba(224, 108, 158, 0.24); }
+:where(:root[data-theme="dark"]) .hl-orange { --hl: rgba(232, 143, 58, 0.24); }
+:where(:root[data-theme="dark"]) .hl-lemon { --hl: rgba(255, 230, 0, 0.3); }
+:where(:root[data-theme="dark"]) .hl-lime { --hl: rgba(118, 230, 64, 0.3); }
+:where(:root[data-theme="dark"]) .hl-sky { --hl: rgba(40, 180, 255, 0.32); }
+:where(:root[data-theme="dark"]) .hl-rose { --hl: rgba(255, 64, 160, 0.32); }
+:where(:root[data-theme="dark"]) .hl-red { --hl: rgba(255, 70, 70, 0.32); }
+:where(:root[data-theme="dark"]) .hl-violet { --hl: rgba(160, 90, 255, 0.34); }
 
-  .verse-row--target {
-    --jump-flash: rgba(96, 165, 250, 0.35);
-  }
+:where(:root[data-theme="dark"]) .verse-row--target {
+  --jump-flash: rgba(96, 165, 250, 0.35);
+}
 
-  .verse-menu,
-  .note-editor textarea {
-    background: var(--paper-raised);
-    color: var(--text);
-  }
+:where(:root[data-theme="dark"]) .verse-menu,
+:where(:root[data-theme="dark"]) .note-editor textarea {
+  background: var(--paper-raised);
+  color: var(--text);
+}
 
-  .confidence-badge.conf-traditional,
-  .confidence-badge.conf-commentary_opinion,
-  .confidence-badge.conf-doctrinal_view,
-  .confidence-badge.conf-unattested {
-    background: #3a2621;
-    color: #f0cfc4;
-  }
+:where(:root[data-theme="dark"]) .confidence-badge.conf-traditional,
+:where(:root[data-theme="dark"]) .confidence-badge.conf-commentary_opinion,
+:where(:root[data-theme="dark"]) .confidence-badge.conf-doctrinal_view,
+:where(:root[data-theme="dark"]) .confidence-badge.conf-unattested {
+  background: #3a2621;
+  color: #f0cfc4;
+}
 
-  .confidence-badge {
-    color: var(--ink-strong);
-  }
+:where(:root[data-theme="dark"]) .confidence-badge {
+  color: var(--ink-strong);
 }
 
 /* ---------- print ---------- */
@@ -2945,10 +2959,9 @@ body.is-resizing .leaflet-container {
   --red-letter: #b0261c;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --red-letter: #f08a80;
-  }
+/* dark theme (Settings → Appearance → Theme, or Windows' setting) */
+:root:where([data-theme="dark"]) {
+  --red-letter: #f08a80;
 }
 
 :root[data-red-letter="on"] .wj {
@@ -4782,16 +4795,15 @@ body.is-resizing .leaflet-container {
   background: color-mix(in srgb, var(--accent-500) 22%, transparent);
 }
 
-@media (prefers-color-scheme: dark) {
-  ::highlight(reading) {
-    background-color: #2f5591;
-    color: #ffffff;
-  }
+/* dark theme (Settings → Appearance → Theme, or Windows' setting) */
+:where(:root[data-theme="dark"])::highlight(reading), :where(:root[data-theme="dark"]) *::highlight(reading) {
+  background-color: #2f5591;
+  color: #ffffff;
+}
 
-  .verse-row--reading,
-  .sbs-row--reading {
-    background: #24364f;
-  }
+:where(:root[data-theme="dark"]) .verse-row--reading,
+:where(:root[data-theme="dark"]) .sbs-row--reading {
+  background: #24364f;
 }
 
 .back-to-reading {
@@ -4975,4 +4987,61 @@ body.is-resizing .leaflet-container {
   .book-body {
     padding-left: 0;
   }
+}
+
+/* ---------- appearance: theme, text colour, contrast (Settings → Appearance) ---------- */
+/* readingPrefs.ts sets data-theme (always "light" or "dark", Windows' setting already
+   resolved), data-text and data-contrast on <html>. These come after the dark theme so
+   they win over it. */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-text="strong"] {
+  --text: #000000;
+  --ink-strong: #000000;
+}
+
+:root[data-theme="dark"][data-text="strong"] {
+  --text: #ffffff;
+  --ink-strong: #ffffff;
+}
+
+:root[data-text="sepia"] {
+  --text: #4a3420;
+  --ink-strong: #3d2a17;
+}
+
+:root[data-theme="dark"][data-text="sepia"] {
+  --text: #ecd9b8;
+  --ink-strong: #f3e3c6;
+}
+
+:root[data-text="blue"] {
+  --text: #1a2747;
+  --ink-strong: #142040;
+}
+
+:root[data-theme="dark"][data-text="blue"] {
+  --text: #d3defa;
+  --ink-strong: #e2e9fb;
+}
+
+/* High contrast: the greys used for labels, headings, hints and borders move close to the
+   text colour. */
+:root[data-contrast="high"] {
+  --text-muted: #3d382e;
+  --text-faint: #4d473b;
+  --border: #c9c2b2;
+}
+
+:root[data-theme="dark"][data-contrast="high"] {
+  --text-muted: #dedad1;
+  --text-faint: #cdc8bd;
+  --border: #4a4d57;
 }
