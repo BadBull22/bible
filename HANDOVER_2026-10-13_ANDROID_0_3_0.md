@@ -1,6 +1,7 @@
-# Handover — 2026-10-13: Android app 0.3.0 (built and tested here; the APK is made on the other PC)
+# Handover — 2026-10-13: Android app 0.3.0 (released 2026-10-13)
 
-**Start here to build and release the phone app 0.3.0.** Background: the Android app's own
+**0.3.0 is released** (section 5). Sections 1 and 3 are kept as the record of how it was
+built. Background: the Android app's own
 handover is `HANDOVER_2026-10-11_V2_6_0_AND_ANDROID.md` (section 3: how the app is built, the
 mirror to local disk, Avast and Java, the NDK, the signing key). Desktop 2.6.1 and the website
 are in `HANDOVER_2026-10-13_V2_6_1.md` and `HANDOVER_WEBSITE.md`.
@@ -13,8 +14,8 @@ are in `HANDOVER_2026-10-13_V2_6_1.md` and `HANDOVER_WEBSITE.md`.
 | Tests (this PC) | `npx tsc --noEmit` clean; `cargo test --test phone` 8 passed; `cargo test --lib bibles` 3 passed; the two internet tests (`-- --ignored`) passed: a real eBible.org download (German Luther 1912) and the nature backgrounds from GitHub. |
 | Tried by the owner | In the desktop window (`npm run tauri dev` in `mobile/`): the screens. **Not** tried on a phone: share/save picture, voices, the reminder (they need Android). |
 | Nature backgrounds | Published: GitHub release **`backgrounds-v1`** (not latest), `nature-backgrounds-v1.zip`, 7.7 MB, SHA-256 `86917e58634e3f109f0f9fca1e010b81e51b1fd92ed940d1823a41f459aaef77` (pinned in `src-tauri/src/backgrounds.rs`). 100 CC0 photos, approved by the owner. |
-| APK | **Not built.** This PC has no NDK and not the Android signing key. |
-| Website | Android page still offers 0.2.1. |
+| APK | Built and signed on the PC with the Android tools, tested by the owner on their phone ("all the new features work"), released as `android-v0.3.0`. |
+| Website | Offers 0.3.0 (section 5). |
 
 ## 2. What's new in 0.3.0 (the owner asked for items 1–10 of the comparison with YouVersion, ESV and BibleProject)
 
@@ -101,3 +102,31 @@ the owner, not decided.
   photos were good enough; the owner accepted the set.
 - Desktop backups stay compatible: the desktop ignores the phone's `reading` field and bookmark
   tags (its own bookmarks have none).
+
+## 5. Released on 2026-10-13
+
+- **APK**: `BibleConcordance_Android_0.3.0.apk`, 69 MB, SHA-256
+  `95145d415e09be07f54f682d4a2bcbf4b4b71c2b805500196968a59bf0cae18d`, same signing
+  certificate as before. GitHub release `android-v0.3.0` (not latest; `releases/latest` is
+  still the desktop `v2.6.1`).
+- **Two fixes were needed to build it** (commit `de2924c`):
+  - the plugin's manifest declared `androidx.core.content.FileProvider`, which the Tauri app
+    template already declares, and a provider class may be declared only once, so the
+    manifest merge failed. The plugin now has its own subclass, `PhoneFileProvider`.
+  - `android.ps1` only ran `npm install` in the mirror when `node_modules` was missing, so
+    the new notification package was absent. It now reinstalls when `package-lock.json`
+    changes (it records the lock file's hash in `node_modules\.installed-for`).
+- **Checked on the emulator**: a fresh install starts and reads; `voices` lists the English
+  voices; word study and study notes return data; `share_image` opens the share sheet. The
+  rest was tested by the owner on their phone.
+- **Downloads cannot be tested on the build PC.** Avast re-signs HTTPS there (github.com and
+  ebible.org included), and the app, using rustls with the public root certificates, rightly
+  refuses it: `backgrounds_install`, the eBible catalogue and the two `--ignored` tests all
+  fail on that PC, in the emulator too. They pass on the other PC and work on the owner's
+  phone. This is not a bug; do not "fix" it by trusting the system's certificate list.
+- **Website**: `docs/android/index.html` (version, link, size, file name, SHA-256, a new
+  "What's inside" and "What it leaves out") and `docs/index.html` (the Android card and the
+  "Which one is for me?" table, which the owner called important: it now lists word study,
+  study notes, more Bibles, side by side, themes, verse pictures, the reminder and streak,
+  and says where the two apps differ rather than only ticks and dashes).
+
