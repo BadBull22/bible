@@ -146,6 +146,29 @@ pub fn sermon_save(state: State<UserDataState>, sermon: userdata::Sermon) -> Res
     userdata::sermon_save(&*user_conn(&state)?, &sermon)
 }
 
+/// Every time a sermon was preached.
+#[tauri::command]
+pub fn sermon_preachings(state: State<UserDataState>, sermon_id: i64) -> Result<Vec<userdata::Preaching>, String> {
+    userdata::preachings(&*user_conn(&state)?, sermon_id)
+}
+
+/// Records (or, with an id, changes) a time a sermon was preached; returns its id.
+#[tauri::command]
+pub fn sermon_preaching_save(state: State<UserDataState>, preaching: userdata::Preaching) -> Result<i64, String> {
+    userdata::preaching_save(&*user_conn(&state)?, &preaching)
+}
+
+#[tauri::command]
+pub fn sermon_preaching_delete(state: State<UserDataState>, id: i64) -> Result<(), String> {
+    userdata::preaching_delete(&*user_conn(&state)?, id)
+}
+
+/// Finds sermons by their words, a passage, dates, series, place or stage.
+#[tauri::command]
+pub fn sermon_search(state: State<UserDataState>, query: userdata::SermonQuery) -> Result<Vec<userdata::SermonHit>, String> {
+    userdata::sermon_search(&*user_conn(&state)?, &query)
+}
+
 /// What every saved sermon used (passages, material), for "used before" notices.
 #[tauri::command]
 pub fn sermon_usage(state: State<UserDataState>) -> Result<Vec<userdata::SermonUsage>, String> {
@@ -265,6 +288,7 @@ pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbStat
             sermons: userdata::sermons_all(&u)?,
             book_bookmarks: userdata::book_bookmarks(&u, None)?,
             sermon_templates: userdata::sermon_templates(&u)?,
+            sermon_preachings: userdata::preachings_all(&u)?,
         };
         (b, stamp)
     };

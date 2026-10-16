@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { api, type SheetBlock, type SheetRun } from "../api";
+import { tidyQuotes } from "../sermonOutputs";
 
 interface Props {
   /** the sermon as a document (sermonBlocks, without blank lines or questions) */
@@ -38,11 +39,11 @@ const runs = (rs: SheetRun[]) =>
           follow(r.link!);
         }}
       >
-        {r.text}
+        {tidyQuotes(r.text)}
       </button>
     ) : (
       <span key={i} style={{ fontWeight: r.bold ? 700 : undefined, fontStyle: r.italic ? "italic" : undefined }}>
-        {r.text}
+        {tidyQuotes(r.text)}
       </span>
     ),
   );

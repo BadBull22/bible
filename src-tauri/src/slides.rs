@@ -28,6 +28,10 @@ pub struct Slide {
     /// a photo behind the slide (darkened so the words stand out): a media file
     #[serde(default)]
     pub background: Option<String>,
+    /// a picture beside the words of a heading, words, song or Scripture slide (the words
+    /// take the left part of the slide): a media file
+    #[serde(default)]
+    pub picture: Option<String>,
     /// what a "link" slide opens: a web address, or a file's full path
     #[serde(default)]
     pub link: Option<String>,
@@ -169,18 +173,23 @@ fn background(bg: Option<(&str, u32, u32)>) -> (String, String) {
 
 fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
     let (bg, shade) = background(refs.background);
+    // with a picture beside them, the words take the left 55% and the picture the rest
+    let side = if s.kind == "image" { None } else { refs.picture };
+    let tw = |full: i64| if side.is_some() { W * 55 / 100 - 700_000 } else { full };
+    let beside = side.map(|(rid, w, h)| picture(5, rid, (W * 55 / 100 + 100_000, 500_000, W * 45 / 100 - 600_000, H - 1_000_000), w, h)).unwrap_or_default();
     let shapes = match s.kind.as_str() {
         "title" => {
-            text_box(2, "Title", 600_000, 2_000_000, W - 1_200_000, 1_700_000, &s.title, 54, "FFFFFF", true, false, "b")
-                + &text_box(3, "Subtitle", 600_000, 3_900_000, W - 1_200_000, 1_200_000, &s.body, 26, "C9D6EE", false, false, "t")
+            text_box(2, "Title", 600_000, 2_000_000, tw(W - 1_200_000), 1_700_000, &s.title, if side.is_some() { 44 } else { 54 }, "FFFFFF", true, false, "b")
+                + &text_box(3, "Subtitle", 600_000, 3_900_000, tw(W - 1_200_000), 1_200_000, &s.body, 26, "C9D6EE", false, false, "t")
         }
         "scripture" => {
-            text_box(2, "Passage", 700_000, 700_000, W - 1_400_000, H - 2_300_000, &format!("“{}”", s.body.trim()), body_size(&s.body), "FFFFFF", false, false, "ctr")
-                + &text_box(3, "Reference", 700_000, H - 1_400_000, W - 1_400_000, 700_000, &s.title, 26, "F2C46D", true, false, "t")
+            let size = if side.is_some() { body_size(&s.body).saturating_sub(4).max(18) } else { body_size(&s.body) };
+            text_box(2, "Passage", 700_000, 700_000, tw(W - 1_400_000), H - 2_300_000, &format!("“{}”", s.body.trim()), size, "FFFFFF", false, false, "ctr")
+                + &text_box(3, "Reference", 700_000, H - 1_400_000, tw(W - 1_400_000), 700_000, &s.title, 26, "F2C46D", true, false, "t")
         }
         "text" | "song" => {
-            text_box(2, "Heading", 700_000, 350_000, W - 1_400_000, 1_000_000, &s.title, 32, "F2C46D", true, false, "ctr")
-                + &text_box(3, "Words", 700_000, 1_400_000, W - 1_400_000, H - 1_900_000, s.body.trim(), body_size(&s.body).min(36), "FFFFFF", false, false, "ctr")
+            text_box(2, "Heading", 700_000, 350_000, tw(W - 1_400_000), 1_000_000, &s.title, 32, "F2C46D", true, false, "ctr")
+                + &text_box(3, "Words", 700_000, 1_400_000, tw(W - 1_400_000), H - 1_900_000, s.body.trim(), body_size(&s.body).min(if side.is_some() { 30 } else { 36 }), "FFFFFF", false, false, "ctr")
         }
         "image" => {
             let pic = refs.picture.map(|(rid, w, h)| picture(4, rid, (500_000, 350_000, W - 1_000_000, H - 1_450_000), w, h)).unwrap_or_default();
@@ -192,10 +201,10 @@ fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
                 + &linked_box(3, "Link", 700_000, 3_800_000, W - 1_400_000, 1_200_000, &label, 28, "F2C46D", false, false, "t", refs.link)
         }
         _ => {
-            text_box(2, "Point", 700_000, 1_600_000, W - 1_400_000, 2_200_000, &s.title, 48, "FFFFFF", true, false, "b")
-                + &text_box(3, "Under the point", 700_000, 4_000_000, W - 1_400_000, 2_000_000, &s.body, 28, "C9D6EE", false, true, "t")
+            text_box(2, "Point", 700_000, 1_600_000, tw(W - 1_400_000), 2_200_000, &s.title, if side.is_some() { 40 } else { 48 }, "FFFFFF", true, false, "b")
+                + &text_box(3, "Under the point", 700_000, 4_000_000, tw(W - 1_400_000), 2_000_000, &s.body, 28, "C9D6EE", false, true, "t")
         }
-    };
+    } + &beside;
     format!(
         r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld>{bg}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>{shade}{shapes}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>"#
@@ -224,7 +233,7 @@ pub fn build_pptx(slides: &[Slide], media: &dyn Fn(&str) -> Option<Vec<u8>>) -> 
     // each picture once, as ppt/media/mediaN.<ext>: file name -> (part name, type, size)
     let mut pictures: Vec<(String, String, &'static str, u32, u32, Vec<u8>)> = Vec::new();
     for s in slides {
-        for f in [s.image.as_deref(), s.background.as_deref()].into_iter().flatten() {
+        for f in [s.image.as_deref(), s.background.as_deref(), s.picture.as_deref()].into_iter().flatten() {
             if pictures.iter().any(|p| p.0 == f) {
                 continue;
             }
@@ -308,7 +317,12 @@ pub fn build_pptx(slides: &[Slide], media: &dyn Fn(&str) -> Option<Vec<u8>>) -> 
     for (i, s) in slides.iter().enumerate() {
         let mut rels = format!(r#"<Relationship Id="rId1" Type="{REL_TYPE}/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>"#);
         let bg = find(s.background.as_ref());
-        let pic = if s.kind == "image" { find(s.image.as_ref()) } else { None };
+        // an "image" slide's picture, or the one beside a slide's words ("link" slides have none)
+        let pic = match s.kind.as_str() {
+            "image" => find(s.image.as_ref()),
+            "link" => None,
+            _ => find(s.picture.as_ref()),
+        };
         if let Some(p) = bg {
             rels += &format!(r#"<Relationship Id="rId2" Type="{REL_TYPE}/image" Target="../media/{}"/>"#, p.1);
         }
@@ -432,6 +446,31 @@ mod tests {
         assert!(read(&mut z, "ppt/slides/_rels/slide4.xml.rels").contains("file:///C:/Users/me/My%20Videos/clip.mp4"));
         // a picture that isn't there: the slide is made without it
         assert!(!read(&mut z, "ppt/slides/slide5.xml").contains("<p:pic>"));
+    }
+
+    #[test]
+    fn a_picture_beside_the_words_and_a_background_per_slide() {
+        let slides = vec![
+            Slide { kind: "point".into(), title: "Faith hears".into(), picture: Some("p.png".into()), ..Default::default() },
+            Slide { kind: "scripture".into(), title: "Romans 10:17".into(), body: "So faith comes from hearing.".into(), picture: Some("p.png".into()), background: Some("p.png".into()), ..Default::default() },
+            Slide { kind: "point".into(), title: "Plain".into(), ..Default::default() },
+            Slide { kind: "link".into(), title: "A video".into(), link: Some("https://example.com".into()), picture: Some("p.png".into()), ..Default::default() },
+        ];
+        let bytes = build_pptx(&slides, &|f: &str| (f == "p.png").then(|| PNG.to_vec())).unwrap();
+        let mut z = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+        let read = |z: &mut zip::ZipArchive<Cursor<Vec<u8>>>, n: &str| {
+            let mut s = String::new();
+            std::io::Read::read_to_string(&mut z.by_name(n).unwrap(), &mut s).unwrap();
+            s
+        };
+        let s1 = read(&mut z, "ppt/slides/slide1.xml");
+        assert!(s1.contains("<p:pic>") && s1.contains(r#"r:embed="rId3""#), "the picture beside the heading");
+        assert!(!s1.contains("<a:blip r:embed=\"rId2\"/><a:srcRect"), "no background on this one");
+        let s2 = read(&mut z, "ppt/slides/slide2.xml");
+        assert!(s2.contains("<p:pic>") && s2.contains("Shade"), "a picture and its own background");
+        assert!(!read(&mut z, "ppt/slides/slide3.xml").contains("<p:pic>"));
+        assert!(!read(&mut z, "ppt/slides/slide4.xml").contains("<p:pic>"), "link slides keep their own layout");
+        assert!(z.by_name("ppt/media/media2.png").is_err(), "one picture, stored once");
     }
 
     /// Writes a sample to the temp folder, to open in PowerPoint by hand:

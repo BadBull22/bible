@@ -6217,6 +6217,7 @@ body.is-resizing .leaflet-container {
   max-width: 76rem;
 }
 
+/* kept in view while the slides are scrolled: the background, adding slides, saving */
 .slides-bar {
   display: flex;
   flex-wrap: wrap;
@@ -6224,6 +6225,52 @@ body.is-resizing .leaflet-container {
   gap: 0.5rem 1.2rem;
   margin-bottom: 0.7rem;
   font-size: 0.85rem;
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  padding: 0.55rem 0;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+}
+
+.slides-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex-basis: 100%;
+}
+
+.slides-look {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.slides-look .sb-inline {
+  flex-wrap: wrap;
+}
+
+/* a picture beside the words: the words on the left, the picture on the right */
+.slide-preview.with-picture {
+  align-items: flex-start;
+  text-align: left;
+  padding-right: 46%;
+  position: relative;
+}
+
+.slide-preview .slide-beside {
+  position: absolute;
+  right: 4%;
+  top: 8%;
+  width: 38%;
+  height: 84%;
+  max-height: none;
+  object-fit: contain;
 }
 
 .slides-actions {
@@ -6603,4 +6650,349 @@ body.is-resizing .leaflet-container {
 .sb-outline textarea {
   font-family: var(--sans);
   font-size: 0.92rem;
+}
+
+/* ---------- the sermon builder's Review page: the printed sermon, editable in place ---------- */
+.sb-review {
+  max-width: 52rem;
+}
+
+.rv-paper {
+  background: #fff;
+  color: #111;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 1.6rem 2rem 2.2rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+
+.rv-paper .rv-hint {
+  margin: 0 0 1rem;
+  font-family: var(--sans);
+  color: #6b6558;
+}
+
+.rv-paper p {
+  margin: 0.35rem 0;
+}
+
+/* what the preacher wrote: looks printed, shows it can be edited when pointed at */
+.rv-edit {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  padding: 0.15rem 0.3rem;
+  margin: 0 -0.3rem;
+  resize: none;
+  overflow: hidden;
+}
+
+.rv-edit:hover {
+  border-color: #c9c2b2;
+}
+
+.rv-edit:focus {
+  outline: none;
+  border-color: #4f86cf;
+  background: #f6f9fe;
+}
+
+.rv-edit::placeholder {
+  color: #9b9585;
+  font-style: italic;
+}
+
+.rv-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+}
+
+.rv-sub {
+  color: #555;
+  font-style: italic;
+}
+
+.rv-bigidea,
+.rv-purpose {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: 0.3rem;
+  margin: 0.4rem 0;
+}
+
+.rv-bigidea {
+  border-left: 3px solid #b8b0a0;
+  padding-left: 0.8rem;
+}
+
+.rv-h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-top: 1rem;
+}
+
+.rv-h3 {
+  font-size: 1.08rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.rv-h3.rv-unprinted {
+  color: #9b9585;
+}
+
+.rv-item {
+  position: relative;
+}
+
+.rv-gathered h4 {
+  font-size: 1.02rem;
+  margin: 0.6rem 0 0.2rem;
+}
+
+.rv-gathered blockquote {
+  margin: 0.2rem 0 0.4rem 1.2rem;
+  padding-left: 0.8rem;
+  border-left: 3px solid #d5cebf;
+}
+
+.rv-quoted,
+.rv-outline,
+.rv-source {
+  font-style: italic;
+}
+
+.rv-x {
+  position: absolute;
+  right: -1.6rem;
+  top: 0.3rem;
+  opacity: 0;
+}
+
+.rv-item:hover .rv-x,
+.rv-x:focus-visible {
+  opacity: 1;
+}
+
+.rv-tools {
+  position: absolute;
+  right: -1.6rem;
+  top: 0.2rem;
+  display: none;
+  gap: 0.6rem;
+  align-items: center;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  background: #fff;
+  padding-left: 0.4rem;
+}
+
+.rv-tools .rv-x {
+  position: static;
+  opacity: 1;
+}
+
+.rv-item:hover .rv-tools,
+.rv-tools:focus-within {
+  display: inline-flex;
+}
+
+/* ---------- the sermon builder: Hebrew and Greek words (SermonWords) ---------- */
+.sw-lookup {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.sw-lookup input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.3rem 0.5rem;
+}
+
+.sw-verse {
+  line-height: 1.9;
+  font-family: var(--serif);
+}
+
+.sw-verse sup {
+  color: var(--accent-500);
+  font-family: var(--sans);
+  font-weight: 700;
+}
+
+.sw-word {
+  padding: 0 0.12rem;
+  margin-right: 0.18rem;
+  border: none;
+  border-bottom: 1px dotted var(--accent-500);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.sw-word:hover {
+  background: var(--accent-100);
+}
+
+.sw-candidates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sw-candidates li {
+  margin: 0.35rem 0;
+}
+
+.sw-lemma {
+  font-size: 1.15rem;
+  font-family: "SBL Greek", "SBL Hebrew", "Times New Roman", serif;
+}
+
+.sw-card {
+  position: relative;
+  margin-bottom: 0.9rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--accent-500);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  box-shadow: var(--shadow-sm);
+}
+
+.sw-card p {
+  margin: 0.25rem 0;
+}
+
+.sw-close {
+  position: absolute;
+  right: 0.4rem;
+  top: 0.2rem;
+  font-size: 1.1rem;
+}
+
+.sw-head .sw-lemma {
+  font-size: 1.5rem;
+}
+
+.sw-xlit {
+  font-style: italic;
+}
+
+.sw-entry + .sw-entry {
+  margin-top: 0.8rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.sw-entry .pill-btn,
+.sw-entry .outline-btn {
+  margin-top: 0.5rem;
+}
+
+.sw-lexicon-text {
+  font-size: 0.88rem;
+  white-space: pre-line;
+  max-height: 14rem;
+  overflow: auto;
+}
+
+/* ---------- the sermon builder: when it was preached, and finding a sermon ---------- */
+.sermon-preachings {
+  flex-basis: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+}
+
+.sp-none {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.sp-head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.sp-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.9rem;
+}
+
+.sp-notes {
+  font-style: italic;
+}
+
+.sp-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.8rem;
+  margin-top: 0.6rem;
+  align-items: flex-end;
+}
+
+.sp-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sp-form input[type="number"] {
+  width: 5rem;
+}
+
+.sp-form .sp-wide {
+  flex: 1 1 20rem;
+}
+
+.sp-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ss-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+
+.ss-filters label {
+  display: inline-flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.ss-filters input,
+.ss-filters select {
+  padding: 0.3rem 0.5rem;
+}
+
+.ss-filters .ss-words {
+  flex: 1 1 18rem;
+}
+
+.ss-filters input.invalid {
+  border-color: var(--status-error);
+}
+
+.ss-idea {
+  font-style: italic;
 }

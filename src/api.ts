@@ -514,6 +514,43 @@ export interface SermonUsage {
   passages: string;
   /** the keys of the material in it */
   keys: string[];
+  /** every time it was preached: [date "YYYY-MM-DD", where] (since 2.8) */
+  preached: [string, string][];
+}
+
+/** A time a sermon was preached (one sermon can be preached many times). */
+export interface Preaching {
+  /** 0 = a new one */
+  id: number;
+  sermon_id: number;
+  /** "YYYY-MM-DD" */
+  date: string;
+  venue: string;
+  audience: string;
+  notes: string;
+  length_min: number | null;
+}
+
+/** What to look for among the saved sermons; every part may be left empty. */
+export interface SermonQuery {
+  words: string;
+  book: string;
+  chapter: number | null;
+  verse: number | null;
+  verse_end: number | null;
+  from: string;
+  to: string;
+  series: string;
+  venue: string;
+  stage: string;
+  /** "newest" | "oldest" | "most" | "title" */
+  sort: string;
+}
+
+/** A sermon found, with every time it was preached and the start of its big idea. */
+export interface SermonHit extends SavedSermon {
+  preachings: Preaching[];
+  big_idea: string;
 }
 
 /** A historic sermon outline (Charles Simeon, Horae Homileticae, public domain). */
@@ -924,6 +961,11 @@ export const api = {
   sermonSave: (sermon: SavedSermon) => invoke<number>("sermon_save", { sermon }),
   sermonDelete: (id: number) => invoke<void>("sermon_delete", { id }),
   sermonUsage: () => invoke<SermonUsage[]>("sermon_usage"),
+  sermonPreachings: (sermonId: number) => invoke<Preaching[]>("sermon_preachings", { sermonId }),
+  /** records (id 0) or changes a time a sermon was preached; returns its id */
+  sermonPreachingSave: (preaching: Preaching) => invoke<number>("sermon_preaching_save", { preaching }),
+  sermonPreachingDelete: (id: number) => invoke<void>("sermon_preaching_delete", { id }),
+  sermonSearch: (query: SermonQuery) => invoke<SermonHit[]>("sermon_search", { query }),
   /** Simeon's outlines on a passage */
   sermonOutlines: (book: string, chapter: number, verse: number, verseEnd: number) => invoke<Discourse[]>("sermon_outlines", { book, chapter, verse, verseEnd }),
   /** stories and sayings on a subject (Moody, Spurgeon), best first */

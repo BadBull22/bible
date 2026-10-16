@@ -50,6 +50,8 @@ export interface Material {
   ref?: Ref;
   /** which of the typed topics it was found for */
   topic: string;
+  /** the text as it was gathered, when the preacher shortened it for this sermon (Review) */
+  original?: string;
 }
 
 /** One line of the sermon as it is arranged. A "block" is a section the preacher writes
@@ -922,4 +924,6 @@ export interface SermonBody {
   // photo behind them (a kept file)
   slides?: import("./sermonOutputs").SlideSpec[] | null;
   slideBackground?: string | null;
+  /** verse numbers on Scripture slides (absent: shown) */
+  slideVerseNumbers?: boolean;
 }
