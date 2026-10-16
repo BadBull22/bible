@@ -223,6 +223,7 @@ function runsHtml(runs: SheetRun[]): string {
       if (r.red) t = `<span style="color: #b0261c;">${t}</span>`;
       if (r.italic) t = `<i>${t}</i>`;
       if (r.bold) t = `<b>${t}</b>`;
+      if (r.link && /^https?:/.test(r.link)) t = `<a href="${esc(r.link)}">${t}</a>`;
       return t;
     })
     .join("");
@@ -292,16 +293,30 @@ export function sheetPlainText(blocks: SheetBlock[]): string {
 /** Prints just the sheet: a print-only copy is added to <body>, everything else is hidden
  * by the `printing-sheet` rules in App.css, and it is removed again afterwards. The print
  * dialog also offers "Save as PDF". */
-export function printSheet(blocks: SheetBlock[]) {
+/** Paper and type size for printing: A4 (the default), A5 (half a page, for the pulpit),
+ * and large print (for reading at a distance, or for listeners who need it). */
+export interface PrintOptions {
+  page?: "a4" | "a5";
+  large?: boolean;
+}
+
+export function printSheet(blocks: SheetBlock[], options: PrintOptions = {}) {
   document.getElementById("sheet-print-root")?.remove();
+  document.getElementById("sheet-print-page")?.remove();
   const root = document.createElement("div");
   root.id = "sheet-print-root";
   root.innerHTML = sheetHtml(blocks);
+  if (options.large) root.style.setProperty("zoom", "1.35");
   document.body.appendChild(root);
+  const page = document.createElement("style");
+  page.id = "sheet-print-page";
+  page.textContent = options.page === "a5" ? "@page { size: A5; margin: 10mm; }" : "@page { size: A4; margin: 16mm; }";
+  document.head.appendChild(page);
   document.body.classList.add("printing-sheet");
   const cleanup = () => {
     document.body.classList.remove("printing-sheet");
     root.remove();
+    page.remove();
     window.removeEventListener("afterprint", cleanup);
   };
   window.addEventListener("afterprint", cleanup);

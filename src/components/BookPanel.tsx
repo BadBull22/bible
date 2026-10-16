@@ -157,6 +157,8 @@ export function BookPanel({ name, layout = "panel", onJump, onOpenLibrary, onClo
       .catch(() => undefined);
 
   useEffect(() => {
+    // a later book (or React drawing the panel twice) makes this load's answer stale
+    let live = true;
     setSection(null);
     setHits(null);
     setQuery("");
@@ -169,6 +171,7 @@ export function BookPanel({ name, layout = "panel", onJump, onOpenLibrary, onClo
     api
       .libraryToc(name)
       .then((t) => {
+        if (!live) return;
         setToc(t);
         // devotional entries come from the dictionary store, with ids from 1,000,000,000 up
         const isDevotional = (t[0]?.id ?? 0) >= 1_000_000_000;
@@ -182,7 +185,10 @@ export function BookPanel({ name, layout = "panel", onJump, onOpenLibrary, onClo
         else if (start != null) open(start, today == null && last?.id === start ? { frac: last.frac } : null);
         else setShowToc(true);
       })
-      .catch((e) => setError(String(e)));
+      .catch((e) => live && setError(String(e)));
+    return () => {
+      live = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name]);
 

@@ -8,6 +8,8 @@ import { BasketButton } from "./BasketButton";
 import { CopyButton } from "./CopyButton";
 import { CloseIcon } from "./icons";
 import { ApocryphaRefsBody, ApocryphaRefsSection } from "./ApocryphaRefs";
+import { LibraryMentionsSection, SpurgeonSection } from "./LibraryMentions";
+import type { LibraryMention } from "../api";
 
 cytoscape.use(cola);
 
@@ -21,6 +23,8 @@ interface Props {
   onOpenIn: (version: string, book: string, chapter: number, verse: number) => void;
   onClose: () => void;
   onJump: (book: string, chapter: number, verse: number) => void;
+  /** opens a place in the reader's Library that refers to the verse */
+  onOpenMention?: (m: LibraryMention) => void;
 }
 
 interface NodeRef {
@@ -61,7 +65,7 @@ async function xrefCopyText(r: CrossReference): Promise<string> {
   return `${r.to_book} ${r.to_chapter}:${r.to_verse_start}${range} (${version})${text ? ` — ${text}` : ""}`;
 }
 
-export function CrossRefGraph({ book, chapter, verse, books, versionCode, onOpenIn, onClose, onJump }: Props) {
+export function CrossRefGraph({ book, chapter, verse, books, versionCode, onOpenIn, onClose, onJump, onOpenMention }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
   const [loading, setLoading] = useState(true);
@@ -360,6 +364,8 @@ export function CrossRefGraph({ book, chapter, verse, books, versionCode, onOpen
       ) : (
         <ApocryphaRefsSection book={book} chapter={chapter} verse={verse} versionCode={versionCode} books={books} onJump={onJump} onOpenIn={onOpenIn} />
       )}
+      {!apocRoot && <SpurgeonSection book={book} chapter={chapter} verse={verse} />}
+      {!apocRoot && onOpenMention && <LibraryMentionsSection book={book} chapter={chapter} verse={verse} onOpen={onOpenMention} />}
     </aside>
   );
 }
