@@ -419,44 +419,58 @@ const SECTIONS: Section[] = [
   {
     id: "sermon",
     title: "Sermon builder",
-    keywords: "sermon builder preach preacher pastor minister message outline points topic gather prepare series word document",
+    keywords:
+      "sermon builder preach preacher pastor minister message outline points topic gather prepare series word document template big idea preach mode slides powerpoint handout fill in blanks small group lectionary calendar spurgeon simeon illustrations quotes library",
     body: (
       <>
         <p>
-          <strong>Study → Sermon builder</strong> gathers material on a subject and lays out what you choose as a document to
-          preach from. It finds and arranges; it does not write anything. The sermon is yours.
+          <strong>Study → Sermon builder</strong> gathers material, gives you a prepared outline to write into, and turns it
+          into a document, handouts, slides and a pulpit view. It finds and arranges; it never writes for you. The sermon is
+          yours.
         </p>
         <ul>
           <li>
-            <strong>1 · Gather.</strong> Type what the sermon is about: one topic (<em>healing</em>), several separated by
-            semicolons (<em>sin; forgiveness</em>), a passage by name or reference (<em>sermon on the mount</em>,{" "}
-            <em>Romans 8</em>), or a plain sentence (<em>how do I forgive someone who hurt me</em>). The app lists key
-            passages, supporting verses, cross-references, commentary, dictionary and topical articles, word studies, your
-            own notes and passages from your Library books. Tick what you want to keep. <em>Gather more</em> with another
-            subject adds to the list.
+            <strong>Prepare</strong> is one screen in two halves that scroll on their own. On the left, type a subject (<em>faith in God</em>)
+            or a passage (<em>John 3</em>) and press <em>Find</em>: Scripture, cross-references, commentary, your Library books, Spurgeon's
+            sermons, outlines, stories and more, in groups that stay at the top while you scroll. Click a title to read it all; <em>Read</em>{" "}
+            shows the chapter and <em>Study this passage</em> everything on it — both on the left, without leaving your sermon. Press{" "}
+            <strong>+</strong> to add an item to the sermon.
           </li>
           <li>
-            <strong>2 · Arrange.</strong> Choose a shape — points, through a passage, problem → God's answer → response, or
-            no headings — and the ticked material is laid out under headings, Scripture first. Drag items (or use ▲ ▼) to
-            reorder, rename headings, and add your own notes and headings anywhere. The bar shows how many passages come
-            from each Testament, suggests one from the other if all are from one, and estimates how long the material takes
-            to read aloud.
+            On the right is <strong>your sermon</strong>. Write the big idea and purpose and choose a template: each point is a card,
+            and what you add with + goes into its place — Scripture to Scripture, commentary to Explain, stories and pictures to
+            Illustrate. Click a point or a section first to put things there instead. Sections with nothing in them yet fold away into
+            chips (+ Apply); click one to write in it. Each point's <em>Add ▾</em> menu adds a section, a note, a picture or a new point.
+            Drag a point by its handle, or anything in it to another section. Outline shows just the headings.
           </li>
           <li>
-            <strong>3 · Document.</strong> A preview with Print, Copy and Save as Word, and optional blank lines under each
-            heading for handwriting. Scripture is set apart from commentary, and commentary always carries its author's
-            name, since it is that author's view.
+            <strong>Pictures, video, music and links:</strong> <em>+ Picture, video or link</em> adds a picture or any file from your computer
+            (a copy is kept with the app), one of 100 nature photos (downloaded once, about 8 MB), a Bible picture you've downloaded, or a
+            web link such as a YouTube video or a song. They appear in the printed and Word copy, in Preach (a link or file opens with a
+            click) and on the slides.
           </li>
           <li>
-            <strong>My sermons.</strong> Give the sermon a title and press <em>Save</em> to keep it. Add a series name and the
-            date preached if you like; sermons are grouped by series, with the passages the series has covered. Saved
-            sermons are included in My Study → Export.
+            <strong>Print &amp; handouts:</strong> the sermon, a listener's outline, a fill-in-the-blanks sheet with answers and a small-group
+            guide — print, A4 or A5, large print, or save as Word.
           </li>
           <li>
-            <em>Open</em> beside a passage shows it in the Bible. Your work in the builder is kept while the app is open;
-            use <em>Save</em> to keep it for good.
+            <strong>Slides:</strong> made from your sermon, then yours to change — reorder, edit, delete, and add words, song words,
+            Scripture, pictures and video or music links, on navy or on a photo. Save as PowerPoint; a link on a slide plays when clicked
+            in the slide show.
+          </li>
+          <li>
+            <strong>Preach</strong> shows the sermon full screen with a clock; Esc leaves. <strong>My sermons</strong> holds your saved
+            sermons by series, on a calendar, a series planner and the lectionary.
+          </li>
+          <li>
+            Your sermon is kept on this computer as you work, even if the app closes. Press <em>Save</em> once to put it in My sermons;
+            after that it saves itself. <em>Undo</em> (Ctrl+Z) takes back the last change.
           </li>
         </ul>
+        <p className="muted">
+          Sources: Simeon's Horae Homileticae (1832), Spurgeon's sermons (CCEL), Moody's and Spurgeon's books of stories and
+          sayings, and the 1979 Book of Common Prayer — all public domain.
+        </p>
       </>
     ),
   },

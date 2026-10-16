@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { api, SheetBlock } from "../api";
 import { copyRich, copyText } from "../clipboard";
-import { printSheet, sheetHtml, sheetPlainText } from "../studySheet";
+import { PrintOptions, printSheet, sheetHtml, sheetPlainText } from "../studySheet";
 import { CopyIcon, PrintIcon } from "./icons";
 
 /** The output half of a study sheet: Print / Copy / Word / Plain text buttons and the
  * paper-style preview. Used by the passage study sheet and the study basket. */
-export function SheetOutput({ blocks, title, building }: { blocks: SheetBlock[]; title: string; building: boolean }) {
+export function SheetOutput({ blocks, title, building, printOptions }: { blocks: SheetBlock[]; title: string; building: boolean; printOptions?: PrintOptions }) {
   const [status, setStatus] = useState<string | null>(null);
   const html = useMemo(() => sheetHtml(blocks), [blocks]);
   const ready = !building && blocks.length > 0;
@@ -27,7 +27,7 @@ export function SheetOutput({ blocks, title, building }: { blocks: SheetBlock[];
   return (
     <>
       <div className="sheet-actions">
-        <button className="pill-btn" disabled={!ready} onClick={() => printSheet(blocks)} title="Print, or choose “Microsoft Print to PDF” as the printer">
+        <button className="pill-btn" disabled={!ready} onClick={() => printSheet(blocks, printOptions)} title="Print, or choose “Microsoft Print to PDF” as the printer">
           <PrintIcon size={14} /> Print / PDF
         </button>
         <button
@@ -56,7 +56,17 @@ export function SheetOutput({ blocks, title, building }: { blocks: SheetBlock[];
         </p>
       )}
       <div className={"sheet-paper" + (building ? " is-building" : "")} aria-busy={building} aria-label="Study sheet preview">
-        {blocks.length === 0 && building ? <p className="muted">Gathering…</p> : <div dangerouslySetInnerHTML={{ __html: html }} />}
+        {blocks.length === 0 && building ? <p className="muted">Gathering…</p> : <div
+            dangerouslySetInnerHTML={{ __html: html }}
+            onClick={(e) => {
+              // a link opens in the browser, never in the app's own window
+              const a = (e.target as HTMLElement).closest("a");
+              if (!a) return;
+              e.preventDefault();
+              const href = a.getAttribute("href") ?? "";
+              if (/^https?:/.test(href)) void import("@tauri-apps/plugin-opener").then(({ openUrl }) => openUrl(href)).catch(() => undefined);
+            }}
+          />}
       </div>
     </>
   );

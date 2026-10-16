@@ -226,3 +226,31 @@ pub fn library_lexicon_entries(state: State<LibraryState>, strongs: String) -> R
 pub fn library_search_books(state: State<LibraryState>, query: String, name: Option<String>, limit: i64) -> Result<Vec<BookHit>, String> {
     library::search_books(&*lib_conn(&state)?, &query, name.as_deref(), limit)
 }
+
+/// Where the installed books, dictionaries, devotionals and commentaries mention a passage
+/// (`verse` 0: the whole chapter). The first time after a module is installed, its
+/// references are indexed first.
+#[tauri::command]
+pub async fn library_mentions(app: AppHandle, book: String, chapter: i64, verse: i64, verse_end: i64, per_module: Option<usize>, limit: Option<usize>) -> Result<library::RefMentions, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<LibraryState>();
+        let mut conn = lib_conn(&state)?;
+        library::ensure_ref_index(&mut conn)?;
+        library::mentions_of(&conn, &book, chapter, verse, verse_end, per_module.unwrap_or(4).clamp(1, 50), limit.unwrap_or(30).clamp(1, 200))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// What the installed books and devotionals say on a subject ("faith in God"), best first,
+/// a few from each book, each with the paragraph that says most.
+#[tauri::command]
+pub async fn library_topic(app: AppHandle, query: String, per_module: Option<usize>, limit: Option<usize>) -> Result<Vec<library::RefMention>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<LibraryState>();
+        let conn = lib_conn(&state)?;
+        library::topic_passages(&conn, &query, per_module.unwrap_or(3).clamp(1, 20), limit.unwrap_or(16).clamp(1, 100))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}

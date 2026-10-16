@@ -157,6 +157,11 @@ const STOP: &[&str] = &[
     "most", "must", "only", "over", "some", "than", "too", "very", "someone", "something",
 ];
 
+/// A word that says nothing about a subject ("the", "in").
+pub fn is_stopword(word: &str) -> bool {
+    STOP.contains(&word)
+}
+
 /// Other words the Bible uses for a subject (as word beginnings): the search looks for any
 /// of them wherever the typed word is wanted.
 const ALSO: &[(&str, &[&str])] = &[

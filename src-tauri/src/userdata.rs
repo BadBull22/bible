@@ -49,6 +49,9 @@ CREATE TABLE IF NOT EXISTS book_bookmarks (
     label TEXT NOT NULL DEFAULT '', snippet TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
 CREATE INDEX IF NOT EXISTS book_bookmarks_module ON book_bookmarks(module);
+CREATE TABLE IF NOT EXISTS sermon_templates (
+    id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, body TEXT NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
 ";
 
 /// Highlight colours the UI offers; anything else is rejected so a bad value can't be
@@ -73,6 +76,15 @@ fn migrate(conn: &Connection) -> Result<(), String> {
     }
     if !cols.iter().any(|c| c == "tags") {
         conn.execute_batch("ALTER TABLE notes ADD COLUMN tags TEXT NOT NULL DEFAULT ''").map_err(err)?;
+    }
+    // a sermon's stage of preparation and where it is (to be) preached -- since 2.7
+    let mut s = conn.prepare("PRAGMA table_info(sermons)").map_err(err)?;
+    let cols: Vec<String> = s.query_map([], |r| r.get(1)).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    if !cols.iter().any(|c| c == "stage") {
+        conn.execute_batch("ALTER TABLE sermons ADD COLUMN stage TEXT NOT NULL DEFAULT 'draft'").map_err(err)?;
+    }
+    if !cols.iter().any(|c| c == "venue") {
+        conn.execute_batch("ALTER TABLE sermons ADD COLUMN venue TEXT NOT NULL DEFAULT ''").map_err(err)?;
     }
     Ok(())
 }
@@ -484,16 +496,50 @@ pub struct Sermon {
     pub body: String,
     #[serde(default)]
     pub updated_at: String,
+    /// idea | research | draft | ready | preached (since 2.7)
+    #[serde(default = "default_stage")]
+    pub stage: String,
+    /// where it is (to be) preached (since 2.7)
+    #[serde(default)]
+    pub venue: String,
+}
+
+fn default_stage() -> String {
+    "draft".into()
+}
+
+/// The stages a sermon goes through; anything else is stored as "draft".
+pub const SERMON_STAGES: [&str; 5] = ["idea", "research", "draft", "ready", "preached"];
+
+fn clean_stage(stage: &str) -> &str {
+    if SERMON_STAGES.contains(&stage) {
+        stage
+    } else {
+        "draft"
+    }
 }
 
 const MAX_SERMON_BYTES: usize = 4 * 1024 * 1024;
 
 /// Every saved sermon, newest first, without its body.
 pub fn sermon_list(conn: &Connection) -> Result<Vec<Sermon>, String> {
-    let mut s = conn.prepare("SELECT id, title, series, preached_on, topics, passages, updated_at FROM sermons ORDER BY updated_at DESC, id DESC").map_err(err)?;
+    let mut s = conn
+        .prepare("SELECT id, title, series, preached_on, topics, passages, updated_at, stage, venue FROM sermons ORDER BY updated_at DESC, id DESC")
+        .map_err(err)?;
     let rows = s
         .query_map([], |r| {
-            Ok(Sermon { id: r.get(0)?, title: r.get(1)?, series: r.get(2)?, preached_on: r.get(3)?, topics: r.get(4)?, passages: r.get(5)?, body: String::new(), updated_at: r.get(6)? })
+            Ok(Sermon {
+                id: r.get(0)?,
+                title: r.get(1)?,
+                series: r.get(2)?,
+                preached_on: r.get(3)?,
+                topics: r.get(4)?,
+                passages: r.get(5)?,
+                body: String::new(),
+                updated_at: r.get(6)?,
+                stage: r.get(7)?,
+                venue: r.get(8)?,
+            })
         })
         .map_err(err)?
         .collect::<Result<_, _>>()
@@ -502,8 +548,19 @@ pub fn sermon_list(conn: &Connection) -> Result<Vec<Sermon>, String> {
 }
 
 pub fn sermon_get(conn: &Connection, id: i64) -> Result<Option<Sermon>, String> {
-    conn.query_row("SELECT id, title, series, preached_on, topics, passages, body, updated_at FROM sermons WHERE id = ?1", params![id], |r| {
-        Ok(Sermon { id: r.get(0)?, title: r.get(1)?, series: r.get(2)?, preached_on: r.get(3)?, topics: r.get(4)?, passages: r.get(5)?, body: r.get(6)?, updated_at: r.get(7)? })
+    conn.query_row("SELECT id, title, series, preached_on, topics, passages, body, updated_at, stage, venue FROM sermons WHERE id = ?1", params![id], |r| {
+        Ok(Sermon {
+            id: r.get(0)?,
+            title: r.get(1)?,
+            series: r.get(2)?,
+            preached_on: r.get(3)?,
+            topics: r.get(4)?,
+            passages: r.get(5)?,
+            body: r.get(6)?,
+            updated_at: r.get(7)?,
+            stage: r.get(8)?,
+            venue: r.get(9)?,
+        })
     })
     .optional()
     .map_err(err)
@@ -519,11 +576,13 @@ pub fn sermon_save(conn: &Connection, s: &Sermon) -> Result<i64, String> {
         return Err("This sermon is too large to save. Remove some of the gathered material.".into());
     }
     let preached = if s.preached_on.len() == 10 && s.preached_on.chars().all(|c| c.is_ascii_digit() || c == '-') { s.preached_on.as_str() } else { "" };
+    let stage = clean_stage(&s.stage);
+    let venue = s.venue.trim();
     if s.id > 0 {
         let n = conn
             .execute(
-                "UPDATE sermons SET title=?2, series=?3, preached_on=?4, topics=?5, passages=?6, body=?7, updated_at=datetime('now','localtime') WHERE id=?1",
-                params![s.id, title, s.series.trim(), preached, s.topics, s.passages, s.body],
+                "UPDATE sermons SET title=?2, series=?3, preached_on=?4, topics=?5, passages=?6, body=?7, stage=?8, venue=?9, updated_at=datetime('now','localtime') WHERE id=?1",
+                params![s.id, title, s.series.trim(), preached, s.topics, s.passages, s.body, stage, venue],
             )
             .map_err(err)?;
         if n > 0 {
@@ -531,11 +590,87 @@ pub fn sermon_save(conn: &Connection, s: &Sermon) -> Result<i64, String> {
         }
     }
     conn.execute(
-        "INSERT INTO sermons (title, series, preached_on, topics, passages, body) VALUES (?1,?2,?3,?4,?5,?6)",
-        params![title, s.series.trim(), preached, s.topics, s.passages, s.body],
+        "INSERT INTO sermons (title, series, preached_on, topics, passages, body, stage, venue) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)",
+        params![title, s.series.trim(), preached, s.topics, s.passages, s.body, stage, venue],
     )
     .map_err(err)?;
     Ok(conn.last_insert_rowid())
+}
+
+/// What each saved sermon used: its passages and the keys of the material in it (from its
+/// body), so the builder can say "used in <sermon> on <date>".
+#[derive(Serialize, Debug, PartialEq)]
+pub struct SermonUsage {
+    pub id: i64,
+    pub title: String,
+    pub preached_on: String,
+    pub stage: String,
+    pub passages: String,
+    pub keys: Vec<String>,
+}
+
+pub fn sermon_usage(conn: &Connection) -> Result<Vec<SermonUsage>, String> {
+    let mut s = conn.prepare("SELECT id, title, preached_on, stage, passages, body FROM sermons ORDER BY preached_on DESC, updated_at DESC").map_err(err)?;
+    let rows: Vec<(i64, String, String, String, String, String)> = s
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?)))
+        .map_err(err)?
+        .collect::<Result<_, _>>()
+        .map_err(err)?;
+    Ok(rows
+        .into_iter()
+        .map(|(id, title, preached_on, stage, passages, body)| {
+            let json: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
+            let keys = json["items"]
+                .as_array()
+                .map(|items| items.iter().filter_map(|i| i["material"]["key"].as_str().map(String::from)).collect())
+                .unwrap_or_default();
+            SermonUsage { id, title, preached_on, stage, passages, keys }
+        })
+        .collect())
+}
+
+// ---------------------------------------------------------------- the preacher's own sermon templates
+//
+// A template is the layout of a sermon -- its sections, each with a role and a question to
+// answer -- saved under a name so it can start the next sermon. `body` is JSON the page owns.
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct SermonTemplate {
+    #[serde(default)]
+    pub id: i64,
+    pub name: String,
+    pub body: String,
+    #[serde(default)]
+    pub updated_at: String,
+}
+
+pub fn sermon_templates(conn: &Connection) -> Result<Vec<SermonTemplate>, String> {
+    let mut s = conn.prepare("SELECT id, name, body, updated_at FROM sermon_templates ORDER BY name COLLATE NOCASE").map_err(err)?;
+    let rows = s.query_map([], |r| Ok(SermonTemplate { id: r.get(0)?, name: r.get(1)?, body: r.get(2)?, updated_at: r.get(3)? })).map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
+/// Saves a template under its name (replacing one of the same name); returns its id.
+pub fn sermon_template_save(conn: &Connection, name: &str, body: &str) -> Result<i64, String> {
+    let name = name.trim();
+    if name.is_empty() {
+        return Err("Give the template a name.".into());
+    }
+    if body.len() > 256 * 1024 {
+        return Err("That template is too large.".into());
+    }
+    conn.execute(
+        "INSERT INTO sermon_templates (name, body) VALUES (?1, ?2)
+         ON CONFLICT(name) DO UPDATE SET body = excluded.body, updated_at = datetime('now','localtime')",
+        params![name, body],
+    )
+    .map_err(err)?;
+    conn.query_row("SELECT id FROM sermon_templates WHERE name = ?1", params![name], |r| r.get(0)).map_err(err)
+}
+
+pub fn sermon_template_delete(conn: &Connection, id: i64) -> Result<(), String> {
+    conn.execute("DELETE FROM sermon_templates WHERE id = ?1", params![id]).map_err(err)?;
+    Ok(())
 }
 
 pub fn sermon_delete(conn: &Connection, id: i64) -> Result<(), String> {
@@ -575,6 +710,9 @@ pub struct Backup {
     /// the reader's bookmarks in books; absent in backups from before 2.6
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub book_bookmarks: Vec<BookBookmark>,
+    /// the preacher's own sermon templates; absent in backups from before 2.7
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sermon_templates: Vec<SermonTemplate>,
 }
 
 pub const BACKUP_FORMAT: &str = "bible-concordance-study/1";
@@ -721,21 +859,28 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
             Some((_, at)) if at >= s.updated_at => {}
             Some((id, _)) => {
                 tx.execute(
-                    "UPDATE sermons SET preached_on=?2, topics=?3, passages=?4, body=?5, updated_at=?6 WHERE id=?1",
-                    params![id, s.preached_on, s.topics, s.passages, s.body, s.updated_at],
+                    "UPDATE sermons SET preached_on=?2, topics=?3, passages=?4, body=?5, updated_at=?6, stage=?7, venue=?8 WHERE id=?1",
+                    params![id, s.preached_on, s.topics, s.passages, s.body, s.updated_at, clean_stage(&s.stage), s.venue.trim()],
                 )
                 .map_err(err)?;
                 r.sermons += 1;
             }
             None => {
                 tx.execute(
-                    "INSERT INTO sermons (title, series, preached_on, topics, passages, body, updated_at) VALUES (?1,?2,?3,?4,?5,?6, CASE WHEN ?7 = '' THEN datetime('now','localtime') ELSE ?7 END)",
-                    params![s.title.trim(), s.series.trim(), s.preached_on, s.topics, s.passages, s.body, s.updated_at],
+                    "INSERT INTO sermons (title, series, preached_on, topics, passages, body, updated_at, stage, venue) VALUES (?1,?2,?3,?4,?5,?6, CASE WHEN ?7 = '' THEN datetime('now','localtime') ELSE ?7 END, ?8, ?9)",
+                    params![s.title.trim(), s.series.trim(), s.preached_on, s.topics, s.passages, s.body, s.updated_at, clean_stage(&s.stage), s.venue.trim()],
                 )
                 .map_err(err)?;
                 r.sermons += 1;
             }
         }
+    }
+    // the preacher's templates: added by name; one already here is left as it is
+    for t in &b.sermon_templates {
+        if t.name.trim().is_empty() || t.body.len() > 256 * 1024 {
+            continue;
+        }
+        tx.execute("INSERT OR IGNORE INTO sermon_templates (name, body) VALUES (?1, ?2)", params![t.name.trim(), t.body]).map_err(err)?;
     }
     tx.commit().map_err(err)?;
     Ok(r)
@@ -769,7 +914,7 @@ mod tests {
         save_note(&c, "John", 3, 16, "God's love -- the gift of the Son.", None, &[]).unwrap();
         save_note(&c, "John", 3, 1, "Nicodemus by night", Some(8), &["#New birth, nicodemus".into(), "new BIRTH".into()]).unwrap();
         start_plan(&c, "nt90", "2026-09-26").unwrap();
-        let mut sermon = Sermon { id: 0, title: " Healing ".into(), series: "Faith".into(), preached_on: "2026-10-11".into(), topics: "healing; faith".into(), passages: "James 5:14".into(), body: "{\"items\":[]}".into(), updated_at: String::new() };
+        let mut sermon = Sermon { id: 0, title: " Healing ".into(), series: "Faith".into(), preached_on: "2026-10-11".into(), topics: "healing; faith".into(), passages: "James 5:14".into(), body: "{\"items\":[]}".into(), updated_at: String::new(), stage: "draft".into(), venue: String::new() };
         assert!(sermon_save(&c, &Sermon { title: "  ".into(), ..sermon.clone() }).is_err());
         sermon.id = sermon_save(&c, &sermon).unwrap();
         sermon.passages = "James 5:14; Isaiah 53:5".into();
@@ -810,6 +955,7 @@ mod tests {
             plans: plan_progress(&c).unwrap(),
             sermons: sermons_all(&c).unwrap(),
             book_bookmarks: book_bookmarks(&c, None).unwrap(),
+            sermon_templates: sermon_templates(&c).unwrap(),
         };
         let res = write_export(&dir, &stamp, &backup).unwrap();
         let md = std::fs::read_to_string(&res.markdown_path).unwrap();
@@ -865,6 +1011,76 @@ mod tests {
         assert_eq!(ids(&c), vec![t, b, d]);
         basket_clear(&c).unwrap();
         assert!(basket_list(&c).unwrap().is_empty());
+        drop(c);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn sermon_stage_venue_usage_and_templates() {
+        let (mut c, dir) = temp_db();
+        let body = r#"{"items":[{"id":"a","type":"material","material":{"key":"p:John|3|16:17","kind":"passage"}},{"id":"b","type":"heading","text":"Point"}]}"#;
+        let id = sermon_save(
+            &c,
+            &Sermon { id: 0, title: "Faith".into(), series: "".into(), preached_on: "2026-10-18".into(), topics: "faith".into(), passages: "John 3:16–17".into(), body: body.into(), updated_at: "".into(), stage: "ready".into(), venue: " South Point ".into() },
+        )
+        .unwrap();
+        let got = sermon_get(&c, id).unwrap().unwrap();
+        assert_eq!((got.stage.as_str(), got.venue.as_str()), ("ready", "South Point"));
+        // an unknown stage is stored as a draft
+        sermon_save(&c, &Sermon { stage: "nonsense".into(), ..got.clone() }).unwrap();
+        assert_eq!(sermon_get(&c, id).unwrap().unwrap().stage, "draft");
+        assert_eq!(sermon_list(&c).unwrap()[0].venue, "South Point");
+
+        let usage = sermon_usage(&c).unwrap();
+        assert_eq!(usage.len(), 1);
+        assert_eq!(usage[0].keys, ["p:John|3|16:17"]);
+        assert_eq!(usage[0].passages, "John 3:16–17");
+
+        let t = sermon_template_save(&c, " My three points ", r#"{"sections":[]}"#).unwrap();
+        assert_eq!(sermon_template_save(&c, "My three points", r#"{"sections":[1]}"#).unwrap(), t, "same name replaces");
+        assert_eq!(sermon_templates(&c).unwrap()[0].body, r#"{"sections":[1]}"#);
+        assert!(sermon_template_save(&c, "  ", "{}").is_err());
+
+        // the backup carries stage, venue and templates
+        let json = serde_json::to_string(&Backup {
+            format: BACKUP_FORMAT.into(),
+            exported_at: "".into(),
+            sermons: sermons_all(&c).unwrap(),
+            sermon_templates: sermon_templates(&c).unwrap(),
+            ..Default::default()
+        })
+        .unwrap();
+        let (mut other, dir2) = temp_db();
+        import_backup(&mut other, &json).unwrap();
+        let s2 = &sermon_list(&other).unwrap()[0];
+        assert_eq!((s2.stage.as_str(), s2.venue.as_str()), ("draft", "South Point"));
+        assert_eq!(sermon_templates(&other).unwrap().len(), 1);
+        sermon_template_delete(&c, t).unwrap();
+        assert!(sermon_templates(&c).unwrap().is_empty());
+        let _ = &mut c;
+        drop(c);
+        drop(other);
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(dir2);
+    }
+
+    #[test]
+    fn an_older_sermons_table_gets_stage_and_venue() {
+        let dir = std::env::temp_dir().join(format!("bc-userdata-old-{}-{}", std::process::id(), rand_suffix()));
+        std::fs::create_dir_all(&dir).unwrap();
+        {
+            let c = Connection::open(dir.join("userdata.db")).unwrap();
+            c.execute_batch(
+                "CREATE TABLE sermons (id INTEGER PRIMARY KEY, title TEXT NOT NULL, series TEXT NOT NULL DEFAULT '', preached_on TEXT NOT NULL DEFAULT '',
+                 topics TEXT NOT NULL DEFAULT '', passages TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
+                 created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')), updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
+                 INSERT INTO sermons (title, body) VALUES ('Old one', '{}');",
+            )
+            .unwrap();
+        }
+        let c = open(&dir).unwrap();
+        let s = &sermon_list(&c).unwrap()[0];
+        assert_eq!((s.title.as_str(), s.stage.as_str(), s.venue.as_str()), ("Old one", "draft", ""));
         drop(c);
         let _ = std::fs::remove_dir_all(dir);
     }

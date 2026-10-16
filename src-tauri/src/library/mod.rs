@@ -148,6 +148,12 @@ CREATE TABLE IF NOT EXISTS lib_book (
     title TEXT NOT NULL, text TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS lib_book_ord ON lib_book(module, ord);
 CREATE VIRTUAL TABLE IF NOT EXISTS lib_book_fts USING fts5(title, text, content='lib_book', content_rowid='id');
+CREATE TABLE IF NOT EXISTS lib_refs (
+    module TEXT NOT NULL, tbl TEXT NOT NULL, row_id INTEGER NOT NULL, pos INTEGER NOT NULL,
+    book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, verse_end INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS lib_refs_loc ON lib_refs(book, chapter, verse);
+CREATE INDEX IF NOT EXISTS lib_refs_module ON lib_refs(module);
+CREATE TABLE IF NOT EXISTS lib_refs_done (module TEXT PRIMARY KEY, installed_at TEXT NOT NULL);
 ";
 
 fn err<E: std::fmt::Display>(e: E) -> String {
@@ -626,6 +632,8 @@ fn delete_module_rows(tx: &Connection, name: &str) -> Result<(), String> {
         .map_err(err)?;
         tx.execute(&format!("DELETE FROM {table} WHERE module = ?1"), params![name]).map_err(err)?;
     }
+    tx.execute("DELETE FROM lib_refs WHERE module = ?1", params![name]).map_err(err)?;
+    tx.execute("DELETE FROM lib_refs_done WHERE module = ?1", params![name]).map_err(err)?;
     tx.execute("DELETE FROM modules WHERE name = ?1", params![name]).map_err(err)?;
     Ok(())
 }
@@ -1355,9 +1363,453 @@ pub fn search_books(conn: &Connection, query: &str, module: Option<&str>, limit:
     rows.collect::<Result<_, _>>().map_err(err)
 }
 
+// ---------------------------------------------------------------- where a passage is mentioned
+//
+// Every Scripture reference inside the installed books, dictionaries, devotionals and
+// commentaries is already a ⟦Book|ch|v|v_end|label⟧ marker (markup.rs, epub.rs). lib_refs
+// turns them round: from a passage to every place that mentions it. Built for a module the
+// first time it is asked for after it is installed (a few seconds for a large library),
+// then kept; removing a module removes its rows.
+
+fn marker_rx() -> &'static regex::Regex {
+    static CELL: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| regex::Regex::new(r"⟦([^|⟧]+)\|(\d+)\|(\d*)\|(\d*)\|[^⟧]*⟧").unwrap())
+}
+
+fn paragraph_break_rx() -> &'static regex::Regex {
+    static CELL: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+    CELL.get_or_init(|| regex::Regex::new(r"\n{2,}").unwrap())
+}
+
+/// The references in one text: (byte position, book, chapter, verse (0 = the whole
+/// chapter), last verse), the first mention of each only.
+pub fn markers_in(text: &str) -> Vec<(usize, String, i64, i64, i64)> {
+    let mut seen = HashSet::new();
+    let mut out = Vec::new();
+    for c in marker_rx().captures_iter(text) {
+        let Ok(chapter) = c[2].parse::<i64>() else { continue };
+        let verse = c[3].parse::<i64>().unwrap_or(0);
+        let end = c[4].parse::<i64>().ok().filter(|e| *e > verse).unwrap_or(verse);
+        if seen.insert((c[1].to_string(), chapter, verse, end)) {
+            out.push((c.get(0).unwrap().start(), c[1].to_string(), chapter, verse, end));
+        }
+    }
+    out
+}
+
+/// Indexes the references of every installed module (other than Bibles) not indexed since
+/// it was installed. Returns how many modules it indexed.
+pub fn ensure_ref_index(conn: &mut Connection) -> Result<usize, String> {
+    let todo: Vec<(String, String)> = conn
+        .prepare(
+            "SELECT m.name, m.installed_at FROM modules m LEFT JOIN lib_refs_done d ON d.module = m.name
+             WHERE m.kind <> 'bible' AND (d.installed_at IS NULL OR d.installed_at <> m.installed_at)",
+        )
+        .map_err(err)?
+        .query_map([], |r| Ok((r.get(0)?, r.get(1)?)))
+        .map_err(err)?
+        .collect::<Result<_, _>>()
+        .map_err(err)?;
+    for (module, installed_at) in &todo {
+        let tx = conn.transaction().map_err(err)?;
+        tx.execute("DELETE FROM lib_refs WHERE module = ?1", params![module]).map_err(err)?;
+        for (tbl, col) in [("lib_book", "text"), ("lib_dict", "body"), ("lib_comm", "text")] {
+            let mut read = tx.prepare(&format!("SELECT id, {col} FROM {tbl} WHERE module = ?1 AND instr({col}, '⟦') > 0")).map_err(err)?;
+            let mut write = tx
+                .prepare("INSERT INTO lib_refs (module, tbl, row_id, pos, book, chapter, verse, verse_end) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)")
+                .map_err(err)?;
+            let mut rows = read.query(params![module]).map_err(err)?;
+            while let Some(row) = rows.next().map_err(err)? {
+                let id: i64 = row.get(0).map_err(err)?;
+                let text: String = row.get(1).map_err(err)?;
+                for (pos, book, chapter, verse, end) in markers_in(&text) {
+                    write.execute(params![module, tbl, id, pos as i64, book, chapter, verse, end]).map_err(err)?;
+                }
+            }
+        }
+        tx.execute("INSERT OR REPLACE INTO lib_refs_done (module, installed_at) VALUES (?1, ?2)", params![module, installed_at]).map_err(err)?;
+        tx.commit().map_err(err)?;
+    }
+    Ok(todo.len())
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct RefMention {
+    pub module: String,
+    pub module_title: String,
+    /// the module's kind: "book", "devotional", "dictionary" or "commentary"
+    pub kind: String,
+    /// for librarySection: a book's section id, or a dictionary or devotional entry's id
+    /// (LIB_ID_BASE + its row); for a commentary, its row
+    pub id: i64,
+    /// a book or devotional: the section's place in its contents and the paragraph, for
+    /// opening it there
+    pub section: i64,
+    pub para: i64,
+    /// the section's title, the dictionary's headword, or the passage a commentary is on
+    pub title: String,
+    /// a commentary: the passage it is on
+    pub on_book: Option<String>,
+    pub on_chapter: Option<i64>,
+    pub on_verse: Option<i64>,
+    /// the passage as it is cited there ("John 3:16", "John 3")
+    pub cited: String,
+    /// the words around the mention, as plain text
+    pub snippet: String,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct RefMentions {
+    pub hits: Vec<RefMention>,
+    /// every place found, before the limits
+    pub total: usize,
+}
+
+/// The words around byte `pos` of `text`, whole markers only, as plain text.
+fn around(text: &str, pos: usize, before: usize, after: usize) -> String {
+    let mut start = pos.saturating_sub(before);
+    while !text.is_char_boundary(start) {
+        start += 1;
+    }
+    // begin at a paragraph or a sentence when there is one near
+    if let Some(nl) = text[start..pos].rfind('\n') {
+        start += nl + 1;
+    } else if start > 0 {
+        if let Some(dot) = text[start..pos].find(". ") {
+            start += dot + 2;
+        } else if let Some(space) = text[start..pos].find(char::is_whitespace) {
+            // at least a whole word
+            start += space + 1;
+        }
+    }
+    // never inside a marker
+    if let Some(close) = text[start..pos].find('⟧') {
+        if text[start..pos].find('⟦').map_or(true, |o| close < o) {
+            start += close + '⟧'.len_utf8();
+        }
+    }
+    let mut end = (pos + after).min(text.len()).max(pos);
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    let window = &text[start..end];
+    let cut = match (window.rfind('⟦'), window.rfind('⟧')) {
+        (Some(o), Some(c)) if o > c => o,
+        (Some(o), None) => o,
+        _ => window.len(),
+    };
+    let mut snippet = crate::study::plain_snippet(&window[..cut], before + after + 40);
+    if start > 0 && !text[..start].ends_with('\n') {
+        snippet.insert_str(0, "… ");
+    }
+    if end < text.len() {
+        snippet.push_str(" …");
+    }
+    snippet
+}
+
+/// Where the installed books, dictionaries, devotionals and commentaries mention a passage
+/// (`verse` 0: the whole chapter). Mentions of the verses themselves come before mentions of
+/// only the chapter; books and devotionals before dictionaries before commentaries; at most
+/// `per_module` from any one. A commentary's own notes on the passage are left out (the
+/// commentary panel has them).
+pub fn mentions_of(conn: &Connection, book: &str, chapter: i64, verse: i64, verse_end: i64, per_module: usize, limit: usize) -> Result<RefMentions, String> {
+    let (first, last) = if verse > 0 { (verse, verse_end.max(verse)) } else { (1, i64::MAX) };
+    let mut stmt = conn
+        .prepare(
+            "SELECT r.module, m.title, m.kind, r.tbl, r.row_id, r.pos, r.verse, r.verse_end
+             FROM lib_refs r JOIN modules m ON m.name = r.module
+             WHERE r.book = ?1 AND r.chapter = ?2 AND (r.verse = 0 OR (r.verse <= ?4 AND r.verse_end >= ?3))
+             ORDER BY r.verse = 0,
+                      CASE m.kind WHEN 'book' THEN 0 WHEN 'devotional' THEN 1 WHEN 'dictionary' THEN 2 ELSE 3 END,
+                      r.verse_end - r.verse, r.module, r.row_id",
+        )
+        .map_err(err)?;
+    type Cand = (String, String, String, String, i64, i64, i64, i64);
+    let cands: Vec<Cand> = stmt
+        .query_map(params![book, chapter, first, last], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?, r.get(7)?)))
+        .map_err(err)?
+        .collect::<Result<_, _>>()
+        .map_err(err)?;
+    let mut hits = Vec::new();
+    let mut total = 0;
+    let mut per: HashMap<String, usize> = HashMap::new();
+    let mut seen_rows = HashSet::new();
+    for (module, module_title, kind, tbl, row_id, pos, v, ve) in cands {
+        if !seen_rows.insert((tbl.clone(), row_id)) {
+            continue;
+        }
+        // a commentary's note on this very passage is not a mention of it elsewhere
+        let on: Option<(String, i64, i64)> = if tbl == "lib_comm" {
+            let on: (String, i64, i64) = conn
+                .query_row("SELECT book, chapter, verse_start FROM lib_comm WHERE id = ?1", params![row_id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+                .map_err(err)?;
+            if on.0 == book && on.1 == chapter && (verse == 0 || (on.2 >= first && on.2 <= last)) {
+                continue;
+            }
+            Some(on)
+        } else {
+            None
+        };
+        total += 1;
+        let n = per.entry(module.clone()).or_default();
+        if *n >= per_module || hits.len() >= limit {
+            continue;
+        }
+        *n += 1;
+        let cited = match (v, ve) {
+            (0, _) => format!("{book} {chapter}"),
+            (v, e) if e > v => format!("{book} {chapter}:{v}-{e}"),
+            (v, _) => format!("{book} {chapter}:{v}"),
+        };
+        let mut hit = RefMention {
+            module: module.clone(),
+            module_title,
+            kind: kind.clone(),
+            id: row_id,
+            section: 0,
+            para: 0,
+            title: String::new(),
+            on_book: None,
+            on_chapter: None,
+            on_verse: None,
+            cited,
+            snippet: String::new(),
+        };
+        let text: String = match (tbl.as_str(), on) {
+            ("lib_comm", Some((b, c, vs))) => {
+                hit.title = if vs > 0 { format!("On {b} {c}:{vs}") } else { format!("On {b} {c}") };
+                (hit.on_book, hit.on_chapter, hit.on_verse) = (Some(b), Some(c), Some(vs.max(1)));
+                conn.query_row("SELECT text FROM lib_comm WHERE id = ?1", params![row_id], |r| r.get(0)).map_err(err)?
+            }
+            ("lib_dict", _) => {
+                let (head, body): (String, String) = conn.query_row("SELECT headword, body FROM lib_dict WHERE id = ?1", params![row_id], |r| Ok((r.get(0)?, r.get(1)?))).map_err(err)?;
+                hit.id = LIB_ID_BASE + row_id;
+                hit.title = head;
+                if kind == "devotional" {
+                    hit.section = conn.query_row("SELECT count(*) FROM lib_dict WHERE module = ?1 AND id < ?2", params![module, row_id], |r| r.get(0)).map_err(err)?;
+                }
+                body
+            }
+            _ => {
+                let (title, ord, text): (String, i64, String) = conn
+                    .query_row("SELECT title, ord, text FROM lib_book WHERE id = ?1", params![row_id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+                    .map_err(err)?;
+                hit.title = title;
+                hit.section = conn.query_row("SELECT count(*) FROM lib_book WHERE module = ?1 AND ord < ?2", params![module, ord], |r| r.get(0)).map_err(err)?;
+                text
+            }
+        };
+        let mut pos = (pos as usize).min(text.len());
+        while !text.is_char_boundary(pos) {
+            pos -= 1;
+        }
+        hit.para = paragraph_break_rx().find_iter(&text[..pos]).count() as i64;
+        hit.snippet = around(&text, pos, 220, 320);
+        hits.push(hit);
+    }
+    Ok(RefMentions { hits, total })
+}
+
+// ---------------------------------------------------------------- what the books say on a subject
+
+/// The parts of the installed books and devotionals that are about a subject ("faith in
+/// God"), best first: the sections whose words (in any form: "faith", "faithful") include
+/// every word of the subject, a section's title counting most, then those with only some of
+/// them. At most `per_module` from any one book, each with the paragraph that says most.
+pub fn topic_passages(conn: &Connection, query: &str, per_module: usize, limit: usize) -> Result<Vec<RefMention>, String> {
+    let stems: Vec<String> = query
+        .to_lowercase()
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| w.len() > 1 && !crate::sermon::is_stopword(w))
+        .map(crate::sermon::stem)
+        .filter(|s| s.len() > 1)
+        .take(6)
+        .collect();
+    if stems.is_empty() {
+        return Ok(Vec::new());
+    }
+    let terms: Vec<String> = stems.iter().map(|s| format!("\"{}\"*", s.replace('"', ""))).collect();
+    // (table, row, module, module title, module kind, title, text, score: lower is better)
+    type Cand = (&'static str, i64, String, String, String, String, String, f64);
+    let mut cands: Vec<Cand> = Vec::new();
+    let mut seen = HashSet::new();
+    let exprs = if terms.len() > 1 { vec![terms.join(" AND "), terms.join(" OR ")] } else { vec![terms[0].clone()] };
+    for (pass, expr) in exprs.iter().enumerate() {
+        if pass > 0 && cands.len() >= limit {
+            break;
+        }
+        let mut found: Vec<Cand> = Vec::new();
+        let mut books = conn
+            .prepare(
+                "SELECT b.id, b.module, m.title, m.kind, b.title, b.text, bm25(lib_book_fts, 8.0, 1.0) FROM lib_book_fts f
+                 JOIN lib_book b ON b.id = f.rowid JOIN modules m ON m.name = b.module
+                 WHERE lib_book_fts MATCH ?1 ORDER BY bm25(lib_book_fts, 8.0, 1.0) LIMIT 300",
+            )
+            .map_err(err)?;
+        for row in books.query_map(params![expr], |r| Ok(("lib_book", r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?))).map_err(err)? {
+            found.push(row.map_err(err)?);
+        }
+        let mut days = conn
+            .prepare(
+                "SELECT d.id, d.module, m.title, m.kind, d.headword, d.body, bm25(lib_dict_fts, 8.0, 1.0) FROM lib_dict_fts f
+                 JOIN lib_dict d ON d.id = f.rowid JOIN modules m ON m.name = d.module
+                 WHERE lib_dict_fts MATCH ?1 AND m.kind = 'devotional' ORDER BY bm25(lib_dict_fts, 8.0, 1.0) LIMIT 100",
+            )
+            .map_err(err)?;
+        for row in days.query_map(params![expr], |r| Ok(("lib_dict", r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?))).map_err(err)? {
+            found.push(row.map_err(err)?);
+        }
+        found.sort_by(|a, b| a.7.partial_cmp(&b.7).unwrap_or(std::cmp::Ordering::Equal));
+        for c in found {
+            if seen.insert((c.0, c.1)) {
+                cands.push(c);
+            }
+        }
+    }
+
+    let mut out = Vec::new();
+    let mut per: HashMap<String, usize> = HashMap::new();
+    for (tbl, row_id, module, module_title, kind, title, text, _) in cands {
+        if out.len() >= limit {
+            break;
+        }
+        let n = per.entry(module.clone()).or_default();
+        if *n >= per_module {
+            continue;
+        }
+        *n += 1;
+        // the paragraph that has the most of the subject's words (the first, if only the title has them)
+        let paras: Vec<&str> = paragraph_break_rx().split(&text).collect();
+        let score = |p: &str| {
+            let p = p.to_lowercase();
+            stems.iter().map(|s| p.matches(s.as_str()).count().min(4) * 3 + usize::from(p.contains(s.as_str())) * 10).sum::<usize>()
+        };
+        let (para, best) = paras.iter().enumerate().max_by_key(|(i, p)| (score(p), std::cmp::Reverse(*i))).map(|(i, p)| (i, *p)).unwrap_or((0, ""));
+        let snippet = {
+            let plain = crate::study::plain_snippet(best, 900);
+            if plain.trim().is_empty() { crate::study::plain_snippet(&text, 600) } else { plain }
+        };
+        let section: i64 = if tbl == "lib_book" {
+            conn.query_row("SELECT count(*) FROM lib_book WHERE module = ?1 AND ord < (SELECT ord FROM lib_book WHERE id = ?2)", params![module, row_id], |r| r.get(0)).map_err(err)?
+        } else {
+            conn.query_row("SELECT count(*) FROM lib_dict WHERE module = ?1 AND id < ?2", params![module, row_id], |r| r.get(0)).map_err(err)?
+        };
+        out.push(RefMention {
+            module,
+            module_title,
+            kind,
+            id: if tbl == "lib_dict" { LIB_ID_BASE + row_id } else { row_id },
+            section,
+            para: para as i64,
+            title,
+            on_book: None,
+            on_chapter: None,
+            on_verse: None,
+            cited: String::new(),
+            snippet,
+        });
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn finds_what_the_books_say_on_a_subject() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        migrate(&conn, Path::new(".")).unwrap();
+        for (name, kind) in [("Warfare", "book"), ("Action", "book"), ("Daily", "devotional")] {
+            conn.execute(
+                "INSERT INTO modules (name, kind, title, lang, language, licence, about, version, versification) VALUES (?1, ?2, ?1, 'en', 'English', '', '', '1', 'KJV')",
+                params![name, kind],
+            )
+            .unwrap();
+        }
+        let rows = [
+            (1, "Warfare", 0, "The armour", "Put on the whole armour.\n\nThe shield of faith quenches the darts, held up in trust towards God."),
+            (2, "Warfare", 1, "Prayer", "Pray always, watching."),
+            (3, "Warfare", 2, "Standing firm", "Stand therefore. A faithful soldier trusts God in the battle.\n\nNothing else here."),
+            (4, "Warfare", 3, "More on faith", "Faith and God, faith and God, faith and God."),
+            (5, "Action", 0, "Faith that works", "Introduction.\n\nFaith without works is dead; faith in God shows itself in deeds."),
+        ];
+        for (id, module, ord, title, text) in rows {
+            conn.execute("INSERT INTO lib_book (id, module, parent, ord, title, text) VALUES (?1, ?2, NULL, ?3, ?4, ?5)", params![id, module, ord, title, text]).unwrap();
+        }
+        conn.execute("INSERT INTO lib_dict (id, module, key, headword, headword_fold, body) VALUES (9, 'Daily', '01.02', '01.02', '01.02', 'Have faith in God. Mark 11:22')", []).unwrap();
+        conn.execute("INSERT INTO lib_book_fts(lib_book_fts) VALUES ('rebuild')", []).unwrap();
+        conn.execute("INSERT INTO lib_dict_fts(lib_dict_fts) VALUES ('rebuild')", []).unwrap();
+
+        let hits = topic_passages(&conn, "faith in God", 2, 20).unwrap();
+        let found: Vec<(&str, &str)> = hits.iter().map(|h| (h.module.as_str(), h.title.as_str())).collect();
+        // every book and the devotional; no more than two from one book; "Prayer" is not about it
+        assert!(found.contains(&("Action", "Faith that works")), "{found:?}");
+        assert!(found.contains(&("Daily", "01.02")), "{found:?}");
+        assert_eq!(found.iter().filter(|(m, _)| *m == "Warfare").count(), 2, "{found:?}");
+        assert!(!found.iter().any(|(_, t)| *t == "Prayer"));
+        // the paragraph that says it, and where it is
+        let action = hits.iter().find(|h| h.module == "Action").unwrap();
+        assert_eq!((action.para, action.section), (1, 0));
+        assert!(action.snippet.starts_with("Faith without works"), "{}", action.snippet);
+        assert_eq!(hits.iter().find(|h| h.module == "Daily").unwrap().id, LIB_ID_BASE + 9);
+        // "faithful" counts as faith; words the subject doesn't need are ignored
+        assert!(topic_passages(&conn, "the faithful", 5, 20).unwrap().iter().any(|h| h.title == "Standing firm"));
+        assert!(topic_passages(&conn, "the and of", 5, 20).unwrap().is_empty());
+    }
+
+    #[test]
+    fn finds_where_a_passage_is_mentioned() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        migrate(&conn, Path::new(".")).unwrap();
+        for (name, kind) in [("Owen", "book"), ("ISBE", "dictionary"), ("Barnes", "commentary"), ("KJV2", "bible")] {
+            conn.execute(
+                "INSERT INTO modules (name, kind, title, lang, language, licence, about, version, versification) VALUES (?1, ?2, ?1, 'en', 'English', '', '', '1', 'KJV')",
+                params![name, kind],
+            )
+            .unwrap();
+        }
+        let john316 = "⟦John|3|16||John 3:16⟧";
+        conn.execute("INSERT INTO lib_book (id, module, parent, ord, title, text) VALUES (1, 'Owen', NULL, 0, 'Preface', 'Nothing here.')", []).unwrap();
+        conn.execute(
+            "INSERT INTO lib_book (id, module, parent, ord, title, text) VALUES (2, 'Owen', NULL, 1, 'Of love', ?1)",
+            params![format!("First paragraph.\n\nGod so loved, as {john316} says, and ⟦Romans|5|8||Rom 5:8⟧ too. Again {john316}.")],
+        )
+        .unwrap();
+        conn.execute("INSERT INTO lib_dict (id, module, key, headword, headword_fold, body) VALUES (7, 'ISBE', 'LOVE', 'LOVE', 'love', 'See ⟦John|3|||John 3⟧ and ⟦John|3|14|17|John 3:14-17⟧.')", []).unwrap();
+        conn.execute("INSERT INTO lib_comm (id, module, book, chapter, verse_start, text) VALUES (1, 'Barnes', 'John', 3, 16, ?1)", params![format!("For God so loved: compare {john316}.")]).unwrap();
+        conn.execute("INSERT INTO lib_comm (id, module, book, chapter, verse_start, text) VALUES (2, 'Barnes', 'Romans', 5, 8, ?1)", params![format!("Commendeth his love: as in {john316}.")]).unwrap();
+        for fts in ["lib_book_fts", "lib_dict_fts", "lib_comm_fts"] {
+            conn.execute(&format!("INSERT INTO {fts}({fts}) VALUES ('rebuild')"), []).unwrap();
+        }
+        assert_eq!(ensure_ref_index(&mut conn).unwrap(), 3);
+        assert_eq!(ensure_ref_index(&mut conn).unwrap(), 0);
+        // the second mention in the same section is not indexed again
+        let n: i64 = conn.query_row("SELECT count(*) FROM lib_refs WHERE module = 'Owen'", [], |r| r.get(0)).unwrap();
+        assert_eq!(n, 2);
+
+        let m = mentions_of(&conn, "John", 3, 16, 16, 5, 50).unwrap();
+        let found: Vec<(&str, &str)> = m.hits.iter().map(|h| (h.module.as_str(), h.title.as_str())).collect();
+        // the book, the dictionary (John 3:14-17), the commentary on Romans; Barnes's own note
+        // on John 3:16 is left out
+        assert_eq!(found, vec![("Owen", "Of love"), ("ISBE", "LOVE"), ("Barnes", "On Romans 5:8")], "{m:?}");
+        assert_eq!(m.total, 3);
+        let owen = &m.hits[0];
+        assert_eq!((owen.section, owen.para, owen.cited.as_str()), (1, 1, "John 3:16"));
+        assert!(owen.snippet.starts_with("God so loved, as John 3:16 says") && !owen.snippet.contains('⟦'), "{}", owen.snippet);
+        assert_eq!((m.hits[1].id, m.hits[1].cited.as_str()), (LIB_ID_BASE + 7, "John 3:14-17"));
+        assert_eq!(m.hits[2].on_book.as_deref(), Some("Romans"));
+        // the whole chapter: every place, the commentary on John 3 itself still left out
+        assert_eq!(mentions_of(&conn, "John", 3, 0, 0, 5, 50).unwrap().hits.len(), 3);
+        assert!(mentions_of(&conn, "John", 4, 1, 1, 5, 50).unwrap().hits.is_empty());
+        assert_eq!(mentions_of(&conn, "John", 3, 16, 16, 5, 1).unwrap().hits.len(), 1);
+
+        remove(&mut conn, "Owen").unwrap();
+        assert!(mentions_of(&conn, "John", 3, 16, 16, 5, 50).unwrap().hits.iter().all(|h| h.module != "Owen"));
+    }
 
     /// Parses the real CrossWire catalogue (downloaded to library-probe\mods.d.tar.gz).
     #[test]

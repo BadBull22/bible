@@ -146,6 +146,28 @@ pub fn sermon_save(state: State<UserDataState>, sermon: userdata::Sermon) -> Res
     userdata::sermon_save(&*user_conn(&state)?, &sermon)
 }
 
+/// What every saved sermon used (passages, material), for "used before" notices.
+#[tauri::command]
+pub fn sermon_usage(state: State<UserDataState>) -> Result<Vec<userdata::SermonUsage>, String> {
+    userdata::sermon_usage(&*user_conn(&state)?)
+}
+
+#[tauri::command]
+pub fn sermon_templates(state: State<UserDataState>) -> Result<Vec<userdata::SermonTemplate>, String> {
+    userdata::sermon_templates(&*user_conn(&state)?)
+}
+
+/// Saves the preacher's own template under a name (replacing one of that name).
+#[tauri::command]
+pub fn sermon_template_save(state: State<UserDataState>, name: String, body: String) -> Result<i64, String> {
+    userdata::sermon_template_save(&*user_conn(&state)?, &name, &body)
+}
+
+#[tauri::command]
+pub fn sermon_template_delete(state: State<UserDataState>, id: i64) -> Result<(), String> {
+    userdata::sermon_template_delete(&*user_conn(&state)?, id)
+}
+
 #[tauri::command]
 pub fn sermon_delete(state: State<UserDataState>, id: i64) -> Result<(), String> {
     userdata::sermon_delete(&*user_conn(&state)?, id)
@@ -242,6 +264,7 @@ pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbStat
             plans: userdata::plan_progress(&u)?,
             sermons: userdata::sermons_all(&u)?,
             book_bookmarks: userdata::book_bookmarks(&u, None)?,
+            sermon_templates: userdata::sermon_templates(&u)?,
         };
         (b, stamp)
     };

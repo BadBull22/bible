@@ -15,6 +15,9 @@ mod online;
 pub mod qa;
 mod qa_parser;
 mod sermon;
+mod sermon_media;
+mod slides;
+mod preaching;
 mod settings;
 mod sheet;
 mod study;
@@ -110,6 +113,22 @@ pub fn run() {
                 .resolve("resources/apocrypha_xrefs.json", tauri::path::BaseDirectory::Resource)
                 .expect("failed to resolve apocrypha_xrefs.json resource path");
             app.manage(apocrypha::ApocryphaXrefs::load(&apocrypha_path).expect("failed to load apocrypha_xrefs.json"));
+
+            let outlines_path = app
+                .path()
+                .resolve("resources/simeon_outlines.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve simeon_outlines.json resource path");
+            app.manage(preaching::OutlinesState::load(&outlines_path));
+            let illustrations_path = app
+                .path()
+                .resolve("resources/illustrations.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve illustrations.json resource path");
+            app.manage(preaching::IllustrationsState::load(&illustrations_path));
+            let spurgeon_path = app
+                .path()
+                .resolve("resources/spurgeon_sermons.json", tauri::path::BaseDirectory::Resource)
+                .expect("failed to resolve spurgeon_sermons.json resource path");
+            app.manage(preaching::SpurgeonState::load(&spurgeon_path));
 
             let qa_path = app
                 .path()
@@ -211,6 +230,23 @@ pub fn run() {
             study_commands::sermon_get,
             study_commands::sermon_save,
             study_commands::sermon_delete,
+            study_commands::sermon_usage,
+            study_commands::sermon_templates,
+            study_commands::sermon_template_save,
+            study_commands::sermon_template_delete,
+            slides::save_sermon_slides,
+            preaching::sermon_outlines,
+            preaching::sermon_outlines_titled,
+            preaching::sermon_illustrations,
+            preaching::spurgeon_sermons_on,
+            sermon_media::sermon_media_add,
+            sermon_media::sermon_media_bytes,
+            sermon_media::sermon_media_open,
+            sermon_media::sermon_media_path,
+            sermon_media::sermon_backgrounds,
+            sermon_media::sermon_background_bytes,
+            sermon_media::sermon_backgrounds_download,
+            preaching::spurgeon_sermons_titled,
             logging::log_event,
             logging::log_recent,
             logging::log_path,
@@ -254,6 +290,8 @@ pub fn run() {
             library_commands::library_extra_books,
             library_commands::library_book_page,
             library_commands::library_search_books,
+            library_commands::library_mentions,
+            library_commands::library_topic,
             library_commands::library_lexicon_entries,
             original_search::original_word_lookup,
             original_search::original_word_search,

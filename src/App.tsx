@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { api, BookInfo, ChapterMarks, InstalledModule, LibraryKind, resolveReference, Version, VerseWithWords } from "./api";
+import { api, BookInfo, ChapterMarks, InstalledModule, LibraryKind, LibraryMention, resolveReference, Version, VerseWithWords } from "./api";
 import { addSearchHistory } from "./searchHistory";
 import { Sidebar } from "./components/Sidebar";
 import { ChapterView } from "./components/ChapterView";
@@ -652,6 +652,20 @@ function App() {
     setHomeActive(true);
   }
 
+  // a place in the reader's Library that refers to a verse: the book or devotional at that
+  // paragraph, the dictionary entry, or the commentary at the passage it is on
+  function openMention(m: LibraryMention) {
+    if (m.kind === "commentary" && m.on_book && m.on_chapter) {
+      jumpTo(m.on_book, m.on_chapter, m.on_verse ?? 1);
+      setPanel({ kind: "commentary", verse: m.on_verse ?? 1, commentaryId: `lib:${m.module}` });
+    } else if (m.kind === "dictionary") {
+      setPanel({ kind: "dictionary", initialQuery: m.title });
+    } else {
+      goToBookPlace(m.module, m.section, m.para);
+      openLibraryBook(m.module);
+    }
+  }
+
   function openLibraryBook(name: string) {
     setReadingBook(name);
     setPanel(null);
@@ -883,7 +897,7 @@ function App() {
           )}
         </header>
         <div className="app-body" style={panelWidth ? ({ "--panel-width": `${panelWidth}px` } as React.CSSProperties) : undefined}>
-          {sidebarOpen && !focusMode && (
+          {sidebarOpen && !focusMode && readingBook !== SERMON_BUILDER && (
             <>
               <Sidebar
                 books={books}
@@ -908,9 +922,9 @@ function App() {
               />
             </>
           )}
-          <main className="main-pane">
+          <main className={"main-pane" + (readingBook === SERMON_BUILDER ? " builder-pane" : "")}>
             {readingBook === SERMON_BUILDER ? (
-              <SermonBuilder versionCode={versionCode} versions={versions} books={books} onJump={jumpTo} onClose={() => setReadingBook(null)} />
+              <SermonBuilder versionCode={versionCode} versions={versions} books={books} chapterCounts={chapterCounts} onJump={jumpTo} onClose={() => setReadingBook(null)} />
             ) : readingBook ? (
               <BookPanel
                 key={readingBook}
@@ -1027,6 +1041,7 @@ function App() {
                 onOpenIn={openInVersion}
                 onClose={() => setPanel(null)}
                 onJump={jumpTo}
+                onOpenMention={openMention}
               />
             </Suspense>
           )}

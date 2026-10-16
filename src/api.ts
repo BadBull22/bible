@@ -497,6 +497,53 @@ export interface SavedSermon {
   passages: string;
   body: string;
   updated_at: string;
+  /** idea | research | draft | ready | preached (since 2.7) */
+  stage: SermonStage;
+  /** where it is (to be) preached (since 2.7) */
+  venue: string;
+}
+
+export type SermonStage = "idea" | "research" | "draft" | "ready" | "preached";
+
+/** What a saved sermon used, for "used before" notices. */
+export interface SermonUsage {
+  id: number;
+  title: string;
+  preached_on: string;
+  stage: SermonStage;
+  passages: string;
+  /** the keys of the material in it */
+  keys: string[];
+}
+
+/** A historic sermon outline (Charles Simeon, Horae Homileticae, public domain). */
+export interface Discourse {
+  n: number;
+  title: string;
+  book: string;
+  chapter: number;
+  verse: number;
+  verse_end: number;
+  announce: string;
+  outline: { level: 1 | 2; text: string }[];
+}
+
+/** A story or a saying from a public-domain book, with its source. */
+export interface IllustrationItem {
+  id: string;
+  kind: "illustration" | "quote";
+  source: string;
+  title: string;
+  subject: string;
+  text: string;
+}
+
+/** The preacher's own template (its layout as JSON). */
+export interface SavedTemplate {
+  id: number;
+  name: string;
+  body: string;
+  updated_at: string;
 }
 
 /** One run of text inside a study-sheet paragraph. */
@@ -506,6 +553,8 @@ export interface SheetRun {
   italic?: boolean;
   /** words of Jesus, when red letters are on */
   red?: boolean;
+  /** a web address (or a kept file, "media:<name>") the words open, where links can be clicked */
+  link?: string;
 }
 
 /** A study sheet is a flat list of these blocks: the same list drives the on-screen
@@ -630,6 +679,48 @@ export interface BookSection {
   text: string;
   prev: number | null;
   next: number | null;
+}
+
+/** A place in the installed books, dictionaries, devotionals or commentaries that mentions a passage. */
+export interface LibraryMention {
+  module: string;
+  module_title: string;
+  /** "book" | "devotional" | "dictionary" | "commentary" */
+  kind: string;
+  /** for librarySection (books, devotionals, dictionaries) */
+  id: number;
+  /** a book or devotional: its place in the contents and the paragraph */
+  section: number;
+  para: number;
+  title: string;
+  /** a commentary: the passage it is on */
+  on_book: string | null;
+  on_chapter: number | null;
+  on_verse: number | null;
+  /** the passage as cited there */
+  cited: string;
+  snippet: string;
+}
+
+export interface LibraryMentions {
+  hits: LibraryMention[];
+  total: number;
+}
+
+/** One of C. H. Spurgeon's sermons, by its text (public domain; read at CCEL). */
+export interface SpurgeonSermon {
+  n: number;
+  title: string;
+  book: string;
+  chapter: number;
+  verse: number;
+  verse_end: number;
+  /** "1877-01-07", or "" */
+  date: string;
+  place: string;
+  /** the sermon's first paragraph */
+  opening: string;
+  url: string;
 }
 
 export interface BookHit {
@@ -832,6 +923,19 @@ export const api = {
   /** saves a new sermon (id 0) or changes to an existing one; returns its id */
   sermonSave: (sermon: SavedSermon) => invoke<number>("sermon_save", { sermon }),
   sermonDelete: (id: number) => invoke<void>("sermon_delete", { id }),
+  sermonUsage: () => invoke<SermonUsage[]>("sermon_usage"),
+  /** Simeon's outlines on a passage */
+  sermonOutlines: (book: string, chapter: number, verse: number, verseEnd: number) => invoke<Discourse[]>("sermon_outlines", { book, chapter, verse, verseEnd }),
+  /** stories and sayings on a subject (Moody, Spurgeon), best first */
+  sermonIllustrations: (query: string, limit = 12) => invoke<IllustrationItem[]>("sermon_illustrations", { query, limit }),
+  /** Simeon's outlines whose titles have the words */
+  sermonOutlinesTitled: (query: string, limit = 12) => invoke<Discourse[]>("sermon_outlines_titled", { query, limit }),
+  sermonTemplates: () => invoke<SavedTemplate[]>("sermon_templates"),
+  sermonTemplateSave: (name: string, body: string) => invoke<number>("sermon_template_save", { name, body }),
+  sermonTemplateDelete: (id: number) => invoke<void>("sermon_template_delete", { id }),
+  /** writes a .pptx in Documents\Bible Concordance; returns its path */
+  saveSermonSlides: (title: string, slides: { kind: string; title: string; body: string; image?: string; background?: string; link?: string }[]) =>
+    invoke<string>("save_sermon_slides", { title, slides }),
   chapterNotes: (book: string, chapter: number) => invoke<Note[]>("chapter_notes", { book, chapter }),
   /** every tag used on a note, with its count, most used first */
   noteTags: () => invoke<[string, number][]>("note_tags"),
@@ -892,6 +996,26 @@ export const api = {
   libraryBookPage: (name: string, page: number) => invoke<[number, number] | null>("library_book_page", { name, page }),
   /** entries for a Strong's number ("G25") in installed Library lexicons */
   libraryLexiconEntries: (strongs: string) => invoke<DictionaryEntry[]>("library_lexicon_entries", { strongs }),
+  /** where the installed books mention a passage (verse 0: the whole chapter) */
+  /** keeps a copy of a file for a sermon (its bytes and own name) */
+  sermonMediaAdd: (bytes: Uint8Array, fileName: string) =>
+    invoke<{ file: string; size: number }>("sermon_media_add", bytes, { headers: { "x-file-name": encodeURIComponent(fileName) } }),
+  sermonMediaBytes: (file: string) => invoke<ArrayBuffer>("sermon_media_bytes", { file }),
+  sermonMediaOpen: (file: string) => invoke<void>("sermon_media_open", { file }),
+  sermonMediaPath: (file: string) => invoke<string>("sermon_media_path", { file }),
+  /** the nature photos, if downloaded */
+  sermonBackgrounds: () => invoke<{ id: string; theme: string; title: string; author: string; licence: string; source: string }[]>("sermon_backgrounds"),
+  sermonBackgroundBytes: (id: string, full: boolean) => invoke<ArrayBuffer>("sermon_background_bytes", { id, full }),
+  sermonBackgroundsDownload: () => invoke<number>("sermon_backgrounds_download"),
+  /** Spurgeon's sermons on a passage (verse 0: the whole chapter) */
+  spurgeonSermonsOn: (book: string, chapter: number, verse: number, verseEnd: number) =>
+    invoke<SpurgeonSermon[]>("spurgeon_sermons_on", { book, chapter, verse, verseEnd }),
+  spurgeonSermonsTitled: (query: string, limit?: number) => invoke<SpurgeonSermon[]>("spurgeon_sermons_titled", { query, limit: limit ?? null }),
+  /** what the installed books and devotionals say on a subject, a few from each */
+  libraryTopic: (query: string, perModule?: number, limit?: number) =>
+    invoke<LibraryMention[]>("library_topic", { query, perModule: perModule ?? null, limit: limit ?? null }),
+  libraryMentions: (book: string, chapter: number, verse: number, verseEnd: number, perModule?: number, limit?: number) =>
+    invoke<LibraryMentions>("library_mentions", { book, chapter, verse, verseEnd, perModule: perModule ?? null, limit: limit ?? null }),
   librarySearchBooks: (query: string, name: string | null, limit: number) =>
     invoke<BookHit[]>("library_search_books", { query, name, limit }),
   basketList: () => invoke<BasketItem[]>("basket_list"),
