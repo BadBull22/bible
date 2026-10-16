@@ -74,3 +74,26 @@ assert.equal(moveIntoSlot(items, e1.id, e2.id), items);
 assert.equal(moveIntoSlot(items, p1.id, e2.id), items);
 
 console.log("sermonLayout: all checks passed");
+
+// ---- Scripture on slides (sermonOutputs): whole verses, a few to a slide
+{
+  const { scriptureSlides, tidyQuotes, versesOf } = await import("../src/scriptureSlides.ts");
+  const john = "16 For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have eternal life. 17 For God did not send His Son into the world to condemn the world, but to save the world through Him. 18 Whoever believes in Him is not condemned, but whoever does not believe has already been condemned, because he has not believed in the name of God’s one and only Son. 19 And this is the verdict: The Light has come into the world, but men loved the darkness rather than the Light because their deeds were evil.";
+  assert.deepEqual(versesOf(john, 16).map((v) => v.n), [16, 17, 18, 19]);
+  assert.deepEqual(versesOf("1 He chose the 12 tribes. 2 And they went", 1).map((v) => [v.n, v.text]), [[1, "He chose the 12 tribes."], [2, "And they went"]], "a number inside a verse is not a verse");
+  assert.deepEqual(versesOf("No numbers here at all.", 5), [{ n: null, text: "No numbers here at all." }]);
+  const parts = scriptureSlides(john, 16, true);
+  assert.ok(parts.length >= 2 && parts.every((p) => p.text.length <= 360), JSON.stringify(parts.map((p) => p.text.length)));
+  assert.deepEqual(parts.map((p) => [p.from, p.to]).flat().filter((x) => x != null)[0], 16);
+  assert.ok(parts.every((p) => /^\d+ /.test(p.text)), "each slide starts at a verse");
+  assert.equal(parts[parts.length - 1].to, 19);
+  const bare = scriptureSlides(john, 16, false);
+  assert.ok(bare.every((p) => !/\b1[6-9] /.test(p.text)), "verse numbers off");
+  const many = Array.from({ length: 12 }, (_, i) => `${i + 1} Short verse ${i + 1}.`).join(" ");
+  assert.deepEqual(scriptureSlides(many, 1, true).map((p) => [p.from, p.to]), [[1, 4], [5, 8], [9, 12]], "at most four verses a slide");
+  const long = "1 " + "A very long verse that goes on and on. ".repeat(20) + "2 Short.";
+  const lp = scriptureSlides(long, 1, true);
+  assert.ok(lp.length >= 3 && lp.every((p) => p.text.length <= 380), "a long verse is split at sentences");
+  assert.equal(tidyQuotes("Jesus said, “ Rabbi, ‘ You are,’ ” he said. ”"), "Jesus said, “Rabbi, ‘You are,’” he said.”");
+  console.log("scripture on slides: ok");
+}

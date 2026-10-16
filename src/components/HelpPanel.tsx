@@ -420,7 +420,7 @@ const SECTIONS: Section[] = [
     id: "sermon",
     title: "Sermon builder",
     keywords:
-      "sermon builder preach preacher pastor minister message outline points topic gather prepare series word document template big idea preach mode slides powerpoint handout fill in blanks small group lectionary calendar spurgeon simeon illustrations quotes library",
+      "sermon builder preach preacher pastor minister message outline points topic gather prepare series word document template big idea preach mode slides powerpoint handout fill in blanks small group lectionary calendar spurgeon simeon illustrations quotes library review edit hebrew greek word strong's definition lexicon preached preaching history tracker find search past sermons verse numbers background",
     body: (
       <>
         <p>
@@ -437,6 +437,12 @@ const SECTIONS: Section[] = [
             <strong>+</strong> to add an item to the sermon.
           </li>
           <li>
+            <strong>Hebrew and Greek words:</strong> <em>Words</em> under any passage (on the left, or in your sermon) shows its words;
+            click one for the original word, its Strong's number and meaning, how often it is used and any lexicon you've downloaded,
+            then <em>Add to the sermon</em> — it goes to the point's Explain section. Or type a word into <em>Look up a Hebrew or Greek
+            word</em> (love, G26, H2617).
+          </li>
+          <li>
             On the right is <strong>your sermon</strong>. Write the big idea and purpose and choose a template: each point is a card,
             and what you add with + goes into its place — Scripture to Scripture, commentary to Explain, stories and pictures to
             Illustrate. Click a point or a section first to put things there instead. Sections with nothing in them yet fold away into
@@ -450,17 +456,31 @@ const SECTIONS: Section[] = [
             click) and on the slides.
           </li>
           <li>
+            <strong>Review</strong> shows the sermon as it will print, with everything you wrote editable where it stands — the title, big
+            idea, points, section names and your words. Passages and quotations can be taken out (Undo brings them back), and a quotation
+            can be <em>shortened</em> for this sermon only; <em>Put back the whole text</em> restores it.
+          </li>
+          <li>
             <strong>Print &amp; handouts:</strong> the sermon, a listener's outline, a fill-in-the-blanks sheet with answers and a small-group
             guide — print, A4 or A5, large print, or save as Word.
           </li>
           <li>
             <strong>Slides:</strong> made from your sermon, then yours to change — reorder, edit, delete, and add words, song words,
             Scripture, pictures and video or music links, on navy or on a photo. Save as PowerPoint; a link on a slide plays when clicked
-            in the slide show.
+            in the slide show. The bar at the top stays in view: the background for all slides, <em>Verse numbers</em> on or off, and a
+            button for each kind of slide to add. Under the slide you're editing, give that one slide its own background and put a
+            picture beside its words. A passage is put on slides a few whole verses at a time, and the words shrink to fit.
           </li>
           <li>
             <strong>Preach</strong> shows the sermon full screen with a clock; Esc leaves. <strong>My sermons</strong> holds your saved
             sermons by series, on a calendar, a series planner and the lectionary.
+          </li>
+          <li>
+            <strong>When and where you preached it:</strong> one sermon can be preached many times. Under the sermon's details,{" "}
+            <em>Record a preaching</em> notes the date, the place, to whom, how long it took and how it went; choosing the stage{" "}
+            <em>Preached</em> asks for it. "Used before" then says when and where. <strong>My sermons → Find a sermon</strong> searches
+            your sermons by their words, a passage ("Romans 8" finds a sermon on Romans 8:28–39), dates, series, place and stage —
+            newest, oldest or most preached first.
           </li>
           <li>
             Your sermon is kept on this computer as you work, even if the app closes. Press <em>Save</em> once to put it in My sermons;

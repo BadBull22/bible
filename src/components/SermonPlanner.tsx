@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, BookInfo, SavedSermon, SermonStage } from "../api";
 import { appointedOn, dayName } from "../lectionary";
 import { LectionaryView } from "./LectionaryView";
+import { SermonSearch } from "./SermonSearch";
 
 interface Props {
   saved: SavedSermon[];
@@ -29,7 +30,7 @@ const nice = (d: string) => (d ? new Date(`${d}T12:00:00`).toLocaleDateString(un
 /** The preacher's sermons: by series or on a calendar, filtered by stage; and a planner that
  * lays a book out as a dated series, a passage a week. */
 export function SermonPlanner({ saved, books, chapterCounts, currentId, onOpen, onChanged, onPrepare }: Props) {
-  const [view, setView] = useState<"list" | "calendar" | "lectionary" | "plan">("list");
+  const [view, setView] = useState<"find" | "list" | "calendar" | "lectionary" | "plan">("list");
   const [stage, setStage] = useState<SermonStage | "all">("all");
   const [month, setMonth] = useState(() => {
     const d = new Date();
@@ -102,6 +103,7 @@ export function SermonPlanner({ saved, books, chapterCounts, currentId, onOpen, 
         <div className="mode-toggle" role="tablist" aria-label="How to show the sermons">
           {(
             [
+              ["find", "Find a sermon"],
               ["list", "By series"],
               ["calendar", "Calendar"],
               ["lectionary", "Lectionary"],
@@ -130,6 +132,8 @@ export function SermonPlanner({ saved, books, chapterCounts, currentId, onOpen, 
         )}
       </div>
       {error && <p className="status-error">{error}</p>}
+
+      {view === "find" && <SermonSearch saved={saved} books={books} stages={STAGES} currentId={currentId} onOpen={onOpen} />}
 
       {view === "list" && (
         <>

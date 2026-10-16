@@ -17,7 +17,7 @@ import {
   testamentBalance,
   wordsWritten,
 } from "../sermon";
-import { answerKey, groupGuide, listenerOutline, SlideSpec, slidesOf } from "../sermonOutputs";
+import { answerKey, groupGuide, listenerOutline, SlideSpec, slidesOf, versesOf } from "../sermonOutputs";
 import { buildDraft, Role, ROLES, TemplateDef, templateByKey, templateFromItems, TEMPLATES } from "../sermonTemplates";
 import { plainText } from "./RichText";
 import { PreachMode } from "./PreachMode";
@@ -28,6 +28,9 @@ import { placeFor, placeMaterial, rolesFor } from "../sermonLayout";
 import { SermonOutline } from "./SermonOutline";
 import { SermonPlanner, STAGES } from "./SermonPlanner";
 import { SheetOutput } from "./SheetOutput";
+import { niceDate, preachingLine, SermonPreachings } from "./SermonPreachings";
+import { SermonReview } from "./SermonReview";
+import type { WordsRequest } from "./SermonWords";
 import { SlidesEditor } from "./SlidesEditor";
 import { ChevronLeftIcon } from "./icons";
 
@@ -40,7 +43,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Tab = "prepare" | "print" | "slides" | "saved";
+type Tab = "prepare" | "review" | "print" | "slides" | "saved";
 type Printout = "sermon" | "outline" | "blanks" | "group";
 
 interface Work {
@@ -67,6 +70,8 @@ interface Work {
   slides: SlideSpec[] | null;
   /** a photo behind every slide (a kept file) */
   slideBackground: string | null;
+  /** verse numbers on Scripture slides */
+  slideVerseNumbers: boolean;
   tab: Tab;
 }
 
@@ -91,6 +96,7 @@ const EMPTY: Work = {
   items: [],
   slides: null,
   slideBackground: null,
+  slideVerseNumbers: true,
   tab: "prepare",
 };
 
@@ -104,7 +110,7 @@ function restore(): Work {
   try {
     const w = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? "null") as Partial<Work> | null;
     if (w && typeof w === "object" && Array.isArray(w.items)) {
-      const tab = (["prepare", "print", "slides", "saved"] as Tab[]).includes(w.tab as Tab) ? (w.tab as Tab) : "prepare";
+      const tab = (["prepare", "review", "print", "slides", "saved"] as Tab[]).includes(w.tab as Tab) ? (w.tab as Tab) : "prepare";
       return { ...EMPTY, ...w, tab };
     }
   } catch {
@@ -131,6 +137,7 @@ function bodyOf(w: Work): SermonBody {
     showPrompts: w.showPrompts,
     slides: w.slides,
     slideBackground: w.slideBackground,
+    slideVerseNumbers: w.slideVerseNumbers,
   };
 }
 
@@ -149,6 +156,8 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   const [status, setStatus] = useState<string | null>(null);
   const [saved, setSaved] = useState<SavedSermon[]>([]);
   const [usage, setUsage] = useState<SermonUsage[]>([]);
+  /** the stage was just set to Preached: ask when and where */
+  const [askPreaching, setAskPreaching] = useState(false);
   const [custom, setCustom] = useState<{ id: number; def: TemplateDef }[]>([]);
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [outline, setOutline] = useState(false);
@@ -285,7 +294,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     if (printout === "group") return groupGuide(meta, work.items);
     return blocks;
   }, [printout, handoutLines, withKey, work, blocks]); // eslint-disable-line react-hooks/exhaustive-deps
-  const autoSlides = useMemo(() => slidesOf(meta, work.items, versionCode), [work, versionCode]); // eslint-disable-line react-hooks/exhaustive-deps
+  const autoSlides = useMemo(() => slidesOf(meta, work.items, versionCode, work.slideVerseNumbers), [work, versionCode]); // eslint-disable-line react-hooks/exhaustive-deps
   const slides = work.slides ?? autoSlides;
   const [savingSlides, setSavingSlides] = useState(false);
 
@@ -304,9 +313,13 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     const u = usedIn(m);
     if (!u.length) return null;
     const first = u[0];
-    const when = first.preached_on ? ` on ${new Date(`${first.preached_on}T12:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : "";
+    // when and where it was preached, if it was; otherwise the date it was planned for
+    const last = first.preached?.length ? first.preached[first.preached.length - 1] : null;
+    const when = last ? ` — preached ${preachingLine({ date: last[0], venue: last[1] })}${first.preached.length > 1 ? ` (${first.preached.length} times)` : ""}` : first.preached_on ? ` on ${niceDate(first.preached_on)}` : "";
+    const detail = (x: (typeof u)[number]) =>
+      `${x.title}${x.preached?.length ? `: preached ${x.preached.map(([d, v]) => preachingLine({ date: d, venue: v })).join("; ")}` : x.preached_on ? ` (${x.preached_on})` : " (not preached yet)"}`;
     return (
-      <span className="used-before" title={u.map((x) => `${x.title}${x.preached_on ? ` (${x.preached_on})` : ""}`).join("\n")}>
+      <span className="used-before" title={u.map(detail).join("\n")}>
         used in “{first.title}”{when}
         {u.length > 1 ? ` +${u.length - 1}` : ""}
       </span>
@@ -343,6 +356,9 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
       if (id === run.current) setBusy(null);
     }
   }
+
+  /** The Hebrew and Greek words being looked at on the left (a passage's, or a word looked up). */
+  const [wordsFor, setWordsFor] = useState<WordsRequest | null>(null);
 
   /** Adds material where the preacher is working (after the row last clicked), or takes it
    * out again. */
@@ -408,6 +424,17 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
 
   const edit = (id: string, text: string) => setWork((w) => ({ ...w, items: w.items.map((i) => (i.id === id && (i.type === "heading" || i.type === "note" || i.type === "block") ? { ...i, text } : i)) }));
   const editLabel = (id: string, label: string) => setWork((w) => ({ ...w, items: w.items.map((i) => (i.id === id && i.type === "block" ? { ...i, label } : i)) }));
+  /** This sermon's copy of a quotation, shortened in Review (null: the whole text again). */
+  const trimMaterial = (id: string, text: string | null) =>
+    setWork((w) => ({
+      ...w,
+      items: w.items.map((i) => {
+        if (i.id !== id || i.type !== "material") return i;
+        const m = i.material;
+        if (text == null) return { ...i, material: { ...m, text: m.original ?? m.text, original: undefined } };
+        return { ...i, material: { ...m, original: m.original ?? m.text, text } };
+      }),
+    }));
   const insertAfter = (index: number, item: SermonItem) => {
     change((w) => {
       const items = [...w.items];
@@ -505,6 +532,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
         items,
         slides: b.slides ?? null,
         slideBackground: b.slideBackground ?? null,
+        slideVerseNumbers: b.slideVerseNumbers ?? true,
         tab: "prepare",
       };
       lastSaved.current = savedForm(w);
@@ -560,7 +588,8 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
       const ready = await Promise.all(
         slides.map(async (s) => ({
           ...s,
-          background: work.slideBackground ?? undefined,
+          // a slide's own background ("" is plain navy), or the one chosen for all of them
+          background: (s.background === undefined ? work.slideBackground : s.background) || undefined,
           link: s.link?.startsWith("media:") ? await api.sermonMediaPath(s.link.slice(6)).catch(() => undefined) : s.link,
         })),
       );
@@ -594,6 +623,11 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
             {isOpen ? "Show less" : "Show all"}
           </button>
         )}
+        {isScripture(m) && m.ref && (
+          <button className="link-btn sermon-more" onClick={() => setWordsFor({ ref: m.ref! })} title="The Hebrew or Greek behind its words, on the left: click one to add its meaning to the sermon">
+            Words
+          </button>
+        )}
       </>
     );
   };
@@ -603,6 +637,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   const total = minutes + Math.round(written / 130);
   const TABS: { key: Tab; label: string }[] = [
     { key: "prepare", label: "Prepare" },
+    { key: "review", label: "Review" },
     { key: "print", label: "Print & handouts" },
     { key: "slides", label: "Slides" },
     { key: "saved", label: `My sermons${saved.length ? ` (${saved.length})` : ""}` },
@@ -848,7 +883,15 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
           </label>
           <label>
             <span className="muted">Stage</span>
-            <select value={work.stage} onChange={(e) => set({ stage: e.target.value as SermonStage })}>
+            <select
+              value={work.stage}
+              onChange={(e) => {
+                const stage = e.target.value as SermonStage;
+                set({ stage });
+                // "Preached": when and where?
+                if (stage === "preached") setAskPreaching(true);
+              }}
+            >
               {STAGES.map((s) => (
                 <option key={s.key} value={s.key}>
                   {s.label}
@@ -860,6 +903,21 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
             <span className="muted">Length (minutes)</span>
             <input type="number" min={0} max={120} value={work.targetMinutes} onChange={(e) => set({ targetMinutes: Number(e.target.value) || 0 })} />
           </label>
+          <SermonPreachings
+            sermonId={work.id}
+            venue={work.venue}
+            ask={askPreaching}
+            onAsked={() => setAskPreaching(false)}
+            onChanged={(latest) => {
+              // the saved sermon now says Preached, on its latest date: so does the open one
+              setWork((w) => {
+                const next = latest ? { ...w, stage: "preached" as SermonStage, preachedOn: latest } : w;
+                if (lastSaved.current !== null && lastSaved.current === savedForm(w)) lastSaved.current = savedForm(next);
+                return next;
+              });
+              loadSaved();
+            }}
+          />
         </div>
       )}
       <nav className="mode-toggle sb-tabs" role="tablist" aria-label="Sermon builder">
@@ -897,9 +955,42 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
               books={books}
               versionCode={versionCode}
               onJump={onJump}
+              words={wordsFor}
+              onWords={setWordsFor}
             />
           </section>
           {sermonSide}
+        </div>
+      )}
+
+      {work.tab === "review" && (
+        <div className="sb-page sb-review">
+          {work.items.length === 0 ? (
+            <p className="muted">Add something to the sermon first.</p>
+          ) : (
+            <SermonReview
+              title={work.title}
+              subtitle={[
+                work.series.trim() ? `Series: ${work.series.trim()}` : "",
+                work.preachedOn ? new Date(`${work.preachedOn}T12:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "",
+                work.venue.trim(),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+              bigIdea={work.bigIdea}
+              purpose={work.purpose}
+              showLabels={work.showLabels}
+              items={work.items}
+              versionName={(code) => versions.find((v) => v.code === code)?.name ?? code}
+              onTitle={(t) => set({ title: t })}
+              onBigIdea={(t) => set({ bigIdea: t })}
+              onPurpose={(t) => set({ purpose: t })}
+              onText={edit}
+              onLabel={editLabel}
+              onRemove={(id) => change((w) => ({ ...w, items: w.items.filter((i) => i.id !== id) }))}
+              onTrim={trimMaterial}
+            />
+          )}
         </div>
       )}
 
@@ -968,6 +1059,15 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
               <input type="checkbox" checked={large} onChange={(e) => setLarge(e.target.checked)} /> Large print
             </label>
           </div>
+          {printout === "sermon" && work.items.length > 0 && (
+            <p className="search-hint">
+              Something to change?{" "}
+              <button className="link-btn" onClick={() => set({ tab: "review" })}>
+                Edit it in Review
+              </button>{" "}
+              — the same page, with your words editable — then come back here to print.
+            </p>
+          )}
           {printout === "blanks" && <p className="search-hint">Words you mark with [ _ ] in the big idea, a point's title or the first line of an Apply section are left blank.</p>}
           {printout === "group" && <p className="search-hint">Questions to observe, understand, apply and pray, with your passages, big idea and points put in.</p>}
           {work.items.length === 0 ? (
@@ -991,6 +1091,16 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
             background={work.slideBackground}
             onChange={(s) => change((w) => ({ ...w, slides: s }))}
             onBackground={(f) => change((w) => ({ ...w, slideBackground: f }))}
+            verseNumbers={work.slideVerseNumbers}
+            onVerseNumbers={(on) =>
+              change((w) => ({
+                ...w,
+                slideVerseNumbers: on,
+                // the preacher's own slides: their Scripture text gains or loses the numbers too
+                // (only numbers that run in order from the start count, so "the 12 tribes" stays)
+                slides: on ? w.slides : (w.slides?.map((s) => (s.kind === "scripture" ? { ...s, body: versesOf(s.body, null).map((v) => v.text).join(" ") } : s)) ?? null),
+              }))
+            }
             onSave={saveSlides}
             saving={savingSlides}
           />

@@ -4,6 +4,9 @@
 // questions are a fixed bank, the same for every sermon, with the passages filled in.
 import type { SheetBlock } from "./api";
 import { isScripture, Material, refLabel, SermonItem, SermonMeta, stripMarks, textRuns } from "./sermon";
+import { scriptureSlides, tidyQuotes, versesOf } from "./scriptureSlides";
+
+export { scriptureSlides, tidyQuotes, versesOf };
 
 const when = (d: string) => (d ? new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "");
 
@@ -111,34 +114,35 @@ export interface SlideSpec {
   body: string;
   /** an "image" slide's picture: a file kept for the sermon */
   image?: string;
-  /** a photo behind the slide (a kept file); set for the whole set when saving */
+  /** this slide's own background: a kept photo, "" for plain navy, or absent to use the one
+   * chosen for all the slides */
   background?: string;
+  /** a picture beside the words (heading, words, song, Scripture and title slides) */
+  picture?: string;
   /** what a "link" slide opens: a web address, or "media:<file>" for a kept file */
   link?: string;
 }
 
 /** Slides from the sermon: the title, the big idea, each point, and each Scripture passage
- * (a long passage over several slides). */
-export function slidesOf(meta: SermonMeta, items: SermonItem[], version: string): SlideSpec[] {
+ * (a long passage over several slides, a few verses each). `verseNumbers`: show the verse
+ * numbers on Scripture slides. */
+export function slidesOf(meta: SermonMeta, items: SermonItem[], version: string, verseNumbers = true): SlideSpec[] {
   const out: SlideSpec[] = [{ kind: "title", title: meta.title.trim() || "Sermon", body: [meta.series.trim(), when(meta.preachedOn)].filter(Boolean).join(" · ") }];
   if (meta.bigIdea?.trim()) out.push({ kind: "point", title: stripMarks(meta.bigIdea.trim()), body: "" });
   for (const i of items) {
     if (i.type === "heading" && i.text !== "More material you ticked") {
       out.push({ kind: "point", title: stripMarks(i.text), body: "" });
     } else if (i.type === "material" && isScripture(i.material)) {
-      const text = i.material.text.replace(/⟪\d+⟫/g, "").replace(/\s+/g, " ").trim();
+      const text = tidyQuotes(i.material.text.replace(/⟪\d+⟫/g, "").replace(/\s+/g, " ").trim());
       const v = (i.material.source ?? version).split(" · ")[0];
-      // about 450 characters a slide, split at a sentence or a verse number
-      const chunks: string[] = [];
-      let rest = text;
-      while (rest.length > 520) {
-        let cut = rest.lastIndexOf(". ", 450);
-        if (cut < 200) cut = rest.lastIndexOf(" ", 450);
-        chunks.push(rest.slice(0, cut + 1).trim());
-        rest = rest.slice(cut + 1).trim();
-      }
-      chunks.push(rest);
-      chunks.forEach((c, n) => out.push({ kind: "scripture", title: `${i.material.title}${chunks.length > 1 ? ` (${n + 1}/${chunks.length})` : ""} · ${v}`, body: c }));
+      const ref = i.material.ref;
+      const chunks = scriptureSlides(text, ref?.verse ?? null, verseNumbers);
+      chunks.forEach((c, n) => {
+        // each slide names its own verses ("John 3:16–18"), when they are known
+        const where =
+          ref && c.from != null ? `${ref.book} ${ref.chapter}:${c.from}${c.to != null && c.to > c.from ? `–${c.to}` : ""}` : `${i.material.title}${chunks.length > 1 ? ` (${n + 1}/${chunks.length})` : ""}`;
+        out.push({ kind: "scripture", title: `${where} · ${v}`, body: c.text });
+      });
     } else if (i.type === "media") {
       const m = i.media;
       if (m.kind === "image" && m.file) out.push({ kind: "image", title: m.title, body: "", image: m.file });

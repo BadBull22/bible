@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { api, BookInfo, Verse } from "../api";
 import { GROUPS, isScripture, Material, MaterialKind, parseRef, Ref, refLabel } from "../sermon";
+import { SermonWords, type WordsRequest } from "./SermonWords";
 import { plainText } from "./RichText";
 import { PassageStudy } from "./PassageStudy";
 import { ChevronLeftIcon } from "./icons";
@@ -22,6 +23,10 @@ interface Props {
   books: BookInfo[];
   versionCode: string;
   onJump: (book: string, chapter: number, verse: number) => void;
+  /** a passage's Hebrew and Greek words, or a word looked up, shown in place of the list
+   * (set from here, or from the sermon on the right) */
+  words: WordsRequest | null;
+  onWords: (w: WordsRequest | null) => void;
 }
 
 const EXAMPLES = ["faith in God", "forgiveness", "John 3", "Romans 8:28-39", "Psalm 23", "how do I forgive someone who hurt me"];
@@ -31,7 +36,8 @@ const text = (m: Material) => plainText(m.text).replace(/⟪\d+⟫/g, "").replac
 
 /** The left side of the builder: what to look for, what was found -- in groups that stay at
  * the top while the list scrolls -- and a passage read or studied in place. */
-export function SermonFind({ query, onQuery, onGather, busy, gathered, topics, chosen, onToggle, usedNote, target, onTargetEnd, books, versionCode, onJump }: Props) {
+export function SermonFind({ query, onQuery, onGather, busy, gathered, topics, chosen, onToggle, usedNote, target, onTargetEnd, books, versionCode, onJump, words, onWords }: Props) {
+  const [lookup, setLookup] = useState("");
   const [group, setGroup] = useState<MaterialKind | "all">("all");
   const [filter, setFilter] = useState("");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -93,6 +99,11 @@ export function SermonFind({ query, onQuery, onGather, busy, gathered, topics, c
                   Study this passage
                 </button>
               )}
+              {isScripture(m) && (
+                <button className="link-btn" onClick={() => onWords({ ref: m.ref! })} title="The Hebrew or Greek behind its words: click one to see what it means and add it to the sermon">
+                  Words
+                </button>
+              )}
             </span>
           )}
         </div>
@@ -100,7 +111,8 @@ export function SermonFind({ query, onQuery, onGather, busy, gathered, topics, c
     );
   };
 
-  // ---- reading a chapter, or studying a passage, in place of the list
+  // ---- reading a chapter, studying a passage, or its words, in place of the list
+  if (words) return <SermonWords request={words} versionCode={versionCode} chosen={chosen} onToggle={onToggle} onBack={() => onWords(null)} />;
   if (reading) return <ChapterPeek r={reading} versionCode={versionCode} onBack={() => setReading(null)} onJump={onJump} />;
   if (studying) {
     return (
@@ -135,6 +147,18 @@ export function SermonFind({ query, onQuery, onGather, busy, gathered, topics, c
           </button>
         </form>
         {busy && <p className="muted sf-busy">{busy}</p>}
+        <form
+          className="sw-lookup"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (lookup.trim()) onWords({ query: lookup.trim() });
+          }}
+        >
+          <input value={lookup} onChange={(e) => setLookup(e.target.value)} placeholder="Look up a Hebrew or Greek word: love, G26, H2617" aria-label="Look up a Hebrew or Greek word" />
+          <button className="outline-btn" type="submit" disabled={!lookup.trim()}>
+            Look up
+          </button>
+        </form>
         {gathered.length > 0 && (
           <>
             <div className="sf-groups" role="tablist" aria-label="What was found">

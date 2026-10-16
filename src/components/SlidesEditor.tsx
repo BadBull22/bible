@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { SlideKind, SlideSpec } from "../sermonOutputs";
 import { mediaUrl, MediaRef } from "../sermonMedia";
 import { MediaPicker } from "./MediaPicker";
@@ -12,9 +12,25 @@ interface Props {
   background: string | null;
   onChange: (slides: SlideSpec[] | null) => void;
   onBackground: (file: string | null) => void;
+  /** verse numbers on Scripture slides */
+  verseNumbers: boolean;
+  onVerseNumbers: (on: boolean) => void;
   onSave: () => void;
   saving: boolean;
 }
+
+/** The slide kinds there is a button for, in the order a preacher reaches for them. */
+const ADD: { kind: SlideKind; label: string }[] = [
+  { kind: "text", label: "Words" },
+  { kind: "song", label: "Song" },
+  { kind: "scripture", label: "Scripture" },
+  { kind: "image", label: "Picture" },
+  { kind: "link", label: "Video or link" },
+  { kind: "point", label: "Heading" },
+];
+
+/** Kinds that can have a picture beside their words. */
+const BESIDE: SlideKind[] = ["title", "point", "scripture", "text", "song"];
 
 const KINDS: { kind: SlideKind; label: string }[] = [
   { kind: "point", label: "Heading" },
@@ -39,12 +55,44 @@ function useMedia(file: string | null | undefined) {
   return url;
 }
 
-/** A slide drawn small, as it will look: words on navy, or on the darkened photo. */
+/** The background a slide will have: its own, or the one for all slides. */
+const backgroundOf = (s: SlideSpec, all: string | null) => (s.background === undefined ? all : s.background || null);
+
+/** Makes the words fit the slide, as PowerPoint's "shrink text on overflow" does: the
+ * preview's text is made smaller step by step until nothing spills over. */
+function useFit(deps: unknown[]) {
+  const ref = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      el.style.fontSize = "";
+      const base = parseFloat(getComputedStyle(el).fontSize) || 13;
+      let size = base;
+      for (let i = 0; i < 14 && el.scrollHeight > el.clientHeight + 1 && size > base * 0.35; i++) {
+        size *= 0.9;
+        el.style.fontSize = `${size}px`;
+      }
+    };
+    fit();
+    const watch = new ResizeObserver(fit);
+    watch.observe(el);
+    return () => watch.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return ref;
+}
+
+/** A slide drawn small, as it will look: words on navy, or on the darkened photo, with a
+ * picture beside them if one was added. */
 function Preview({ s, background }: { s: SlideSpec; background: string | null }) {
-  const bg = useMedia(background);
+  const bgFile = backgroundOf(s, background);
+  const bg = useMedia(bgFile);
   const pic = useMedia(s.kind === "image" ? s.image : null);
-  return (
-    <div className={`slide-preview k-${s.kind}`} style={bg ? { backgroundImage: `linear-gradient(rgba(0,0,0,.52), rgba(0,0,0,.52)), url(${bg})` } : undefined}>
+  const side = useMedia(s.kind !== "image" && s.kind !== "link" ? s.picture : null);
+  const fit = useFit([s.title, s.body, s.kind, side]);
+  const words = (
+    <div className={`slide-preview k-${s.kind}` + (side ? " with-picture" : "")} ref={fit} style={bg ? { backgroundImage: `linear-gradient(rgba(0,0,0,.52), rgba(0,0,0,.52)), url(${bg})` } : undefined}>
       {s.kind === "image" ? (
         <>
           {pic ? <img src={pic} alt="" /> : <span className="slide-missing">(choose a picture)</span>}
@@ -66,16 +114,18 @@ function Preview({ s, background }: { s: SlideSpec; background: string | null })
           {s.body && <span className={s.kind === "link" ? "slide-link" : "slide-sub"}>{s.body}</span>}
         </>
       )}
+      {side && <img className="slide-beside" src={side} alt="" />}
     </div>
   );
+  return words;
 }
 
 /** The sermon's slides: as they follow from the sermon, or changed, reordered and added to
  * by the preacher -- words, song words, pictures, video and music links -- on navy or on a
  * photo. Saved as PowerPoint. */
-export function SlidesEditor({ slides, edited, background, onChange, onBackground, onSave, saving }: Props) {
+export function SlidesEditor({ slides, edited, background, onChange, onBackground, verseNumbers, onVerseNumbers, onSave, saving }: Props) {
   const [selected, setSelected] = useState(0);
-  const [picker, setPicker] = useState<null | { for: "background" | "picture" | "media"; at: number }>(null);
+  const [picker, setPicker] = useState<null | { for: "background" | "slide-background" | "picture" | "beside" | "media"; at: number }>(null);
   const cur = slides[Math.min(selected, slides.length - 1)];
 
   const update = (i: number, patch: Partial<SlideSpec>) => onChange(slides.map((s, n) => (n === i ? { ...s, ...patch } : s)));
@@ -111,7 +161,7 @@ export function SlidesEditor({ slides, edited, background, onChange, onBackgroun
     <div className="slides-editor">
       <div className="slides-bar">
         <span className="sb-inline">
-          <span className="muted">Background</span>
+          <span className="muted">Background for all slides</span>
           <button className={"sf-chip" + (!background ? " on" : "")} onClick={() => onBackground(null)}>
             Plain navy
           </button>
@@ -119,6 +169,10 @@ export function SlidesEditor({ slides, edited, background, onChange, onBackgroun
             {background ? "Change the photo…" : "A photo…"}
           </button>
         </span>
+        <label className="sb-inline" title="Show the verse numbers in the Scripture on the slides">
+          <input type="checkbox" checked={verseNumbers} onChange={(e) => onVerseNumbers(e.target.checked)} />
+          <span className="muted">Verse numbers</span>
+        </label>
         <span className="muted">
           {edited ? (
             <>
@@ -131,15 +185,15 @@ export function SlidesEditor({ slides, edited, background, onChange, onBackgroun
             "Made from your sermon: they change as it does. Edit any slide to make them your own."
           )}
         </span>
+        <span className="slides-add" role="group" aria-label="Add a slide after the one selected">
+          <span className="muted">Add a slide:</span>
+          {ADD.map((k) => (
+            <button key={k.kind} className="sf-chip" onClick={() => addKind(k.kind)} title={`Add a ${k.label.toLowerCase()} slide after slide ${selected + 1}`}>
+              + {k.label}
+            </button>
+          ))}
+        </span>
         <span className="slides-actions">
-          <select className="add-section" value="" onChange={(e) => e.target.value && addKind(e.target.value as SlideKind)} aria-label="Add a slide">
-            <option value="">+ Add a slide…</option>
-            {KINDS.filter((k) => k.kind !== "title").map((k) => (
-              <option key={k.kind} value={k.kind}>
-                {k.label}
-              </option>
-            ))}
-          </select>
           <button className="pill-btn" onClick={onSave} disabled={saving || slides.length === 0}>
             {saving ? "Saving…" : "Save as PowerPoint"}
           </button>
@@ -198,6 +252,45 @@ export function SlidesEditor({ slides, edited, background, onChange, onBackgroun
                   />
                 </label>
               )}
+              <div className="slides-look">
+                <span className="sb-inline">
+                  <span className="muted">This slide's background</span>
+                  <button className={"sf-chip" + (cur.background === undefined ? " on" : "")} onClick={() => update(selected, { background: undefined })} title="The background chosen for all slides">
+                    Same as all
+                  </button>
+                  <button className={"sf-chip" + (cur.background === "" ? " on" : "")} onClick={() => update(selected, { background: "" })}>
+                    Plain
+                  </button>
+                  <button className={"sf-chip" + (cur.background ? " on" : "")} onClick={() => setPicker({ for: "slide-background", at: selected })}>
+                    {cur.background ? "Change the photo…" : "A photo…"}
+                  </button>
+                  {cur.background !== undefined && (
+                    <button
+                      className="link-btn"
+                      onClick={() => {
+                        onBackground(cur.background || null);
+                        onChange(slides.map(({ background: _, ...s }) => s));
+                      }}
+                      title="Make this slide's background the one for every slide"
+                    >
+                      Use for all slides
+                    </button>
+                  )}
+                </span>
+                {BESIDE.includes(cur.kind) && (
+                  <span className="sb-inline">
+                    <span className="muted">Picture beside the words</span>
+                    <button className="sf-chip" onClick={() => setPicker({ for: "beside", at: selected })}>
+                      {cur.picture ? "Change the picture…" : "Add a picture to this slide…"}
+                    </button>
+                    {cur.picture && (
+                      <button className="link-btn" onClick={() => update(selected, { picture: undefined })}>
+                        Remove it
+                      </button>
+                    )}
+                  </span>
+                )}
+              </div>
               <div className="slides-row-tools">
                 <button className="text-btn" onClick={() => move(selected, selected - 1)} disabled={selected === 0}>
                   ▲ Earlier
@@ -226,6 +319,8 @@ export function SlidesEditor({ slides, edited, background, onChange, onBackgroun
             const p = picker;
             setPicker(null);
             if (p.for === "background") onBackground(media[0]?.file ?? null);
+            else if (p.for === "slide-background") update(p.at, { background: media[0]?.file ?? undefined });
+            else if (p.for === "beside") update(p.at, { picture: media[0]?.file ?? undefined });
             else if (p.at === -1) update(selected, { image: media[0]?.file, title: cur?.title && cur.title !== "New slide" ? cur.title : media[0]?.title ?? "" });
             else insert(p.at, media.map(fromMedia));
           }}

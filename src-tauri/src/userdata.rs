@@ -52,6 +52,17 @@ CREATE INDEX IF NOT EXISTS book_bookmarks_module ON book_bookmarks(module);
 CREATE TABLE IF NOT EXISTS sermon_templates (
     id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, body TEXT NOT NULL,
     updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
+CREATE TABLE IF NOT EXISTS sermon_preachings (
+    id INTEGER PRIMARY KEY, sermon_id INTEGER NOT NULL, date TEXT NOT NULL,
+    venue TEXT NOT NULL DEFAULT '', audience TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '',
+    length_min INTEGER,
+    created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
+CREATE INDEX IF NOT EXISTS sermon_preachings_sermon ON sermon_preachings(sermon_id);
+CREATE TABLE IF NOT EXISTS sermon_refs (
+    sermon_id INTEGER NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, verse_end INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS sermon_refs_sermon ON sermon_refs(sermon_id);
+CREATE INDEX IF NOT EXISTS sermon_refs_where ON sermon_refs(book, chapter);
+CREATE VIRTUAL TABLE IF NOT EXISTS sermon_fts USING fts5(title, series, topics, big_idea, words, tokenize = 'porter unicode61');
 ";
 
 /// Highlight colours the UI offers; anything else is rejected so a bad value can't be
@@ -86,6 +97,7 @@ fn migrate(conn: &Connection) -> Result<(), String> {
     if !cols.iter().any(|c| c == "venue") {
         conn.execute_batch("ALTER TABLE sermons ADD COLUMN venue TEXT NOT NULL DEFAULT ''").map_err(err)?;
     }
+    first_index(conn)?;
     Ok(())
 }
 
@@ -586,6 +598,7 @@ pub fn sermon_save(conn: &Connection, s: &Sermon) -> Result<i64, String> {
             )
             .map_err(err)?;
         if n > 0 {
+            index_sermon(conn, s.id)?;
             return Ok(s.id);
         }
     }
@@ -594,7 +607,9 @@ pub fn sermon_save(conn: &Connection, s: &Sermon) -> Result<i64, String> {
         params![title, s.series.trim(), preached, s.topics, s.passages, s.body, stage, venue],
     )
     .map_err(err)?;
-    Ok(conn.last_insert_rowid())
+    let id = conn.last_insert_rowid();
+    index_sermon(conn, id)?;
+    Ok(id)
 }
 
 /// What each saved sermon used: its passages and the keys of the material in it (from its
@@ -607,6 +622,8 @@ pub struct SermonUsage {
     pub stage: String,
     pub passages: String,
     pub keys: Vec<String>,
+    /// every time it was preached: "YYYY-MM-DD" and where (since 2.8)
+    pub preached: Vec<(String, String)>,
 }
 
 pub fn sermon_usage(conn: &Connection) -> Result<Vec<SermonUsage>, String> {
@@ -624,7 +641,8 @@ pub fn sermon_usage(conn: &Connection) -> Result<Vec<SermonUsage>, String> {
                 .as_array()
                 .map(|items| items.iter().filter_map(|i| i["material"]["key"].as_str().map(String::from)).collect())
                 .unwrap_or_default();
-            SermonUsage { id, title, preached_on, stage, passages, keys }
+            let preached = preachings(conn, id).map(|ps| ps.into_iter().map(|p| (p.date, p.venue)).collect()).unwrap_or_default();
+            SermonUsage { id, title, preached_on, stage, passages, keys, preached }
         })
         .collect())
 }
@@ -675,8 +693,316 @@ pub fn sermon_template_delete(conn: &Connection, id: i64) -> Result<(), String> 
 
 pub fn sermon_delete(conn: &Connection, id: i64) -> Result<(), String> {
     conn.execute("DELETE FROM sermons WHERE id = ?1", params![id]).map_err(err)?;
+    conn.execute("DELETE FROM sermon_preachings WHERE sermon_id = ?1", params![id]).map_err(err)?;
+    conn.execute("DELETE FROM sermon_refs WHERE sermon_id = ?1", params![id]).map_err(err)?;
+    conn.execute("DELETE FROM sermon_fts WHERE rowid = ?1", params![id]).map_err(err)?;
     Ok(())
 }
+
+// ---------------------------------------------------------------- when and where a sermon was preached, and finding sermons (since 2.8)
+//
+// One sermon can be preached many times, in different places: each time is a row of
+// `sermon_preachings`. To find sermons again, every save indexes the sermon's words (title,
+// series, subjects, big idea and the preacher's own text, in `sermon_fts`) and the passages it
+// uses (`sermon_refs`, one row per passage, so "Romans 8" finds a sermon on Romans 8:28-39).
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct Preaching {
+    #[serde(default)]
+    pub id: i64,
+    #[serde(default)]
+    pub sermon_id: i64,
+    /// "YYYY-MM-DD"
+    pub date: String,
+    #[serde(default)]
+    pub venue: String,
+    /// "morning service", "youth", ...
+    #[serde(default)]
+    pub audience: String,
+    #[serde(default)]
+    pub notes: String,
+    /// how long it took, in minutes
+    #[serde(default)]
+    pub length_min: Option<i64>,
+}
+
+fn is_date(d: &str) -> bool {
+    d.len() == 10 && d.as_bytes()[4] == b'-' && d.as_bytes()[7] == b'-' && d.chars().filter(|c| c.is_ascii_digit()).count() == 8
+}
+
+fn preaching_row(r: &rusqlite::Row) -> rusqlite::Result<Preaching> {
+    Ok(Preaching { id: r.get(0)?, sermon_id: r.get(1)?, date: r.get(2)?, venue: r.get(3)?, audience: r.get(4)?, notes: r.get(5)?, length_min: r.get(6)? })
+}
+
+/// The times a sermon was preached, earliest first.
+pub fn preachings(conn: &Connection, sermon_id: i64) -> Result<Vec<Preaching>, String> {
+    let mut s = conn
+        .prepare("SELECT id, sermon_id, date, venue, audience, notes, length_min FROM sermon_preachings WHERE sermon_id = ?1 ORDER BY date, id")
+        .map_err(err)?;
+    let rows = s.query_map(params![sermon_id], preaching_row).map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
+/// Records a time the sermon was preached (or, with an id, changes one); returns its id. The
+/// sermon's own "preached on" date and stage follow its latest preaching.
+pub fn preaching_save(conn: &Connection, p: &Preaching) -> Result<i64, String> {
+    if !is_date(&p.date) {
+        return Err("Choose the date it was preached.".into());
+    }
+    let exists: bool = conn.query_row("SELECT 1 FROM sermons WHERE id = ?1", params![p.sermon_id], |_| Ok(true)).optional().map_err(err)?.unwrap_or(false);
+    if !exists {
+        return Err("Save the sermon first.".into());
+    }
+    let length = p.length_min.filter(|m| (1..=600).contains(m));
+    let clip = |s: &str, n: usize| s.trim().chars().take(n).collect::<String>();
+    let id = if p.id > 0 {
+        conn.execute(
+            "UPDATE sermon_preachings SET date=?2, venue=?3, audience=?4, notes=?5, length_min=?6 WHERE id=?1 AND sermon_id=?7",
+            params![p.id, p.date, clip(&p.venue, 200), clip(&p.audience, 200), clip(&p.notes, 4000), length, p.sermon_id],
+        )
+        .map_err(err)?;
+        p.id
+    } else {
+        conn.execute(
+            "INSERT INTO sermon_preachings (sermon_id, date, venue, audience, notes, length_min) VALUES (?1,?2,?3,?4,?5,?6)",
+            params![p.sermon_id, p.date, clip(&p.venue, 200), clip(&p.audience, 200), clip(&p.notes, 4000), length],
+        )
+        .map_err(err)?;
+        conn.last_insert_rowid()
+    };
+    follow_preachings(conn, p.sermon_id)?;
+    Ok(id)
+}
+
+pub fn preaching_delete(conn: &Connection, id: i64) -> Result<(), String> {
+    let sermon: Option<i64> = conn.query_row("SELECT sermon_id FROM sermon_preachings WHERE id = ?1", params![id], |r| r.get(0)).optional().map_err(err)?;
+    conn.execute("DELETE FROM sermon_preachings WHERE id = ?1", params![id]).map_err(err)?;
+    if let Some(s) = sermon {
+        follow_preachings(conn, s)?;
+    }
+    Ok(())
+}
+
+/// A sermon preached at least once is "preached", with its latest date as "preached on".
+fn follow_preachings(conn: &Connection, sermon_id: i64) -> Result<(), String> {
+    let last: Option<String> = conn.query_row("SELECT max(date) FROM sermon_preachings WHERE sermon_id = ?1", params![sermon_id], |r| r.get(0)).map_err(err)?;
+    if let Some(d) = last {
+        conn.execute("UPDATE sermons SET preached_on = ?2, stage = 'preached' WHERE id = ?1", params![sermon_id, d]).map_err(err)?;
+    }
+    Ok(())
+}
+
+/// The Scripture kinds of gathered material (sermon.ts `isScripture`).
+const SCRIPTURE_KINDS: [&str; 4] = ["passage", "section", "verse", "xref"];
+
+/// What a sermon's body says, for the index: the preacher's own words (big idea, purpose,
+/// points, section names and text, notes) and the passages it uses.
+fn indexed(body: &str) -> (String, String, Vec<(String, i64, i64, i64)>) {
+    let json: serde_json::Value = serde_json::from_str(body).unwrap_or(serde_json::Value::Null);
+    let s = |v: &serde_json::Value| v.as_str().unwrap_or("").to_string();
+    let big_idea = [s(&json["bigIdea"]), s(&json["purpose"])].join(" ").trim().to_string();
+    let mut words = Vec::new();
+    let mut refs = Vec::new();
+    for i in json["items"].as_array().into_iter().flatten() {
+        match i["type"].as_str() {
+            Some("heading") | Some("note") => words.push(s(&i["text"])),
+            Some("block") => {
+                words.push(s(&i["label"]));
+                words.push(s(&i["text"]));
+            }
+            Some("material") => {
+                let m = &i["material"];
+                if SCRIPTURE_KINDS.contains(&m["kind"].as_str().unwrap_or("")) {
+                    let r = &m["ref"];
+                    if let (Some(book), Some(ch), Some(v)) = (r["book"].as_str(), r["chapter"].as_i64(), r["verse"].as_i64()) {
+                        let end = r["verseEnd"].as_i64().unwrap_or(v).max(v);
+                        if !refs.iter().any(|x: &(String, i64, i64, i64)| x.0 == book && x.1 == ch && x.2 == v && x.3 == end) {
+                            refs.push((book.to_string(), ch, v, end));
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    (big_idea, words.join("\n"), refs)
+}
+
+/// Brings a sermon's entries in the word index and the passage list up to date.
+pub fn index_sermon(conn: &Connection, id: i64) -> Result<(), String> {
+    conn.execute("DELETE FROM sermon_fts WHERE rowid = ?1", params![id]).map_err(err)?;
+    conn.execute("DELETE FROM sermon_refs WHERE sermon_id = ?1", params![id]).map_err(err)?;
+    let row: Option<(String, String, String, String)> = conn
+        .query_row("SELECT title, series, topics, body FROM sermons WHERE id = ?1", params![id], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))
+        .optional()
+        .map_err(err)?;
+    let Some((title, series, topics, body)) = row else { return Ok(()) };
+    let (big_idea, words, refs) = indexed(&body);
+    conn.execute("INSERT INTO sermon_fts (rowid, title, series, topics, big_idea, words) VALUES (?1,?2,?3,?4,?5,?6)", params![id, title, series, topics, big_idea, words])
+        .map_err(err)?;
+    for (book, ch, v, end) in refs {
+        conn.execute("INSERT INTO sermon_refs (sermon_id, book, chapter, verse, verse_end) VALUES (?1,?2,?3,?4,?5)", params![id, book, ch, v, end]).map_err(err)?;
+    }
+    Ok(())
+}
+
+/// What to look for in the preacher's sermons. Every part is optional.
+#[derive(Deserialize, Debug, Default, Clone)]
+pub struct SermonQuery {
+    /// words in the title, series, subjects, big idea or the preacher's own text
+    #[serde(default)]
+    pub words: String,
+    /// a passage: sermons using any of it ("Romans 8" -> chapter 8; "Romans 8:28" -> verse 28)
+    #[serde(default)]
+    pub book: String,
+    #[serde(default)]
+    pub chapter: Option<i64>,
+    #[serde(default)]
+    pub verse: Option<i64>,
+    #[serde(default)]
+    pub verse_end: Option<i64>,
+    /// preached (or planned) between these dates, "YYYY-MM-DD"
+    #[serde(default)]
+    pub from: String,
+    #[serde(default)]
+    pub to: String,
+    #[serde(default)]
+    pub series: String,
+    #[serde(default)]
+    pub venue: String,
+    #[serde(default)]
+    pub stage: String,
+    /// "newest" (default), "oldest", "most" (most preached), "title"
+    #[serde(default)]
+    pub sort: String,
+}
+
+/// A sermon found: its list fields, every time it was preached, and the start of its big idea.
+#[derive(Serialize, Debug)]
+pub struct SermonHit {
+    #[serde(flatten)]
+    pub sermon: Sermon,
+    pub preachings: Vec<Preaching>,
+    pub big_idea: String,
+}
+
+/// Words typed into the search, as an FTS5 query: every word (or its start) must be there.
+fn fts_words(words: &str) -> Option<String> {
+    let parts: Vec<String> = words
+        .split(|c: char| !c.is_alphanumeric() && c != '\'' && c != '’')
+        .map(|w| w.trim_matches(|c| c == '\'' || c == '’'))
+        .filter(|w| !w.is_empty())
+        .take(12)
+        .map(|w| format!("\"{}\"*", w.replace('"', "")))
+        .collect();
+    (!parts.is_empty()).then(|| parts.join(" "))
+}
+
+pub fn sermon_search(conn: &Connection, q: &SermonQuery) -> Result<Vec<SermonHit>, String> {
+    let words = fts_words(&q.words);
+    if !q.words.trim().is_empty() && words.is_none() {
+        return Ok(Vec::new());
+    }
+    let book = q.book.trim();
+    let (from, to) = (q.from.trim(), q.to.trim());
+    let sql = "SELECT s.id, s.title, s.series, s.preached_on, s.topics, s.passages, s.updated_at, s.stage, s.venue, s.body FROM sermons s
+         WHERE (?1 IS NULL OR s.id IN (SELECT rowid FROM sermon_fts WHERE sermon_fts MATCH ?1))
+           AND (?2 = '' OR s.id IN (SELECT sermon_id FROM sermon_refs WHERE book = ?2 AND (?3 IS NULL OR chapter = ?3)
+                AND (?4 IS NULL OR (verse <= coalesce(?5, ?4) AND verse_end >= ?4))))
+           AND (?6 = '' OR s.series = ?6)
+           AND (?7 = '' OR s.stage = ?7)
+           AND (?8 = '' OR s.venue LIKE '%' || ?8 || '%' OR EXISTS (SELECT 1 FROM sermon_preachings p WHERE p.sermon_id = s.id AND p.venue LIKE '%' || ?8 || '%'))
+           AND ((?9 = '' AND ?10 = '')
+                OR EXISTS (SELECT 1 FROM sermon_preachings p WHERE p.sermon_id = s.id AND (?9 = '' OR p.date >= ?9) AND (?10 = '' OR p.date <= ?10))
+                OR (s.preached_on <> '' AND (?9 = '' OR s.preached_on >= ?9) AND (?10 = '' OR s.preached_on <= ?10)))";
+    let mut stmt = conn.prepare(sql).map_err(err)?;
+    let rows: Vec<(Sermon, String)> = stmt
+        .query_map(
+            params![words, book, q.chapter, q.verse, q.verse_end, q.series.trim(), q.stage.trim(), q.venue.trim(), from, to],
+            |r| {
+                Ok((
+                    Sermon {
+                        id: r.get(0)?,
+                        title: r.get(1)?,
+                        series: r.get(2)?,
+                        preached_on: r.get(3)?,
+                        topics: r.get(4)?,
+                        passages: r.get(5)?,
+                        body: String::new(),
+                        updated_at: r.get(6)?,
+                        stage: r.get(7)?,
+                        venue: r.get(8)?,
+                    },
+                    r.get::<_, String>(9)?,
+                ))
+            },
+        )
+        .map_err(err)?
+        .collect::<Result<_, _>>()
+        .map_err(err)?;
+    let mut hits = Vec::new();
+    for (sermon, body) in rows {
+        let json: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
+        let big_idea = json["bigIdea"].as_str().unwrap_or("").trim().chars().take(200).collect();
+        let preachings = preachings(conn, sermon.id)?;
+        hits.push(SermonHit { sermon, preachings, big_idea });
+    }
+    // the date a sermon is known by: its latest preaching, its planned date, or its last edit
+    let when = |h: &SermonHit| h.preachings.last().map(|p| p.date.clone()).filter(|d| !d.is_empty()).unwrap_or_else(|| if h.sermon.preached_on.is_empty() { h.sermon.updated_at.chars().take(10).collect() } else { h.sermon.preached_on.clone() });
+    match q.sort.as_str() {
+        "oldest" => hits.sort_by(|a, b| when(a).cmp(&when(b))),
+        "most" => hits.sort_by(|a, b| b.preachings.len().cmp(&a.preachings.len()).then_with(|| when(b).cmp(&when(a)))),
+        "title" => hits.sort_by(|a, b| a.sermon.title.to_lowercase().cmp(&b.sermon.title.to_lowercase())),
+        _ => hits.sort_by(|a, b| when(b).cmp(&when(a))),
+    }
+    Ok(hits)
+}
+
+/// A preaching in a backup: its sermon is named by title and series (ids differ between computers).
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct PreachingBackup {
+    pub sermon_title: String,
+    #[serde(default)]
+    pub sermon_series: String,
+    #[serde(flatten)]
+    pub preaching: Preaching,
+}
+
+pub fn preachings_all(conn: &Connection) -> Result<Vec<PreachingBackup>, String> {
+    let mut s = conn
+        .prepare(
+            "SELECT p.id, p.sermon_id, p.date, p.venue, p.audience, p.notes, p.length_min, s.title, s.series FROM sermon_preachings p
+             JOIN sermons s ON s.id = p.sermon_id ORDER BY p.date, p.id",
+        )
+        .map_err(err)?;
+    let rows = s
+        .query_map([], |r| Ok(PreachingBackup { sermon_title: r.get(7)?, sermon_series: r.get(8)?, preaching: Preaching { id: 0, sermon_id: 0, ..preaching_row(r)? } }))
+        .map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
+/// Run once when the tracker arrives (2.8): every sermon indexed, and one preaching for each
+/// sermon already marked preached on a date.
+fn first_index(conn: &Connection) -> Result<(), String> {
+    let version: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0)).map_err(err)?;
+    if version >= 1 {
+        return Ok(());
+    }
+    let ids: Vec<i64> = conn.prepare("SELECT id FROM sermons").map_err(err)?.query_map([], |r| r.get(0)).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    for id in ids {
+        index_sermon(conn, id)?;
+    }
+    conn.execute(
+        "INSERT INTO sermon_preachings (sermon_id, date, venue)
+         SELECT id, preached_on, venue FROM sermons WHERE stage = 'preached' AND length(preached_on) = 10
+           AND id NOT IN (SELECT sermon_id FROM sermon_preachings)",
+        [],
+    )
+    .map_err(err)?;
+    conn.execute_batch("PRAGMA user_version = 1").map_err(err)?;
+    Ok(())
+}
+
 
 /// All sermons with their bodies, for the backup.
 pub fn sermons_all(conn: &Connection) -> Result<Vec<Sermon>, String> {
@@ -713,6 +1039,9 @@ pub struct Backup {
     /// the preacher's own sermon templates; absent in backups from before 2.7
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub sermon_templates: Vec<SermonTemplate>,
+    /// when and where each sermon was preached; absent in backups from before 2.8
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sermon_preachings: Vec<PreachingBackup>,
 }
 
 pub const BACKUP_FORMAT: &str = "bible-concordance-study/1";
@@ -875,6 +1204,31 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
             }
         }
     }
+    // each preaching, to its sermon by title and series; one already recorded (same date and
+    // place) is not added again
+    for p in &b.sermon_preachings {
+        let pr = &p.preaching;
+        if !is_date(&pr.date) {
+            continue;
+        }
+        let sermon: Option<i64> = tx
+            .query_row("SELECT id FROM sermons WHERE title = ?1 AND series = ?2", params![p.sermon_title.trim(), p.sermon_series.trim()], |r| r.get(0))
+            .optional()
+            .map_err(err)?;
+        let Some(sermon) = sermon else { continue };
+        let there: bool = tx
+            .query_row("SELECT 1 FROM sermon_preachings WHERE sermon_id = ?1 AND date = ?2 AND venue = ?3", params![sermon, pr.date, pr.venue.trim()], |_| Ok(true))
+            .optional()
+            .map_err(err)?
+            .unwrap_or(false);
+        if !there {
+            tx.execute(
+                "INSERT INTO sermon_preachings (sermon_id, date, venue, audience, notes, length_min) VALUES (?1,?2,?3,?4,?5,?6)",
+                params![sermon, pr.date, pr.venue.trim(), pr.audience.trim(), pr.notes, pr.length_min],
+            )
+            .map_err(err)?;
+        }
+    }
     // the preacher's templates: added by name; one already here is left as it is
     for t in &b.sermon_templates {
         if t.name.trim().is_empty() || t.body.len() > 256 * 1024 {
@@ -883,6 +1237,11 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
         tx.execute("INSERT OR IGNORE INTO sermon_templates (name, body) VALUES (?1, ?2)", params![t.name.trim(), t.body]).map_err(err)?;
     }
     tx.commit().map_err(err)?;
+    // the restored sermons in the search index
+    let ids: Vec<i64> = conn.prepare("SELECT id FROM sermons").map_err(err)?.query_map([], |r| r.get(0)).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    for id in ids {
+        index_sermon(conn, id)?;
+    }
     Ok(r)
 }
 
@@ -956,6 +1315,7 @@ mod tests {
             sermons: sermons_all(&c).unwrap(),
             book_bookmarks: book_bookmarks(&c, None).unwrap(),
             sermon_templates: sermon_templates(&c).unwrap(),
+            sermon_preachings: Vec::new(),
         };
         let res = write_export(&dir, &stamp, &backup).unwrap();
         let md = std::fs::read_to_string(&res.markdown_path).unwrap();
@@ -1081,6 +1441,117 @@ mod tests {
         let c = open(&dir).unwrap();
         let s = &sermon_list(&c).unwrap()[0];
         assert_eq!((s.title.as_str(), s.stage.as_str(), s.venue.as_str()), ("Old one", "draft", ""));
+        drop(c);
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn preachings_search_and_the_backup() {
+        let (mut c, dir) = temp_db();
+        let body = |idea: &str, words: &str, refs: &[(&str, i64, i64, i64)]| {
+            let mut items: Vec<serde_json::Value> = vec![serde_json::json!({"id": "1", "type": "heading", "text": words})];
+            for (b, ch, v, e) in refs {
+                items.push(serde_json::json!({"id": "x", "type": "material", "material": {"key": "k", "kind": "passage", "title": "t", "text": "", "topic": "", "ref": {"book": b, "chapter": ch, "verse": v, "verseEnd": e}}}));
+            }
+            serde_json::json!({"bigIdea": idea, "items": items}).to_string()
+        };
+        let base = Sermon { id: 0, title: String::new(), series: String::new(), preached_on: String::new(), topics: String::new(), passages: String::new(), body: String::new(), updated_at: String::new(), stage: "draft".into(), venue: String::new() };
+        let hope = sermon_save(&c, &Sermon { title: "Hope that holds".into(), series: "Romans".into(), body: body("God works all things for good", "Suffering is not the end", &[("Romans", 8, 28, 39)]), ..base.clone() }).unwrap();
+        let faith = sermon_save(&c, &Sermon { title: "Faith comes by hearing".into(), series: "Romans".into(), body: body("Faith hears the word", "Preaching matters", &[("Romans", 10, 14, 17)]), ..base.clone() }).unwrap();
+        let other = sermon_save(&c, &Sermon { title: "The shepherd".into(), body: body("", "", &[("Psalms", 23, 1, 200)]), stage: "ready".into(), ..base.clone() }).unwrap();
+
+        // preached three times; the sermon follows its latest preaching
+        for (d, v) in [("2025-01-12", "South Point"), ("2025-06-01", "Youth camp"), ("2026-03-08", "South Point")] {
+            preaching_save(&c, &Preaching { id: 0, sermon_id: hope, date: d.into(), venue: v.into(), audience: String::new(), notes: String::new(), length_min: Some(35) }).unwrap();
+        }
+        assert!(preaching_save(&c, &Preaching { id: 0, sermon_id: hope, date: "soon".into(), venue: String::new(), audience: String::new(), notes: String::new(), length_min: None }).is_err());
+        assert!(preaching_save(&c, &Preaching { id: 0, sermon_id: 999, date: "2026-01-01".into(), venue: String::new(), audience: String::new(), notes: String::new(), length_min: None }).is_err());
+        let s = sermon_get(&c, hope).unwrap().unwrap();
+        assert_eq!((s.preached_on.as_str(), s.stage.as_str()), ("2026-03-08", "preached"));
+        assert_eq!(preachings(&c, hope).unwrap().len(), 3);
+        assert_eq!(sermon_usage(&c).unwrap().iter().find(|u| u.id == hope).unwrap().preached.len(), 3);
+
+        let find = |c: &Connection, q: SermonQuery| sermon_search(c, &q).unwrap().into_iter().map(|h| h.sermon.id).collect::<Vec<_>>();
+        // words: the title, the big idea, the preacher's own text, the start of a word
+        assert_eq!(find(&c, SermonQuery { words: "holds".into(), ..Default::default() }), [hope]);
+        assert_eq!(find(&c, SermonQuery { words: "suffer".into(), ..Default::default() }), [hope], "a word's start finds it");
+        assert_eq!(find(&c, SermonQuery { words: "faith word".into(), ..Default::default() }), [faith], "every word must be there");
+        assert!(find(&c, SermonQuery { words: "zebra".into(), ..Default::default() }).is_empty());
+        // Scripture: a chapter, or a verse inside a passage
+        assert_eq!(find(&c, SermonQuery { book: "Romans".into(), chapter: Some(8), ..Default::default() }), [hope]);
+        assert_eq!(find(&c, SermonQuery { book: "Romans".into(), chapter: Some(8), verse: Some(31), ..Default::default() }), [hope]);
+        assert!(find(&c, SermonQuery { book: "Romans".into(), chapter: Some(8), verse: Some(1), verse_end: Some(5), ..Default::default() }).is_empty());
+        assert_eq!(find(&c, SermonQuery { book: "Psalms".into(), chapter: Some(23), verse: Some(4), ..Default::default() }), [other], "a whole chapter");
+        let mut both = find(&c, SermonQuery { book: "Romans".into(), ..Default::default() });
+        both.sort();
+        assert_eq!(both, [hope, faith]);
+        // dates, place, series, stage, and the order
+        assert_eq!(find(&c, SermonQuery { from: "2025-05-01".into(), to: "2025-07-01".into(), ..Default::default() }), [hope]);
+        assert_eq!(find(&c, SermonQuery { venue: "camp".into(), ..Default::default() }), [hope]);
+        assert_eq!(find(&c, SermonQuery { stage: "ready".into(), ..Default::default() }), [other]);
+        assert_eq!(find(&c, SermonQuery { series: "Romans".into(), sort: "most".into(), ..Default::default() })[0], hope);
+        assert_eq!(find(&c, SermonQuery { sort: "title".into(), ..Default::default() }), [faith, hope, other]);
+
+        // a renamed sermon is found by its new words, not its old ones
+        let mut s2 = sermon_get(&c, faith).unwrap().unwrap();
+        s2.title = "Faith rests on the word".into();
+        sermon_save(&c, &s2).unwrap();
+        assert!(find(&c, SermonQuery { words: "comes".into(), ..Default::default() }).is_empty(), "the old title is gone (\"hearing\" still finds it: the big idea says \"hears\")");
+        assert_eq!(find(&c, SermonQuery { words: "rests".into(), ..Default::default() }), [faith]);
+
+        // a preaching taken out; the sermon's date follows
+        let last = preachings(&c, hope).unwrap()[2].id;
+        preaching_delete(&c, last).unwrap();
+        assert_eq!(sermon_get(&c, hope).unwrap().unwrap().preached_on, "2025-06-01");
+
+        // the backup carries the preachings to another computer, once
+        let backup = Backup { format: BACKUP_FORMAT.into(), exported_at: String::new(), sermons: sermons_all(&c).unwrap(), sermon_preachings: preachings_all(&c).unwrap(), ..Default::default() };
+        let json = serde_json::to_string(&backup).unwrap();
+        let (mut c2, dir2) = temp_db();
+        import_backup(&mut c2, &json).unwrap();
+        import_backup(&mut c2, &json).unwrap();
+        let h2 = sermon_search(&c2, &SermonQuery { words: "holds".into(), ..Default::default() }).unwrap();
+        assert_eq!(h2.len(), 1);
+        assert_eq!(h2[0].preachings.iter().map(|p| p.date.as_str()).collect::<Vec<_>>(), ["2025-01-12", "2025-06-01"]);
+        assert_eq!(find(&c2, SermonQuery { book: "Romans".into(), chapter: Some(10), ..Default::default() }).len(), 1, "restored sermons are indexed");
+
+        // deleting a sermon takes its preachings and index entries with it
+        sermon_delete(&mut c, hope).unwrap();
+        assert!(preachings(&c, hope).unwrap().is_empty());
+        assert!(find(&c, SermonQuery { words: "holds".into(), ..Default::default() }).is_empty());
+        drop(c);
+        drop(c2);
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(dir2);
+    }
+
+    #[test]
+    fn sermons_from_before_the_tracker_get_their_preaching() {
+        let dir = std::env::temp_dir().join(format!("bc-userdata-old-{}-{}", std::process::id(), rand_suffix()));
+        std::fs::create_dir_all(&dir).unwrap();
+        {
+            // a 2.7 database: sermons, no tracker, user_version 0
+            let c = Connection::open(dir.join("userdata.db")).unwrap();
+            c.execute_batch(
+                r#"CREATE TABLE sermons (id INTEGER PRIMARY KEY, title TEXT NOT NULL, series TEXT NOT NULL DEFAULT '', preached_on TEXT NOT NULL DEFAULT '',
+                 topics TEXT NOT NULL DEFAULT '', passages TEXT NOT NULL DEFAULT '', body TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL DEFAULT '',
+                 stage TEXT NOT NULL DEFAULT 'draft', venue TEXT NOT NULL DEFAULT '');
+                 INSERT INTO sermons (title, preached_on, body, stage, venue) VALUES ('Preached', '2024-05-05', '{"bigIdea":"Grace"}', 'preached', 'Hall');
+                 INSERT INTO sermons (title, preached_on, body, stage) VALUES ('Planned', '2026-12-25', '{}', 'ready');"#,
+            )
+            .unwrap();
+        }
+        let c = open(&dir).unwrap();
+        let all = sermon_search(&c, &SermonQuery::default()).unwrap();
+        let got = |t: &str| all.iter().find(|h| h.sermon.title == t).unwrap();
+        assert_eq!(got("Preached").preachings.iter().map(|p| (p.date.as_str(), p.venue.as_str())).collect::<Vec<_>>(), [("2024-05-05", "Hall")]);
+        assert!(got("Planned").preachings.is_empty());
+        assert_eq!(sermon_search(&c, &SermonQuery { words: "grace".into(), ..Default::default() }).unwrap().len(), 1, "indexed on the way in");
+        let id = got("Preached").sermon.id;
+        drop(c);
+        // opening again does not add the preaching twice
+        let c = open(&dir).unwrap();
+        assert_eq!(preachings(&c, id).unwrap().len(), 1);
         drop(c);
         let _ = std::fs::remove_dir_all(dir);
     }
