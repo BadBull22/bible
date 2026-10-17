@@ -5,6 +5,7 @@
 import { cancel, isPermissionGranted, requestPermission, Schedule, sendNotification } from "@tauri-apps/plugin-notification";
 
 const REMINDER_ID = 4101;
+const TEST_ID = 4102;
 
 export const canRemind = /Android/i.test(navigator.userAgent);
 
@@ -28,5 +29,21 @@ export async function setReminder(time: string | null, body: string): Promise<bo
   if (!allowed) allowed = (await requestPermission()) === "granted";
   if (!allowed) return false;
   sendNotification({ id: REMINDER_ID, title: "Bible Concordance", body, schedule: Schedule.interval({ hour: at.hour, minute: at.minute }, true) });
+  return true;
+}
+
+/** A one-off reminder in about a minute, to see that reminders reach this phone. */
+export async function testReminder(): Promise<boolean> {
+  if (!canRemind) return false;
+  let allowed = await isPermissionGranted();
+  if (!allowed) allowed = (await requestPermission()) === "granted";
+  if (!allowed) return false;
+  await cancel([TEST_ID]).catch(() => undefined);
+  sendNotification({
+    id: TEST_ID,
+    title: "Bible Concordance",
+    body: "This is how your daily reminder will look.",
+    schedule: Schedule.at(new Date(Date.now() + 60 * 1000), false, true),
+  });
   return true;
 }

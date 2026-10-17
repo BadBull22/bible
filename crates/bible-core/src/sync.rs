@@ -39,11 +39,14 @@ pub fn now_ms() -> i64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
 }
 
-/// The tables the sync keeps, and the column both apps' bookmarks need (the phone tags them).
+/// The tables the sync keeps, the reader's names for the highlight colours (the same on every
+/// device: "Old Testament prophecy" for rose), and the column both apps' bookmarks need (the
+/// phone tags them).
 pub fn init(conn: &Connection) -> Result<(), String> {
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS sync_state (key TEXT PRIMARY KEY, hash TEXT NOT NULL, stamp INTEGER NOT NULL, deleted INTEGER NOT NULL DEFAULT 0);
-         CREATE TABLE IF NOT EXISTS sync_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);",
+         CREATE TABLE IF NOT EXISTS sync_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+         CREATE TABLE IF NOT EXISTS highlight_names (color TEXT PRIMARY KEY, title TEXT NOT NULL);",
     )
     .map_err(err)?;
     add_column(conn, "bookmarks", "tags", "TEXT NOT NULL DEFAULT ''")
@@ -142,8 +145,33 @@ pub trait Store {
     }
 }
 
-/// The records both apps keep, the same way: bookmarks, highlights, notes and reading plans.
-pub const COMMON_KINDS: [&str; 5] = ["bm", "hl", "note", "plan", "pday"];
+/// The records both apps keep, the same way: bookmarks, highlights, notes, reading plans, and
+/// the names of the highlight colours.
+pub const COMMON_KINDS: [&str; 6] = ["bm", "hl", "note", "plan", "pday", "hlname"];
+
+/// The highlight colours both apps offer, in the desktop's order.
+pub const HIGHLIGHT_COLORS: [&str; 11] = ["yellow", "green", "blue", "pink", "orange", "lemon", "lime", "sky", "rose", "red", "violet"];
+
+/// The reader's names for the highlight colours: colour -> name.
+pub fn highlight_names(conn: &Connection) -> Result<std::collections::HashMap<String, String>, String> {
+    let mut st = conn.prepare("SELECT color, title FROM highlight_names").map_err(err)?;
+    let rows = st.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))).map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
+/// Names a highlight colour ("" takes the name away).
+pub fn set_highlight_name(conn: &Connection, color: &str, title: &str) -> Result<(), String> {
+    if !HIGHLIGHT_COLORS.contains(&color) {
+        return Err(format!("unknown highlight colour: {color}"));
+    }
+    let title: String = title.trim().chars().take(60).collect();
+    if title.is_empty() {
+        conn.execute("DELETE FROM highlight_names WHERE color = ?1", params![color]).map_err(err)?;
+    } else {
+        conn.execute("INSERT INTO highlight_names (color, title) VALUES (?1, ?2) ON CONFLICT(color) DO UPDATE SET title = ?2", params![color, title]).map_err(err)?;
+    }
+    Ok(())
+}
 
 pub fn common_collect(conn: &Connection, out: &mut BTreeMap<String, Value>) -> Result<(), String> {
     let mut put = |sql: &str, f: &dyn Fn(&rusqlite::Row) -> rusqlite::Result<(String, Value)>| -> Result<(), String> {
@@ -169,6 +197,7 @@ pub fn common_collect(conn: &Connection, out: &mut BTreeMap<String, Value>) -> R
     put("SELECT plan_id, day, done_at FROM plan_days", &|r| {
         Ok((format!("pday|{}|{}", r.get::<_, String>(0)?, r.get::<_, i64>(1)?), json!({ "done_at": r.get::<_, String>(2)? })))
     })?;
+    put("SELECT color, title FROM highlight_names", &|r| Ok((format!("hlname|{}", r.get::<_, String>(0)?), json!({ "title": r.get::<_, String>(1)? }))))?;
     Ok(())
 }
 
@@ -219,6 +248,16 @@ pub fn common_apply(conn: &Connection, key: &str, v: Option<&Value>) -> Result<b
             Some(v) => {
                 conn.execute("INSERT INTO plans (plan_id, started_on) VALUES (?1, ?2) ON CONFLICT(plan_id) DO UPDATE SET started_on=?2", params![rest(key), s(v, "started_on")])
                     .map_err(err)?;
+            }
+        },
+        "hlname" => match v {
+            None => {
+                conn.execute("DELETE FROM highlight_names WHERE color = ?1", params![rest(key)]).map_err(err)?;
+            }
+            Some(v) => {
+                if HIGHLIGHT_COLORS.contains(&rest(key)) {
+                    set_highlight_name(conn, rest(key), &s(v, "title"))?;
+                }
             }
         },
         "pday" => {
@@ -628,8 +667,10 @@ mod tests {
         let (mut a, mut b) = (phone(&root, "a"), phone(&root, "b"));
         a.execute("INSERT INTO notes (book, chapter, verse, body) VALUES ('Psalms', 23, 1, 'The Lord is my shepherd')", []).unwrap();
         a.execute("INSERT INTO bookmarks (book, chapter, verse, tags) VALUES ('Psalms', 23, 1, 'Comfort')", []).unwrap();
-        assert_eq!(sync(&mut a, &CommonStore, &folder, "Phone A", "phone").unwrap().sent, 2);
-        assert_eq!(sync(&mut b, &CommonStore, &folder, "Phone B", "phone").unwrap().received, 2);
+        set_highlight_name(&a, "rose", "Old Testament prophecy").unwrap();
+        assert_eq!(sync(&mut a, &CommonStore, &folder, "Phone A", "phone").unwrap().sent, 3);
+        assert_eq!(sync(&mut b, &CommonStore, &folder, "Phone B", "phone").unwrap().received, 3);
+        assert_eq!(highlight_names(&b).unwrap().get("rose").map(String::as_str), Some("Old Testament prophecy"));
         let tags: String = b.query_row("SELECT tags FROM bookmarks", [], |r| r.get(0)).unwrap();
         assert_eq!(tags, "Comfort");
         // records of a kind this device doesn't keep are left alone

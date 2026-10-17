@@ -9,6 +9,12 @@
     <!-- to hand a downloaded update of this app to Android's installer (PhonePlugin.installUpdate);
          the reader must still allow it for this app, and confirm each install -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- the daily reminder on time: exact alarms (Android 12: asked; 13 and newer: given to an
+         app whose reminder is the reader's own choice), and the reader's leave to run in the
+         background, which some phones (Huawei, Honor, Xiaomi) need before any alarm comes -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <application>
         <!-- hands a verse picture to the app it is shared with (PhonePlugin.shareImage), and a
              downloaded update to the installer (PhonePlugin.installUpdate) -->

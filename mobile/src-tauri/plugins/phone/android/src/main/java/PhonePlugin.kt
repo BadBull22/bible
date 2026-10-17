@@ -413,6 +413,32 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
     }
   }
 
+  // ---------------------------------------------------------------- running in the background (the reminder)
+
+  /** Asks Android to let the app run in the background, so the daily reminder comes on time:
+   * Android's own question, or (already allowed, or not offered) the app's settings page. */
+  @Command
+  fun batterySettings(invoke: Invoke) {
+    try {
+      val power = activity.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+      val pkg = activity.packageName
+      val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !power.isIgnoringBatteryOptimizations(pkg)) {
+        Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$pkg"))
+      } else {
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg"))
+      }
+      activity.startActivity(intent)
+      invoke.resolve(JSObject().put("asked", true))
+    } catch (ex: Exception) {
+      try {
+        activity.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${activity.packageName}")))
+        invoke.resolve(JSObject().put("asked", true))
+      } catch (ex2: Exception) {
+        invoke.reject(ex2.message)
+      }
+    }
+  }
+
   // ---------------------------------------------------------------- a shared folder (keeping in step)
   //
   // The reader chooses a folder once (Android's folder picker); the app keeps the right to

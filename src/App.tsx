@@ -175,6 +175,14 @@ function App() {
   // counter bumped whenever they change so the My Study lists and Home screen refresh.
   const [marks, setMarks] = useState<ChapterMarks>(NO_MARKS);
   const [studyVersion, setStudyVersion] = useState(0);
+  // highlight names can arrive from the phone: read again when the study changes
+  useEffect(() => {
+    if (studyVersion === 0) return;
+    api
+      .getSettings()
+      .then((s) => setHighlightTitles(s.highlight_titles))
+      .catch(() => undefined);
+  }, [studyVersion]);
   // the shared folder with the other devices: their changes arriving show at once
   useEffect(() => startAutoSync(() => setStudyVersion((n) => n + 1)), []);
   const [basketItems] = useBasket();

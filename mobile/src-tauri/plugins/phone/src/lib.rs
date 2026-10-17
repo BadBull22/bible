@@ -110,6 +110,12 @@ pub fn sync_write<R: Runtime>(app: &AppHandle<R>, uri: &str, name: &str, text: &
     app.state::<Phone<R>>().run("syncWrite", json!({ "uri": uri, "name": name, "text": text })).map(|_| ())
 }
 
+/// Asks Android to let the app run in the background (for the daily reminder).
+#[tauri::command(async)]
+fn battery_settings<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("batterySettings", json!({}))
+}
+
 /// The folder a downloaded update must be put in for `install_update` to hand it to Android's
 /// installer: `updates` in the app's cache, as Android itself names that folder (it is the
 /// one the plugin's file provider may share). On a computer, where nothing is installed, a
@@ -128,7 +134,7 @@ pub fn updates_dir<R: Runtime>(app: &AppHandle<R>) -> Result<std::path::PathBuf,
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("phone")
-        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, voices, share_image, save_image, install_update])
+        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, voices, share_image, save_image, install_update])
         .setup(|app, _api| {
             #[cfg(target_os = "android")]
             app.manage(Phone { handle: _api.register_android_plugin("com.ghostclaw.phone", "PhonePlugin")? });

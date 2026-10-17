@@ -16,6 +16,12 @@
   --hl-blue: rgba(143, 188, 245, 0.5);
   --hl-pink: rgba(246, 168, 204, 0.5);
   --hl-orange: rgba(255, 184, 108, 0.5);
+  --hl-lemon: rgba(255, 234, 0, 0.62);
+  --hl-lime: rgba(118, 230, 64, 0.55);
+  --hl-sky: rgba(40, 180, 255, 0.45);
+  --hl-rose: rgba(255, 64, 160, 0.4);
+  --hl-red: rgba(255, 70, 70, 0.4);
+  --hl-violet: rgba(160, 90, 255, 0.4);
   --on-accent: #ffffff;
   color-scheme: light;
 }
@@ -35,6 +41,12 @@
   --hl-blue: rgba(79, 134, 207, 0.34);
   --hl-pink: rgba(224, 108, 158, 0.3);
   --hl-orange: rgba(232, 143, 58, 0.3);
+  --hl-lemon: rgba(255, 230, 0, 0.3);
+  --hl-lime: rgba(118, 230, 64, 0.3);
+  --hl-sky: rgba(40, 180, 255, 0.32);
+  --hl-rose: rgba(255, 64, 160, 0.32);
+  --hl-red: rgba(255, 70, 70, 0.32);
+  --hl-violet: rgba(160, 90, 255, 0.34);
   --on-accent: #101a2e;
   color-scheme: dark;
 }
@@ -54,6 +66,12 @@
   --hl-blue: rgba(120, 165, 220, 0.42);
   --hl-pink: rgba(230, 150, 180, 0.42);
   --hl-orange: rgba(240, 160, 90, 0.45);
+  --hl-lemon: rgba(245, 220, 0, 0.5);
+  --hl-lime: rgba(118, 200, 64, 0.45);
+  --hl-sky: rgba(40, 160, 230, 0.4);
+  --hl-rose: rgba(240, 70, 150, 0.36);
+  --hl-red: rgba(235, 70, 60, 0.36);
+  --hl-violet: rgba(150, 90, 230, 0.36);
   color-scheme: light;
 }
 
@@ -274,6 +292,12 @@ button {
 .hl-blue { background: var(--hl-blue); }
 .hl-pink { background: var(--hl-pink); }
 .hl-orange { background: var(--hl-orange); }
+.hl-lemon { background: var(--hl-lemon); }
+.hl-lime { background: var(--hl-lime); }
+.hl-sky { background: var(--hl-sky); }
+.hl-rose { background: var(--hl-rose); }
+.hl-red { background: var(--hl-red); }
+.hl-violet { background: var(--hl-violet); }
 
 .ribbon {
   display: inline-block;
@@ -1333,3 +1357,33 @@ mark.used {
 .veil.top {
   z-index: 25;
 }
+
+/* My Study: highlights in one folded group per colour, as on the computer */
+details.hl-group {
+  margin: 0 0 8px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+details.hl-group > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+details.hl-group > summary::-webkit-details-marker { display: none; }
+details.hl-group > summary span { flex: 1; }
+details.hl-group > summary small { opacity: 0.75; font-weight: 500; }
+details.hl-group > summary::after { content: "⌄"; opacity: 0.7; }
+details.hl-group[open] > summary::after { content: "⌃"; }
+details.hl-group > .hits { background: var(--paper); margin: 0; padding: 6px 0 0; }
+details.hl-group > .hits li { background: transparent; }
+
+/* the verse sheet: the chosen colour's name; Settings: naming the colours */
+.colors { flex-wrap: wrap; }
+.hl-chosen { margin: 4px 0 0; font-size: 0.85rem; color: var(--muted); }
+.hl-names { display: grid; gap: 6px; margin-bottom: 8px; }
+.hl-name { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 8px; }
+.hl-name input { flex: 1; min-width: 0; }

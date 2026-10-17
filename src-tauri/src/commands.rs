@@ -533,9 +533,15 @@ pub fn cross_references_for(state: State<DbState>, book: String, chapter: i64, v
 }
 
 #[tauri::command]
-pub fn get_settings(state: State<SettingsState>) -> Result<AppSettings, String> {
-    let s = state.0.lock().map_err(|e| e.to_string())?;
-    Ok(s.clone())
+pub fn get_settings(state: State<SettingsState>, user: State<crate::userdata::UserDataState>) -> Result<AppSettings, String> {
+    let mut s = state.0.lock().map_err(|e| e.to_string())?.clone();
+    // the highlight names are kept with the study (they keep in step with the phone)
+    if let Ok(conn) = user.0.lock() {
+        if let Ok(names) = bible_core::sync::highlight_names(&conn) {
+            s.highlight_titles = names;
+        }
+    }
+    Ok(s)
 }
 
 fn clean_key(key: String) -> Option<String> {
@@ -569,12 +575,14 @@ pub fn save_esv_api_key(
 pub fn save_highlight_title(
     config_dir: State<ConfigDir>,
     state: State<SettingsState>,
+    user: State<crate::userdata::UserDataState>,
     color: String,
     title: String,
 ) -> Result<(), String> {
     if !crate::userdata::HIGHLIGHT_COLORS.contains(&color.as_str()) {
         return Err(format!("unknown highlight colour: {color}"));
     }
+    bible_core::sync::set_highlight_name(&*user.0.lock().map_err(|e| e.to_string())?, &color, &title)?;
     let mut s = state.0.lock().map_err(|e| e.to_string())?;
     match title.trim() {
         "" => {
