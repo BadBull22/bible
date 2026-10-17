@@ -1696,7 +1696,8 @@ function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose,
             <button
               onClick={() =>
                 phone
-                  .share(quoted, label)
+                  // shared (not copied) verses say where they came from: the link shows its preview
+                  .share(`${quoted}\n\nShared from Bible Concordance · https://bible4me.org`, label)
                   .then(onClose)
                   .catch(async () => {
                     // (not on a phone) the next best thing
