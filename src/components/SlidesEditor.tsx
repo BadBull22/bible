@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { SlideKind, SlideSpec } from "../sermonOutputs";
-import { mediaUrl, MediaRef } from "../sermonMedia";
+import { kindOfName, mediaUrl, MediaRef } from "../sermonMedia";
 import { MediaPicker } from "./MediaPicker";
 import { CloseIcon } from "./icons";
 
@@ -15,9 +15,15 @@ interface Props {
   /** verse numbers on Scripture slides */
   verseNumbers: boolean;
   onVerseNumbers: (on: boolean) => void;
-  onSave: () => void;
+  /** save as PowerPoint; `embed`: put the video and music files inside it */
+  onSave: (embed: boolean) => void;
   saving: boolean;
+  /** start the slide show from this slide */
+  onPresent: (from: number) => void;
 }
+
+/** File types PowerPoint can play from inside the file (the rest can only be linked). */
+const EMBEDDABLE = /\.(mp4|m4v|mov|wmv|avi|mp3|m4a|wav|wma)$/i;
 
 /** The slide kinds there is a button for, in the order a preacher reaches for them. */
 const ADD: { kind: SlideKind; label: string }[] = [
@@ -85,7 +91,7 @@ function useFit(deps: unknown[]) {
 
 /** A slide drawn small, as it will look: words on navy, or on the darkened photo, with a
  * picture beside them if one was added. */
-function Preview({ s, background }: { s: SlideSpec; background: string | null }) {
+export function Preview({ s, background }: { s: SlideSpec; background: string | null }) {
   const bgFile = backgroundOf(s, background);
   const bg = useMedia(bgFile);
   const pic = useMedia(s.kind === "image" ? s.image : null);
@@ -123,8 +129,13 @@ function Preview({ s, background }: { s: SlideSpec; background: string | null })
 /** The sermon's slides: as they follow from the sermon, or changed, reordered and added to
  * by the preacher -- words, song words, pictures, video and music links -- on navy or on a
  * photo. Saved as PowerPoint. */
-export function SlidesEditor({ slides, edited, background, onChange, onBackground, verseNumbers, onVerseNumbers, onSave, saving }: Props) {
+export function SlidesEditor({ slides, edited, background, onChange, onBackground, verseNumbers, onVerseNumbers, onSave, saving, onPresent }: Props) {
   const [selected, setSelected] = useState(0);
+  // the video and music files on the slides: asked each time whether they go inside the
+  // PowerPoint or are linked
+  const [askClips, setAskClips] = useState(false);
+  const clipFiles = slides.filter((s) => s.kind === "link" && s.link?.startsWith("media:") && ["video", "audio"].includes(kindOfName(s.link)));
+  const save = () => (clipFiles.length ? setAskClips(true) : onSave(false));
   const [picker, setPicker] = useState<null | { for: "background" | "slide-background" | "picture" | "beside" | "media"; at: number }>(null);
   const cur = slides[Math.min(selected, slides.length - 1)];
 
@@ -194,7 +205,13 @@ export function SlidesEditor({ slides, edited, background, onChange, onBackgroun
           ))}
         </span>
         <span className="slides-actions">
-          <button className="pill-btn" onClick={onSave} disabled={saving || slides.length === 0}>
+          <button className="pill-btn" onClick={() => onPresent(0)} disabled={slides.length === 0} title="Show the slides on the second screen, with your presenter view on this one">
+            ▶ Present
+          </button>
+          <button className="outline-btn" onClick={() => onPresent(selected)} disabled={slides.length === 0} title={`Start the show at slide ${selected + 1}`}>
+            From this slide
+          </button>
+          <button className="outline-btn" onClick={save} disabled={saving || slides.length === 0}>
             {saving ? "Saving…" : "Save as PowerPoint"}
           </button>
         </span>
@@ -291,6 +308,10 @@ export function SlidesEditor({ slides, edited, background, onChange, onBackgroun
                   </span>
                 )}
               </div>
+              <label>
+                <span className="muted">Your notes (only you see them, in the presenter view)</span>
+                <textarea value={cur.notes ?? ""} rows={2} onChange={(e) => update(selected, { notes: e.target.value || undefined })} />
+              </label>
               <div className="slides-row-tools">
                 <button className="text-btn" onClick={() => move(selected, selected - 1)} disabled={selected === 0}>
                   ▲ Earlier
@@ -310,6 +331,49 @@ export function SlidesEditor({ slides, edited, background, onChange, onBackgroun
           </div>
         )}
       </div>
+
+      {askClips && (
+        <div className="mp-backdrop" role="dialog" aria-modal="true" aria-label="Videos and music in the PowerPoint" onClick={() => setAskClips(false)}>
+          <div className="mp slides-ask" onClick={(e) => e.stopPropagation()}>
+            <strong>
+              {clipFiles.length === 1 ? "There is a video or music file on the slides." : `There are ${clipFiles.length} video or music files on the slides.`} How should{" "}
+              {clipFiles.length === 1 ? "it" : "they"} go into the PowerPoint?
+            </strong>
+            <div className="slides-ask-choices">
+              <button
+                className="pill-btn"
+                onClick={() => {
+                  setAskClips(false);
+                  onSave(true);
+                }}
+              >
+                Put {clipFiles.length === 1 ? "it" : "them"} inside the PowerPoint
+              </button>
+              <span className="muted">Plays on any computer, without the original files. The PowerPoint file is bigger.</span>
+              <button
+                className="outline-btn"
+                onClick={() => {
+                  setAskClips(false);
+                  onSave(false);
+                }}
+              >
+                Link to {clipFiles.length === 1 ? "it" : "them"}
+              </button>
+              <span className="muted">A small file, but it plays only on this computer, where the files are kept.</span>
+            </div>
+            {clipFiles.some((s) => !EMBEDDABLE.test(s.link ?? "")) && (
+              <p className="search-hint">
+                PowerPoint can't play {[...new Set(clipFiles.filter((s) => !EMBEDDABLE.test(s.link ?? "")).map((s) => "." + (s.link ?? "").split(".").pop()))].join(", ")} files from
+                inside, so those stay linked either way.
+              </p>
+            )}
+            <p className="search-hint">Web videos (YouTube and the like) are always links: they need the internet.</p>
+            <button className="text-btn" onClick={() => setAskClips(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {picker && (
         <MediaPicker

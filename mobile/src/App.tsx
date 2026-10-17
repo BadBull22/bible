@@ -28,6 +28,8 @@ import { parseReference, Reference } from "./refs";
 import { canRemind, setReminder } from "./reminder";
 import { Translations } from "./Translations";
 import { UpdateBanner, UpdateSettings, useUpdates } from "./Updates";
+import { SyncSettings, useAutoSync } from "./Sync";
+import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
 import { WordStudy } from "./WordStudy";
@@ -262,6 +264,16 @@ export function App() {
   const [study, setStudy] = useState<null | { kind: "intro"; text: string } | { kind: "notes"; notes: CommentaryNote[] }>(null);
   const [about, setAbout] = useState<CommentaryAbout | null>(null);
   const [showTranslations, setShowTranslations] = useState(false);
+  // the Library: open (on its first page, or on the chapter's commentaries)
+  const [library, setLibrary] = useState<null | "home" | "commentary">(null);
+  const [hasCommentary, setHasCommentary] = useState(false);
+  useEffect(() => {
+    if (library !== null) return;
+    api
+      .libraryInstalled()
+      .then((m) => setHasCommentary(m.some((x) => x.kind === "commentary")))
+      .catch(() => undefined);
+  }, [library]);
 
   // reading aloud: the verse being spoken; each run has a number, so an old one knows to stop
   const [speaking, setSpeaking] = useState<number | null>(null);
@@ -635,6 +647,8 @@ export function App() {
 
   const highlightOf = useMemo(() => new Map(marks.highlights), [marks]);
   const changed = () => setMarksVersion((n) => n + 1);
+  // the shared folder with the computers: their changes arriving show at once
+  useAutoSync(changed);
 
   async function bookmark(book: string, chapter: number, verse: number) {
     const on = await api.toggleBookmark(book, chapter, verse).catch(fail);
@@ -746,6 +760,7 @@ export function App() {
   useBack(asking != null, () => setAsking(null));
   useBack(study != null, () => setStudy(null));
   useBack(showTranslations, () => setShowTranslations(false));
+  useBack(library !== null, () => setLibrary(null));
 
   const chosenVerse = chosen != null ? verses.find((v) => v.verse === chosen) : undefined;
   const shown = topic ? topic.hits : (result?.hits ?? []);
@@ -831,6 +846,7 @@ export function App() {
             <div className="read-tools">
               <button onClick={() => void openIntro()}>About {place.book}</button>
               <button onClick={() => void openChapterNotes()}>Study notes</button>
+              {hasCommentary && <button onClick={() => setLibrary("commentary")}>Commentaries</button>}
               <select
                 className={second ? "on" : ""}
                 value={second ?? ""}
@@ -1198,6 +1214,15 @@ export function App() {
               <button onClick={() => setShowTranslations(true)}>More translations (other languages)</button>
             </div>
 
+            <h2>Library</h2>
+            <p className="hint">Commentaries, dictionaries, books and devotionals to read offline: free ones from CrossWire, or files you have.</p>
+            <div className="actions">
+              <button onClick={() => setLibrary("home")}>Open the library</button>
+            </div>
+
+            <h2>Keep in step with your computer</h2>
+            <SyncSettings onChanged={changed} />
+
             <h2>Backup</h2>
             <p className="hint">Your bookmarks, highlights, notes and reading plans live only on this phone. Save a backup file now and then; the same file works in the desktop app.</p>
             <div className="actions">
@@ -1418,7 +1443,8 @@ export function App() {
       )}
 
       {asking && (
-        <Sheet onClose={() => setAsking(null)}>
+        // above any other sheet: the question can come from inside one (Library, Translations)
+        <Sheet top onClose={() => setAsking(null)}>
           <p className="question">{asking.message}</p>
           <div className="actions">
             <button onClick={() => setAsking(null)}>Cancel</button>
@@ -1467,6 +1493,23 @@ export function App() {
               {about.name} © Tyndale House Publishers, {about.licence} ({about.licence_url}). Shown here unchanged.
             </p>
           )}
+        </Sheet>
+      )}
+
+      {library !== null && (
+        <Sheet tall onClose={() => setLibrary(null)}>
+          <Library
+            book={place.book}
+            chapter={place.chapter}
+            start={library === "commentary" ? "commentary" : undefined}
+            onGo={(b, c, v) => {
+              setLibrary(null);
+              go(b, c, v);
+            }}
+            onBibles={() => void loadVersions()}
+            ask={ask}
+            say={say}
+          />
         </Sheet>
       )}
 
@@ -1752,9 +1795,9 @@ function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose,
 }
 
 /** A panel that slides up from the bottom; a tap outside it closes it. */
-function Sheet({ children, onClose, tall = false }: { children: React.ReactNode; onClose: () => void; tall?: boolean }) {
+function Sheet({ children, onClose, tall = false, top = false }: { children: React.ReactNode; onClose: () => void; tall?: boolean; top?: boolean }) {
   return (
-    <div className="veil" onClick={onClose}>
+    <div className={"veil" + (top ? " top" : "")} onClick={onClose}>
       <div className={"sheet" + (tall ? " tall" : "")} role="dialog" onClick={(e) => e.stopPropagation()}>
         <div className="grip" aria-hidden />
         {children}

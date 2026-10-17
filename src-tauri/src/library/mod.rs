@@ -10,13 +10,14 @@
 //! their markup becomes app text.
 
 pub mod epub;
-pub mod markup;
 pub mod pdf;
-pub mod refs;
-pub mod sword;
+// the module readers and references, shared with the phone app
+pub use bible_core::{esword, markup, refs, sword};
+// the store both apps share: sources, catalogues, installing, the installed list
+pub use bible_core::library::*;
 
 use std::collections::{HashMap, HashSet};
-use std::io::{Cursor, Read};
+use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
@@ -26,89 +27,7 @@ use serde::Serialize;
 use crate::commentaries::{CommentaryChapter, CommentaryHit, CommentaryInfo, CommentarySection};
 use crate::models::{SearchHit, Verse, Version};
 use crate::study::{DictionaryEntry, DictionaryHit, DictionaryInfo};
-use markup::Kind;
-use sword::Conf;
 
-/// A repository of SWORD modules the Library can browse: its catalogue (`mods.d.tar.gz`)
-/// and the folder of per-module zips. All are fetched over HTTPS. The list follows
-/// CrossWire's own master list of repositories (masterRepoList.conf), minus the ones that
-/// are FTP-only or hold only locked (paid) modules.
-#[derive(Serialize, Clone, Copy, Debug)]
-pub struct Source {
-    pub id: &'static str,
-    pub name: &'static str,
-    pub about: &'static str,
-    #[serde(skip)]
-    pub catalog_url: &'static str,
-    #[serde(skip)]
-    pub zip_url: &'static str,
-}
-
-pub const SOURCES: &[Source] = &[
-    Source {
-        id: "crosswire",
-        name: "CrossWire",
-        about: "The main CrossWire Bible Society library: Bibles, commentaries, dictionaries, devotionals and books.",
-        catalog_url: "https://crosswire.org/ftpmirror/pub/sword/raw/mods.d.tar.gz",
-        zip_url: "https://crosswire.org/ftpmirror/pub/sword/packages/rawzip/",
-    },
-    Source {
-        id: "ebible",
-        name: "eBible.org",
-        about: "About 1,500 Bibles and Bible portions in a very wide range of languages, from eBible.org.",
-        catalog_url: "https://ebible.org/sword/mods.d.tar.gz",
-        zip_url: "https://ebible.org/sword/zip/",
-    },
-    Source {
-        id: "attic",
-        name: "CrossWire Attic",
-        about: "Older works CrossWire has retired from its main library, often replaced by newer editions.",
-        catalog_url: "https://crosswire.org/ftpmirror/pub/sword/atticraw/mods.d.tar.gz",
-        zip_url: "https://crosswire.org/ftpmirror/pub/sword/atticpackages/rawzip/",
-    },
-    Source {
-        id: "wycliffe",
-        name: "Wycliffe",
-        about: "Bibles in minority languages from Wycliffe Bible Translators, hosted by CrossWire.",
-        catalog_url: "https://crosswire.org/ftpmirror/pub/sword/wyclifferaw/mods.d.tar.gz",
-        zip_url: "https://crosswire.org/ftpmirror/pub/sword/wycliffepackages/rawzip/",
-    },
-    Source {
-        id: "netbible",
-        name: "NET Bible (bible.org)",
-        about: "The NET Bible's free edition from bible.org. The full edition with all notes is locked by its publisher.",
-        catalog_url: "https://crosswire.org/ftpmirror/pub/bible.org/sword/mods.d.tar.gz",
-        zip_url: "https://crosswire.org/ftpmirror/pub/bible.org/sword/packages/",
-    },
-    Source {
-        id: "beta",
-        name: "CrossWire Beta",
-        about: "Works CrossWire is still testing. They may have mistakes.",
-        catalog_url: "https://crosswire.org/ftpmirror/pub/sword/betaraw/mods.d.tar.gz",
-        zip_url: "https://crosswire.org/ftpmirror/pub/sword/betapackages/rawzip/",
-    },
-];
-
-/// `modules.source` for something the reader added from a file of their own.
-pub const SOURCE_FILE: &str = "file";
-
-pub fn source(id: &str) -> Option<&'static Source> {
-    SOURCES.iter().find(|s| s.id == id)
-}
-
-/// Where a source's catalogue is cached in the library folder.
-pub fn catalog_cache(dir: &Path, source: &Source) -> PathBuf {
-    if source.id == "crosswire" {
-        dir.join("mods.d.tar.gz") // its name before there were other sources
-    } else {
-        dir.join(format!("mods.d.{}.tar.gz", source.id))
-    }
-}
-
-/// A module name the app accepts: it becomes part of file paths and of the translation code.
-pub fn valid_name(name: &str) -> bool {
-    !name.is_empty() && name.len() <= 64 && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
-}
 
 /// Library dictionary entries share the Dictionary panel's id space with the bundled
 /// study.db entries; ids from here are offset so the two never collide.
@@ -121,40 +40,6 @@ pub struct LibraryState {
     pub busy: Mutex<HashSet<String>>,
 }
 
-const SCHEMA: &str = "
-CREATE TABLE IF NOT EXISTS modules (
-    name TEXT PRIMARY KEY, kind TEXT NOT NULL, title TEXT NOT NULL, lang TEXT NOT NULL,
-    language TEXT NOT NULL, licence TEXT NOT NULL, about TEXT NOT NULL, version TEXT NOT NULL,
-    versification TEXT NOT NULL, entries INTEGER NOT NULL DEFAULT 0,
-    installed_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
-CREATE TABLE IF NOT EXISTS lib_verses (
-    id INTEGER PRIMARY KEY, module TEXT NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL,
-    verse INTEGER NOT NULL, text TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS lib_verses_loc ON lib_verses(module, book, chapter, verse);
-CREATE VIRTUAL TABLE IF NOT EXISTS lib_verses_fts USING fts5(text, content='lib_verses', content_rowid='id');
-CREATE TABLE IF NOT EXISTS lib_comm (
-    id INTEGER PRIMARY KEY, module TEXT NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL,
-    verse_start INTEGER NOT NULL, text TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS lib_comm_loc ON lib_comm(module, book, chapter, verse_start);
-CREATE VIRTUAL TABLE IF NOT EXISTS lib_comm_fts USING fts5(text, content='lib_comm', content_rowid='id');
-CREATE TABLE IF NOT EXISTS lib_dict (
-    id INTEGER PRIMARY KEY, module TEXT NOT NULL, key TEXT NOT NULL, headword TEXT NOT NULL,
-    headword_fold TEXT NOT NULL, body TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS lib_dict_head ON lib_dict(module, headword_fold);
-CREATE INDEX IF NOT EXISTS lib_dict_fold ON lib_dict(headword_fold);
-CREATE VIRTUAL TABLE IF NOT EXISTS lib_dict_fts USING fts5(headword, body, content='lib_dict', content_rowid='id');
-CREATE TABLE IF NOT EXISTS lib_book (
-    id INTEGER PRIMARY KEY, module TEXT NOT NULL, parent INTEGER, ord INTEGER NOT NULL,
-    title TEXT NOT NULL, text TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS lib_book_ord ON lib_book(module, ord);
-CREATE VIRTUAL TABLE IF NOT EXISTS lib_book_fts USING fts5(title, text, content='lib_book', content_rowid='id');
-CREATE TABLE IF NOT EXISTS lib_refs (
-    module TEXT NOT NULL, tbl TEXT NOT NULL, row_id INTEGER NOT NULL, pos INTEGER NOT NULL,
-    book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, verse_end INTEGER NOT NULL);
-CREATE INDEX IF NOT EXISTS lib_refs_loc ON lib_refs(book, chapter, verse);
-CREATE INDEX IF NOT EXISTS lib_refs_module ON lib_refs(module);
-CREATE TABLE IF NOT EXISTS lib_refs_done (module TEXT PRIMARY KEY, installed_at TEXT NOT NULL);
-";
 
 fn err<E: std::fmt::Display>(e: E) -> String {
     e.to_string()
@@ -170,102 +55,6 @@ pub fn open(app_data: &Path) -> Result<LibraryState, String> {
     Ok(LibraryState { conn: Mutex::new(conn), dir, busy: Mutex::new(HashSet::new()) })
 }
 
-fn has_column(conn: &Connection, table: &str, column: &str) -> bool {
-    conn.prepare(&format!("PRAGMA table_info({table})"))
-        .and_then(|mut s| s.query_map([], |r| r.get::<_, String>(1))?.collect::<Result<Vec<_>, _>>())
-        .map(|cols| cols.iter().any(|c| c == column))
-        .unwrap_or(false)
-}
-
-/// Later additions to the schema, applied to libraries created before them:
-/// `modules.features` (the module's Feature= tags, e.g. GreekDef) and `lib_dict.strongs`
-/// (an entry's Strong's number in the app's form, "G25"/"H1254", for lexicons keyed by
-/// Strong's numbers -- what Word Study looks up).
-fn migrate(conn: &Connection, dir: &Path) -> Result<(), String> {
-    if !has_column(conn, "modules", "features") {
-        conn.execute_batch("ALTER TABLE modules ADD COLUMN features TEXT NOT NULL DEFAULT ''").map_err(err)?;
-    }
-    if !has_column(conn, "modules", "source") {
-        conn.execute_batch("ALTER TABLE modules ADD COLUMN source TEXT NOT NULL DEFAULT 'crosswire'").map_err(err)?;
-    }
-    if !has_column(conn, "lib_dict", "strongs") {
-        conn.execute_batch("ALTER TABLE lib_dict ADD COLUMN strongs TEXT").map_err(err)?;
-    }
-    conn.execute_batch("CREATE INDEX IF NOT EXISTS lib_dict_strongs ON lib_dict(strongs)").map_err(err)?;
-    // dictionaries installed before `features` existed: take their tags from the cached catalogue
-    let missing: Vec<String> = conn
-        .prepare("SELECT name FROM modules WHERE kind = 'dictionary' AND features = ''")
-        .map_err(err)?
-        .query_map([], |r| r.get(0))
-        .map_err(err)?
-        .collect::<Result<_, _>>()
-        .map_err(err)?;
-    if missing.is_empty() {
-        return Ok(());
-    }
-    let Ok(bytes) = std::fs::read(dir.join("mods.d.tar.gz")) else { return Ok(()) };
-    let confs = parse_catalog(&bytes).unwrap_or_default();
-    for name in missing {
-        let Some(conf) = confs.iter().find(|c| c.name == name) else { continue };
-        let features = conf.fields.get("Feature").map(|v| v.join(",")).unwrap_or_default();
-        conn.execute("UPDATE modules SET features = ?2 WHERE name = ?1", params![name, if features.is_empty() { "-" } else { &features }]).map_err(err)?;
-        let (greek, hebrew) = (features.contains("GreekDef"), features.contains("HebrewDef"));
-        let rows: Vec<(i64, String)> = conn
-            .prepare("SELECT id, key FROM lib_dict WHERE module = ?1 AND strongs IS NULL")
-            .map_err(err)?
-            .query_map(params![name], |r| Ok((r.get(0)?, r.get(1)?)))
-            .map_err(err)?
-            .collect::<Result<_, _>>()
-            .map_err(err)?;
-        for (id, key) in rows {
-            if let Some(s) = strongs_of_key(&key, greek, hebrew) {
-                conn.execute("UPDATE lib_dict SET strongs = ?2 WHERE id = ?1", params![id, s]).map_err(err)?;
-            }
-        }
-    }
-    Ok(())
-}
-
-/// A lexicon key as a Strong's number in the app's form: "00025", "00025\", "G0025",
-/// "H25" -> "G25" / "H25". Bare numbers take their language from the module's
-/// GreekDef/HebrewDef feature.
-pub fn strongs_of_key(key: &str, greek: bool, hebrew: bool) -> Option<String> {
-    let k = key.trim().trim_end_matches('\\').trim();
-    let first = k.chars().next()?;
-    let (prefix, digits) = match first {
-        'G' | 'g' => (Some('G'), &k[1..]),
-        'H' | 'h' => (Some('H'), &k[1..]),
-        c if c.is_ascii_digit() => (None, k),
-        _ => return None,
-    };
-    if digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
-        return None;
-    }
-    let n: u32 = digits.parse().ok()?;
-    if n == 0 {
-        return None;
-    }
-    let lang = prefix.or(match (greek, hebrew) {
-        (true, false) => Some('G'),
-        (false, true) => Some('H'),
-        _ => None,
-    })?;
-    Some(format!("{lang}{n}"))
-}
-
-/// The Greek/Hebrew word a lexicon entry is about, from its markup (<orth> or <foreign>).
-fn entry_lemma(raw: &str) -> Option<String> {
-    static WORD: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-    static TAG: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-    let word = WORD.get_or_init(|| regex::Regex::new(r#"(?s)<(orth|foreign)\b([^>]*)>(.*?)</(?:orth|foreign)>"#).unwrap());
-    let tag = TAG.get_or_init(|| regex::Regex::new(r"<[^>]*>").unwrap());
-    let found = word
-        .captures_iter(raw)
-        .filter(|c| !c[2].contains("writing") && !c[2].contains("trans"))
-        .map(|c| markup::unescape(&tag.replace_all(&c[3], "")).trim().to_string())
-        .find(|s| !s.is_empty());
-    found
-}
 
 /// Entries for one Strong's number ("G25") in the installed Library lexicons -- shown in
 /// Word Study under the bundled Strong's definition.
@@ -295,7 +84,7 @@ pub fn lexicon_entries(conn: &Connection, strongs: &str) -> Result<Vec<Dictionar
 
 /// Works the app already ships, so the Library offers them as "already included" instead
 /// of installing a second copy.
-const BUILT_IN: &[(&str, &str)] = &[
+pub const BUILT_IN: &[(&str, &str)] = &[
     ("KJV", "The King James Version is built in."),
     ("ASV", "The American Standard Version is built in."),
     ("YLT", "Young's Literal Translation is built in."),
@@ -316,521 +105,9 @@ const BUILT_IN: &[(&str, &str)] = &[
     ("Torrey", "Torrey's New Topical Textbook is built in (Dictionary panel)."),
 ];
 
-pub fn language_name(code: &str) -> String {
-    let base = code.split(['-', '_']).next().unwrap_or(code);
-    match base {
-        "en" => "English",
-        "af" => "Afrikaans",
-        "de" => "German",
-        "fr" => "French",
-        "nl" => "Dutch",
-        "es" => "Spanish",
-        "pt" => "Portuguese",
-        "it" => "Italian",
-        "grc" => "Greek (ancient)",
-        "el" => "Greek",
-        "hbo" => "Hebrew (ancient)",
-        "he" => "Hebrew",
-        "la" => "Latin",
-        "ru" => "Russian",
-        "uk" => "Ukrainian",
-        "pl" => "Polish",
-        "cs" => "Czech",
-        "sk" => "Slovak",
-        "hu" => "Hungarian",
-        "ro" => "Romanian",
-        "bg" => "Bulgarian",
-        "sr" => "Serbian",
-        "hr" => "Croatian",
-        "sl" => "Slovenian",
-        "fi" => "Finnish",
-        "sv" => "Swedish",
-        "da" => "Danish",
-        "nb" | "no" => "Norwegian",
-        "zh" => "Chinese",
-        "ja" => "Japanese",
-        "ko" => "Korean",
-        "vi" => "Vietnamese",
-        "ar" => "Arabic",
-        "fa" => "Persian",
-        "ur" => "Urdu",
-        "hi" => "Hindi",
-        "tr" => "Turkish",
-        "sw" => "Swahili",
-        "zu" => "Zulu",
-        "xh" => "Xhosa",
-        "tl" => "Tagalog",
-        "cop" => "Coptic",
-        "syr" => "Syriac",
-        "eu" => "Basque",
-        "hy" => "Armenian",
-        "lv" => "Latvian",
-        "lt" => "Lithuanian",
-        "et" => "Estonian",
-        "my" => "Burmese",
-        "br" => "Breton",
-        "gez" => "Ge'ez",
-        _ => return code.to_string(),
-    }
-    .to_string()
-}
-
-/// What the app does with a module: "bible", "commentary", "dictionary", "devotional",
-/// "book" -- or None for a driver it can't read.
-pub fn kind_of(conf: &Conf) -> Option<&'static str> {
-    Some(match conf.driver() {
-        "zText" | "zText4" | "RawText" | "RawText4" => "bible",
-        "zCom" | "zCom4" | "RawCom" | "RawCom4" => "commentary",
-        "zLD" | "RawLD" | "RawLD4" => {
-            if conf.has_value("Feature", "DailyDevotion") || conf.get("Category").is_some_and(|c| c.contains("Devotional")) {
-                "devotional"
-            } else {
-                "dictionary"
-            }
-        }
-        "RawGenBook" => "book",
-        _ => return None,
-    })
-}
-
-/// SWORD's About field is RTF-flavoured ("\par", "\qc"): plain text with line breaks.
-pub fn clean_about(s: &str) -> String {
-    let s = s.replace("\\par", "\n").replace("\\pard", "\n");
-    let s = regex::Regex::new(r"\\[a-z]+\d*\s?").unwrap().replace_all(&s, "");
-    let s = markup::unescape(&s);
-    s.lines().map(str::trim).collect::<Vec<_>>().join("\n").trim().to_string()
-}
-
-#[derive(Serialize, Clone, Debug)]
-pub struct CatalogItem {
-    pub name: String,
-    pub kind: String,
-    pub title: String,
-    pub lang: String,
-    pub language: String,
-    pub licence: String,
-    pub about: String,
-    pub size_kb: i64,
-    pub version: String,
-    pub category: String,
-    /// CrossWire's own "Cults / Unorthodox / Questionable Material" category
-    pub questionable: bool,
-    pub supported: bool,
-    /// why it can't be installed, or that the app already includes it
-    pub note: Option<String>,
-    pub built_in: bool,
-    pub installed: bool,
-    pub installed_version: Option<String>,
-    /// id of the source (repository) this entry comes from
-    pub source: String,
-}
-
-/// Why the app can't use a module, if it can't.
-fn unsupported_reason(conf: &Conf) -> Option<String> {
-    if !valid_name(&conf.name) {
-        return Some("Its name has characters the app can't use.".into());
-    }
-    let Some(kind) = kind_of(conf) else {
-        return Some(format!("This kind of module ({}) isn't supported yet.", conf.driver()));
-    };
-    if conf.get("CipherKey").is_some() {
-        return Some("Locked by its publisher (needs an unlock key).".into());
-    }
-    if let Some(c) = conf.get("CompressType") {
-        if !c.eq_ignore_ascii_case("ZIP") {
-            return Some(format!("Uses {c} compression, which isn't supported yet."));
-        }
-    }
-    if (kind == "bible" || kind == "commentary") && sword::canon(&conf.versification()).is_none() {
-        return Some(format!("Uses the {} verse numbering, which isn't supported.", conf.get("Versification").unwrap_or("?")));
-    }
-    None
-}
-
-/// Every module in the catalogue archive (mods.d.tar.gz).
-pub fn parse_catalog(targz: &[u8]) -> Result<Vec<Conf>, String> {
-    let mut archive = tar::Archive::new(flate2::read::GzDecoder::new(Cursor::new(targz)));
-    let mut out = Vec::new();
-    for entry in archive.entries().map_err(err)? {
-        let mut entry = entry.map_err(err)?;
-        let is_conf = entry.path().map(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case("conf"))).unwrap_or(false);
-        if !is_conf {
-            continue;
-        }
-        let mut bytes = Vec::new();
-        entry.read_to_end(&mut bytes).map_err(err)?;
-        if let Some(c) = Conf::parse(&String::from_utf8_lossy(&bytes)) {
-            out.push(c);
-        }
-    }
-    Ok(out)
-}
-
-pub fn catalog_items(confs: &[Conf], conn: &Connection, source: &str) -> Result<Vec<CatalogItem>, String> {
-    let installed: HashMap<String, String> = conn
-        .prepare("SELECT name, version FROM modules")
-        .map_err(err)?
-        .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
-        .map_err(err)?
-        .collect::<Result<_, _>>()
-        .map_err(err)?;
-    let mut out: Vec<CatalogItem> = confs
-        .iter()
-        .filter_map(|c| {
-            let kind = kind_of(c).unwrap_or("other");
-            let lang = c.get("Lang").unwrap_or("").to_string();
-            let built_in = BUILT_IN.iter().find(|(n, _)| *n == c.name).map(|(_, note)| note.to_string());
-            let reason = unsupported_reason(c);
-            let category = c.get("Category").unwrap_or("").to_string();
-            Some(CatalogItem {
-                name: c.name.clone(),
-                kind: kind.to_string(),
-                title: c.get("Description").unwrap_or(&c.name).to_string(),
-                language: language_name(&lang),
-                lang,
-                licence: c.get("DistributionLicense").unwrap_or("See the module's notes").to_string(),
-                about: clean_about(c.get("About").unwrap_or("")),
-                size_kb: c.get("InstallSize").and_then(|s| s.parse::<i64>().ok()).map(|b| (b + 1023) / 1024).unwrap_or(0),
-                version: c.get("Version").unwrap_or("").to_string(),
-                questionable: category.contains("Cults") || category.contains("Questionable"),
-                category,
-                supported: reason.is_none() && built_in.is_none(),
-                note: built_in.clone().or(reason),
-                built_in: built_in.is_some(),
-                installed: installed.contains_key(&c.name),
-                installed_version: installed.get(&c.name).cloned(),
-                source: source.to_string(),
-            })
-        })
-        .collect();
-    out.sort_by(|a, b| a.language.cmp(&b.language).then(a.title.to_lowercase().cmp(&b.title.to_lowercase())));
-    Ok(out)
-}
 
 // ---------------------------------------------------------------- install / remove
 
-#[derive(Serialize, Clone, Debug)]
-pub struct InstallReport {
-    pub name: String,
-    pub kind: String,
-    pub title: String,
-    /// verses, notes, entries or sections with text
-    pub entries: i64,
-    /// Bibles and commentaries: how many of the 66 books have text
-    pub books: i64,
-    pub language: String,
-    pub licence: String,
-    /// things the reader should know before installing a file of their own
-    pub warnings: Vec<String>,
-    /// title of an installed work this one would replace
-    pub replaces: Option<String>,
-}
-
-/// How a module is being installed.
-#[derive(Clone, Copy)]
-pub struct InstallOptions<'a> {
-    /// a `Source` id, or `SOURCE_FILE`
-    pub source: &'a str,
-    /// a file the reader supplied: refuse anything doubtful instead of installing what can be read
-    pub strict: bool,
-    /// false = a trial run that reports what would be installed and changes nothing
-    pub commit: bool,
-}
-
-const MAX_ZIP_FILES: usize = 4000;
-const MAX_UNPACKED_BYTES: u64 = 800 * 1024 * 1024;
-
-/// Unpacks a module .zip into a fresh folder (guarding against paths that escape it, and
-/// against archives that unpack to something enormous). `strict` is for a file the reader
-/// supplied: it must hold exactly one module and nothing else.
-fn unzip(bytes: &[u8], dest: &Path, strict: bool) -> Result<(), String> {
-    let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|_| "This isn't a zip file the app can open.".to_string())?;
-    if zip.len() > MAX_ZIP_FILES {
-        return Err("The archive has too many files to be a single module.".into());
-    }
-    let mut total: u64 = 0;
-    let mut confs = 0;
-    for i in 0..zip.len() {
-        let f = zip.by_index(i).map_err(err)?;
-        total += f.size();
-        if f.is_dir() {
-            continue;
-        }
-        let Some(rel) = f.enclosed_name() else {
-            return Err("The archive has a file path the app won't unpack.".into());
-        };
-        let parts: Vec<String> = rel.components().map(|c| c.as_os_str().to_string_lossy().to_lowercase()).collect();
-        let is_conf = parts.len() == 2 && parts[0] == "mods.d" && parts[1].ends_with(".conf");
-        if is_conf {
-            confs += 1;
-        }
-        if strict && !is_conf && parts.first().map(String::as_str) != Some("modules") {
-            return Err(format!(
-                "This isn't a SWORD module: it contains \"{}\". A module zip holds only a mods.d folder and a modules folder.",
-                rel.display()
-            ));
-        }
-    }
-    if total > MAX_UNPACKED_BYTES {
-        return Err("The archive unpacks to more than 800 MB, which is too large for a module.".into());
-    }
-    if strict && confs != 1 {
-        return Err(if confs == 0 {
-            "This isn't a SWORD module: there is no module description (mods.d/*.conf) in the zip.".to_string()
-        } else {
-            format!("The zip holds {confs} modules. Add them one at a time, each in its own zip.")
-        });
-    }
-    for i in 0..zip.len() {
-        let mut f = zip.by_index(i).map_err(err)?;
-        let Some(rel) = f.enclosed_name() else { continue };
-        let path = dest.join(rel);
-        if f.is_dir() {
-            std::fs::create_dir_all(&path).map_err(err)?;
-            continue;
-        }
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent).map_err(err)?;
-        }
-        let mut out = std::fs::File::create(&path).map_err(err)?;
-        std::io::copy(&mut f, &mut out).map_err(err)?;
-    }
-    Ok(())
-}
-
-fn find_conf(root: &Path, name: &str) -> Result<Conf, String> {
-    let dir = root.join("mods.d");
-    let entries = std::fs::read_dir(&dir).map_err(|e| format!("no mods.d in the archive: {e}"))?;
-    let mut first = None;
-    for e in entries.flatten() {
-        let text = std::fs::read(e.path()).map(|b| String::from_utf8_lossy(&b).into_owned()).unwrap_or_default();
-        if let Some(c) = Conf::parse(&text) {
-            if c.name.eq_ignore_ascii_case(name) {
-                return Ok(c);
-            }
-            first.get_or_insert(c);
-        }
-    }
-    first.ok_or_else(|| "no module description (.conf) in the archive".into())
-}
-
-fn fold(s: &str) -> String {
-    s.to_lowercase()
-}
-
-fn delete_module_rows(tx: &Connection, name: &str) -> Result<(), String> {
-    for (table, fts, cols) in [
-        ("lib_verses", "lib_verses_fts", "text"),
-        ("lib_comm", "lib_comm_fts", "text"),
-        ("lib_dict", "lib_dict_fts", "headword, body"),
-        ("lib_book", "lib_book_fts", "title, text"),
-    ] {
-        tx.execute(
-            &format!("INSERT INTO {fts}({fts}, rowid, {cols}) SELECT 'delete', id, {cols} FROM {table} WHERE module = ?1"),
-            params![name],
-        )
-        .map_err(err)?;
-        tx.execute(&format!("DELETE FROM {table} WHERE module = ?1"), params![name]).map_err(err)?;
-    }
-    tx.execute("DELETE FROM lib_refs WHERE module = ?1", params![name]).map_err(err)?;
-    tx.execute("DELETE FROM lib_refs_done WHERE module = ?1", params![name]).map_err(err)?;
-    tx.execute("DELETE FROM modules WHERE name = ?1", params![name]).map_err(err)?;
-    Ok(())
-}
-
-/// Converts an unpacked module into library.db. `progress` gets short stage names.
-pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: InstallOptions, progress: &dyn Fn(&str)) -> Result<InstallReport, String> {
-    let conf = find_conf(root, name)?;
-    if let Some(reason) = unsupported_reason(&conf) {
-        return Err(reason);
-    }
-    if opts.strict {
-        if let Some((_, note)) = BUILT_IN.iter().find(|(n, _)| n.eq_ignore_ascii_case(&conf.name)) {
-            return Err(note.to_string());
-        }
-    }
-    let kind = kind_of(&conf).unwrap_or("other");
-    let source = conf.get("SourceType").unwrap_or("").to_string();
-    let module = conf.name.clone();
-    progress("reading");
-
-    let tx = conn.transaction().map_err(err)?;
-    let replaces: Option<String> = tx.query_row("SELECT title FROM modules WHERE name = ?1", params![module], |r| r.get(0)).optional().map_err(err)?;
-    delete_module_rows(&tx, &module)?;
-    let mut entries: i64 = 0;
-    // books of a Bible/commentary the app has no name for
-    let mut other_books: HashSet<String> = HashSet::new();
-    // books of a Bible beyond the 66 (the Apocrypha) that are kept
-    let mut apocrypha: HashSet<&'static str> = HashSet::new();
-    match kind {
-        "bible" => {
-            let mut stmt = tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)").map_err(err)?;
-            for e in sword::read_verse_module(root, &conf)? {
-                let extra = refs::apocrypha_book(&e.osis_book);
-                let Some(book) = refs::osis_book(&e.osis_book).or(extra) else {
-                    other_books.insert(e.osis_book.clone());
-                    continue;
-                };
-                if e.chapter == 0 || e.verse == 0 {
-                    continue; // book and chapter introductions/headings
-                }
-                let text = markup::to_text(&e.text, &source, Kind::Bible);
-                if text.is_empty() {
-                    continue;
-                }
-                if let Some(x) = extra {
-                    apocrypha.insert(x);
-                }
-                stmt.execute(params![module, book, e.chapter, e.verse, text]).map_err(err)?;
-                entries += 1;
-            }
-        }
-        "commentary" => {
-            let mut stmt =
-                tx.prepare("INSERT INTO lib_comm(module, book, chapter, verse_start, text) VALUES (?1,?2,?3,?4,?5)").map_err(err)?;
-            let mut last_loc = None;
-            for e in sword::read_verse_module(root, &conf)? {
-                let Some(book) = refs::osis_book(&e.osis_book) else { continue };
-                // consecutive verses pointing at the same note are one note on a range
-                if last_loc == Some((e.osis_book.clone(), e.loc)) {
-                    continue;
-                }
-                last_loc = Some((e.osis_book.clone(), e.loc));
-                let text = markup::to_text(&e.text, &source, Kind::Commentary);
-                if text.is_empty() {
-                    continue;
-                }
-                stmt.execute(params![module, book, e.chapter, e.verse, text]).map_err(err)?;
-                entries += 1;
-            }
-        }
-        "dictionary" | "devotional" => {
-            let mut stmt = tx
-                .prepare("INSERT INTO lib_dict(module, key, headword, headword_fold, body, strongs) VALUES (?1,?2,?3,?4,?5,?6)")
-                .map_err(err)?;
-            let (greek, hebrew) = (conf.has_value("Feature", "GreekDef"), conf.has_value("Feature", "HebrewDef"));
-            for (key, raw) in sword::read_lexicon(root, &conf)? {
-                let body = markup::to_text(&raw, &source, Kind::Dictionary);
-                if body.is_empty() {
-                    continue;
-                }
-                // a lexicon keyed by Strong's numbers: index the number, and head the entry
-                // with its Greek/Hebrew word rather than "00025"
-                let strongs = if kind == "dictionary" { strongs_of_key(&key, greek, hebrew) } else { None };
-                let head = match &strongs {
-                    Some(s) => entry_lemma(&raw).map(|l| format!("{l} ({s})")).unwrap_or_else(|| s.clone()),
-                    None => markup::headword(&key),
-                };
-                stmt.execute(params![module, key, head, fold(&head), body, strongs]).map_err(err)?;
-                entries += 1;
-            }
-        }
-        "book" => {
-            let mut stmt = tx.prepare("INSERT INTO lib_book(module, parent, ord, title, text) VALUES (?1,?2,?3,?4,?5)").map_err(err)?;
-            let mut ids: Vec<i64> = Vec::new();
-            for (ord, n) in sword::read_genbook(root, &conf)?.into_iter().enumerate() {
-                let parent = n.parent.and_then(|p| ids.get(p).copied());
-                let text = markup::to_text(&n.text, &source, Kind::Book);
-                let title = markup::unescape(n.title.trim());
-                stmt.execute(params![module, parent, ord as i64, if title.is_empty() { "Untitled" } else { &title }, text]).map_err(err)?;
-                ids.push(tx.last_insert_rowid());
-                if !text.is_empty() {
-                    entries += 1;
-                }
-            }
-        }
-        other => return Err(format!("unsupported module kind {other}")),
-    }
-    if entries == 0 {
-        return Err("The module contained no text this app can read.".into());
-    }
-    let (table, text_col) = match kind {
-        "bible" => ("lib_verses", "text"),
-        "commentary" => ("lib_comm", "text"),
-        "book" => ("lib_book", "text"),
-        _ => ("lib_dict", "body"),
-    };
-    let books: i64 = if kind == "bible" || kind == "commentary" {
-        tx.query_row(&format!("SELECT count(DISTINCT book) FROM {table} WHERE module = ?1"), params![module], |r| r.get(0)).map_err(err)?
-    } else {
-        0
-    };
-    let mut warnings: Vec<String> = Vec::new();
-    if opts.strict {
-        // text that didn't decode cleanly shows as U+FFFD: a little is a damaged character,
-        // a lot means the file's encoding is wrong and it would read as rubbish
-        let garbled: i64 = tx
-            .query_row(&format!("SELECT count(*) FROM {table} WHERE module = ?1 AND instr({text_col}, char(65533)) > 0"), params![module], |r| r.get(0))
-            .map_err(err)?;
-        if garbled * 100 > entries {
-            return Err(format!("The text doesn't read correctly ({garbled} of {entries} entries have unreadable characters), so it wasn't added."));
-        }
-        if garbled > 0 {
-            warnings.push(format!("{garbled} of {entries} entries have a character that couldn't be read."));
-        }
-        if kind == "bible" && entries < 20 {
-            return Err(format!("Only {entries} verses could be read, which is too few to be a Bible or a Bible book."));
-        }
-        let canonical = books - apocrypha.len() as i64;
-        if kind == "bible" && canonical < 66 {
-            warnings.push(format!("It has {canonical} of the 66 books of the Bible."));
-        }
-    }
-    if !apocrypha.is_empty() {
-        warnings.push(format!(
-            "It also has {} book(s) of the Apocrypha. They are listed under Apocrypha in the book list while you read this Bible.",
-            apocrypha.len()
-        ));
-    }
-    if !other_books.is_empty() {
-        warnings.push(format!("{} book(s) the app has no name for are left out.", other_books.len()));
-    }
-    progress("saving");
-    for (table, fts, cols) in [
-        ("lib_verses", "lib_verses_fts", "text"),
-        ("lib_comm", "lib_comm_fts", "text"),
-        ("lib_dict", "lib_dict_fts", "headword, body"),
-        ("lib_book", "lib_book_fts", "title, text"),
-    ] {
-        tx.execute(&format!("INSERT INTO {fts}(rowid, {cols}) SELECT id, {cols} FROM {table} WHERE module = ?1"), params![module])
-            .map_err(err)?;
-    }
-    let lang = conf.get("Lang").unwrap_or("").to_string();
-    let features = conf.fields.get("Feature").map(|v| v.join(",")).filter(|f| !f.is_empty()).unwrap_or_else(|| "-".into());
-    tx.execute(
-        "INSERT INTO modules(name, kind, title, lang, language, licence, about, version, versification, entries, features, source)
-         VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
-        params![
-            module,
-            kind,
-            conf.get("Description").unwrap_or(&module),
-            lang,
-            language_name(&lang),
-            conf.get("DistributionLicense").unwrap_or(""),
-            clean_about(conf.get("About").unwrap_or("")),
-            conf.get("Version").unwrap_or(""),
-            conf.versification(),
-            entries,
-            features,
-            opts.source
-        ],
-    )
-    .map_err(err)?;
-    if opts.commit {
-        tx.commit().map_err(err)?;
-    } // otherwise the transaction rolls back as it drops: nothing changed
-    Ok(InstallReport {
-        name: module,
-        kind: kind.into(),
-        title: conf.get("Description").unwrap_or(&conf.name).to_string(),
-        entries,
-        books,
-        language: language_name(&lang),
-        licence: conf.get("DistributionLicense").unwrap_or("").to_string(),
-        warnings,
-        replaces,
-    })
-}
 
 /// Unpacks `zip_bytes` into a temporary folder under the library folder, installs it, and
 /// removes the folder again. `source` is the id of the repository it was downloaded from.
@@ -841,7 +118,7 @@ pub fn install_zip(state: &LibraryState, zip_bytes: &[u8], name: &str, source: &
     progress("unpacking");
     let result = unzip(zip_bytes, &tmp, false).and_then(|_| {
         let mut conn = state.conn.lock().map_err(err)?;
-        install_unpacked(&mut conn, &tmp, name, InstallOptions { source, strict: false, commit: true }, progress)
+        install_unpacked(&mut conn, &tmp, name, InstallOptions { source, strict: false, commit: true, built_in: BUILT_IN }, progress)
     });
     let _ = std::fs::remove_dir_all(&tmp);
     result
@@ -859,8 +136,6 @@ fn import_dir(state: &LibraryState) -> PathBuf {
     state.dir.join("tmp").join("_import")
 }
 
-/// Largest file "Add from file" accepts.
-pub const MAX_IMPORT_BYTES: usize = 400 * 1024 * 1024;
 
 /// Adds an e-book or PDF book (already read and checked by `epub::read` / `pdf::read`) as
 /// a book in the library.
@@ -916,6 +191,9 @@ pub fn install_epub(conn: &mut Connection, book: &epub::Epub, commit: bool) -> R
 }
 
 const IMPORT_EPUB: &str = "book.bin";
+/// an e-Sword or MySword module waiting in the holding folder
+const IMPORT_ESWORD: &str = "module.sqlite";
+
 
 /// The reader's own book, from an EPUB or a PDF.
 fn read_book(bytes: &[u8], file_name: Option<&str>) -> Result<epub::Epub, String> {
@@ -936,7 +214,13 @@ pub fn import_check(state: &LibraryState, bytes: &[u8], file_name: Option<&str>)
         return Err("The file is larger than 400 MB, which is too large to add.".into());
     }
     std::fs::create_dir_all(&dir).map_err(err)?;
-    let result = if pdf::is_pdf(bytes) || epub::is_epub(bytes) {
+    let result = if let Some((module_bytes, name)) = esword_bytes(bytes, file_name)? {
+        // an e-Sword or MySword module: kept in the holding folder, read, tried
+        let path = dir.join(IMPORT_ESWORD);
+        std::fs::write(&path, &module_bytes).map_err(err)?;
+        std::fs::write(dir.join(IMPORT_NAME), &name).map_err(err)?;
+        esword::read(&path, Some(&name)).and_then(|m| install_esword(&mut *state.conn.lock().map_err(err)?, &m, Some(&name), false, BUILT_IN))
+    } else if pdf::is_pdf(bytes) || epub::is_epub(bytes) {
         read_book(bytes, file_name).and_then(|book| {
             std::fs::write(dir.join(IMPORT_EPUB), bytes).map_err(err)?;
             std::fs::write(dir.join(IMPORT_NAME), file_name.unwrap_or("")).map_err(err)?;
@@ -945,7 +229,7 @@ pub fn import_check(state: &LibraryState, bytes: &[u8], file_name: Option<&str>)
     } else {
         unzip(bytes, &dir, true).and_then(|_| {
             let mut conn = state.conn.lock().map_err(err)?;
-            install_unpacked(&mut conn, &dir, "", InstallOptions { source: SOURCE_FILE, strict: true, commit: false }, &|_| {})
+            install_unpacked(&mut conn, &dir, "", InstallOptions { source: SOURCE_FILE, strict: true, commit: false, built_in: BUILT_IN }, &|_| {})
         })
     };
     if result.is_err() {
@@ -957,12 +241,19 @@ pub fn import_check(state: &LibraryState, bytes: &[u8], file_name: Option<&str>)
 /// Installs the file last checked with `import_check`.
 pub fn import_install(state: &LibraryState, progress: &dyn Fn(&str)) -> Result<InstallReport, String> {
     let dir = import_dir(state);
-    let result = if dir.join(IMPORT_EPUB).is_file() {
+    let result = if dir.join(IMPORT_ESWORD).is_file() {
+        let name = std::fs::read_to_string(dir.join(IMPORT_NAME)).ok().filter(|n| !n.is_empty());
+        progress("reading");
+        esword::read(&dir.join(IMPORT_ESWORD), name.as_deref()).and_then(|m| {
+            progress("saving");
+            install_esword(&mut *state.conn.lock().map_err(err)?, &m, name.as_deref(), true, BUILT_IN)
+        })
+    } else if dir.join(IMPORT_EPUB).is_file() {
         let file_name = std::fs::read_to_string(dir.join(IMPORT_NAME)).ok().filter(|n| !n.is_empty());
         std::fs::read(dir.join(IMPORT_EPUB)).map_err(err).and_then(|bytes| read_book(&bytes, file_name.as_deref())).and_then(|book| install_epub(&mut *state.conn.lock().map_err(err)?, &book, true))
     } else if dir.join("mods.d").is_dir() {
         let mut conn = state.conn.lock().map_err(err)?;
-        install_unpacked(&mut conn, &dir, "", InstallOptions { source: SOURCE_FILE, strict: true, commit: true }, progress)
+        install_unpacked(&mut conn, &dir, "", InstallOptions { source: SOURCE_FILE, strict: true, commit: true, built_in: BUILT_IN }, progress)
     } else {
         return Err("Choose the file again: there is nothing waiting to be added.".into());
     };
@@ -974,30 +265,9 @@ pub fn import_cancel(state: &LibraryState) {
     let _ = std::fs::remove_dir_all(import_dir(state));
 }
 
-pub fn remove(conn: &mut Connection, name: &str) -> Result<(), String> {
-    let tx = conn.transaction().map_err(err)?;
-    delete_module_rows(&tx, name)?;
-    tx.commit().map_err(err)
-}
 
 // ---------------------------------------------------------------- installed modules
 
-#[derive(Serialize, Clone, Debug)]
-pub struct InstalledModule {
-    pub name: String,
-    pub kind: String,
-    pub title: String,
-    pub language: String,
-    pub licence: String,
-    pub about: String,
-    pub version: String,
-    pub entries: i64,
-    pub installed_at: String,
-    /// a `Source` id, or "file" for something the reader added themselves
-    pub source: String,
-    /// a book added from a PDF: how many printed pages it has (0 = it has no page numbers)
-    pub pages: i64,
-}
 
 /// The section of a book where printed page `page` starts (or the nearest earlier page that
 /// has text), with that page's number.
@@ -1011,32 +281,6 @@ pub fn book_page(conn: &Connection, module: &str, page: i64) -> Result<Option<(i
     Ok(None)
 }
 
-pub fn installed(conn: &Connection, kind: Option<&str>) -> Result<Vec<InstalledModule>, String> {
-    let mut stmt = conn
-        .prepare(
-            "SELECT name, kind, title, language, licence, about, version, entries, installed_at, source, features FROM modules
-             WHERE ?1 IS NULL OR kind = ?1 ORDER BY title",
-        )
-        .map_err(err)?;
-    let rows = stmt
-        .query_map(params![kind], |r| {
-            Ok(InstalledModule {
-                name: r.get(0)?,
-                kind: r.get(1)?,
-                title: r.get(2)?,
-                language: r.get(3)?,
-                licence: r.get(4)?,
-                about: r.get(5)?,
-                version: r.get(6)?,
-                entries: r.get(7)?,
-                installed_at: r.get(8)?,
-                source: r.get(9)?,
-                pages: r.get::<_, String>(10)?.strip_prefix("pages=").and_then(|n| n.parse().ok()).unwrap_or(0),
-            })
-        })
-        .map_err(err)?;
-    rows.collect::<Result<_, _>>().map_err(err)
-}
 
 // ---------------------------------------------------------------- Bibles
 
@@ -1820,7 +1064,7 @@ mod tests {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(SCHEMA).unwrap();
         migrate(&conn, Path::new(".")).unwrap();
-        let items = catalog_items(&confs, &conn, "crosswire").unwrap();
+        let items = catalog_items(&confs, &conn, "crosswire", BUILT_IN).unwrap();
         let count = |f: &dyn Fn(&CatalogItem) -> bool| items.iter().filter(|i| f(i)).count();
         println!(
             "{} modules; {} installable; {} built in; {} questionable; english installable {}",
@@ -2086,6 +1330,93 @@ mod tests {
         drop(conn);
         remove(&mut state.conn.lock().unwrap(), "Barnes").unwrap();
         assert!(commentaries(&state.conn.lock().unwrap()).unwrap().iter().all(|c| c.id != "lib:Barnes"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// A small MySword Bible, made here: Genesis 1:1-30 and John 3:16-35.
+    fn mysword_bible(abbr: &str) -> Vec<u8> {
+        let p = std::env::temp_dir().join(format!("bc-mysword-{}-{abbr}.bbl.mybible", std::process::id()));
+        let _ = std::fs::remove_file(&p);
+        {
+            let c = Connection::open(&p).unwrap();
+            c.execute_batch("CREATE TABLE Bible(Book INT, Chapter INT, Verse INT, Scripture TEXT); CREATE TABLE Details(Description TEXT, Abbreviation TEXT, Comments TEXT, Language TEXT);").unwrap();
+            c.execute("INSERT INTO Details VALUES (?1, ?2, 'Free to share, not to sell.', 'af')", params![format!("Test Bible {abbr}"), abbr]).unwrap();
+            for v in 1..=30 {
+                c.execute("INSERT INTO Bible VALUES (1, 1, ?1, ?2)", params![v, format!("<TS>Head<Ts>Genesis verse {v}<RF>note<Rf>.<CM>")]).unwrap();
+            }
+            for v in 16..=35 {
+                c.execute("INSERT INTO Bible VALUES (43, 3, ?1, ?2)", params![v, format!("John verse {v}.")]).unwrap();
+            }
+        }
+        let bytes = std::fs::read(&p).unwrap();
+        let _ = std::fs::remove_file(&p);
+        bytes
+    }
+
+    #[test]
+    fn esword_and_mysword_modules_from_a_file() {
+        let dir = std::env::temp_dir().join(format!("bc-esword-lib-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let state = open(&dir).unwrap();
+
+        // a MySword Bible: checked (nothing added yet), then added; read like any Bible
+        let bytes = mysword_bible("TB1");
+        let r = import_check(&state, &bytes, Some("tb1.bbl.mybible")).unwrap();
+        assert_eq!((r.kind.as_str(), r.name.as_str(), r.entries, r.books), ("bible", "TB1", 50, 2));
+        assert!(r.warnings.iter().any(|w| w.contains("2 of the 66")), "{:?}", r.warnings);
+        assert!(versions(&state.conn.lock().unwrap()).unwrap().iter().all(|v| v.code != "TB1"), "a check adds nothing");
+        let done = import_install(&state, &|_| {}).unwrap();
+        assert_eq!(done.name, "TB1");
+        {
+            let conn = state.conn.lock().unwrap();
+            assert!(versions(&conn).unwrap().iter().any(|v| v.code == "TB1"));
+            assert_eq!(verse(&conn, "TB1", "Genesis", 1, 1).unwrap().as_deref(), Some("Genesis verse 1."));
+            assert_eq!(chapter(&conn, "TB1", "John", 3).unwrap().len(), 20);
+            let m = installed(&conn, None).unwrap().into_iter().find(|m| m.name == "TB1").unwrap();
+            assert_eq!((m.source.as_str(), m.language.is_empty()), ("file", false));
+            assert!(m.licence.starts_with("Your own copy"));
+        }
+
+        // the same, packed in a .gz and in a .zip, as MySword's site gives them
+        let gz = {
+            let mut e = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+            std::io::Write::write_all(&mut e, &mysword_bible("TB2")).unwrap();
+            e.finish().unwrap()
+        };
+        assert_eq!(import_check(&state, &gz, Some("tb2.bbl.mybible.gz")).unwrap().name, "TB2");
+        let zipped = {
+            let mut z = zip::ZipWriter::new(Cursor::new(Vec::new()));
+            z.start_file("tb3.bbl.mybible", zip::write::SimpleFileOptions::default()).unwrap();
+            std::io::Write::write_all(&mut z, &mysword_bible("TB3")).unwrap();
+            z.finish().unwrap().into_inner()
+        };
+        assert_eq!(import_check(&state, &zipped, Some("tb3.zip")).unwrap().name, "TB3");
+        import_cancel(&state);
+
+        // one the app already has is refused, as for SWORD modules
+        let e = import_check(&state, &mysword_bible("BSB"), Some("bsb.bbl.mybible")).unwrap_err();
+        assert!(e.contains("built in"), "{e}");
+
+        // an e-Sword topics file (RTF) becomes a dictionary of subjects
+        let p = dir.join("t.topx");
+        Connection::open(&p).unwrap().execute_batch(r"CREATE TABLE Topics(Title TEXT, Notes TEXT); INSERT INTO Topics VALUES ('Joy', '{\rtf1 Joy, as in Gal 5:22.\par}');").unwrap();
+        let r = import_check(&state, &std::fs::read(&p).unwrap(), Some("Joy topics.topx")).unwrap();
+        assert_eq!((r.kind.as_str(), r.entries), ("dictionary", 1));
+        import_install(&state, &|_| {}).unwrap();
+        let conn = state.conn.lock().unwrap();
+        let body: String = conn.query_row("SELECT body FROM lib_dict WHERE headword = 'Joy'", [], |r| r.get(0)).unwrap();
+        assert!(body.contains("⟦Galatians|5|22||Gal 5:22⟧"), "{body}");
+        drop(conn);
+
+        // a locked one is refused with the reason, and nothing is left waiting
+        let p = dir.join("l.bblx");
+        Connection::open(&p)
+            .unwrap()
+            .execute_batch("CREATE TABLE Bible(Book INT, Chapter INT, Verse INT, Scripture BLOB_TEXT); CREATE TABLE sqliteplus_license(Name TEXT); INSERT INTO Bible VALUES (1,1,1,x'00ff10203040506070809a');")
+            .unwrap();
+        let e = import_check(&state, &std::fs::read(&p).unwrap(), Some("l.bblx")).unwrap_err();
+        assert!(e.contains("locked"), "{e}");
+        assert!(import_install(&state, &|_| {}).is_err());
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

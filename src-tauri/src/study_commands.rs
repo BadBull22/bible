@@ -389,3 +389,96 @@ pub fn import_study(state: State<UserDataState>, json: String) -> Result<ImportR
     let mut conn = user_conn(&state)?;
     userdata::import_backup(&mut conn, &json)
 }
+
+// ---------------------------------------------------------------- keeping in step through a shared folder (sync.rs)
+
+#[derive(Serialize)]
+pub struct SyncStatus {
+    folder: Option<String>,
+    name: String,
+    last: Option<crate::sync::SyncReport>,
+    error: Option<String>,
+}
+
+/// This computer's name as Windows knows it ("STUDY-PC" -> "Study-pc"), until the reader
+/// gives it another.
+pub(crate) fn computer_name() -> String {
+    let n = std::env::var("COMPUTERNAME").unwrap_or_default();
+    let mut c = n.trim().chars();
+    match c.next() {
+        Some(f) => f.to_uppercase().chain(c.flat_map(char::to_lowercase)).collect(),
+        None => "This computer".into(),
+    }
+}
+
+fn sync_status_of(conn: &Connection) -> Result<SyncStatus, String> {
+    use crate::sync::setting;
+    Ok(SyncStatus {
+        folder: setting(conn, "folder")?,
+        name: setting(conn, "name")?.unwrap_or_else(computer_name),
+        last: setting(conn, "last")?.and_then(|t| serde_json::from_str(&t).ok()),
+        error: setting(conn, "error")?,
+    })
+}
+
+#[tauri::command]
+pub fn sync_status(state: State<UserDataState>) -> Result<SyncStatus, String> {
+    sync_status_of(&*user_conn(&state)?)
+}
+
+/// The shared folder to keep in step through, or None to stop.
+#[tauri::command]
+pub fn sync_set_folder(state: State<UserDataState>, folder: Option<String>) -> Result<SyncStatus, String> {
+    let conn = user_conn(&state)?;
+    if let Some(f) = &folder {
+        if !std::path::Path::new(f).is_dir() {
+            return Err("That folder can't be found.".into());
+        }
+    }
+    crate::sync::set_setting(&conn, "folder", folder.as_deref())?;
+    crate::sync::set_setting(&conn, "last", None)?;
+    crate::sync::set_setting(&conn, "error", None)?;
+    sync_status_of(&conn)
+}
+
+#[tauri::command]
+pub fn sync_set_name(state: State<UserDataState>, name: String) -> Result<SyncStatus, String> {
+    let conn = user_conn(&state)?;
+    let name: String = name.trim().chars().take(40).collect();
+    crate::sync::set_setting(&conn, "name", if name.is_empty() { None } else { Some(&name) })?;
+    sync_status_of(&conn)
+}
+
+/// One sync with the shared folder: the records (holding the database), then the sermon
+/// media files (not holding it, as they can take a while over a network drive).
+#[tauri::command]
+pub async fn sync_now(app: AppHandle) -> Result<crate::sync::SyncReport, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<UserDataState>();
+        let (folder, result) = {
+            let mut conn = state.0.lock().map_err(|e| e.to_string())?;
+            let folder = crate::sync::setting(&conn, "folder")?.ok_or("Choose the shared folder first.")?;
+            let name = crate::sync::setting(&conn, "name")?.unwrap_or_else(computer_name);
+            let r = if std::path::Path::new(&folder).is_dir() {
+                crate::sync::sync(&mut conn, std::path::Path::new(&folder), &name, "computer")
+            } else {
+                Err(format!("The shared folder {folder} can't be reached (is the drive connected?)."))
+            };
+            if let Err(e) = &r {
+                crate::sync::set_setting(&conn, "error", Some(e))?;
+            }
+            (folder, r)
+        };
+        let mut report = result?;
+        if let Ok(data) = app.path().app_data_dir() {
+            report.media = crate::sync::sync_media(&crate::sermon_media::media_dir(&data), std::path::Path::new(&folder)).unwrap_or(0);
+        }
+        let conn = state.0.lock().map_err(|e| e.to_string())?;
+        crate::sync::set_setting(&conn, "last", Some(&serde_json::to_string(&report).map_err(|e| e.to_string())?))?;
+        crate::sync::set_setting(&conn, "error", None)?;
+        Ok(report)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+

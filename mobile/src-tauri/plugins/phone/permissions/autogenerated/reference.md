@@ -1,6 +1,6 @@
 ## Default Permission
 
-Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, and handing a downloaded update to Android's installer.
+Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, and handing a downloaded update to Android's installer.
 
 #### This default permission set includes the following:
 
@@ -9,6 +9,8 @@ Sharing text or a picture, reading aloud with the phone's voices, saving or open
 - `allow-stop-speaking`
 - `allow-save-text`
 - `allow-open-text`
+- `allow-open-file`
+- `allow-pick-folder`
 - `allow-voices`
 - `allow-share-image`
 - `allow-save-image`
@@ -52,6 +54,32 @@ Denies the install_update command without any pre-configured scope.
 <tr>
 <td>
 
+`phone:allow-open-file`
+
+</td>
+<td>
+
+Enables the open_file command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-open-file`
+
+</td>
+<td>
+
+Denies the open_file command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `phone:allow-open-text`
 
 </td>
@@ -71,6 +99,32 @@ Enables the open_text command without any pre-configured scope.
 <td>
 
 Denies the open_text command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-pick-folder`
+
+</td>
+<td>
+
+Enables the pick_folder command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-pick-folder`
+
+</td>
+<td>
+
+Denies the pick_folder command without any pre-configured scope.
 
 </td>
 </tr>

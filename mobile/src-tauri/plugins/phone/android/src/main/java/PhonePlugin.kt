@@ -6,6 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
+import android.provider.OpenableColumns
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
@@ -57,6 +59,22 @@ class SaveArgs {
   lateinit var name: String
   lateinit var text: String
 }
+
+@InvokeArg
+class FolderArgs {
+  /** a folder the reader chose with pickFolder (its tree URI) */
+  lateinit var uri: String
+}
+
+@InvokeArg
+class FolderWriteArgs {
+  lateinit var uri: String
+  lateinit var name: String
+  lateinit var text: String
+}
+
+/** The folder inside the chosen one that holds the sync files (as on the computers). */
+const val SYNC_FOLDER = "Bible Concordance sync"
 
 /** What the Bible app needs from the phone itself: the share sheet (text or a picture), the
  * phone's voices, and saving or opening a file where the reader chooses. */
@@ -337,6 +355,164 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
         putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/json", "text/plain", "application/octet-stream"))
       }
       startActivityForResult(invoke, open, "opened")
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** Asks for any file (a Bible module to add) and copies it into the app's cache, so the app
+   * can read it however large it is: { path, name }, or { path: null } if cancelled. */
+  @Command
+  fun openFile(invoke: Invoke) {
+    try {
+      val open = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = "*/*"
+      }
+      startActivityForResult(invoke, open, "fileOpened")
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  @ActivityCallback
+  fun fileOpened(invoke: Invoke, result: ActivityResult) {
+    val uri = result.data?.data
+    if (result.resultCode != Activity.RESULT_OK || uri == null) {
+      invoke.resolve(JSObject().put("path", null as String?))
+      return
+    }
+    try {
+      val resolver = activity.contentResolver
+      var name = "module"
+      resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+        if (c.moveToFirst() && !c.isNull(0)) name = c.getString(0)
+      }
+      val dir = File(activity.cacheDir, "import")
+      dir.deleteRecursively()
+      dir.mkdirs()
+      val safe = name.replace(Regex("[^A-Za-z0-9._ -]"), "_").take(120).ifEmpty { "module" }
+      val file = File(dir, safe)
+      val input = resolver.openInputStream(uri) ?: throw Exception("The file could not be read.")
+      input.use { stream ->
+        file.outputStream().use { out ->
+          val chunk = ByteArray(65536)
+          var total = 0L
+          while (true) {
+            val n = stream.read(chunk)
+            if (n < 0) break
+            out.write(chunk, 0, n)
+            total += n
+            if (total > 400L * 1024 * 1024) throw Exception("That file is too large to add.")
+          }
+        }
+      }
+      invoke.resolve(JSObject().put("path", file.absolutePath).put("name", name))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  // ---------------------------------------------------------------- a shared folder (keeping in step)
+  //
+  // The reader chooses a folder once (Android's folder picker); the app keeps the right to
+  // read and write it. In it, like the computers, each device keeps one file of its own in
+  // "Bible Concordance sync" and reads the others'.
+
+  @Command
+  fun pickFolder(invoke: Invoke) {
+    try {
+      val pick = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+      }
+      startActivityForResult(invoke, pick, "folderPicked")
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  @ActivityCallback
+  fun folderPicked(invoke: Invoke, result: ActivityResult) {
+    val uri = result.data?.data
+    if (result.resultCode != Activity.RESULT_OK || uri == null) {
+      invoke.resolve(JSObject().put("uri", null as String?))
+      return
+    }
+    try {
+      activity.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+      val rootId = DocumentsContract.getTreeDocumentId(uri)
+      var name = rootId.substringAfterLast(':').ifEmpty { rootId }
+      activity.contentResolver.query(DocumentsContract.buildDocumentUriUsingTree(uri, rootId), arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { c ->
+        if (c.moveToFirst() && !c.isNull(0)) name = c.getString(0)
+      }
+      invoke.resolve(JSObject().put("uri", uri.toString()).put("name", name))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** The documents in a folder of the tree: (id, name, mime type). */
+  private fun children(tree: Uri, parentId: String): List<Triple<String, String, String>> {
+    val out = ArrayList<Triple<String, String, String>>()
+    val cols = arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE)
+    activity.contentResolver.query(DocumentsContract.buildChildDocumentsUriUsingTree(tree, parentId), cols, null, null, null)?.use { c ->
+      while (c.moveToNext()) out.add(Triple(c.getString(0), c.getString(1) ?: "", c.getString(2) ?: ""))
+    }
+    return out
+  }
+
+  /** The sync folder's document id in the chosen folder (made when `create`), or null. */
+  private fun syncDir(tree: Uri, create: Boolean): String? {
+    val rootId = DocumentsContract.getTreeDocumentId(tree)
+    // the sync folder itself was chosen: use it as it is, not another one made inside it
+    activity.contentResolver.query(DocumentsContract.buildDocumentUriUsingTree(tree, rootId), arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { c ->
+      if (c.moveToFirst() && c.getString(0) == SYNC_FOLDER) return rootId
+    }
+    children(tree, rootId).firstOrNull { it.second == SYNC_FOLDER && it.third == DocumentsContract.Document.MIME_TYPE_DIR }?.let { return it.first }
+    if (!create) return null
+    val made = DocumentsContract.createDocument(activity.contentResolver, DocumentsContract.buildDocumentUriUsingTree(tree, rootId), DocumentsContract.Document.MIME_TYPE_DIR, SYNC_FOLDER)
+      ?: throw Exception("The folder \"$SYNC_FOLDER\" could not be made there.")
+    return DocumentsContract.getDocumentId(made)
+  }
+
+  /** Every device's sync file: { files: [{ name, text }] }. */
+  @Command
+  fun syncRead(invoke: Invoke) {
+    try {
+      val tree = Uri.parse(invoke.parseArgs(FolderArgs::class.java).uri)
+      val files = JSArray()
+      val dir = syncDir(tree, false)
+      if (dir != null) {
+        for ((id, name, _) in children(tree, dir)) {
+          if (!name.endsWith(".json") || name.startsWith(".")) continue
+          val text = activity.contentResolver.openInputStream(DocumentsContract.buildDocumentUriUsingTree(tree, id))?.use { String(it.readBytes(), Charsets.UTF_8) } ?: continue
+          files.put(JSObject().put("name", name).put("text", text))
+        }
+      }
+      invoke.resolve(JSObject().put("files", files))
+    } catch (ex: SecurityException) {
+      invoke.reject("The app may no longer use that folder: choose it again.")
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** Writes this device's sync file (made the first time). */
+  @Command
+  fun syncWrite(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(FolderWriteArgs::class.java)
+      val tree = Uri.parse(args.uri)
+      val dir = syncDir(tree, true)!!
+      val existing = children(tree, dir).firstOrNull { it.second == args.name }?.first
+      val doc = if (existing != null) DocumentsContract.buildDocumentUriUsingTree(tree, existing)
+        else DocumentsContract.createDocument(activity.contentResolver, DocumentsContract.buildDocumentUriUsingTree(tree, dir), "application/json", args.name)
+          ?: throw Exception("The sync file could not be made.")
+      val out = activity.contentResolver.openOutputStream(doc, "wt") ?: throw Exception("The sync file could not be written.")
+      out.use { it.write(args.text.toByteArray(Charsets.UTF_8)) }
+      invoke.resolve(JSObject().put("written", true))
+    } catch (ex: SecurityException) {
+      invoke.reject("The app may no longer use that folder: choose it again.")
     } catch (ex: Exception) {
       invoke.reject(ex.message)
     }

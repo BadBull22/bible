@@ -62,6 +62,8 @@ New-Item -ItemType Directory -Force "$Mirror\src-tauri\src" | Out-Null
 # node_modules, the generated Android project and build output belong to the mirror
 Mirror-Dir $mobile "$Mirror\mobile" @("node_modules", "dist", "gen", "target", ".cargo", ".tauri", "build")
 Copy-Item "$root\src-tauri\src\sermon.rs" "$Mirror\src-tauri\src\sermon.rs" -Force
+# what the desktop and the phone app share (module readers, references, keeping in step)
+Mirror-Dir "$root\crates" "$Mirror\crates" @("target", ".cargo")
 
 Set-Location "$Mirror\mobile"
 # the mirror has its own node_modules: install when there is none, or when the packages asked for have changed

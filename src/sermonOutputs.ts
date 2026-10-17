@@ -121,6 +121,8 @@ export interface SlideSpec {
   picture?: string;
   /** what a "link" slide opens: a web address, or "media:<file>" for a kept file */
   link?: string;
+  /** the preacher's own notes, shown only to them in the presenter view */
+  notes?: string;
 }
 
 /** Slides from the sermon: the title, the big idea, each point, and each Scripture passage

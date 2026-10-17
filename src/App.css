@@ -6996,3 +6996,376 @@ body.is-resizing .leaflet-container {
 .ss-idea {
   font-style: italic;
 }
+
+/* ---------- Library: the recommended free translations ---------- */
+.library-recommended {
+  margin: 0.4rem 0 1.2rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--accent-500);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+}
+
+.library-recommended > p {
+  margin: 0.2rem 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+/* ---------- Library > Add from file: notice, several files, community libraries ---------- */
+.library-notice {
+  padding: 0.5rem 0.7rem;
+  border-left: 4px solid #b7791f;
+  background: var(--chrome-bg);
+  border-radius: var(--radius-sm);
+}
+
+.library-batch {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.86rem;
+}
+
+.library-batch li.refused {
+  color: var(--status-error);
+}
+
+.library-community {
+  margin-top: 1.2rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+
+.library-community-search input {
+  width: 100%;
+  max-width: 32rem;
+  padding: 0.35rem 0.6rem;
+}
+
+.library-community-list {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.library-community-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+/* ---------- The slide show: the slide screen and the presenter view ---------- */
+body.show-body {
+  margin: 0;
+  background: #000;
+  overflow: hidden;
+  cursor: none;
+}
+
+.show-screen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* the slide as large as the screen allows, kept 16:9 */
+.show-slide {
+  position: relative;
+  width: min(100vw, 177.78vh);
+  height: min(100vh, 56.25vw);
+  display: flex;
+}
+
+.show-slide .slide-preview {
+  border-radius: 0;
+  font-size: min(1.9vw, 3.4vh);
+}
+
+.show-clip {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  border: 0;
+  object-fit: contain;
+}
+
+.presenter {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: #12161f;
+  color: #e8ecf4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  box-sizing: border-box;
+}
+
+.presenter .muted {
+  color: #9aa6bd;
+}
+
+.presenter-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+  font-size: 1.05rem;
+}
+
+.presenter-clock,
+.presenter-timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.presenter-timer {
+  color: #f2c46d;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.presenter-timer .link-btn {
+  font-size: 0.8rem;
+}
+
+.presenter-tools {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.presenter-tools .outline-btn.on {
+  background: #000;
+  color: #fff;
+}
+
+.presenter-note {
+  margin: 0;
+  padding: 0.4rem 0.7rem;
+  border-left: 4px solid #f2c46d;
+  background: #1c2230;
+}
+
+.presenter-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(16rem, 1fr);
+  gap: 1rem;
+}
+
+.presenter-current {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+}
+
+.presenter-current .slide-preview {
+  flex: none;
+  width: 100%;
+  max-height: 100%;
+  font-size: clamp(9px, 1.4vw, 22px);
+}
+
+.presenter-black {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: #000;
+  color: #fff;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.presenter-clip {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.presenter-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-height: 0;
+}
+
+.presenter-side .slide-preview {
+  flex: none;
+  width: 100%;
+  font-size: clamp(6px, 0.7vw, 11px);
+}
+
+.presenter-end {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #4a5468;
+  border-radius: 4px;
+  color: #9aa6bd;
+}
+
+.presenter-notes {
+  flex: 1;
+  min-height: 4rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 1.25rem;
+  line-height: 1.45;
+  background: #1c2230;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+}
+
+.presenter-steps {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.presenter-steps button {
+  flex: 1;
+  font-size: 1.1rem;
+  padding: 0.6rem;
+}
+
+.presenter-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.3rem;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  flex: none;
+}
+
+.presenter-strip li button {
+  display: flex;
+  gap: 0.25rem;
+  align-items: flex-start;
+  width: 9.5rem;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  color: #9aa6bd;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.presenter-strip li.on button {
+  border-color: #f2c46d;
+}
+
+.presenter-strip .slide-preview {
+  font-size: 4px;
+}
+
+.slides-ask {
+  max-width: 34rem;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.slides-ask-choices {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem 0.8rem;
+  align-items: center;
+}
+
+.presenter-screen {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ---------- Settings: keeping in step through a shared folder ---------- */
+.sync-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sync-folder {
+  margin: 0;
+  word-break: break-all;
+}
+
+.sync-last p {
+  margin: 0.2rem 0;
+}
+
+.sync-devices {
+  margin: 0.2rem 0;
+  padding-left: 1.2rem;
+}
+
+.sync-conflict {
+  padding: 0.3rem 0.6rem;
+  border-left: 4px solid #b7791f;
+  background: var(--chrome-bg);
+}
+
+.sync-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: 24rem;
+}
+
+.sync-sub {
+  margin: 0.8rem 0 0.2rem;
+  font-size: 0.95rem;
+}
+
+.sync-phone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.sync-code {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: var(--chrome-bg);
+  max-width: 26rem;
+}
+
+.sync-code strong {
+  font-size: 2rem;
+  letter-spacing: 0.15em;
+  font-variant-numeric: tabular-nums;
+}
+
+.library-community-search {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.library-community-list li {
+  flex-wrap: wrap;
+}

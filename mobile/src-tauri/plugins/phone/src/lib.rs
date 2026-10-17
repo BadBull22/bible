@@ -82,6 +82,34 @@ fn open_text<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
     app.state::<Phone<R>>().run("openText", json!({}))
 }
 
+/// Asks for any file and copies it into the app's cache: { path, name }, or { path: null }.
+#[tauri::command(async)]
+fn open_file<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("openFile", json!({}))
+}
+
+/// Asks the reader for a folder to keep in step through (Android's folder picker); the app
+/// keeps the right to use it: { uri, name }, or { uri: null } if cancelled.
+#[tauri::command(async)]
+fn pick_folder<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("pickFolder", json!({}))
+}
+
+/// Every device's sync file in the chosen folder: (file name, contents).
+pub fn sync_read<R: Runtime>(app: &AppHandle<R>, uri: &str) -> Result<Vec<(String, String)>, String> {
+    let answer = app.state::<Phone<R>>().run("syncRead", json!({ "uri": uri }))?;
+    Ok(answer
+        .get("files")
+        .and_then(Value::as_array)
+        .map(|a| a.iter().filter_map(|f| Some((f.get("name")?.as_str()?.to_string(), f.get("text")?.as_str()?.to_string()))).collect())
+        .unwrap_or_default())
+}
+
+/// Writes this device's sync file into the chosen folder.
+pub fn sync_write<R: Runtime>(app: &AppHandle<R>, uri: &str, name: &str, text: &str) -> Result<(), String> {
+    app.state::<Phone<R>>().run("syncWrite", json!({ "uri": uri, "name": name, "text": text })).map(|_| ())
+}
+
 /// The folder a downloaded update must be put in for `install_update` to hand it to Android's
 /// installer: `updates` in the app's cache, as Android itself names that folder (it is the
 /// one the plugin's file provider may share). On a computer, where nothing is installed, a
@@ -100,7 +128,7 @@ pub fn updates_dir<R: Runtime>(app: &AppHandle<R>) -> Result<std::path::PathBuf,
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("phone")
-        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, voices, share_image, save_image, install_update])
+        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, voices, share_image, save_image, install_update])
         .setup(|app, _api| {
             #[cfg(target_os = "android")]
             app.manage(Phone { handle: _api.register_android_plugin("com.ghostclaw.phone", "PhonePlugin")? });

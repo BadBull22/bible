@@ -253,7 +253,140 @@ export const api = {
   updateCheck: () => invoke<UpdateOffer | null>("update_check"),
   /** downloads it ("update-progress" events report the percentage); returns the file's path */
   updateDownload: () => invoke<string>("update_download"),
+  /** adds the Bible in a file `phone.openFile` copied into the app (e-Sword, MySword or SWORD) */
+  bibleAddFile: (path: string, name: string) => invoke<AddedBible>("bible_add_file", { path, name }),
+  syncStatus: () => invoke<SyncStatus>("sync_status"),
+  /** the folder `phone.pickFolder` gave (null: stop keeping in step) */
+  syncSetFolder: (uri: string | null, name: string | null) => invoke<SyncStatus>("sync_set_folder", { uri, name }),
+  syncSetName: (name: string) => invoke<SyncStatus>("sync_set_name", { name }),
+  syncNow: () => invoke<SyncReport>("sync_now"),
+  /** the computers on this Wi-Fi that let the phone sync with them */
+  lanFind: () => invoke<FoundComputer[]>("lan_find"),
+  /** pairs with a computer (found, or its address typed) using the code it shows */
+  lanPair: (address: string, code: string) => invoke<SyncStatus>("lan_pair", { address, code }),
+  lanForget: () => invoke<SyncStatus>("lan_forget"),
+  libraryCatalog: (refresh: boolean) => invoke<CatalogItem[]>("library_catalog", { refresh }),
+  libraryInstall: (name: string) => invoke<LibReport>("library_install", { name }),
+  /** a module `phone.openFile` copied into the app: to the Library, or a Bible to the translations */
+  libraryAddFile: (path: string, name: string) => invoke<LibReport>("library_add_file", { path, name }),
+  libraryInstalled: () => invoke<LibInstalled[]>("library_installed"),
+  libraryRemove: (name: string) => invoke<void>("library_remove", { name }),
+  libraryCommentary: (book: string, chapter: number) => invoke<CommentaryOn[]>("library_commentary", { book, chapter }),
+  librarySearch: (query: string) => invoke<{ id: number; module: string; title: string; headword: string }[]>("library_search", { query }),
+  libraryEntry: (id: number) => invoke<LibEntry | null>("library_entry", { id }),
+  libraryDevotional: (module: string, month: number, day: number) => invoke<LibEntry | null>("library_devotional", { module, month, day }),
+  libraryToc: (module: string) => invoke<TocEntry[]>("library_toc", { module }),
+  librarySection: (id: number) => invoke<LibSection | null>("library_section", { id }),
+  /** the sections of a book of daily readings that are today's */
+  libraryToday: (module: string, month: number, day: number) => invoke<number[]>("library_today", { module, month, day }),
 };
+
+/** The Library (since 2.9.0): a module CrossWire offers. */
+export interface CatalogItem {
+  name: string;
+  kind: string;
+  title: string;
+  lang: string;
+  language: string;
+  licence: string;
+  about: string;
+  size_kb: number;
+  questionable: boolean;
+  supported: boolean;
+  /** why it can't be added, or that it is built in */
+  note: string | null;
+  installed: boolean;
+}
+
+export interface LibReport {
+  name: string;
+  /** "bible" when a file was a Bible (it went to the translations) */
+  kind: string;
+  title: string;
+  entries: number;
+  warnings: string[];
+}
+
+export interface LibInstalled {
+  name: string;
+  kind: string;
+  title: string;
+  language: string;
+  licence: string;
+  /** "crosswire", or "file" */
+  source: string;
+}
+
+export interface CommentaryOn {
+  module: string;
+  title: string;
+  /** [first verse, text]; verse 0 is on the whole chapter */
+  notes: [number, string][];
+}
+
+export interface LibEntry {
+  id: number;
+  module: string;
+  title: string;
+  headword: string;
+  body: string;
+}
+
+export interface TocEntry {
+  id: number;
+  parent: number | null;
+  title: string;
+}
+
+export interface LibSection {
+  id: number;
+  module: string;
+  book: string;
+  title: string;
+  text: string;
+  prev: number | null;
+  next: number | null;
+}
+
+export interface FoundComputer {
+  id: string;
+  name: string;
+  address: string;
+}
+
+/** A Bible added from a file. */
+export interface AddedBible {
+  code: string;
+  name: string;
+  language: string;
+  verses: number;
+  books: number;
+  /** "e-Sword", "MySword" or "SWORD" */
+  program: string;
+  warnings: string[];
+}
+
+/** Keeping in step with the computers through a shared folder (as in the desktop app). */
+export interface SyncReport {
+  at: number;
+  received: number;
+  sent: number;
+  conflicts: string[];
+  devices: { name: string; kind: string; written: number }[];
+  skipped: string[];
+  /** e.g. "Your computer wasn't found on this Wi-Fi…" */
+  notes: string[];
+}
+
+export interface SyncStatus {
+  /** the computer paired over the home Wi-Fi, or null */
+  computer: string | null;
+  /** the chosen folder's name, or null */
+  folder: string | null;
+  name: string;
+  last: SyncReport | null;
+  error: string | null;
+}
 
 /** A newer version of the app, as the website describes it. */
 export interface UpdateOffer {
@@ -281,6 +414,10 @@ export const phone = {
   saveText: (name: string, text: string) => invoke<{ saved: boolean }>("plugin:phone|save_text", { name, text }),
   /** asks for a file; `text` is null if the reader cancelled */
   openText: () => invoke<{ text: string | null }>("plugin:phone|open_text"),
+  /** asks for any file and copies it into the app: its path there, or null if cancelled */
+  openFile: () => invoke<{ path: string | null; name: string }>("plugin:phone|open_file"),
+  /** asks for a folder to keep in step through: its uri, or null if cancelled */
+  pickFolder: () => invoke<{ uri: string | null; name: string }>("plugin:phone|pick_folder"),
   /** hands a downloaded update to Android's installer; `allow`: the reader must first let this app install apps */
   installUpdate: (path: string) => invoke<{ started: boolean; allow: boolean }>("plugin:phone|install_update", { path }),
 };

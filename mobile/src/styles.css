@@ -1267,3 +1267,69 @@ mark.used {
 .update-progress .bar {
   margin-bottom: 0.35rem;
 }
+
+/* keeping in step: this phone's name */
+.sync-name {
+  width: 100%;
+  max-width: 22rem;
+}
+
+/* pairing with the computer over the home Wi-Fi */
+.steps {
+  padding-left: 1.2rem;
+  margin: 0.3rem 0;
+}
+
+.pair-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pair-form input {
+  width: 9rem;
+}
+
+/* the Library */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+}
+
+.chips button.on {
+  background: var(--accent, #3b6fb6);
+  color: #fff;
+}
+
+.lib-search {
+  width: 100%;
+  margin: 0.3rem 0;
+}
+
+.lib-open {
+  text-align: left;
+  font-weight: 600;
+}
+
+.link.back {
+  margin-bottom: 0.3rem;
+}
+
+.toc {
+  list-style: none;
+  padding: 0;
+  margin: 0.4rem 0;
+}
+
+.toc li {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* a question asked from inside another sheet shows above it */
+.veil.top {
+  z-index: 25;
+}

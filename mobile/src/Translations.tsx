@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { api, Offer } from "./api";
+import { api, Offer, phone, Version } from "./api";
 import { todayIso } from "./plans";
+
+/** The free modern English Bibles, shown first (eBible.org's ids). Only ones eBible.org marks
+ * free to share; the built-in ones (BSB, KJV, ASV, WEB, YLT) are not repeated. */
+const RECOMMENDED: [string, string][] = [
+  ["englsv", "A modern, word-for-word translation (2020)."],
+  ["engnet", "NET Bible: a readable modern translation."],
+  ["engmsb", "The Berean Standard Bible's sister, from the Majority Greek text."],
+  ["engfbv", "Plain, everyday English."],
+  ["engULB", "A literal translation made to be freely shared."],
+  ["engoebus", "Modern English (the Old Testament is still being translated)."],
+];
 
 interface Props {
   /** called after one was downloaded or removed, so the translation list refreshes */
@@ -19,6 +30,35 @@ export function Translations({ onChanged, ask, say }: Props) {
   const [language, setLanguage] = useState("English");
   const [wholeOnly, setWholeOnly] = useState(true);
   const [busy, setBusy] = useState<Record<string, number>>({});
+  // Bibles the reader added from a file (not eBible.org's)
+  const [ownBibles, setOwnBibles] = useState<Version[]>([]);
+  const [adding, setAdding] = useState(false);
+  const loadOwn = () =>
+    api
+      .versions()
+      .then((vs) => setOwnBibles(vs.filter((v) => v.downloaded)))
+      .catch(() => undefined);
+  useEffect(() => void loadOwn(), []);
+
+  async function addFromFile() {
+    setError(null);
+    const f = await phone.openFile().catch((e) => {
+      setError(String(e));
+      return null;
+    });
+    if (!f?.path) return;
+    setAdding(true);
+    try {
+      const a = await api.bibleAddFile(f.path, f.name);
+      say(`${a.name} (${a.code}): ${a.verses.toLocaleString()} verses${a.warnings.length ? `. ${a.warnings.join(" ")}` : ""}`);
+      void loadOwn();
+      onChanged();
+    } catch (e) {
+      setError(`${f.name}: ${String(e)}`);
+    } finally {
+      setAdding(false);
+    }
+  }
 
   const load = (refresh = false) => {
     setError(null);
@@ -85,6 +125,49 @@ export function Translations({ onChanged, ask, say }: Props) {
         the search uses the built-in English translations.
       </p>
       {error && <p className="hint status">{error}</p>}
+      <h3>Add a Bible from a file</h3>
+      <p className="hint">
+        An e-Sword (.bblx), MySword (.bbl.mybible) or SWORD (.zip) Bible you already have on the phone or in your cloud storage. Only add Bibles you have the right to
+        use: many shared online are copies of copyrighted translations made without permission. Bibles bought in e-Sword are locked and can't be opened.
+      </p>
+      <div className="actions">
+        <button onClick={() => void addFromFile()} disabled={adding}>
+          {adding ? "Adding…" : "Choose a file…"}
+        </button>
+      </div>
+      {ownBibles.filter((v) => !(offers ?? []).some((o) => o.id === v.code)).length > 0 && (
+        <ul className="hits plain">
+          {ownBibles
+            .filter((v) => !(offers ?? []).some((o) => o.id === v.code))
+            .map((v) => (
+              <li key={v.code} className="offer">
+                <div className="hit-head">
+                  <strong>
+                    {v.name} ({v.code})
+                  </strong>
+                  <button
+                    className="remove"
+                    aria-label={`Remove ${v.name}`}
+                    onClick={() =>
+                      ask(`Remove ${v.name} from this phone? You can add it again from its file.`, "Remove", () =>
+                        void api
+                          .bibleRemove(v.code)
+                          .then(() => {
+                            void loadOwn();
+                            onChanged();
+                          })
+                          .catch((e) => setError(String(e))),
+                      )
+                    }
+                  >
+                    ×
+                  </button>
+                </div>
+                <p>Added from a file</p>
+              </li>
+            ))}
+        </ul>
+      )}
       {installed.length > 0 && (
         <>
           <h3>On this phone</h3>
@@ -103,6 +186,34 @@ export function Translations({ onChanged, ask, say }: Props) {
               </li>
             ))}
           </ul>
+        </>
+      )}
+      {offers && (
+        <>
+          <h3>Recommended free translations</h3>
+          <ul className="hits plain">
+            {RECOMMENDED.map(([id, why]) => {
+              const o = offers.find((x) => x.id === id);
+              if (!o) return null;
+              return (
+                <li key={o.id} className="offer">
+                  <div className="hit-head">
+                    <strong>{o.title}</strong>
+                  </div>
+                  <p>{why}</p>
+                  <p className="hint">{o.copyright}</p>
+                  {o.installed ? (
+                    <span className="hint">✓ On this phone</span>
+                  ) : o.id in busy ? (
+                    <span className="hint">Downloading… {busy[o.id] ? `${busy[o.id]}%` : ""}</span>
+                  ) : (
+                    <button onClick={() => void install(o)}>Download</button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+          <p className="hint">NIV, ESV, NASB and NLT are not free to share, so they can't be offered here.</p>
         </>
       )}
       <h3>Get more</h3>
