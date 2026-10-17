@@ -387,3 +387,13 @@ footer a:hover { color: var(--accent-600); }
   .music-card { flex-direction: column; text-align: center; }
   .music-text .music-go { align-self: center; }
 }
+
+/* the Music button in the top bar: gold, like the Music card */
+.site-nav a.nav-music { color: #f2c46d; border-color: rgba(242, 196, 109, 0.55); }
+.site-nav a.nav-music:hover { background: #f2c46d; color: var(--navy-900); border-color: #f2c46d; }
+/* small phones: the three buttons fit without their icons */
+@media (max-width: 460px) {
+  .site-nav { gap: 4px; }
+  .site-nav a { padding: 6px 9px; font-size: 0.85rem; }
+  .site-nav a svg { display: none; }
+}
