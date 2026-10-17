@@ -1,7 +1,7 @@
 {
-  "version": "0.3.2",
-  "url": "https://github.com/BadBull22/bible/releases/download/android-v0.3.2/BibleConcordance_Android_0.3.2.apk",
-  "sha256": "7cd0c4cac29a206d98d5cc2f62bbf77bdce85ee9cf909a14f5a84a3697301d80",
-  "size": 72574912,
-  "notes": "The app now looks for new versions itself, once a day, and installs them when you say so."
+  "version": "2.9.0",
+  "url": "https://github.com/BadBull22/bible/releases/download/android-v2.9.0/BibleConcordance_Android_2.9.0.apk",
+  "sha256": "5d5b3b793b04d6de53ea454c714964b3d016adc47987e18ee0dff9b7831f3eeb",
+  "size": 76142192,
+  "notes": "A library of commentaries, dictionaries, books and devotionals; Bibles from e-Sword, MySword or SWORD files; and your notes in step with your computer over your home Wi-Fi."
 }
