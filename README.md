@@ -1,5 +1,16 @@
 # Bible Concordance
 
+**Free, offline Bible study for Windows and Android — [bible4me.org](https://bible4me.org)**
+
+[Download for Windows](https://bible4me.org/windows/) · [Download for Android](https://bible4me.org/android/) · [All releases](https://github.com/BadBull22/bible/releases)
+
+Several translations (BSB, KJV, ASV, WEB, YLT and over a thousand more to download), Strong's Hebrew and Greek word
+study, seven commentaries, a sermon builder with slides and a presenter view, read aloud, a library of free books,
+and e-Sword, MySword and SWORD modules. The phone and the computer keep your notes in step over your home Wi-Fi.
+No account, no adverts, and free for anyone to use, copy and share.
+
+---
+
 Offline-first Bible study and concordance desktop app: Tauri 2 + Rust backend, React/TypeScript frontend.
 
 - Multi-version reading (BSB, KJV, ASV, YLT, WEB, plus Hebrew WLC and Greek TR) with parallel comparison
