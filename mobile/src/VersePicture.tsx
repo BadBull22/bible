@@ -28,6 +28,8 @@ const LOOKS: Look[] = [
 ];
 
 const SIZE = 1080;
+/** On every verse picture, so a picture passed on shows where to find the app. */
+const WEBSITE = "bible4me.org";
 
 /** What the verse is drawn on: a colour gradient, or a photo. */
 type Ground = { kind: "colour"; look: Look } | { kind: "photo"; image: HTMLImageElement };
@@ -97,6 +99,12 @@ function draw(canvas: HTMLCanvasElement, ground: Ground, text: string, label: st
   ctx.fillStyle = soft;
   ctx.font = `600 ${Math.max(34, Math.round(size * 0.55))}px system-ui, Roboto, sans-serif`;
   ctx.fillText(`${label} · ${version}`, SIZE / 2, y + 60);
+  // where the picture came from, small at the foot, on every picture
+  ctx.globalAlpha = 0.8;
+  ctx.shadowBlur = ground.kind === "photo" ? 10 : 6;
+  ctx.font = "600 30px system-ui, Roboto, sans-serif";
+  ctx.fillText(WEBSITE, SIZE / 2, SIZE - 46);
+  ctx.globalAlpha = 1;
   ctx.shadowBlur = 0;
 }
 
@@ -242,7 +250,7 @@ export function VersePicture({ label, version, text, say, fail }: Props) {
         >
           Save
         </button>
-        <button className="primary" onClick={() => phone.shareImage(name, png(), `${label} (${version})`).catch(fail)}>
+        <button className="primary" onClick={() => phone.shareImage(name, png(), `${label} (${version}) · https://bible4me.org`).catch(fail)}>
           Share
         </button>
       </div>
