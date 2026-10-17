@@ -397,3 +397,19 @@ footer a:hover { color: var(--accent-600); }
   .site-nav a { padding: 6px 9px; font-size: 0.85rem; }
   .site-nav a svg { display: none; }
 }
+
+/* screenshots on the Windows and Android pages */
+.shots { display: grid; gap: 18px; margin: 0 0 8px; }
+.shots-wide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.shots-tall { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.shots figure { margin: 0; }
+.shots img {
+  display: block; width: 100%; height: auto;
+  border-radius: var(--radius-md); border: 1px solid var(--border);
+  box-shadow: var(--shadow-md); background: #12161f;
+}
+.shots figcaption { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; line-height: 1.45; }
+@media (max-width: 680px) {
+  .shots-wide { grid-template-columns: 1fr; }
+  .shots-tall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
