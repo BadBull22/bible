@@ -7,6 +7,8 @@ import {
   Book,
   ChapterMarks,
   COLORS,
+  COLOR_NAMES,
+  colorName,
   CommentaryAbout,
   CommentaryNote,
   Counts,
@@ -25,7 +27,7 @@ import {
 import { applyAppearance, Contrast, DEFAULT_APPEARANCE, Font, TextColor, Theme, watchSystemTheme } from "./appearance";
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "./plans";
 import { parseReference, Reference } from "./refs";
-import { canRemind, setReminder } from "./reminder";
+import { canRemind, setReminder, testReminder } from "./reminder";
 import { Translations } from "./Translations";
 import { UpdateBanner, UpdateSettings, useUpdates } from "./Updates";
 import { SyncSettings, useAutoSync } from "./Sync";
@@ -149,7 +151,6 @@ function useBack(active: boolean, close: () => void) {
 }
 
 const WHY: Record<string, string> = { core: "Key passage", phrase: "Exact words", topical: "Topic" };
-const COLOR_NAMES: Record<string, string> = { yellow: "Yellow", green: "Green", blue: "Blue", pink: "Pink", orange: "Orange" };
 const RATES: [number, string][] = [
   [0.65, "Slow"],
   [0.8, "Slower"],
@@ -296,6 +297,8 @@ export function App() {
   // my study
   const [kind, setKind] = useState<MarkKind>("bookmarks");
   const [list, setList] = useState<Mark[]>([]);
+  // the reader's names for the highlight colours (kept in step with the computer)
+  const [names, setNames] = useState<Record<string, string>>({});
   const [tags, setTags] = useState<[string, number][]>([]);
   const [tagFilter, setTagFilter] = useState<string | null>(null);
 
@@ -647,6 +650,12 @@ export function App() {
 
   const highlightOf = useMemo(() => new Map(marks.highlights), [marks]);
   const changed = () => setMarksVersion((n) => n + 1);
+  useEffect(() => {
+    api
+      .highlightNames()
+      .then(setNames)
+      .catch(() => undefined);
+  }, [marksVersion]);
   // the shared folder with the computers: their changes arriving show at once
   useAutoSync(changed);
 
@@ -1039,11 +1048,12 @@ export function App() {
             )}
             {list.length > 0 && shownList.length === 0 && <p className="hint">Nothing here has the tag “{tagFilter}”.</p>}
             {(kind === "highlights" ? COLORS.filter((c) => list.some((m) => m.color === c)) : [null]).map((color) => (
-              <section key={color ?? "all"}>
+              // highlights: one folded group per colour, as on the computer
+              <details key={color ?? "all"} className={color ? `hl-group hl-${color}` : "hl-all"} open={color == null}>
                 {color && (
-                  <h3>
-                    <i className={`dot hl-${color}`} /> {COLOR_NAMES[color]} <small>{list.filter((m) => m.color === color).length}</small>
-                  </h3>
+                  <summary>
+                    <i className={`dot hl-${color}`} /> <span>{colorName(color, names)}</span> <small>{list.filter((m) => m.color === color).length}</small>
+                  </summary>
                 )}
                 <ul className="hits">
                   {(kind === "highlights" ? list : shownList)
@@ -1079,7 +1089,7 @@ export function App() {
                       </li>
                     ))}
                 </ul>
-              </section>
+              </details>
             ))}
           </>
         )}
@@ -1123,6 +1133,16 @@ export function App() {
                   <input type="time" value={reminder ?? "07:00"} disabled={reminder == null} onChange={(e) => e.target.value && void chooseReminder(e.target.value)} aria-label="Reminder time" />
                 </div>
                 <p className="hint">A notification once a day, even when the app is closed.</p>
+                <div className="actions">
+                  <button onClick={() => void testReminder().then((ok) => say(ok ? "A test reminder will come in about a minute" : "Notifications aren't allowed for this app")).catch(fail)}>
+                    Test the reminder
+                  </button>
+                  <button onClick={() => void phone.batterySettings().catch(fail)}>Let it run in the background</button>
+                </div>
+                <p className="hint">
+                  If the test doesn't arrive, allow the app to run in the background. On Huawei and Honor phones also open Settings → Apps → App launch → Bible
+                  Concordance, switch to <em>Manage manually</em> and turn on all three; on Samsung, Settings → Battery → Background usage limits.
+                </p>
               </>
             ) : (
               <p className="hint">The daily reminder works on the phone.</p>
@@ -1218,6 +1238,26 @@ export function App() {
             <p className="hint">Commentaries, dictionaries, books and devotionals to read offline: free ones from CrossWire, or files you have.</p>
             <div className="actions">
               <button onClick={() => setLibrary("home")}>Open the library</button>
+            </div>
+
+            <h2>Name your highlights</h2>
+            <p className="hint">Give each colour a meaning (“Promises”, “Old Testament prophecy”). Names you give on the computer show here too when the two keep in step.</p>
+            <div className="hl-names">
+              {COLORS.map((c) => (
+                <label key={c} className={`hl-name hl-${c}`}>
+                  <i className={`dot hl-${c}`} />
+                  <input
+                    defaultValue={names[c] ?? ""}
+                    key={`${c}:${names[c] ?? ""}`}
+                    placeholder={COLOR_NAMES[c]}
+                    maxLength={60}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (names[c] ?? "")) void api.setHighlightName(c, v).then(changed).catch(fail);
+                    }}
+                  />
+                </label>
+              ))}
             </div>
 
             <h2>Keep in step with your computer</h2>
@@ -1381,6 +1421,7 @@ export function App() {
           verse={chosenVerse}
           version={version}
           color={highlightOf.get(chosenVerse.verse) ?? null}
+          names={names}
           bookmarked={marks.bookmarks.includes(chosenVerse.verse)}
           onClose={() => setChosen(null)}
           onBookmark={() => {
@@ -1589,6 +1630,8 @@ interface VerseSheetProps {
   verse: Verse;
   version: string;
   color: string | null;
+  /** the reader's names for the highlight colours */
+  names: Record<string, string>;
   bookmarked: boolean;
   onClose: () => void;
   onBookmark: () => void;
@@ -1612,7 +1655,7 @@ const textTags = (text: string) =>
 
 /** Everything that can be done with one verse: mark it, write a note on it, pass it on,
  * hear it, and see what else Scripture says alongside it. */
-function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose, onBookmark, onHighlight, onListen, onGo, onChanged, about, ask, say, fail }: VerseSheetProps) {
+function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, onClose, onBookmark, onHighlight, onListen, onGo, onChanged, about, ask, say, fail }: VerseSheetProps) {
   const [view, setView] = useState<"main" | "note" | "refs" | "compare" | "words" | "notes" | "picture" | "tags">("main");
   const [note, setNote] = useState("");
   const [had, setHad] = useState(false);
@@ -1675,7 +1718,7 @@ function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose,
           )}
           <div className="colors" role="group" aria-label="Highlight">
             {COLORS.map((c) => (
-              <button key={c} className={`dot hl-${c}` + (color === c ? " on" : "")} aria-label={`Highlight ${COLOR_NAMES[c]}`} onClick={() => onHighlight(color === c ? null : c)} />
+              <button key={c} className={`dot hl-${c}` + (color === c ? " on" : "")} aria-label={`Highlight: ${colorName(c, names)}`} title={colorName(c, names)} onClick={() => onHighlight(color === c ? null : c)} />
             ))}
             {color && (
               <button className="text" onClick={() => onHighlight(null)}>
@@ -1683,6 +1726,7 @@ function VerseSheet({ book, chapter, verse, version, color, bookmarked, onClose,
               </button>
             )}
           </div>
+          {color && <p className="hl-chosen">{colorName(color, names)}</p>}
           <div className="actions wrap">
             <button onClick={onBookmark}>{bookmarked ? "Remove bookmark" : "Bookmark"}</button>
             {bookmarked && <button onClick={() => setView("tags")}>{bookmarkTags ? `Tags: ${bookmarkTags}` : "Tag the bookmark"}</button>}

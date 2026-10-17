@@ -646,6 +646,19 @@ fn library_today(core: State<Core>, module: String, month: u32, day: u32) -> Res
     library::book_today(&*core.get()?.library.lock().map_err(err)?, &module, month, day)
 }
 
+// ---------------------------------------------------------------- the names of the highlight colours
+
+/// The reader's names for the highlight colours (the same as on the computer when they keep in step).
+#[tauri::command(async)]
+fn highlight_names(core: State<Core>) -> Result<std::collections::HashMap<String, String>, String> {
+    bible_core::sync::highlight_names(&*core.get()?.user.lock().map_err(err)?)
+}
+
+#[tauri::command(async)]
+fn set_highlight_name(core: State<Core>, color: String, title: String) -> Result<(), String> {
+    bible_core::sync::set_highlight_name(&*core.get()?.user.lock().map_err(err)?, &color, &title)
+}
+
 #[tauri::command(async)]
 fn bible_remove(core: State<Core>, code: String) -> Result<(), String> {
     bibles::remove(&*core.get()?.bibles.lock().map_err(err)?, &code)
@@ -848,6 +861,8 @@ pub fn run() {
             bible_install,
             bible_remove,
             bible_add_file,
+            highlight_names,
+            set_highlight_name,
             library_catalog,
             library_install,
             library_add_file,

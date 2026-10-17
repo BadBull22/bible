@@ -11,6 +11,7 @@ Sharing text or a picture, reading aloud with the phone's voices, saving or open
 - `allow-open-text`
 - `allow-open-file`
 - `allow-pick-folder`
+- `allow-battery-settings`
 - `allow-voices`
 - `allow-share-image`
 - `allow-save-image`
@@ -24,6 +25,32 @@ Sharing text or a picture, reading aloud with the phone's voices, saving or open
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`phone:allow-battery-settings`
+
+</td>
+<td>
+
+Enables the battery_settings command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-battery-settings`
+
+</td>
+<td>
+
+Denies the battery_settings command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>

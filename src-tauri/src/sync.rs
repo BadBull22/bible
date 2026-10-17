@@ -51,7 +51,7 @@ pub fn sync_media(local: &Path, folder: &Path) -> Result<usize, String> {
 /// What a computer keeps in step.
 pub struct Desktop;
 
-const KINDS: [&str; 9] = ["bm", "hl", "note", "plan", "pday", "sermon", "tmpl", "preach", "basket"];
+const KINDS: [&str; 10] = ["bm", "hl", "note", "plan", "pday", "hlname", "sermon", "tmpl", "preach", "basket"];
 
 impl Store for Desktop {
     fn kinds(&self) -> &[&'static str] {

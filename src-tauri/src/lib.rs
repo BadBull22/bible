@@ -169,6 +169,15 @@ pub fn run() {
             let data_dir = app.path().app_data_dir().expect("no app data dir");
             let user_db = userdata::open(&data_dir).expect("failed to open userdata.db");
             sync::init(&user_db).expect("failed to prepare userdata.db for keeping in step");
+            // the highlight names lived in the settings file before 2.9.2: copied into the study
+            // database once, where they keep in step with the phone
+            if bible_core::sync::highlight_names(&user_db).map(|n| n.is_empty()).unwrap_or(false) {
+                if let Ok(s) = app.state::<SettingsState>().0.lock() {
+                    for (color, title) in &s.highlight_titles {
+                        let _ = bible_core::sync::set_highlight_name(&user_db, color, title);
+                    }
+                }
+            }
             app.manage(userdata::UserDataState(Mutex::new(user_db)));
             // the phone over the home Wi-Fi, if the reader turned it on
             app.manage(lan::LanState::default());

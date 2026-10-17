@@ -295,6 +295,18 @@
       "type": "string",
       "oneOf": [
         {
+          "description": "Enables the battery_settings command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-battery-settings",
+          "markdownDescription": "Enables the battery_settings command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the battery_settings command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-battery-settings",
+          "markdownDescription": "Denies the battery_settings command without any pre-configured scope."
+        },
+        {
           "description": "Enables the install_update command without any pre-configured scope.",
           "type": "string",
           "const": "allow-install-update",
@@ -427,10 +439,10 @@
           "markdownDescription": "Denies the voices command without any pre-configured scope."
         },
         {
-          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`",
+          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`"
+          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`"
         }
       ]
     }

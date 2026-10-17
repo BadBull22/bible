@@ -12,7 +12,7 @@ fn err<E: ToString>(e: E) -> String {
 }
 
 /// The highlight colours, named as in the desktop app so a backup means the same in both.
-pub const COLORS: [&str; 5] = ["yellow", "green", "blue", "pink", "orange"];
+pub const COLORS: [&str; 11] = bible_core::sync::HIGHLIGHT_COLORS;
 
 pub fn open(path: &Path) -> Result<Connection, String> {
     let conn = Connection::open(path).map_err(err)?;
@@ -462,14 +462,9 @@ pub fn restore(conn: &mut Connection, json: &str) -> Result<Counts, String> {
         }
     }
     for h in &b.highlights {
-        // the desktop app has more colours than the phone: one of those is kept as the nearest of the phone's
+        // both apps have the same colours (one the phone doesn't know becomes yellow)
         let color = match h.value.as_str() {
             c if COLORS.contains(&c) => c,
-            "lemon" => "yellow",
-            "lime" => "green",
-            "sky" | "violet" => "blue",
-            "rose" => "pink",
-            "red" => "orange",
             _ => "yellow",
         };
         n.highlights += tx

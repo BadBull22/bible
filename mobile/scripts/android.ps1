@@ -120,6 +120,12 @@ if ($Release) {
         if ($text -notmatch 'signingConfig = signingConfigs') { throw "Could not add signing to $gradle" }
         Set-Content -Path $gradle -Value $text -NoNewline
     }
+    # the release build shrinks the Java code (R8), which renamed the notification plugin's fields
+    # that its schedules are read into: the daily reminder's hour and minute were lost and the
+    # alarm never set (a one-off test worked). The plugins' classes are kept whole.
+    $rules = "src-tauri\gen\android\app\proguard-rules.pro"
+    $keep = "-keep class app.tauri.** { *; }`n-keep class com.ghostclaw.phone.** { *; }"
+    if (-not (Select-String -Path $rules -SimpleMatch "-keep class app.tauri.**" -Quiet)) { Add-Content -Path $rules -Value "`n$keep" }
     npx tauri android build --apk --target @Targets
 } else {
     npx tauri android build --apk --debug --target @Targets

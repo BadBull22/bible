@@ -1,6 +1,6 @@
 [package]
 name = "bible-pocket"
-version = "2.9.1"
+version = "2.9.2"
 description = "Bible Concordance for phones: read, search, bookmark and highlight, offline"
 authors = ["BadBull22"]
 edition = "2021"

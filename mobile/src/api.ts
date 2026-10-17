@@ -181,13 +181,33 @@ export interface Counts {
   plans: number;
 }
 
-/** The highlight colours, named as in the desktop app. */
-export const COLORS = ["yellow", "green", "blue", "pink", "orange"] as const;
+/** The highlight colours, the same as the desktop app's (and in its order). */
+export const COLORS = ["yellow", "green", "blue", "pink", "orange", "lemon", "lime", "sky", "rose", "red", "violet"] as const;
+
+/** Each colour's name until the reader gives it one (the desktop app's names). */
+export const COLOR_NAMES: Record<string, string> = {
+  yellow: "Soft yellow",
+  green: "Soft green",
+  blue: "Soft blue",
+  pink: "Soft pink",
+  orange: "Soft orange",
+  lemon: "Bright yellow",
+  lime: "Bright green",
+  sky: "Bright blue",
+  rose: "Hot pink",
+  red: "Red",
+  violet: "Purple",
+};
+
+/** A highlight colour's name: the reader's own ("Old Testament prophecy"), or the colour's. */
+export const colorName = (color: string, names: Record<string, string>) => names[color]?.trim() || COLOR_NAMES[color] || color;
 
 export type MarkKind = "bookmarks" | "highlights" | "notes";
 
 export const api = {
   versions: () => invoke<Version[]>("versions"),
+  highlightNames: () => invoke<Record<string, string>>("highlight_names"),
+  setHighlightName: (color: string, title: string) => invoke<void>("set_highlight_name", { color, title }),
   books: () => invoke<Book[]>("books"),
   chapter: (version: string, book: string, chapter: number) => invoke<Verse[]>("chapter", { version, book, chapter }),
   passage: (version: string, book: string, chapter: number, verse: number, verseEnd: number | null = null) =>
@@ -416,6 +436,8 @@ export const phone = {
   openText: () => invoke<{ text: string | null }>("plugin:phone|open_text"),
   /** asks for any file and copies it into the app: its path there, or null if cancelled */
   openFile: () => invoke<{ path: string | null; name: string }>("plugin:phone|open_file"),
+  /** asks Android to let the app run in the background (for the daily reminder) */
+  batterySettings: () => invoke<{ asked: boolean }>("plugin:phone|battery_settings"),
   /** asks for a folder to keep in step through: its uri, or null if cancelled */
   pickFolder: () => invoke<{ uri: string | null; name: string }>("plugin:phone|pick_folder"),
   /** hands a downloaded update to Android's installer; `allow`: the reader must first let this app install apps */
