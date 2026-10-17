@@ -35,6 +35,86 @@ pub struct Slide {
     /// what a "link" slide opens: a web address, or a file's full path
     #[serde(default)]
     pub link: Option<String>,
+    /// a video or music file (in the sermon's media folder) to put inside the PowerPoint on
+    /// a "link" slide, so it plays without the original file; without it the slide links
+    #[serde(default)]
+    pub video: Option<String>,
+}
+
+/// A video or music file PowerPoint can play from inside the file: its type and whether it
+/// is a video (otherwise music). Others (and web videos) can only be linked.
+pub fn clip_type(name: &str) -> Option<(&'static str, &'static str, bool)> {
+    let ext = name.rsplit('.').next()?.to_ascii_lowercase();
+    Some(match ext.as_str() {
+        "mp4" => ("mp4", "video/mp4", true),
+        "m4v" => ("m4v", "video/x-m4v", true),
+        "mov" => ("mov", "video/quicktime", true),
+        "wmv" => ("wmv", "video/x-ms-wmv", true),
+        "avi" => ("avi", "video/x-msvideo", true),
+        "mp3" => ("mp3", "audio/mpeg", false),
+        "m4a" => ("m4a", "audio/mp4", false),
+        "wav" => ("wav", "audio/wav", false),
+        "wma" => ("wma", "audio/x-ms-wma", false),
+        _ => return None,
+    })
+}
+
+/// The picture PowerPoint shows for a video or music clip before it plays: navy, with a
+/// white "play" triangle. A PNG made here (no picture file is needed).
+fn poster_png() -> Vec<u8> {
+    let (w, h) = (640u32, 360u32);
+    let mut raw = Vec::with_capacity(((w * 3 + 1) * h) as usize);
+    for y in 0..h {
+        raw.push(0); // no filter
+        for x in 0..w {
+            // a triangle pointing right, centred: x from 270 to 390, y from 120 to 240
+            let (fx, fy) = (x as i32 - 270, y as i32 - 180);
+            let inside = (0..=120).contains(&fx) && fy.abs() * 2 <= 120 - fx;
+            raw.extend_from_slice(if inside { &[255, 255, 255] } else { &[0x1C, 0x24, 0x40] });
+        }
+    }
+    let mut z = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());
+    z.write_all(&raw).unwrap_or_default();
+    let idat = z.finish().unwrap_or_default();
+    let chunk = |out: &mut Vec<u8>, kind: &[u8], data: &[u8]| {
+        out.extend_from_slice(&(data.len() as u32).to_be_bytes());
+        out.extend_from_slice(kind);
+        out.extend_from_slice(data);
+        let mut crc = flate2::Crc::new();
+        crc.update(kind);
+        crc.update(data);
+        out.extend_from_slice(&crc.sum().to_be_bytes());
+    };
+    let mut ihdr = Vec::new();
+    ihdr.extend_from_slice(&w.to_be_bytes());
+    ihdr.extend_from_slice(&h.to_be_bytes());
+    ihdr.extend_from_slice(&[8, 2, 0, 0, 0]);
+    let mut out = b"\x89PNG\r\n\x1a\n".to_vec();
+    chunk(&mut out, b"IHDR", &ihdr);
+    chunk(&mut out, b"IDAT", &idat);
+    chunk(&mut out, b"IEND", &[]);
+    out
+}
+
+/// A video or music clip inside the slide: its poster picture, which plays when clicked in
+/// the slide show (PowerPoint also shows its play bar).
+fn clip_pic(id: u32, video: bool) -> String {
+    let (bw, bh) = (W - 3_000_000, H - 2_300_000);
+    let (w, h) = if bw * 9 / 16 <= bh { (bw, bw * 9 / 16) } else { (bh * 16 / 9, bh) };
+    let (x, y) = ((W - w) / 2, 1_700_000 + (bh - h) / 2);
+    let file = if video { "videoFile" } else { "audioFile" };
+    format!(
+        r#"<p:pic><p:nvPicPr><p:cNvPr id="{id}" name="{name}"><a:hlinkClick r:id="" action="ppaction://media"/></p:cNvPr><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr><a:{file} r:link="rId5"/><p:extLst><p:ext uri="{{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}}"><p14:media xmlns:p14="http://schemas.microsoft.com/office/powerpoint/2010/main" r:embed="rId6"/></p:ext></p:extLst></p:nvPr></p:nvPicPr><p:blipFill><a:blip r:embed="rId7"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="{x}" y="{y}"/><a:ext cx="{w}" cy="{h}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>"#,
+        name = if video { "Video" } else { "Music" }
+    )
+}
+
+/// What makes a clip play when it is clicked in the slide show.
+fn clip_timing(id: u32, video: bool) -> String {
+    let node = if video { "video" } else { "audio" };
+    format!(
+        r#"<p:timing><p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst><p:{node}><p:cMediaNode vol="80000"><p:cTn id="2" fill="hold" display="0"><p:stCondLst><p:cond delay="indefinite"/></p:stCondLst></p:cTn><p:tgtEl><p:spTgt spid="{id}"/></p:tgtEl></p:cMediaNode></p:{node}></p:childTnLst></p:cTn></p:par></p:tnLst></p:timing>"#
+    )
 }
 
 /// A picture's file type and pixel size, read from its header (PNG, JPEG or GIF).
@@ -137,6 +217,8 @@ struct SlideRefs<'a> {
     background: Option<(&'a str, u32, u32)>,
     picture: Option<(&'a str, u32, u32)>,
     link: Option<&'a str>,
+    /// a clip inside the slide (rId5-rId7): true for a video, false for music
+    clip: Option<bool>,
 }
 
 /// A picture fitted inside a box, keeping its shape.
@@ -195,6 +277,9 @@ fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
             let pic = refs.picture.map(|(rid, w, h)| picture(4, rid, (500_000, 350_000, W - 1_000_000, H - 1_450_000), w, h)).unwrap_or_default();
             pic + &text_box(2, "Caption", 600_000, H - 1_050_000, W - 1_200_000, 800_000, &s.title, 24, "FFFFFF", false, false, "ctr")
         }
+        "link" if refs.clip.is_some() => {
+            text_box(2, "Title", 700_000, 350_000, W - 1_400_000, 1_200_000, &s.title, 40, "FFFFFF", true, false, "ctr") + &clip_pic(6, refs.clip == Some(true))
+        }
         "link" => {
             let label = if s.body.trim().is_empty() { "▶ Play".to_string() } else { s.body.trim().to_string() };
             text_box(2, "Title", 700_000, 1_500_000, W - 1_400_000, 2_000_000, &s.title, 44, "FFFFFF", true, false, "b")
@@ -207,7 +292,8 @@ fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
     } + &beside;
     format!(
         r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld>{bg}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>{shade}{shapes}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>"#
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld>{bg}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>{shade}{shapes}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>{timing}</p:sld>"#,
+        timing = refs.clip.map(|v| clip_timing(6, v)).unwrap_or_default()
     )
 }
 
@@ -242,11 +328,29 @@ pub fn build_pptx(slides: &[Slide], media: &dyn Fn(&str) -> Option<Vec<u8>>) -> 
             pictures.push((f.to_string(), format!("media{}.{ext}", pictures.len() + 1), ext, w, h, bytes));
         }
     }
-    let types: String = ["png", "jpeg", "gif"]
+    // each clip to go inside once, as ppt/media/clipN.<ext>: file name -> (part, type, video, bytes)
+    let mut clips: Vec<(String, String, &'static str, &'static str, bool, Vec<u8>)> = Vec::new();
+    for f in slides.iter().filter(|s| s.kind == "link").filter_map(|s| s.video.as_deref()) {
+        if clips.iter().any(|c| c.0 == f) {
+            continue;
+        }
+        let Some((ext, ctype, video)) = clip_type(f) else { continue };
+        let Some(bytes) = media(f) else { continue };
+        clips.push((f.to_string(), format!("clip{}.{ext}", clips.len() + 1), ext, ctype, video, bytes));
+    }
+    let poster = if clips.is_empty() { None } else { Some(poster_png()) };
+    let mut types: String = ["png", "jpeg", "gif"]
         .iter()
-        .filter(|e| pictures.iter().any(|p| p.2 == **e))
+        .filter(|e| pictures.iter().any(|p| p.2 == **e) || (**e == "png" && poster.is_some()))
         .map(|e| format!(r#"<Default Extension="{e}" ContentType="image/{e}"/>"#))
         .collect();
+    let mut typed: Vec<&str> = Vec::new();
+    for c in &clips {
+        if !typed.contains(&c.2) {
+            typed.push(c.2);
+            types += &format!(r#"<Default Extension="{}" ContentType="{}"/>"#, c.2, c.3);
+        }
+    }
     let slide_overrides: String = (1..=n)
         .map(|i| format!(r#"<Override PartName="/ppt/slides/slide{i}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>"#))
         .collect();
@@ -333,7 +437,15 @@ pub fn build_pptx(slides: &[Slide], media: &dyn Fn(&str) -> Option<Vec<u8>>) -> 
         if let Some(l) = link {
             rels += &format!(r#"<Relationship Id="rId4" Type="{REL_TYPE}/hyperlink" Target="{}" TargetMode="External"/>"#, esc(&link_target(l)));
         }
-        let refs = SlideRefs { background: bg.map(|p| ("rId2", p.3, p.4)), picture: pic.map(|p| ("rId3", p.3, p.4)), link: link.map(|_| "rId4") };
+        let clip = if s.kind == "link" { s.video.as_ref().and_then(|f| clips.iter().find(|c| &c.0 == f)) } else { None };
+        if let Some(c) = clip {
+            let kind = if c.4 { "video" } else { "audio" };
+            rels += &format!(
+                r#"<Relationship Id="rId5" Type="{REL_TYPE}/{kind}" Target="../media/{p}"/><Relationship Id="rId6" Type="http://schemas.microsoft.com/office/2007/relationships/media" Target="../media/{p}"/><Relationship Id="rId7" Type="{REL_TYPE}/image" Target="../media/poster.png"/>"#,
+                p = c.1
+            );
+        }
+        let refs = SlideRefs { background: bg.map(|p| ("rId2", p.3, p.4)), picture: pic.map(|p| ("rId3", p.3, p.4)), link: link.map(|_| "rId4"), clip: clip.map(|c| c.4) };
         files.push((format!("ppt/slides/slide{}.xml", i + 1), slide_xml(s, &refs)));
         files.push((
             format!("ppt/slides/_rels/slide{}.xml.rels", i + 1),
@@ -354,6 +466,14 @@ pub fn build_pptx(slides: &[Slide], media: &dyn Fn(&str) -> Option<Vec<u8>>) -> 
     for p in &pictures {
         zip.start_file(format!("ppt/media/{}", p.1), stored).map_err(|e| e.to_string())?;
         zip.write_all(&p.5).map_err(|e| e.to_string())?;
+    }
+    for c in &clips {
+        zip.start_file(format!("ppt/media/{}", c.1), stored).map_err(|e| e.to_string())?;
+        zip.write_all(&c.5).map_err(|e| e.to_string())?;
+    }
+    if let Some(png) = &poster {
+        zip.start_file("ppt/media/poster.png", stored).map_err(|e| e.to_string())?;
+        zip.write_all(png).map_err(|e| e.to_string())?;
     }
     Ok(zip.finish().map_err(|e| e.to_string())?.into_inner())
 }
@@ -382,6 +502,41 @@ pub fn save_sermon_slides(app: AppHandle, title: String, slides: Vec<Slide>) -> 
     let path = write_pptx(&dir, &title, &slides, &media)?;
     let _ = tauri_plugin_opener::reveal_item_in_dir(&path);
     Ok(path.display().to_string())
+}
+
+/// Opens the slide show's screen: a window without a frame, full screen on the screen at
+/// `x`,`y` (physical pixels, `width` x `height`). Made here rather than from the page so it
+/// starts with the same WebView settings as the main window, which WebView2 requires of
+/// every window of an app. Returns the window's label ("show-<time>").
+#[tauri::command]
+pub async fn show_window_open(app: AppHandle, x: i32, y: i32, width: u32, height: u32) -> Result<String, String> {
+    // a new name each time, even for two opened in the same moment
+    static SHOWS: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+    let label = format!("show-{}", SHOWS.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1);
+    let mut b = tauri::WebviewWindowBuilder::new(&app, &label, tauri::WebviewUrl::App("index.html".into())).title("Slides").decorations(false).visible(false).focused(false);
+    if let Some(args) = app.config().app.windows.first().and_then(|w| w.additional_browser_args.clone()) {
+        b = b.additional_browser_args(&args);
+    }
+    let w = b.build().map_err(|e| e.to_string())?;
+    w.set_position(tauri::PhysicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+    w.set_size(tauri::PhysicalSize::new(width, height)).map_err(|e| e.to_string())?;
+    w.set_fullscreen(true).map_err(|e| e.to_string())?;
+    w.show().map_err(|e| e.to_string())?;
+    Ok(label)
+}
+
+/// Moves the slide show's screen to another screen (at `x`,`y`, `width` x `height`).
+#[tauri::command]
+pub async fn show_window_move(app: AppHandle, label: String, x: i32, y: i32, width: u32, height: u32) -> Result<(), String> {
+    if !label.starts_with("show-") {
+        return Err("not a slide show window".into());
+    }
+    let w = app.get_webview_window(&label).ok_or("The slide screen is closed.")?;
+    w.set_fullscreen(false).map_err(|e| e.to_string())?;
+    w.set_position(tauri::PhysicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+    w.set_size(tauri::PhysicalSize::new(width, height)).map_err(|e| e.to_string())?;
+    w.set_fullscreen(true).map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -471,6 +626,59 @@ mod tests {
         assert!(!read(&mut z, "ppt/slides/slide3.xml").contains("<p:pic>"));
         assert!(!read(&mut z, "ppt/slides/slide4.xml").contains("<p:pic>"), "link slides keep their own layout");
         assert!(z.by_name("ppt/media/media2.png").is_err(), "one picture, stored once");
+    }
+
+    #[test]
+    fn a_video_inside_the_powerpoint_or_linked() {
+        let slides = vec![
+            Slide { kind: "link".into(), title: "Our video".into(), video: Some("abc.mp4".into()), link: Some("C:/m/abc.mp4".into()), ..Default::default() },
+            Slide { kind: "link".into(), title: "A song".into(), video: Some("song.mp3".into()), ..Default::default() },
+            Slide { kind: "link".into(), title: "Linked".into(), link: Some("C:/m/abc.mp4".into()), ..Default::default() },
+            Slide { kind: "link".into(), title: "Not playable inside".into(), video: Some("x.webm".into()), link: Some("C:/m/x.webm".into()), ..Default::default() },
+        ];
+        let media = |f: &str| matches!(f, "abc.mp4" | "song.mp3" | "x.webm").then(|| vec![1u8, 2, 3]);
+        let bytes = build_pptx(&slides, &media).unwrap();
+        let mut z = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+        let read = |z: &mut zip::ZipArchive<Cursor<Vec<u8>>>, n: &str| {
+            let mut s = String::new();
+            std::io::Read::read_to_string(&mut z.by_name(n).unwrap(), &mut s).unwrap();
+            s
+        };
+        let types = read(&mut z, "[Content_Types].xml");
+        assert!(types.contains(r#"Extension="mp4" ContentType="video/mp4""#) && types.contains(r#"Extension="mp3""#) && types.contains(r#"Extension="png""#), "{types}");
+        assert!(z.by_name("ppt/media/clip1.mp4").is_ok() && z.by_name("ppt/media/clip2.mp3").is_ok() && z.by_name("ppt/media/poster.png").is_ok());
+        assert!(z.by_name("ppt/media/clip3.webm").is_err(), "a kind PowerPoint can't play inside stays a link");
+        let s1 = read(&mut z, "ppt/slides/slide1.xml");
+        assert!(s1.contains(r#"<a:videoFile r:link="rId5"/>"#) && s1.contains("<p:video>") && s1.contains(r#"<p:spTgt spid="6"/>"#), "{s1}");
+        let r1 = read(&mut z, "ppt/slides/_rels/slide1.xml.rels");
+        assert!(r1.contains("relationships/video") && r1.contains("2007/relationships/media") && r1.contains("poster.png"), "{r1}");
+        assert!(read(&mut z, "ppt/slides/slide2.xml").contains("<a:audioFile"));
+        let s3 = read(&mut z, "ppt/slides/slide3.xml");
+        assert!(!s3.contains("videoFile") && s3.contains(r#"hlinkClick r:id="rId4""#), "linked");
+        assert!(read(&mut z, "ppt/slides/slide4.xml").contains(r#"hlinkClick r:id="rId4""#));
+        assert_eq!(picture_info(&poster_png()), Some(("png", 640, 360)));
+    }
+
+    /// A sample with a real video inside, to open in PowerPoint by hand: set SLIDES_CLIP to an
+    /// .mp4 and run `cargo test --lib slides::tests::sample_with_a_video -- --ignored`.
+    #[test]
+    #[ignore]
+    fn sample_with_a_video() {
+        let clip = std::env::var("SLIDES_CLIP").expect("SLIDES_CLIP");
+        let slides = vec![
+            Slide { kind: "title".into(), title: "A video inside".into(), ..Default::default() },
+            Slide { kind: "link".into(), title: "The clip".into(), video: Some("clip.mp4".into()), ..Default::default() },
+            Slide { kind: "link".into(), title: "The song".into(), video: Some("song.mp3".into()), ..Default::default() },
+        ];
+        // SLIDES_SONG: an .mp3 for the third slide (optional)
+        let song = std::env::var("SLIDES_SONG").ok();
+        let media = |f: &str| match f {
+            "clip.mp4" => std::fs::read(&clip).ok(),
+            "song.mp3" => song.as_ref().and_then(|s| std::fs::read(s).ok()),
+            _ => None,
+        };
+        let p = write_pptx(&std::env::temp_dir(), "Sermon slides video sample", &slides, &media).unwrap();
+        println!("{}", p.display());
     }
 
     /// Writes a sample to the temp folder, to open in PowerPoint by hand:

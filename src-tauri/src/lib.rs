@@ -6,6 +6,7 @@ pub mod embeddings;
 pub mod firsts;
 mod genealogy;
 pub mod library;
+mod lan;
 mod library_commands;
 mod logging;
 mod pictures;
@@ -22,6 +23,7 @@ mod settings;
 mod sheet;
 mod study;
 mod study_commands;
+mod sync;
 mod update;
 mod userdata;
 mod voice;
@@ -59,6 +61,7 @@ pub fn run() {
     register_sqlite_vec();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(update::PendingUpdate::default())
         // Close is intercepted on the FRONTEND, via the window's own onCloseRequested
@@ -69,6 +72,12 @@ pub fn run() {
         // window before the page had finished loading in a heavily side-loaded dev
         // session, not a real bug -- see HANDOVER.md's Phase 8 notes before mistrusting
         // this design again.)
+        // the slide show's screen is a second window: when the main window goes, so does the app
+        .on_window_event(|window, event| {
+            if window.label() == "main" && matches!(event, tauri::WindowEvent::Destroyed) {
+                window.app_handle().exit(0);
+            }
+        })
         .setup(|app| {
             // first, so a failure anywhere below (a missing resource, a locked database)
             // is written to the log as well as ending the start-up
@@ -159,7 +168,11 @@ pub fn run() {
             // data folder (never the install folder), so it survives reinstalls.
             let data_dir = app.path().app_data_dir().expect("no app data dir");
             let user_db = userdata::open(&data_dir).expect("failed to open userdata.db");
+            sync::init(&user_db).expect("failed to prepare userdata.db for keeping in step");
             app.manage(userdata::UserDataState(Mutex::new(user_db)));
+            // the phone over the home Wi-Fi, if the reader turned it on
+            app.manage(lan::LanState::default());
+            lan::start_if_on(app.handle());
             app.manage(voice::VoiceState::default());
 
             // Free modules the user installs from the Library (CrossWire), converted into a
@@ -235,10 +248,20 @@ pub fn run() {
             study_commands::sermon_preaching_save,
             study_commands::sermon_preaching_delete,
             study_commands::sermon_search,
+            study_commands::sync_status,
+            study_commands::sync_set_folder,
+            study_commands::sync_set_name,
+            study_commands::sync_now,
+            lan::lan_status,
+            lan::lan_enable,
+            lan::lan_pair_code,
+            lan::lan_forget,
             study_commands::sermon_templates,
             study_commands::sermon_template_save,
             study_commands::sermon_template_delete,
             slides::save_sermon_slides,
+            slides::show_window_open,
+            slides::show_window_move,
             preaching::sermon_outlines,
             preaching::sermon_outlines_titled,
             preaching::sermon_illustrations,

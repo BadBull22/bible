@@ -784,7 +784,7 @@ pub fn preaching_delete(conn: &Connection, id: i64) -> Result<(), String> {
 }
 
 /// A sermon preached at least once is "preached", with its latest date as "preached on".
-fn follow_preachings(conn: &Connection, sermon_id: i64) -> Result<(), String> {
+pub(crate) fn follow_preachings(conn: &Connection, sermon_id: i64) -> Result<(), String> {
     let last: Option<String> = conn.query_row("SELECT max(date) FROM sermon_preachings WHERE sermon_id = ?1", params![sermon_id], |r| r.get(0)).map_err(err)?;
     if let Some(d) = last {
         conn.execute("UPDATE sermons SET preached_on = ?2, stage = 'preached' WHERE id = ?1", params![sermon_id, d]).map_err(err)?;

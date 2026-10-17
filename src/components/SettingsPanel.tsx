@@ -1,3 +1,4 @@
+import { SyncSettings } from "./SyncSettings";
 import { useEffect, useRef, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { api, HIGHLIGHT_COLOR_NAMES, HIGHLIGHT_COLORS, HighlightColor } from "../api";
@@ -462,6 +463,9 @@ export function SettingsPanel({
         Keys are stored only on this computer, in the app's local settings file — never bundled into the app or sent
         anywhere except the provider they belong to.
       </p>
+
+      <h4 className="section-label">Keep in step with your other devices</h4>
+      <SyncSettings />
 
       <h4 className="section-label">Keyboard shortcuts</h4>
       <ul className="shortcut-list">

@@ -548,6 +548,50 @@ export interface SermonQuery {
 }
 
 /** A sermon found, with every time it was preached and the start of its big idea. */
+/** Keeping in step with other devices through a shared folder (sync.rs). */
+export interface SyncDevice {
+  name: string;
+  /** "computer" or "phone" */
+  kind: string;
+  /** when its file was last written (ms) */
+  written: number;
+}
+
+export interface SyncReport {
+  /** when (ms) */
+  at: number;
+  received: number;
+  sent: number;
+  conflicts: string[];
+  devices: SyncDevice[];
+  skipped: string[];
+  /** sermon pictures and videos copied */
+  media?: number;
+}
+
+/** The phone over the home Wi-Fi (lan.rs). */
+export interface LanStatus {
+  enabled: boolean;
+  running: boolean;
+  /** this computer's address on the home network */
+  address: string | null;
+  port: number;
+  phones: { id: string; name: string; last: number }[];
+  /** the pairing code to type into the phone, while it lasts */
+  code: string | null;
+  error: string | null;
+}
+
+export interface SyncStatus {
+  /** the shared folder, or null when not keeping in step */
+  folder: string | null;
+  /** this device's name, as the others show it */
+  name: string;
+  last: SyncReport | null;
+  /** the last sync's error, if it failed */
+  error: string | null;
+}
+
 export interface SermonHit extends SavedSermon {
   preachings: Preaching[];
   big_idea: string;
@@ -966,6 +1010,15 @@ export const api = {
   sermonPreachingSave: (preaching: Preaching) => invoke<number>("sermon_preaching_save", { preaching }),
   sermonPreachingDelete: (id: number) => invoke<void>("sermon_preaching_delete", { id }),
   sermonSearch: (query: SermonQuery) => invoke<SermonHit[]>("sermon_search", { query }),
+  syncStatus: () => invoke<SyncStatus>("sync_status"),
+  /** the shared folder to keep in step through (null: stop) */
+  syncSetFolder: (folder: string | null) => invoke<SyncStatus>("sync_set_folder", { folder }),
+  syncSetName: (name: string) => invoke<SyncStatus>("sync_set_name", { name }),
+  syncNow: () => invoke<SyncReport>("sync_now"),
+  lanStatus: () => invoke<LanStatus>("lan_status"),
+  lanEnable: (on: boolean) => invoke<LanStatus>("lan_enable", { on }),
+  lanPairCode: () => invoke<LanStatus>("lan_pair_code"),
+  lanForget: (id: string) => invoke<LanStatus>("lan_forget", { id }),
   /** Simeon's outlines on a passage */
   sermonOutlines: (book: string, chapter: number, verse: number, verseEnd: number) => invoke<Discourse[]>("sermon_outlines", { book, chapter, verse, verseEnd }),
   /** stories and sayings on a subject (Moody, Spurgeon), best first */

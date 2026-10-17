@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 
 use regex::{Captures, Regex};
 
-use super::refs::{self, Ref};
+use crate::refs::{self, Ref};
 
 /// What the text is for, which decides what survives the conversion.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

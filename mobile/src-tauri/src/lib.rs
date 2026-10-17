@@ -17,6 +17,9 @@ use tauri::{AppHandle, Emitter, Manager, State};
 pub mod backgrounds;
 pub mod bibles;
 pub mod db;
+pub mod lan;
+pub mod library;
+pub mod modules;
 pub mod search;
 pub mod study;
 pub mod study_extra;
@@ -69,6 +72,8 @@ pub struct Opened {
     study: Mutex<Connection>,
     user: Mutex<Connection>,
     bibles: Mutex<Connection>,
+    /// commentaries, dictionaries, books and devotionals (since 2.9.0)
+    library: Mutex<Connection>,
     /// the translations in the bundled database (BSB, KJV, ...)
     bundled: Vec<String>,
     /// the app's data folder (the nature backgrounds are kept in it)
@@ -84,8 +89,13 @@ fn open_all(dir: &Path) -> Result<Opened, String> {
     Ok(Opened {
         db: Mutex::new(db),
         study: Mutex::new(db::open_read_only(&bible).map_err(err)?),
-        user: Mutex::new(userdata::open(&dir.join("my-study.db"))?),
+        user: Mutex::new({
+            let user = userdata::open(&dir.join("my-study.db"))?;
+            bible_core::sync::init(&user)?;
+            user
+        }),
         bibles: Mutex::new(more),
+        library: Mutex::new(library::open(dir)?),
         bundled,
         dir: dir.to_path_buf(),
     })
@@ -342,6 +352,300 @@ fn bible_install(app: AppHandle, core: State<Core>, id: String, today: String) -
     Ok(n)
 }
 
+/// Adds the Bible in a file the reader chose (the phone plugin's `open_file` copied it to
+/// `path`): an e-Sword, MySword or SWORD Bible.
+#[tauri::command(async)]
+fn bible_add_file(core: State<Core>, path: String, name: String) -> Result<modules::Added, String> {
+    let opened = core.get()?;
+    let file = PathBuf::from(&path);
+    let added = modules::add_file(&mut *opened.bibles.lock().map_err(err)?, &file, &name, &opened.dir.join("import-work"), &opened.bundled);
+    // the copy in the cache is not needed any more
+    let _ = fs::remove_file(&file);
+    added
+}
+
+// ---------------------------------------------------------------- keeping in step through a shared folder (since 0.4.0)
+//
+// The same as on the computers (bible_core::sync): the reader chooses a folder they share with
+// them, and each device keeps a file of its own in it. On a phone the folder is reached through
+// Android's folder access (the phone plugin); when the app is tried out on a computer, a path.
+
+/// The chosen folder, through the phone plugin (or a plain folder on a computer).
+struct PhoneFolder<'a> {
+    app: &'a AppHandle,
+    uri: String,
+}
+
+impl bible_core::sync::Folder for PhoneFolder<'_> {
+    fn read_all(&self) -> Result<Vec<(String, String)>, String> {
+        if self.uri.starts_with("content://") {
+            tauri_plugin_phone::sync_read(self.app, &self.uri)
+        } else {
+            bible_core::sync::DirFolder::new(Path::new(&self.uri))?.read_all()
+        }
+    }
+    fn write(&self, name: &str, text: &str) -> Result<(), String> {
+        if self.uri.starts_with("content://") {
+            tauri_plugin_phone::sync_write(self.app, &self.uri, name, text)
+        } else {
+            bible_core::sync::DirFolder::new(Path::new(&self.uri))?.write(name, text)
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct SyncStatus {
+    /// the computer paired over the home Wi-Fi, or null
+    computer: Option<String>,
+    /// the chosen folder's name, or null when not keeping in step through one
+    folder: Option<String>,
+    name: String,
+    last: Option<bible_core::sync::SyncReport>,
+    error: Option<String>,
+}
+
+fn sync_status_of(conn: &Connection) -> Result<SyncStatus, String> {
+    use bible_core::sync::setting;
+    Ok(SyncStatus {
+        computer: setting(conn, "lan_token")?.and(setting(conn, "lan_name")?),
+        folder: setting(conn, "uri")?.map(|u| setting(conn, "folder_name").ok().flatten().unwrap_or(u)),
+        name: setting(conn, "name")?.unwrap_or_else(|| "Phone".into()),
+        last: setting(conn, "last")?.and_then(|t| serde_json::from_str(&t).ok()),
+        error: setting(conn, "error")?,
+    })
+}
+
+#[tauri::command(async)]
+fn sync_status(core: State<Core>) -> Result<SyncStatus, String> {
+    sync_status_of(&*core.get()?.user.lock().map_err(err)?)
+}
+
+/// The folder chosen with the phone plugin's `pick_folder` (its uri and name), or none to stop.
+#[tauri::command(async)]
+fn sync_set_folder(core: State<Core>, uri: Option<String>, name: Option<String>) -> Result<SyncStatus, String> {
+    use bible_core::sync::set_setting;
+    let conn = core.get()?.user.lock().map_err(err)?;
+    set_setting(&conn, "uri", uri.as_deref())?;
+    set_setting(&conn, "folder_name", name.as_deref())?;
+    set_setting(&conn, "last", None)?;
+    set_setting(&conn, "error", None)?;
+    sync_status_of(&conn)
+}
+
+#[tauri::command(async)]
+fn sync_set_name(core: State<Core>, name: String) -> Result<SyncStatus, String> {
+    let conn = core.get()?.user.lock().map_err(err)?;
+    let name: String = name.trim().chars().take(40).collect();
+    bible_core::sync::set_setting(&conn, "name", if name.is_empty() { None } else { Some(&name) })?;
+    sync_status_of(&conn)
+}
+
+/// One sync: with the computer over the home Wi-Fi (when paired) and through the shared folder
+/// (when one is chosen) -- the phone's bookmarks, highlights, notes and reading plans.
+#[tauri::command(async)]
+fn sync_now(app: AppHandle, core: State<Core>) -> Result<bible_core::sync::SyncReport, String> {
+    use bible_core::sync::{set_setting, setting, SyncReport};
+    let user = &core.get()?.user;
+    let (paired, uri, name) = {
+        let conn = user.lock().map_err(err)?;
+        (setting(&conn, "lan_token")?.is_some(), setting(&conn, "uri")?, setting(&conn, "name")?.unwrap_or_else(|| "Phone".into()))
+    };
+    if !paired && uri.is_none() {
+        return Err("Pair this phone with your computer first.".into());
+    }
+    let mut report = SyncReport { at: bible_core::sync::now_ms(), ..Default::default() };
+    let add = |r: SyncReport, report: &mut SyncReport| {
+        report.received += r.received;
+        report.sent += r.sent;
+        report.conflicts.extend(r.conflicts);
+        report.skipped.extend(r.skipped);
+        report.notes.extend(r.notes);
+        for d in r.devices {
+            if !report.devices.iter().any(|x| x.name == d.name) {
+                report.devices.push(d);
+            }
+        }
+    };
+    if paired {
+        match lan_sync(user, &name) {
+            Ok(r) => add(r, &mut report),
+            Err(e) => report.notes.push(e),
+        }
+    }
+    if let Some(uri) = uri {
+        let mut conn = user.lock().map_err(err)?;
+        match bible_core::sync::sync(&mut conn, &bible_core::sync::CommonStore, &PhoneFolder { app: &app, uri }, &name, "phone") {
+            Ok(r) => add(r, &mut report),
+            Err(e) => report.notes.push(e),
+        }
+    }
+    let conn = user.lock().map_err(err)?;
+    set_setting(&conn, "last", Some(&serde_json::to_string(&report).map_err(err)?))?;
+    set_setting(&conn, "error", None)?;
+    Ok(report)
+}
+
+/// One sync with the paired computer: this phone's changes go into its sync file, the file
+/// goes to the computer, and the computer's file comes back and is taken in. The database is
+/// not held while the network is used.
+fn lan_sync(user: &Mutex<Connection>, name: &str) -> Result<bible_core::sync::SyncReport, String> {
+    use bible_core::sync::{self as core, set_setting, setting, CommonStore, MemFolder};
+    let (address, token, pc_id, mine, sent) = {
+        let mut conn = user.lock().map_err(err)?;
+        let mem = MemFolder::default();
+        let first = core::sync(&mut conn, &CommonStore, &mem, name, "phone")?;
+        let mine = mem.written.borrow_mut().take().unwrap_or_default();
+        (
+            setting(&conn, "lan_address")?.unwrap_or_default(),
+            setting(&conn, "lan_token")?.unwrap_or_default(),
+            setting(&conn, "lan_id")?.unwrap_or_default(),
+            mine,
+            first.sent,
+        )
+    };
+    let theirs = match lan::exchange(&address, &token, &mine) {
+        Ok(t) => t,
+        Err(f) if f.unreachable => {
+            // the computer may have a new address on the network: look for it
+            let Some(found) = lan::find().into_iter().find(|c| c.id == pc_id) else { return Err(f.message) };
+            set_setting(&*user.lock().map_err(err)?, "lan_address", Some(&found.address))?;
+            lan::exchange(&found.address, &token, &mine).map_err(|f| f.message)?
+        }
+        Err(f) => return Err(f.message),
+    };
+    let mut conn = user.lock().map_err(err)?;
+    let mem = MemFolder { others: vec![("computer.json".into(), theirs)], ..Default::default() };
+    let mut r = core::sync(&mut conn, &CommonStore, &mem, name, "phone")?;
+    r.sent += sent;
+    Ok(r)
+}
+
+/// The computers on this Wi-Fi that let phones sync with them.
+#[tauri::command(async)]
+fn lan_find() -> Vec<lan::Found> {
+    lan::find()
+}
+
+/// Pairs with the computer at `address` (found, or typed) using the code it shows.
+#[tauri::command(async)]
+fn lan_pair(core: State<Core>, address: String, code: String) -> Result<SyncStatus, String> {
+    use bible_core::sync::{device_id, set_setting, setting};
+    let user = &core.get()?.user;
+    let (me, name) = {
+        let conn = user.lock().map_err(err)?;
+        (device_id(&conn)?, setting(&conn, "name")?.unwrap_or_else(|| "Phone".into()))
+    };
+    // a typed address: make sure it is the app before sending the code
+    let found = lan::hello(&address).map_err(|f| f.message)?;
+    let p = lan::pair(&found.address, &code, &me, &name).map_err(|f| f.message)?;
+    let conn = user.lock().map_err(err)?;
+    set_setting(&conn, "lan_address", Some(&found.address))?;
+    set_setting(&conn, "lan_token", Some(&p.token))?;
+    set_setting(&conn, "lan_id", Some(&p.id))?;
+    set_setting(&conn, "lan_name", Some(&p.name))?;
+    sync_status_of(&conn)
+}
+
+/// Stops syncing with the paired computer.
+#[tauri::command(async)]
+fn lan_forget(core: State<Core>) -> Result<SyncStatus, String> {
+    let conn = core.get()?.user.lock().map_err(err)?;
+    for k in ["lan_address", "lan_token", "lan_id", "lan_name"] {
+        bible_core::sync::set_setting(&conn, k, None)?;
+    }
+    sync_status_of(&conn)
+}
+
+// ---------------------------------------------------------------- the Library (since 2.9.0)
+
+/// What CrossWire offers for the Library (commentaries, dictionaries, books, devotionals).
+#[tauri::command(async)]
+fn library_catalog(core: State<Core>, refresh: bool) -> Result<Vec<bible_core::library::CatalogItem>, String> {
+    let opened = core.get()?;
+    library::catalog(&*opened.library.lock().map_err(err)?, &opened.dir, refresh)
+}
+
+/// Downloads and installs a module; "library-progress" events report { name, pct }.
+#[tauri::command(async)]
+fn library_install(app: AppHandle, core: State<Core>, name: String) -> Result<bible_core::library::InstallReport, String> {
+    let opened = core.get()?;
+    library::install(&mut *opened.library.lock().map_err(err)?, &opened.dir, &name, &|pct| {
+        let _ = app.emit("library-progress", serde_json::json!({ "name": name, "pct": pct }));
+    })
+}
+
+/// Adds a module from a file the reader chose (`phone.openFile` copied it to `path`): to the
+/// Library, or, when it is a Bible, to the translations.
+#[tauri::command(async)]
+fn library_add_file(core: State<Core>, path: String, name: String) -> Result<bible_core::library::InstallReport, String> {
+    let opened = core.get()?;
+    let file = PathBuf::from(&path);
+    let result = match library::add_file(&mut *opened.library.lock().map_err(err)?, &opened.dir, &file, &name) {
+        Err(e) if e == library::IS_BIBLE => modules::add_file(&mut *opened.bibles.lock().map_err(err)?, &file, &name, &opened.dir.join("import-work"), &opened.bundled).map(|a| {
+            bible_core::library::InstallReport {
+                name: a.code,
+                kind: "bible".into(),
+                title: a.name,
+                entries: a.verses,
+                books: a.books,
+                language: a.language,
+                licence: String::new(),
+                warnings: a.warnings,
+                replaces: None,
+            }
+        }),
+        other => other,
+    };
+    let _ = fs::remove_file(&file);
+    result
+}
+
+#[tauri::command(async)]
+fn library_installed(core: State<Core>) -> Result<Vec<bible_core::library::InstalledModule>, String> {
+    library::installed(&*core.get()?.library.lock().map_err(err)?)
+}
+
+#[tauri::command(async)]
+fn library_remove(core: State<Core>, name: String) -> Result<(), String> {
+    library::remove(&mut *core.get()?.library.lock().map_err(err)?, &name)
+}
+
+#[tauri::command(async)]
+fn library_commentary(core: State<Core>, book: String, chapter: i64) -> Result<Vec<library::CommentaryOn>, String> {
+    library::commentary(&*core.get()?.library.lock().map_err(err)?, &book, chapter)
+}
+
+#[tauri::command(async)]
+fn library_search(core: State<Core>, query: String) -> Result<Vec<library::DictHit>, String> {
+    library::dictionary_search(&*core.get()?.library.lock().map_err(err)?, &query)
+}
+
+#[tauri::command(async)]
+fn library_entry(core: State<Core>, id: i64) -> Result<Option<library::Entry>, String> {
+    library::dictionary_entry(&*core.get()?.library.lock().map_err(err)?, id)
+}
+
+#[tauri::command(async)]
+fn library_devotional(core: State<Core>, module: String, month: u32, day: u32) -> Result<Option<library::Entry>, String> {
+    library::devotional(&*core.get()?.library.lock().map_err(err)?, &module, month, day)
+}
+
+#[tauri::command(async)]
+fn library_toc(core: State<Core>, module: String) -> Result<Vec<library::TocEntry>, String> {
+    library::book_toc(&*core.get()?.library.lock().map_err(err)?, &module)
+}
+
+#[tauri::command(async)]
+fn library_section(core: State<Core>, id: i64) -> Result<Option<library::Section>, String> {
+    library::book_section(&*core.get()?.library.lock().map_err(err)?, id)
+}
+
+/// A book's sections that are this day's readings (a book of daily readings), if any.
+#[tauri::command(async)]
+fn library_today(core: State<Core>, module: String, month: u32, day: u32) -> Result<Vec<i64>, String> {
+    library::book_today(&*core.get()?.library.lock().map_err(err)?, &module, month, day)
+}
+
 #[tauri::command(async)]
 fn bible_remove(core: State<Core>, code: String) -> Result<(), String> {
     bibles::remove(&*core.get()?.bibles.lock().map_err(err)?, &code)
@@ -543,6 +847,26 @@ pub fn run() {
             bible_catalog,
             bible_install,
             bible_remove,
+            bible_add_file,
+            library_catalog,
+            library_install,
+            library_add_file,
+            library_installed,
+            library_remove,
+            library_commentary,
+            library_search,
+            library_entry,
+            library_devotional,
+            library_toc,
+            library_section,
+            library_today,
+            sync_status,
+            sync_set_folder,
+            sync_set_name,
+            sync_now,
+            lan_find,
+            lan_pair,
+            lan_forget,
             set_tags,
             tags_of,
             all_tags,

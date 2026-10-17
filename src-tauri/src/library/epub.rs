@@ -595,28 +595,8 @@ pub fn read(bytes: &[u8], file_name: Option<&str>) -> Result<Epub, String> {
     Ok(Epub { title: plain(&title), author: plain(&author), lang, rights: plain(&rights), sections, warnings, pages: 0 })
 }
 
-/// A library name for the reader's own book, from its title: "own-he-came-to-set-the-captives-free".
-pub fn module_name(title: &str) -> String {
-    let mut slug = String::new();
-    for ch in title.chars() {
-        if ch.is_ascii_alphanumeric() {
-            slug.push(ch.to_ascii_lowercase());
-        } else if !slug.ends_with('-') && !slug.is_empty() {
-            slug.push('-');
-        }
-        if slug.len() >= 48 {
-            break;
-        }
-    }
-    let slug = slug.trim_matches('-');
-    if slug.is_empty() {
-        // a title with no Latin letters: a stable number from its characters
-        let n = title.chars().fold(0u32, |a, c| a.wrapping_mul(31).wrapping_add(c as u32));
-        format!("own-book-{n}")
-    } else {
-        format!("own-{slug}")
-    }
-}
+// the library name for the reader's own book ("own-<title>"): shared with the phone
+pub use bible_core::library::module_name;
 
 #[cfg(test)]
 pub mod tests {

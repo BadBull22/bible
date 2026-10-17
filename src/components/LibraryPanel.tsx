@@ -2,6 +2,43 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { api, CatalogItem, InstalledModule, InstallReport, LibraryKind, LibraryProgress, LibrarySource } from "../api";
 import { CloseIcon } from "./icons";
+import { RecommendedBibles } from "./RecommendedBibles";
+import { openUrl } from "@tauri-apps/plugin-opener";
+
+/** Files the app can add: books, SWORD modules, e-Sword and MySword modules (also in a .gz). */
+const ACCEPTED = /\.(epub|pdf|zip|gz|bblx|cmtx|dctx|topx|lexx|devx|refx|bbli|cmti|dcti|topi|lexi|devi|mybible)$/i;
+
+/** Community libraries of e-Sword and MySword modules. The app only opens their pages in the
+ * browser; the reader downloads there, by their own choice, and adds the files here. */
+/** Where e-Sword and MySword modules can be downloaded from a website (checked 2026-10-17).
+ * e-Sword's own site has none: its library is only inside the e-Sword program. */
+const COMMUNITY: { name: string; url: string; about: string }[] = [
+  {
+    name: "BibleSupport",
+    // its https address doesn't answer; the site works on http
+    url: "http://www.biblesupport.com/e-sword-downloads/",
+    about: "The largest: thousands of e-Sword and MySword modules, by category. Downloading needs a free account there. Each module says whether it is public domain or copyrighted.",
+  },
+  {
+    name: "eswordlibrary.com",
+    url: "https://www.eswordlibrary.com/",
+    about: "e-Sword modules by kind; downloads without an account.",
+  },
+  {
+    name: "bible.org",
+    url: "https://bible.org/article/e-sword%C2%AE-modules-bibleorg",
+    about: "bible.org's own studies and articles (Keathley and others) as e-Sword modules, shared by their publisher.",
+  },
+];
+
+/** MySword's own downloads, by kind: straight from its website, no account. */
+const MYSWORD: [string, string][] = [
+  ["Bibles", "bibles"],
+  ["Commentaries", "commentaries"],
+  ["Dictionaries", "dictionaries"],
+  ["Books", "books"],
+  ["Devotionals", "devotionals"],
+];
 
 interface Props {
   initialTab?: Tab;
@@ -67,6 +104,9 @@ function readFilters(): Filters {
   }
 }
 
+/** "1 entry", "31,102 verses". */
+const countOf = (n: number, kind: LibraryKind) => `${n.toLocaleString()} ${n === 1 ? ONE_WORD[kind] ?? "entry" : ENTRY_WORD[kind] ?? "entries"}`;
+const ONE_WORD: Record<LibraryKind, string> = { bible: "verse", commentary: "note", dictionary: "entry", devotional: "reading", book: "section", other: "entry" };
 const ENTRY_WORD: Record<LibraryKind, string> = {
   bible: "verses",
   commentary: "notes",
@@ -147,8 +187,9 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
     setFileState("checking");
     try {
       const name = file.name.toLowerCase();
-      if (/\.(mobi|azw3?|kfx)$/.test(name)) throw "Kindle files can't be added. Only EPUB e-books, PDF books and SWORD modules (.zip) can.";
-      if (!/\.(epub|pdf|zip)$/.test(name)) throw "Only EPUB e-books (.epub), PDF books (.pdf) and SWORD modules (.zip) can be added.";
+      if (/\.(mobi|azw3?|kfx)$/.test(name)) throw "Kindle files can't be added. Only EPUB e-books, PDF books, SWORD modules (.zip) and e-Sword or MySword modules can.";
+      if (!ACCEPTED.test(name))
+        throw "Only EPUB e-books (.epub), PDF books (.pdf), SWORD modules (.zip) and e-Sword or MySword modules (.bblx, .cmtx, .dctx, .topx, .lexx, .devx, .refx, .mybible) can be added.";
       setFileReport(await api.libraryImportCheck(new Uint8Array(await file.arrayBuffer()), file.name));
       setFileState("ready");
     } catch (e) {
@@ -167,6 +208,38 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
       setFileError(String(e));
       setFileState("idle");
     }
+  }
+
+  /** Several files at once (or a whole folder): each checked and added in turn, without a
+   * second step; one that fails is skipped with its reason. */
+  const [batch, setBatch] = useState<{ name: string; result: string; ok: boolean }[] | null>(null);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const batchRef = useRef<HTMLInputElement>(null);
+  const folderRef = useRef<HTMLInputElement>(null);
+  async function addMany(files: File[]) {
+    const wanted = files.filter((f) => ACCEPTED.test(f.name));
+    if (!wanted.length) {
+      setBatch([{ name: "", result: "None of the chosen files is one the app can add.", ok: false }]);
+      return;
+    }
+    setBatchBusy(true);
+    setFileReport(null);
+    setFileError(null);
+    setFileState("idle");
+    const out: { name: string; result: string; ok: boolean }[] = [];
+    setBatch(out);
+    for (const f of wanted) {
+      try {
+        await api.libraryImportCheck(new Uint8Array(await f.arrayBuffer()), f.name);
+        const r = await api.libraryImportInstall();
+        out.push({ name: f.name, result: `${KIND_LABEL[r.kind] ?? r.kind}: ${r.title} (${countOf(r.entries, r.kind)})`, ok: true });
+      } catch (e) {
+        out.push({ name: f.name, result: String(e), ok: false });
+      }
+      setBatch([...out]);
+    }
+    setBatchBusy(false);
+    reloadInstalled();
   }
 
   function cancelFile() {
@@ -308,7 +381,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
                     </span>
                   </div>
                   <div className="library-meta muted">
-                    {m.name} · {m.language} · {m.entries.toLocaleString()} {ENTRY_WORD[m.kind]}
+                    {[m.name, m.language, countOf(m.entries, m.kind)].filter(Boolean).join(" · ")}
                     {m.licence ? ` · ${m.licence}` : ""}
                   </div>
                   {errors[m.name] && <p className="status-error">{errors[m.name]}</p>}
@@ -360,6 +433,15 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
               questionable material
             </label>
           </div>
+          {!query.trim() && (filters.kind === "all" || filters.kind === "bible") && (
+            <RecommendedBibles
+              installedNames={new Set(installed.map((m) => m.name))}
+              progress={progress}
+              errors={errors}
+              onInstall={install}
+              installedTools={(name) => <InstalledTools name={name} confirm={confirmRemove} onConfirm={setConfirmRemove} onRemove={remove} />}
+            />
+          )}
           {loadingCatalog && <p className="muted">Loading the {source?.name ?? "library"} catalogue…</p>}
           {catalogError && <p className="status-error">{catalogError}</p>}
           {catalog && (
@@ -391,7 +473,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
                           Not supported
                         </span>
                       ) : c.installed && !update ? (
-                        <span className="library-installed">✓ Installed</span>
+                        <InstalledTools name={c.name} confirm={confirmRemove} onConfirm={setConfirmRemove} onRemove={remove} />
                       ) : (
                         <button className="pill-btn small" onClick={() => install(c)}>
                           {update ? "Update" : "Install"}
@@ -434,9 +516,19 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
             </li>
             <li>
               a <strong>SWORD module</strong> (<em>.zip</em>) — a Bible, commentary, dictionary or book in the format CrossWire
-              and eBible.org publish.
+              and eBible.org publish;
+            </li>
+            <li>
+              an <strong>e-Sword or MySword module</strong> (<em>.bblx .cmtx .dctx .topx .lexx .devx .refx</em>, or{" "}
+              <em>.mybible</em>, also packed in <em>.gz</em> or <em>.zip</em>) — a Bible joins the translation list, a commentary the
+              Commentary panel, a dictionary, lexicon or topics the Dictionary panel and Word Study, a book or devotional your books.
+              Modules locked by their publisher (e-Sword's own and bought modules) can't be opened, and the app says so.
             </li>
           </ul>
+          <p className="library-notice">
+            <strong>Only add modules you have the right to use.</strong> Many modules shared online are copies of copyrighted Bibles
+            and books made without permission.
+          </p>
           <p className="muted">
             The app checks the whole file first and shows you what it found. Nothing is added unless every check passes and you
             press Add, and anything you add can be removed again under My library.
@@ -444,7 +536,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
           <input
             ref={fileRef}
             type="file"
-            accept=".epub,.pdf,.zip,application/epub+zip,application/pdf,application/zip"
+            accept=".epub,.pdf,.zip,.gz,.bblx,.cmtx,.dctx,.topx,.lexx,.devx,.refx,.bbli,.cmti,.dcti,.topi,.lexi,.devi,.mybible,application/epub+zip,application/pdf,application/zip"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -452,10 +544,54 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
               if (f) checkFile(f);
             }}
           />
-          {(fileState === "idle" || fileState === "done") && (
-            <button className="pill-btn" onClick={() => fileRef.current?.click()}>
-              {fileState === "done" ? "Add another file…" : "Choose a file…"}
-            </button>
+          <input
+            ref={batchRef}
+            type="file"
+            multiple
+            hidden
+            onChange={(e) => {
+              const fs = [...(e.target.files ?? [])];
+              e.target.value = "";
+              if (fs.length) void addMany(fs);
+            }}
+          />
+          <input
+            ref={folderRef}
+            type="file"
+            multiple
+            hidden
+            {...({ webkitdirectory: "" } as Record<string, string>)}
+            onChange={(e) => {
+              const fs = [...(e.target.files ?? [])];
+              e.target.value = "";
+              if (fs.length) void addMany(fs);
+            }}
+          />
+          {(fileState === "idle" || fileState === "done") && !batchBusy && (
+            <div className="note-editor-actions">
+              <button className="pill-btn" onClick={() => fileRef.current?.click()}>
+                {fileState === "done" ? "Add another file…" : "Choose a file…"}
+              </button>
+              <button className="outline-btn" onClick={() => batchRef.current?.click()} title="Each is checked and added in turn">
+                Several files…
+              </button>
+              <button className="outline-btn" onClick={() => folderRef.current?.click()} title="Every module and book in a folder, such as your e-Sword folder">
+                A whole folder…
+              </button>
+            </div>
+          )}
+          {batch && (
+            <div className="library-file-result">
+              <strong>{batchBusy ? `Adding… ${batch.length} done` : `Done: ${batch.filter((b) => b.ok).length} added, ${batch.filter((b) => !b.ok).length} not added`}</strong>
+              <ul className="library-batch">
+                {batch.map((b, i) => (
+                  <li key={i} className={b.ok ? "ok" : "refused"}>
+                    {b.name && <strong>{b.name}: </strong>}
+                    {b.result}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {fileState === "checking" && <p className="muted">Checking {fileName}…</p>}
           {fileError && (
@@ -472,7 +608,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
               </strong>
               <p>
                 {KIND_LABEL[fileReport.kind]} · {fileReport.language || "language not stated"} ·{" "}
-                {fileReport.entries.toLocaleString()} {ENTRY_WORD[fileReport.kind]}
+                {countOf(fileReport.entries, fileReport.kind)}
                 {fileReport.books > 0 ? ` in ${fileReport.books} book${fileReport.books === 1 ? "" : "s"}` : ""}
                 {fileReport.licence ? ` · ${fileReport.licence}` : ""}
               </p>
@@ -510,8 +646,82 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
             purchases, and library loans) can't be added, and neither can Kindle files or scanned books that are only pictures
             of pages.
           </p>
+          <CommunityLibraries />
         </div>
       )}
     </aside>
+  );
+}
+
+/** Where e-Sword and MySword modules are shared: a search of each site and a link to it,
+ * opened in the browser. Nothing is downloaded by the app; the reader chooses there. */
+function CommunityLibraries() {
+  const [q, setQ] = useState("");
+  const open = (url: string) => void openUrl(url).catch(() => undefined);
+  // BibleSupport's own search of its downloads (a general web search finds little of it)
+  const search = () =>
+    open(`http://www.biblesupport.com/index.php?app=core&module=search&do=search&search_app=downloads&search_term=${encodeURIComponent(q.trim())}`);
+  return (
+    <section className="library-community">
+      <h4 className="section-label">More modules: community libraries</h4>
+      <p className="muted">
+        Users of e-Sword and MySword share modules on these sites; they open in your browser. Check each module's rights before you
+        download it, then add the file above. (e-Sword's own website has no modules to download: its library is only inside the
+        e-Sword program.)
+      </p>
+      <form
+        className="library-community-search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (q.trim()) search();
+        }}
+      >
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="What to look for: Spurgeon, angels, Greek lexicon…" aria-label="Search BibleSupport" />
+        <button className="pill-btn small" type="submit" disabled={!q.trim()}>
+          Search BibleSupport
+        </button>
+      </form>
+      <ul className="library-community-list">
+        {COMMUNITY.map((c) => (
+          <li key={c.name}>
+            <button className="link-btn" onClick={() => open(c.url)}>
+              {c.name}
+            </button>
+            <span className="muted">{c.about}</span>
+          </li>
+        ))}
+        <li>
+          <span>MySword:</span>
+          {MYSWORD.map(([label, path]) => (
+            <button key={path} className="link-btn" onClick={() => open(`https://www.mysword.info/download-mysword/${path}`)}>
+              {label}
+            </button>
+          ))}
+          <span className="muted">— straight from MySword's website, no account.</span>
+        </li>
+      </ul>
+    </section>
+  );
+}
+
+/** "✓ Installed", with Remove (asked once more) beside it: in Get more and the recommended
+ * Bibles, so an installed Bible can be removed where it was installed. */
+export function InstalledTools({ name, confirm, onConfirm, onRemove }: { name: string; confirm: string | null; onConfirm: (n: string | null) => void; onRemove: (n: string) => void }) {
+  return confirm === name ? (
+    <>
+      <button className="text-btn danger" onClick={() => onRemove(name)}>
+        Remove
+      </button>
+      <button className="text-btn" onClick={() => onConfirm(null)}>
+        Keep
+      </button>
+    </>
+  ) : (
+    <>
+      <span className="library-installed">✓ Installed</span>
+      <button className="text-btn" onClick={() => onConfirm(name)} title="Remove from this computer">
+        Remove
+      </button>
+    </>
   );
 }

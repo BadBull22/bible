@@ -54,3 +54,8 @@ check/
 # Read-aloud voice (~275 MB): the Kokoro model + the built voice sidecar -- rebuild with
 # voice-sidecar\build.ps1 (see HANDOVER.md)
 src-tauri/resources/voice/
+
+# the shared crate: its local build folder setting and lock file (each app has its own lock)
+crates/bible-core/.cargo/
+crates/bible-core/Cargo.lock
+crates/bible-core/target/

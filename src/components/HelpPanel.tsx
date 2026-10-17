@@ -183,6 +183,32 @@ const SECTIONS: Section[] = [
     ),
   },
   {
+    id: "sync",
+    title: "Keeping your computers and phone in step",
+    keywords: "sync synchronise keep in step folder onedrive google drive dropbox synology phone another computer laptop devices",
+    body: (
+      <>
+        <p>
+          <strong>Settings → Keep in step with your other devices</strong> keeps your notes, highlights, bookmarks, reading plans,
+          sermons (with when they were preached), sermon templates and basket the same on all your computers and your phone.
+          Choose a folder they all share — in OneDrive, Google Drive, Dropbox or on your Synology drive — and choose the same folder
+          on each device. There is no account and nothing goes anywhere else: each device keeps one file of its own in that
+          folder (in <em>Bible Concordance sync</em>) and reads the others'.
+        </p>
+        <ul>
+          <li>It syncs when the app starts, every two minutes while it is open, and when you come back to its window; or press <em>Sync now</em>.</li>
+          <li>The newest change wins, and something you delete stays deleted on every device.</li>
+          <li>
+            The same note changed on two devices before they synced keeps both texts (marked <em>from …</em>); the same sermon keeps
+            the other device's version as a copy beside yours, named <em>(from …)</em>. Settings says when this happened.
+          </li>
+          <li>Pictures, videos and music in your sermons are copied too. Downloaded Bibles, books and modules are not: add them on each device.</li>
+          <li>The phone keeps notes, highlights, bookmarks and reading plans in step; sermons stay on the computers.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: "plans",
     title: "Reading plans and verse of the day",
     keywords: "reading plan year new testament gospels psalms proverbs tick day progress verse of the day",
@@ -469,7 +495,19 @@ const SECTIONS: Section[] = [
             Scripture, pictures and video or music links, on navy or on a photo. Save as PowerPoint; a link on a slide plays when clicked
             in the slide show. The bar at the top stays in view: the background for all slides, <em>Verse numbers</em> on or off, and a
             button for each kind of slide to add. Under the slide you're editing, give that one slide its own background and put a
-            picture beside its words. A passage is put on slides a few whole verses at a time, and the words shrink to fit.
+            picture beside its words. A passage is put on slides a few whole verses at a time, and the words shrink to fit. When the
+            slides have video or music files, <em>Save as PowerPoint</em> asks each time: put them inside the PowerPoint (plays on any
+            computer, a bigger file) or link to them (a small file that plays only on this computer). Web videos are always links.
+          </li>
+          <li>
+            <strong>Present:</strong> <em>▶ Present</em> (or <em>From this slide</em>) shows the slides full screen on your second
+            screen — the projector or TV — and on your own screen a presenter view: this slide, the next one, your notes for it, the
+            time and how long you've been going, and every slide along the bottom to jump to. Write the notes under each slide's
+            editor; only you see them. Keys: → or Space for the next slide, ← back, B to black out the screen, Esc to end (clickers
+            work too). A video or music slide has <em>Play</em>, <em>Pause</em> and <em>Stop</em>: a kept file plays from this
+            computer, a YouTube video needs the internet. With three or more screens, choose which one shows the slides; the app
+            remembers it. With only one screen the slides fill it: in Windows press Windows key + P and choose <em>Extend</em> to use
+            the projector as a second screen.
           </li>
           <li>
             <strong>Preach</strong> shows the sermon full screen with a clock; Esc leaves. <strong>My sermons</strong> holds your saved
@@ -596,6 +634,22 @@ const SECTIONS: Section[] = [
             <em>Add to my library</em>. An e-book then appears under <strong>Books</strong> in the left-hand list like any
             other, with contents, search and Listen; Bible references in its text ("John 3:16") become links. Only the text
             is added, not pictures. Items you add yourself are marked <em>Added by you</em> and can be removed again.
+          </li>
+          <li>
+            <strong>e-Sword and MySword modules</strong>: <em>Add from file</em> also takes modules made for e-Sword (
+            <em>.bblx .cmtx .dctx .topx .lexx .devx .refx</em>) and MySword (<em>.mybible</em>, also packed in <em>.gz</em> or{" "}
+            <em>.zip</em>). A Bible joins your translation list, a commentary the Commentary panel, a dictionary, lexicon or
+            topics the Dictionary panel, and a book or devotional your books. <em>Several files…</em> and{" "}
+            <em>A whole folder…</em> add many at once and report on each. Modules locked by their publisher (e-Sword's own and
+            bought modules) can't be opened; the app says so and adds nothing. Only add modules you have the right to use —
+            many shared online are copies of copyrighted Bibles and books made without permission.
+          </li>
+          <li>
+            <strong>Community libraries</strong>: below <em>Add from file</em>. <em>Search BibleSupport</em> searches the largest
+            collection of e-Sword and MySword modules (downloading there needs a free account); MySword's own Bibles,
+            commentaries, dictionaries, books and devotionals, eswordlibrary.com and bible.org's own studies are a click away. They
+            open in your browser: choose and download there, then add the file here. The app itself downloads nothing from these
+            sites. e-Sword's own website has no modules to download — its library is only inside the e-Sword program.
           </li>
           <li>
             <strong>Finding your place in a book</strong>: the slider above the text runs across the whole book — drag it to

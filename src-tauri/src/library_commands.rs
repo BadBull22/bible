@@ -64,7 +64,7 @@ pub async fn library_catalog(state: State<'_, LibraryState>, refresh: bool, sour
         None => std::fs::read(&cache).map_err(|e| e.to_string())?,
     };
     let confs = library::parse_catalog(&bytes)?;
-    library::catalog_items(&confs, &*lib_conn(&state)?, source.id)
+    library::catalog_items(&confs, &*lib_conn(&state)?, source.id, library::BUILT_IN)
 }
 
 /// Downloads one module (internet needed) and installs it into the library. Progress is

@@ -32,6 +32,7 @@ import { niceDate, preachingLine, SermonPreachings } from "./SermonPreachings";
 import { SermonReview } from "./SermonReview";
 import type { WordsRequest } from "./SermonWords";
 import { SlidesEditor } from "./SlidesEditor";
+import { Presenter } from "./SlideShow";
 import { ChevronLeftIcon } from "./icons";
 
 interface Props {
@@ -297,6 +298,8 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   const autoSlides = useMemo(() => slidesOf(meta, work.items, versionCode, work.slideVerseNumbers), [work, versionCode]); // eslint-disable-line react-hooks/exhaustive-deps
   const slides = work.slides ?? autoSlides;
   const [savingSlides, setSavingSlides] = useState(false);
+  // the slide show running: the slide it started from
+  const [presenting, setPresenting] = useState<number | null>(null);
 
   /** Other sermons that used this material (or, for Scripture, this passage). */
   const usedIn = (m: Material) =>
@@ -581,7 +584,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     loadTemplates();
   }
 
-  async function saveSlides() {
+  async function saveSlides(embed: boolean) {
     setSavingSlides(true);
     try {
       // a kept file a slide opens: its full path on this computer
@@ -591,6 +594,8 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
           // a slide's own background ("" is plain navy), or the one chosen for all of them
           background: (s.background === undefined ? work.slideBackground : s.background) || undefined,
           link: s.link?.startsWith("media:") ? await api.sermonMediaPath(s.link.slice(6)).catch(() => undefined) : s.link,
+          // a kept video or music file to put inside the PowerPoint (when the preacher chose that)
+          video: embed && s.kind === "link" && s.link?.startsWith("media:") ? s.link.slice(6) : undefined,
         })),
       );
       flash(`Saved to ${await api.saveSermonSlides(work.title.trim() || "Sermon", ready)}`);
@@ -1083,6 +1088,14 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
         </div>
       )}
 
+      {presenting !== null && (
+        <Presenter
+          slides={slides}
+          background={work.slideBackground}
+          start={presenting}
+          onEnd={() => setPresenting(null)}
+        />
+      )}
       {work.tab === "slides" && (
         <div className="sb-page sb-slides">
           <SlidesEditor
@@ -1101,8 +1114,9 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
                 slides: on ? w.slides : (w.slides?.map((s) => (s.kind === "scripture" ? { ...s, body: versesOf(s.body, null).map((v) => v.text).join(" ") } : s)) ?? null),
               }))
             }
-            onSave={saveSlides}
+            onSave={(embed) => void saveSlides(embed)}
             saving={savingSlides}
+            onPresent={(from) => setPresenting(from)}
           />
           <p className="search-hint">
             Saved as a PowerPoint file in Documents\Bible Concordance — it opens in PowerPoint, ProPresenter, Keynote, Google Slides and LibreOffice.

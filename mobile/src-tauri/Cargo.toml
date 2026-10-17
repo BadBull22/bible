@@ -1,6 +1,6 @@
 [package]
 name = "bible-pocket"
-version = "0.3.2"
+version = "2.9.0"
 description = "Bible Concordance for phones: read, search, bookmark and highlight, offline"
 authors = ["BadBull22"]
 edition = "2021"
@@ -30,6 +30,9 @@ ureq = { version = "2", default-features = false, features = ["tls"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
 # the nature backgrounds for verse pictures (since 0.3.0): checked by SHA-256, handed to the page as base64
 sha2 = "0.10"
+# what the desktop and the phone app share (since 0.4.0): the module readers, Bible references,
+# and keeping devices in step through a shared folder
+bible-core = { path = "../../crates/bible-core" }
 base64 = "0.22"
 
 [profile.release]
