@@ -14,7 +14,9 @@ On https://github.com/BadBull22/bible, click the ⚙ beside **About** (top right
 - **Topics:** bible, bible-study, bible-app, concordance, strongs-concordance, christian,
   offline-first, sermon, e-sword, mysword, sword-project, tauri, android, windows, free-software
 
-## 2. Search engines (15 minutes, once)
+## 2. Search engines — DONE 2026-10-17 (Google Search Console and Bing Webmaster Tools set up by the owner)
+
+Kept for reference. The Google verification file is `docs/google605daed453905d75.html` — never remove it.
 
 **Google Search Console** — this is what gets the site into Google properly.
 
@@ -119,7 +121,12 @@ Directories want 3–6 screenshots (PNG, at least 1280×720 for Windows). Good o
 5. **Android:** the reading view with a highlight, and the verse sheet open.
 6. **Android:** the Library with a commentary open, and a verse picture.
 
-(Claude can take these in a session when the app is not in use and the phone is plugged in.)
+**Taken 2026-10-17 — in the `screenshots/` folder of the repository** (full size: Windows 1600×1000,
+Android 1200×2652; on GitHub at https://github.com/BadBull22/bible/tree/master/screenshots):
+`windows-1-interlinear`, `windows-2-sermon-builder`, `windows-3-slides`, `windows-4-commentary`,
+`windows-5-library`, `android-1-reading`, `android-2-verse`, `android-3-word`, `android-4-picture`,
+`android-5-commentary`, `android-6-search`, `android-7-library`. Smaller copies are in the galleries
+on the Windows and Android pages of the website.
 
 ## 7. Links
 
