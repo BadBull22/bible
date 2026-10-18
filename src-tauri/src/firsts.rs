@@ -49,8 +49,12 @@ pub struct FirstsData {
 
 impl FirstsData {
     pub fn load(path: &Path) -> anyhow::Result<Self> {
-        let contents = std::fs::read_to_string(path)?;
-        let raw: RawFile = serde_json::from_str(&contents)?;
+        Self::from_json(&std::fs::read_to_string(path)?)
+    }
+
+    /// From firsts.json's text (the phone carries it inside the app).
+    pub fn from_json(text: &str) -> anyhow::Result<Self> {
+        let raw: RawFile = serde_json::from_str(text)?;
         Ok(Self { entries: raw.entries })
     }
 

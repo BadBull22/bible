@@ -55,6 +55,22 @@ export interface Article extends ArticleHead {
   body: string;
 }
 
+/** An answer to a question typed in the search box (ask.rs). */
+export type Answer =
+  | { kind: "count"; word: string; total: number; verses: number; scope: string | null }
+  | {
+      kind: "curated";
+      question: string;
+      /** stated | computed | traditional | commentary_opinion | doctrinal_view | unattested */
+      confidence: string;
+      answer: string;
+      citations: { reference: string; role: string }[];
+      note: string | null;
+      /** the closest question on file, not the words typed */
+      by_meaning: boolean;
+    }
+  | { kind: "dictionary"; id: number; headword: string; source: string; preview: string };
+
 export interface SearchResult {
   hits: Hit[];
   /** verses with exactly the words typed, in the translation being read */
@@ -219,6 +235,8 @@ export const api = {
     invoke<string>("passage", { version, book, chapter, verse, verseEnd }),
   search: (query: string, version: string, testament: string | null, book: string | null) =>
     invoke<SearchResult>("search_bible", { query, version, testament, book, limit: 300 }),
+  /** an answer when what was typed is a question the app can answer, else null */
+  ask: (query: string) => invoke<Answer | null>("ask_question", { query }),
   searchUpgradeStatus: () => invoke<{ installed: boolean; size_mb: number }>("search_upgrade_status"),
   /** downloads the Advanced search upgrade ("search-upgrade-progress" events report the percentage) */
   searchUpgradeInstall: () => invoke<void>("search_upgrade_install"),

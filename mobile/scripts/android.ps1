@@ -62,6 +62,10 @@ New-Item -ItemType Directory -Force "$Mirror\src-tauri\src" | Out-Null
 # node_modules, the generated Android project and build output belong to the mirror
 Mirror-Dir $mobile "$Mirror\mobile" @("node_modules", "dist", "gen", "target", ".cargo", ".tauri", "build")
 Copy-Item "$root\src-tauri\src\sermon.rs" "$Mirror\src-tauri\src\sermon.rs" -Force
+# the desktop's "Ask a question" (since 2.9.3): its code and its data (see mobile/src-tauri/src/ask.rs)
+foreach ($f in "qa.rs", "qa_parser.rs", "firsts.rs") { Copy-Item "$root\src-tauri\src\$f" "$Mirror\src-tauri\src\$f" -Force }
+New-Item -ItemType Directory -Force "$Mirror\src-tauri\resources" | Out-Null
+foreach ($f in "qa.json", "qa_index.json", "firsts.json") { Copy-Item "$root\src-tauri\resources\$f" "$Mirror\src-tauri\resources\$f" -Force }
 # what the desktop and the phone app share (module readers, references, keeping in step)
 Mirror-Dir "$root\crates" "$Mirror\crates" @("target", ".cargo")
 

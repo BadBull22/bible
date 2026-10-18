@@ -34,6 +34,14 @@ pub mod userdata;
 #[allow(dead_code)]
 #[path = "../../../src-tauri/src/sermon.rs"]
 pub mod sermon;
+// the desktop's "Ask a question": its question grammar and its hand-checked answers (since 2.9.3)
+#[path = "../../../src-tauri/src/qa.rs"]
+pub mod qa;
+#[path = "../../../src-tauri/src/qa_parser.rs"]
+pub mod qa_parser;
+#[path = "../../../src-tauri/src/firsts.rs"]
+pub mod firsts;
+pub mod ask;
 
 static PHONE_DB_GZ: &[u8] = include_bytes!("../resources/phone.db.gz");
 
@@ -198,6 +206,16 @@ fn search_bible(core: State<Core>, query: String, version: String, testament: Op
     let scope = search::Scope { testament: testament.as_deref(), book: book.as_deref() };
     let meaning = meaning_pack::get(&core.dir);
     search::search(&d, &s, &query, core.searchable(&version), scope, limit.unwrap_or(200).min(500), meaning.as_deref())
+}
+
+/// An answer above the search results, when what was typed is a question the app can answer.
+#[tauri::command(async)]
+fn ask_question(core: State<Core>, query: String) -> Result<Option<ask::Answer>, String> {
+    let core = core.get()?;
+    let meaning = meaning_pack::get(&core.dir);
+    let d = core.db.lock().map_err(err)?;
+    let s = core.study.lock().map_err(err)?;
+    ask::ask(&d, &s, &query, meaning.as_deref())
 }
 
 // ---------------------------------------------------------------- the Advanced search upgrade
@@ -874,6 +892,7 @@ pub fn run() {
             passage,
             search_bible,
             search_upgrade_status,
+            ask_question,
             search_upgrade_install,
             search_upgrade_remove,
             topic_verses,

@@ -1387,3 +1387,21 @@ details.hl-group > .hits li { background: transparent; }
 .hl-names { display: grid; gap: 6px; margin-bottom: 8px; }
 .hl-name { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: 8px; }
 .hl-name input { flex: 1; min-width: 0; }
+
+/* Search: an answer above the results, when the search is a question (AskAnswer.tsx) */
+.card.answer { margin: 0 0 12px; border-left: 4px solid var(--accent); }
+.card.answer h3 { margin: 6px 0 4px; }
+.answer-text { margin: 6px 0; line-height: 1.5; white-space: pre-line; }
+.card.answer .badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--muted);
+}
+.card.answer .badge.conf-unattested,
+.card.answer .badge.conf-commentary_opinion { color: var(--muted); }
+.card.answer .badge.conf-stated,
+.card.answer .badge.conf-computed { color: var(--accent); }
