@@ -14,11 +14,16 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+# packs the desktop's Ask index for the phone (build.rs)
+serde_json = "1"
 
 [dependencies]
 tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+# the desktop's Ask (qa.rs, qa_parser.rs, firsts.rs, shared as files like sermon.rs)
+anyhow = "1"
+regex = "1"
 rusqlite = { version = "0.32", features = ["bundled"] }
 flate2 = "1"
 # the share sheet, the phone's voice, saving and opening a file (Kotlin, in plugins/phone/android)

@@ -280,9 +280,11 @@ dependencies = [
 name = "bible-pocket"
 version = "2.9.3"
 dependencies = [
+ "anyhow",
  "base64 0.22.1",
  "bible-core",
  "flate2",
+ "regex",
  "rusqlite",
  "serde",
  "serde_json",

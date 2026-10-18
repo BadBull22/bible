@@ -20,6 +20,7 @@ import {
   PlanProgress,
   ReadingStats,
   SearchResult,
+  Answer,
   Topic,
   Verse,
   Version,
@@ -32,6 +33,7 @@ import { Translations } from "./Translations";
 import { UpdateBanner, UpdateSettings, useUpdates } from "./Updates";
 import { SyncSettings, useAutoSync } from "./Sync";
 import { SearchUpgradeOffer, SearchUpgradeSettings, useSearchUpgrade } from "./SearchUpgrade";
+import { AskAnswer } from "./AskAnswer";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
@@ -293,6 +295,8 @@ export function App() {
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState<"all" | "OT" | "NT" | "book">("all");
   const [result, setResult] = useState<SearchResult | null>(null);
+  // an answer above the results, when the search is a question (as the desktop's "Ask")
+  const [answer, setAnswer] = useState<Answer | null>(null);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const searchUpgrade = useSearchUpgrade();
@@ -620,6 +624,11 @@ export function App() {
     if (!query) return;
     let current = true;
     setSearching(true);
+    setAnswer(null);
+    api
+      .ask(query)
+      .then((a) => current && setAnswer(a))
+      .catch(() => undefined);
     api
       .search(query, version, scope === "OT" || scope === "NT" ? scope : null, scope === "book" ? place.book : null)
       .then((r) => current && setResult(r))
@@ -1001,6 +1010,7 @@ export function App() {
                     </button>
                   </p>
                 )}
+                {query && answer && <AskAnswer answer={answer} books={books} onOpen={go} onArticle={openArticle} />}
                 {query && result && (result.topics.length > 0 || result.articles.length > 0) && (
                   <div className="chips topics" role="group" aria-label="Topics and dictionary articles">
                     {result.topics.map((t) => (
