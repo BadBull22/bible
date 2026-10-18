@@ -24,7 +24,8 @@ export interface Verse {
   red: [number, number][];
 }
 
-/** A verse (or short passage) a search found. `why`: core | phrase | words | topical | some. */
+/** A passage a search found. `why`: story | core | phrase | words | meaning | name. `text`: the
+ * verses of it that were found (numbered when there are several). */
 export interface Hit {
   book: string;
   chapter: number;
@@ -60,6 +61,10 @@ export interface SearchResult {
   exact: number;
   topics: Topic[];
   articles: ArticleHead[];
+  /** misspelt words and the Bible's words they were taken for */
+  corrected: [string, string][];
+  /** whether the Advanced search upgrade took part */
+  by_meaning: boolean;
 }
 
 export interface ChapterMarks {
@@ -214,6 +219,10 @@ export const api = {
     invoke<string>("passage", { version, book, chapter, verse, verseEnd }),
   search: (query: string, version: string, testament: string | null, book: string | null) =>
     invoke<SearchResult>("search_bible", { query, version, testament, book, limit: 300 }),
+  searchUpgradeStatus: () => invoke<{ installed: boolean; size_mb: number }>("search_upgrade_status"),
+  /** downloads the Advanced search upgrade ("search-upgrade-progress" events report the percentage) */
+  searchUpgradeInstall: () => invoke<void>("search_upgrade_install"),
+  searchUpgradeRemove: () => invoke<void>("search_upgrade_remove"),
   topicVerses: (id: number, version: string) => invoke<Hit[]>("topic_verses", { id, version }),
   crossRefs: (version: string, book: string, chapter: number, verse: number) => invoke<Hit[]>("cross_refs", { version, book, chapter, verse }),
   /** the verse in every translation: [code, text] */
@@ -438,6 +447,8 @@ export const phone = {
   openFile: () => invoke<{ path: string | null; name: string }>("plugin:phone|open_file"),
   /** asks Android to let the app run in the background (for the daily reminder) */
   batterySettings: () => invoke<{ asked: boolean }>("plugin:phone|battery_settings"),
+  /** opens an https:// address in the phone's browser */
+  openLink: (url: string) => invoke<{ opened: boolean }>("plugin:phone|open_link", { url }),
   /** asks for a folder to keep in step through: its uri, or null if cancelled */
   pickFolder: () => invoke<{ uri: string | null; name: string }>("plugin:phone|pick_folder"),
   /** hands a downloaded update to Android's installer; `allow`: the reader must first let this app install apps */

@@ -33,6 +33,12 @@ class ShareArgs {
 }
 
 @InvokeArg
+class LinkArgs {
+  /** an https:// address */
+  lateinit var url: String
+}
+
+@InvokeArg
 class SpeakArgs {
   lateinit var text: String
   var rate: Float = 1.0f
@@ -410,6 +416,26 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
       invoke.resolve(JSObject().put("path", file.absolutePath).put("name", name))
     } catch (ex: Exception) {
       invoke.reject(ex.message)
+    }
+  }
+
+  // ---------------------------------------------------------------- a web page in the phone's browser
+
+  /** Opens an https:// address in the phone's browser (searching online). */
+  @Command
+  fun openLink(invoke: Invoke) {
+    val args = invoke.parseArgs(LinkArgs::class.java)
+    if (!args.url.startsWith("https://")) {
+      invoke.reject("Only web addresses can be opened.")
+      return
+    }
+    try {
+      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(args.url))
+      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      activity.startActivity(intent)
+      invoke.resolve(JSObject().put("opened", true))
+    } catch (ex: Exception) {
+      invoke.reject("There is no web browser on this phone to open it in.")
     }
   }
 

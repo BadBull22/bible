@@ -146,6 +146,86 @@ const CORE: &[(&[&str], &[Passage])] = &[
     (&["joy"], &[
         ("Nehemiah", 8, 10, 10), ("Psalms", 16, 11, 11), ("Psalms", 30, 5, 5), ("John", 15, 11, 11), ("Romans", 15, 13, 13), ("Philippians", 4, 4, 4), ("James", 1, 2, 4),
     ]),
+    (&["trinity", "the trinity", "godhead", "three in one", "father son and holy spirit", "triune god"], &[
+        ("Genesis", 1, 26, 27), ("Deuteronomy", 6, 4, 4), ("Isaiah", 48, 16, 16), ("Matthew", 3, 16, 17), ("Matthew", 28, 19, 19),
+        ("John", 1, 1, 3), ("John", 1, 14, 14), ("John", 14, 16, 17), ("John", 14, 26, 26), ("2 Corinthians", 13, 14, 14), ("1 Peter", 1, 2, 2),
+    ]),
+    (&["law of moses", "the law", "mosaic law", "torah", "the commandments"], &[
+        ("Exodus", 20, 1, 17), ("Deuteronomy", 6, 4, 9), ("Psalms", 19, 7, 11), ("Psalms", 119, 97, 105), ("Matthew", 5, 17, 20),
+        ("Matthew", 22, 36, 40), ("Romans", 3, 20, 22), ("Romans", 7, 7, 12), ("Romans", 10, 4, 4), ("Galatians", 3, 23, 25), ("Hebrews", 10, 1, 1),
+    ]),
+    (&["angels", "angel", "guardian angels", "archangel"], &[
+        ("Genesis", 28, 12, 12), ("Psalms", 34, 7, 7), ("Psalms", 91, 11, 12), ("Psalms", 103, 20, 20), ("Daniel", 10, 12, 13), ("Matthew", 18, 10, 10),
+        ("Luke", 1, 26, 38), ("Luke", 2, 8, 14), ("Acts", 12, 7, 11), ("Hebrews", 1, 13, 14), ("Hebrews", 13, 2, 2), ("Revelation", 5, 11, 12),
+    ]),
+    (&["demons", "demon", "evil spirits", "unclean spirits", "casting out demons", "deliverance", "possessed"], &[
+        ("Matthew", 10, 1, 1), ("Matthew", 10, 8, 8), ("Matthew", 12, 43, 45), ("Mark", 1, 23, 27), ("Mark", 5, 1, 20), ("Mark", 16, 17, 17),
+        ("Luke", 10, 17, 20), ("Acts", 16, 16, 18), ("Acts", 19, 13, 16), ("Ephesians", 6, 12, 12), ("James", 2, 19, 19), ("1 John", 4, 1, 4),
+    ]),
+    (&["satan", "lucifer", "fall of satan"], &[
+        ("Genesis", 3, 1, 5), ("Job", 1, 6, 12), ("Isaiah", 14, 12, 15), ("Matthew", 4, 1, 11), ("Luke", 10, 18, 18), ("John", 8, 44, 44),
+        ("John", 10, 10, 10), ("2 Corinthians", 11, 14, 14), ("1 Peter", 5, 8, 8), ("Revelation", 12, 7, 10), ("Revelation", 20, 10, 10),
+    ]),
+    (&["end times", "end of days", "last days", "end of the world", "signs of the times", "tribulation", "great tribulation", "end of the age"], &[
+        ("Daniel", 12, 1, 4), ("Joel", 2, 28, 32), ("Matthew", 24, 3, 14), ("Matthew", 24, 21, 22), ("Matthew", 24, 29, 31), ("Luke", 21, 25, 28),
+        ("1 Thessalonians", 4, 16, 17), ("1 Thessalonians", 5, 1, 9), ("2 Thessalonians", 2, 1, 4), ("2 Timothy", 3, 1, 5), ("2 Peter", 3, 3, 10),
+        ("Revelation", 6, 12, 17),
+    ]),
+    (&["antichrist", "mark of the beast", "the beast", "666", "man of lawlessness"], &[
+        ("Daniel", 7, 24, 25), ("2 Thessalonians", 2, 3, 10), ("1 John", 2, 18, 18), ("1 John", 4, 3, 3), ("Revelation", 13, 1, 8),
+        ("Revelation", 13, 16, 18), ("Revelation", 19, 20, 20),
+    ]),
+    (&["millennium", "thousand years", "millennial reign", "reign of christ"], &[
+        ("Isaiah", 2, 2, 4), ("Isaiah", 11, 6, 9), ("Zechariah", 14, 4, 9), ("Revelation", 20, 1, 6),
+    ]),
+    (&["judgment", "judgement", "judgment day", "day of judgment", "great white throne", "final judgment"], &[
+        ("Ecclesiastes", 12, 14, 14), ("Matthew", 25, 31, 46), ("John", 5, 28, 29), ("Romans", 14, 10, 12), ("2 Corinthians", 5, 10, 10),
+        ("Hebrews", 9, 27, 27), ("Revelation", 20, 11, 15),
+    ]),
+    (&["heaven", "new jerusalem", "new heaven and new earth", "paradise"], &[
+        ("John", 14, 2, 3), ("1 Corinthians", 2, 9, 9), ("2 Corinthians", 5, 1, 1), ("Philippians", 3, 20, 21), ("Revelation", 21, 1, 4),
+        ("Revelation", 21, 22, 27), ("Revelation", 22, 1, 5),
+    ]),
+    (&["hell", "lake of fire", "eternal punishment", "hades"], &[
+        ("Matthew", 10, 28, 28), ("Matthew", 25, 41, 41), ("Matthew", 25, 46, 46), ("Mark", 9, 43, 48), ("Luke", 16, 22, 26),
+        ("2 Thessalonians", 1, 8, 9), ("Revelation", 20, 14, 15), ("Revelation", 21, 8, 8),
+    ]),
+    (&["covenant", "new covenant", "covenants"], &[
+        ("Genesis", 9, 12, 17), ("Genesis", 15, 5, 6), ("Genesis", 17, 1, 8), ("Jeremiah", 31, 31, 34), ("Luke", 22, 20, 20), ("Hebrews", 8, 6, 13),
+        ("Hebrews", 9, 15, 15),
+    ]),
+    (&["fasting", "fasted", "fast and pray"], &[
+        ("Ezra", 8, 21, 23), ("Esther", 4, 16, 16), ("Isaiah", 58, 6, 9), ("Daniel", 10, 2, 3), ("Joel", 2, 12, 12), ("Matthew", 4, 1, 2),
+        ("Matthew", 6, 16, 18), ("Acts", 13, 2, 3), ("Acts", 14, 23, 23),
+    ]),
+    (&["speaking in tongues", "tongues", "other tongues", "praying in tongues"], &[
+        ("Isaiah", 28, 11, 11), ("Mark", 16, 17, 17), ("Acts", 2, 1, 4), ("Acts", 10, 44, 46), ("Acts", 19, 6, 6), ("1 Corinthians", 12, 10, 10),
+        ("1 Corinthians", 14, 2, 2), ("1 Corinthians", 14, 4, 5), ("1 Corinthians", 14, 14, 15), ("1 Corinthians", 14, 18, 18), ("1 Corinthians", 14, 39, 39),
+    ]),
+    (&["miracles", "signs and wonders", "miracle", "the miraculous"], &[
+        ("Mark", 16, 17, 20), ("John", 14, 12, 12), ("Acts", 2, 22, 22), ("Acts", 2, 43, 43), ("Acts", 5, 12, 16), ("Acts", 19, 11, 12),
+        ("1 Corinthians", 12, 10, 10), ("Hebrews", 2, 4, 4),
+    ]),
+    (&["sabbath", "day of rest", "sabbath rest"], &[
+        ("Genesis", 2, 2, 3), ("Exodus", 20, 8, 11), ("Mark", 2, 27, 28), ("Luke", 4, 16, 16), ("Colossians", 2, 16, 17), ("Hebrews", 4, 9, 11),
+    ]),
+    (&["eternal life", "everlasting life", "life after death"], &[
+        ("John", 3, 16, 16), ("John", 5, 24, 24), ("John", 10, 27, 28), ("John", 17, 3, 3), ("Romans", 6, 23, 23), ("1 John", 5, 11, 13),
+    ]),
+    (&["the church", "church", "body of christ"], &[
+        ("Matthew", 16, 18, 18), ("Acts", 2, 42, 47), ("1 Corinthians", 12, 12, 27), ("Ephesians", 1, 22, 23), ("Ephesians", 4, 11, 16), ("Hebrews", 10, 24, 25),
+    ]),
+    (&["anointing", "the anointing", "laying on of hands", "anointing oil"], &[
+        ("Isaiah", 61, 1, 1), ("Luke", 4, 18, 19), ("Acts", 8, 17, 17), ("Acts", 10, 38, 38), ("1 Timothy", 4, 14, 14), ("2 Timothy", 1, 6, 6),
+        ("James", 5, 14, 15), ("1 John", 2, 20, 20), ("1 John", 2, 27, 27),
+    ]),
+    (&["restoration of israel", "israel restored", "future of israel", "god's people israel"], &[
+        ("Genesis", 12, 1, 3), ("Ezekiel", 36, 24, 28), ("Ezekiel", 37, 21, 22), ("Amos", 9, 14, 15), ("Zechariah", 12, 10, 10), ("Romans", 11, 25, 27),
+    ]),
+    (&["messianic prophecy", "messianic prophecies", "prophecies about jesus", "prophecies of christ", "messiah"], &[
+        ("Genesis", 3, 15, 15), ("Psalms", 22, 16, 18), ("Isaiah", 7, 14, 14), ("Isaiah", 9, 6, 7), ("Isaiah", 53, 3, 7), ("Micah", 5, 2, 2),
+        ("Zechariah", 9, 9, 9), ("Luke", 24, 44, 44),
+    ]),
 ];
 
 /// Words that say nothing about the subject.
@@ -271,15 +351,65 @@ fn group(stem: &str) -> String {
 }
 
 fn verse_matches(conn: &Connection, expr: &str, bsb_only: bool, limit: i64) -> Vec<(String, i64, i64)> {
+    // the BSB's verses are one block of rows: the index is asked about those only (a common
+    // word's verses in every translation, ranked, are slow on a phone)
+    let (lo, hi) = if bsb_only { bsb_rows(conn) } else { (i64::MIN, i64::MAX) };
     let sql = format!(
         "SELECT b.name, v.chapter, v.verse FROM verses_fts f JOIN verses v ON v.id = f.rowid JOIN books b ON b.id = v.book_id
          JOIN versions ver ON ver.id = v.version_id
-         WHERE verses_fts MATCH ?1 AND b.testament IN ('OT','NT') AND {} ORDER BY f.rank LIMIT ?2",
+         WHERE verses_fts MATCH ?1 AND f.rowid BETWEEN ?3 AND ?4 AND b.testament IN ('OT','NT') AND {} ORDER BY f.rank LIMIT ?2",
         if bsb_only { "ver.code = 'BSB'" } else { "ver.is_original_language = 0" }
     );
     let Ok(mut stmt) = conn.prepare(&sql) else { return Vec::new() };
-    let rows = stmt.query_map(params![expr, limit], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)));
+    let rows = stmt.query_map(params![expr, limit, lo, hi], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)));
     rows.map(|r| r.filter_map(Result::ok).collect()).unwrap_or_default()
+}
+
+/// The verses (any translation but the original languages) with exactly these words in a row.
+/// A phrase with common words ("end of days") is slow for the index, which walks every verse
+/// with "of"; so the verses with its other words close together are found first, and the
+/// exact words are checked in their text.
+fn phrase_matches(conn: &Connection, words: &[String], limit: usize) -> Vec<(String, i64, i64)> {
+    let tokens = |s: &str| -> Vec<String> { s.to_lowercase().split(|c: char| !c.is_alphanumeric()).filter(|w| !w.is_empty()).map(String::from).collect() };
+    let wanted: Vec<String> = words.iter().flat_map(|w| tokens(w)).collect();
+    let rare: Vec<&String> = wanted.iter().filter(|w| w.len() >= 3 && !STOP.contains(&w.as_str())).collect();
+    if rare.len() == wanted.len() || rare.is_empty() {
+        return verse_matches(conn, &format!("\"{}\"", wanted.join(" ")), false, limit as i64);
+    }
+    let near = if rare.len() == 1 {
+        format!("\"{}\"", rare[0])
+    } else {
+        format!("NEAR({}, {})", rare.iter().map(|w| format!("\"{w}\"")).collect::<Vec<_>>().join(" "), wanted.len())
+    };
+    let Ok(mut stmt) = conn.prepare(
+        "SELECT b.name, v.chapter, v.verse, v.text FROM verses_fts f JOIN verses v ON v.id = f.rowid JOIN books b ON b.id = v.book_id
+         JOIN versions ver ON ver.id = v.version_id
+         WHERE verses_fts MATCH ?1 AND b.testament IN ('OT','NT') AND ver.is_original_language = 0 ORDER BY f.rank LIMIT 600",
+    ) else {
+        return Vec::new();
+    };
+    let rows = stmt.query_map(params![near], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, i64>(2)?, r.get::<_, String>(3)?)));
+    let Ok(rows) = rows else { return Vec::new() };
+    rows.filter_map(Result::ok)
+        .filter(|(_, _, _, text)| tokens(text).windows(wanted.len()).any(|w| w == wanted.as_slice()))
+        .map(|(b, c, v, _)| (b, c, v))
+        .take(limit)
+        .collect()
+}
+
+/// The BSB's rows of the verses table when they are one block (they are), else all rows.
+fn bsb_rows(conn: &Connection) -> (i64, i64) {
+    conn.query_row(
+        "SELECT MIN(v.id), MAX(v.id), COUNT(*) FROM verses v JOIN versions ver ON ver.id = v.version_id WHERE ver.code = 'BSB'",
+        [],
+        |r| Ok((r.get::<_, Option<i64>>(0)?, r.get::<_, Option<i64>>(1)?, r.get::<_, i64>(2)?)),
+    )
+    .ok()
+    .and_then(|(lo, hi, n)| match (lo, hi) {
+        (Some(lo), Some(hi)) if hi - lo + 1 == n => Some((lo, hi)),
+        _ => None,
+    })
+    .unwrap_or((i64::MIN, i64::MAX))
 }
 
 fn passage_text(conn: &Connection, book: &str, chapter: i64, start: i64, end: i64) -> String {
@@ -339,11 +469,16 @@ fn topical_refs(study: &Connection, topic: &str) -> Vec<(String, i64, i64, i64)>
             headings.extend(extra.iter().map(|h| h.to_string()));
         }
     }
-    let Ok(mut all) = study.prepare("SELECT id, headword_fold FROM dict_entries WHERE dict_code IN ('nave','torrey')") else { return Vec::new() };
-    let entries: Vec<(i64, String)> = all.query_map([], |r| Ok((r.get(0)?, r.get(1)?))).map(|r| r.filter_map(Result::ok).collect()).unwrap_or_default();
+    // the topical Bibles' headings with their stems, worked out once (it takes a while on a phone)
+    static HEADINGS: std::sync::OnceLock<Vec<(i64, String, Vec<String>)>> = std::sync::OnceLock::new();
+    let entries = HEADINGS.get_or_init(|| {
+        let Ok(mut all) = study.prepare("SELECT id, headword_fold FROM dict_entries WHERE dict_code IN ('nave','torrey')") else { return Vec::new() };
+        all.query_map([], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?)))
+            .map(|r| r.filter_map(Result::ok).map(|(id, head)| { let stems = key_stems(&head); (id, head, stems) }).collect())
+            .unwrap_or_default()
+    });
     let mut ids: Vec<i64> = Vec::new();
-    for (id, head) in &entries {
-        let head_stems = key_stems(head);
+    for (id, head, head_stems) in entries {
         // a heading fits when it is about all the subject's words and little else
         let fits = stems.iter().all(|s| head_stems.contains(s)) && head_stems.len() <= stems.len() + 2;
         if fits || headings.iter().any(|h| h == head) {
@@ -351,14 +486,22 @@ fn topical_refs(study: &Connection, topic: &str) -> Vec<(String, i64, i64, i64)>
         }
     }
     let mut out = Vec::new();
-    let Ok(mut refs) = study.prepare("SELECT book, chapter, verse, verse_end FROM dict_refs WHERE entry_id = ?1 AND verse IS NOT NULL") else { return out };
-    for id in ids.iter().take(12) {
-        let rows = refs.query_map(params![id], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, i64>(2)?, r.get::<_, Option<i64>>(3)?)));
-        if let Ok(rows) = rows {
-            for (book, chapter, verse, end) in rows.filter_map(Result::ok) {
-                out.push((book, chapter, verse, end.filter(|e| *e > verse && *e - verse <= 12).unwrap_or(verse)));
-            }
+    // all the headings' references in one pass (the desktop's study.db has no index on entry_id)
+    let ids: Vec<i64> = ids.into_iter().take(12).collect();
+    if ids.is_empty() {
+        return out;
+    }
+    let list = ids.iter().map(i64::to_string).collect::<Vec<_>>().join(",");
+    let Ok(mut refs) = study.prepare(&format!("SELECT entry_id, book, chapter, verse, verse_end FROM dict_refs WHERE entry_id IN ({list}) AND verse IS NOT NULL ORDER BY rowid")) else { return out };
+    let mut by_entry: HashMap<i64, Vec<(String, i64, i64, i64)>> = HashMap::new();
+    if let Ok(rows) = refs.query_map([], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?, r.get::<_, i64>(2)?, r.get::<_, i64>(3)?, r.get::<_, Option<i64>>(4)?))) {
+        for (id, book, chapter, verse, end) in rows.filter_map(Result::ok) {
+            by_entry.entry(id).or_default().push((book, chapter, verse, end.filter(|e| *e > verse && *e - verse <= 12).unwrap_or(verse)));
         }
+    }
+    // in the headings' order, as before
+    for id in &ids {
+        out.extend(by_entry.remove(id).unwrap_or_default());
     }
     out
 }
@@ -381,9 +524,8 @@ pub fn find(db: &Connection, study: Option<&Connection>, topic: &str, limit: usi
 
     let words = words_of(topic);
     let stems = key_stems(topic);
-    if words.len() >= 2 {
-        let phrase = format!("\"{}\"", words.join(" "));
-        for (i, (book, chapter, verse)) in verse_matches(db, &phrase, false, 60).into_iter().enumerate() {
+    if words.len() >= 2 && stems.len() >= 2 {
+        for (i, (book, chapter, verse)) in phrase_matches(db, &words, 60).into_iter().enumerate() {
             add(&book, chapter, verse, verse, 4.0 - i as f64 * 0.01, "phrase");
         }
     }
@@ -479,6 +621,20 @@ mod tests {
         assert_eq!(key_stems("How do I forgive someone who hurt me?"), ["forgiv", "hurt"]);
     }
 
+    /// The well-known stories the search knows by name (`bible_core::find::STORIES`): every
+    /// passage is in the text. `--nocapture` shows each one's first and last verse.
+    #[test]
+    fn every_story_passage_exists() {
+        let (db, _) = dbs();
+        for (names, (book, chapter, verse, end)) in bible_core::find::STORIES {
+            assert!(end >= verse, "{names:?}");
+            let first = passage_text(&db, book, *chapter, *verse, *verse);
+            let last = passage_text(&db, book, *chapter, *end, *end);
+            assert!(!first.is_empty() && !last.is_empty(), "{names:?}: {book} {chapter}:{verse}-{end} isn't in the text");
+            println!("{} | {book} {chapter}:{verse}-{end} | {first} || {last}", names[0]);
+        }
+    }
+
     #[test]
     fn every_core_passage_exists() {
         let (db, _) = dbs();
@@ -488,6 +644,7 @@ mod tests {
                 let first = passage_text(&db, book, *chapter, *verse, *verse);
                 let last = passage_text(&db, book, *chapter, *end, *end);
                 assert!(!first.is_empty() && !last.is_empty(), "{names:?}: {book} {chapter}:{verse}-{end} isn't in the text");
+                println!("{} | {book} {chapter}:{verse}-{end} | {first} || {last}", names[0]);
             }
         }
     }

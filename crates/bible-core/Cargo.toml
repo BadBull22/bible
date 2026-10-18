@@ -15,3 +15,10 @@ flate2 = "1"
 unicode-normalization = "0.1"
 tar = { version = "0.4", default-features = false }
 zip = { version = "8", default-features = false, features = ["deflate"] }
+# searching by meaning (the "meaning" feature): the sentence model, without its tokenizer library
+candle-core = { version = "0.9", optional = true }
+candle-nn = { version = "0.9", optional = true }
+candle-transformers = { version = "0.9", optional = true }
+
+[features]
+meaning = ["dep:candle-core", "dep:candle-nn", "dep:candle-transformers"]

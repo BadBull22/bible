@@ -19,7 +19,9 @@ pub mod bibles;
 pub mod db;
 pub mod lan;
 pub mod library;
+pub mod meaning_pack;
 pub mod modules;
+pub mod packs;
 pub mod search;
 pub mod study;
 pub mod study_extra;
@@ -78,6 +80,8 @@ pub struct Opened {
     bundled: Vec<String>,
     /// the app's data folder (the nature backgrounds are kept in it)
     dir: PathBuf,
+    /// the unpacked Bible database
+    bible: PathBuf,
 }
 
 fn open_all(dir: &Path) -> Result<Opened, String> {
@@ -97,6 +101,7 @@ fn open_all(dir: &Path) -> Result<Opened, String> {
         bibles: Mutex::new(more),
         library: Mutex::new(library::open(dir)?),
         bundled,
+        bible: bible.clone(),
         dir: dir.to_path_buf(),
     })
 }
@@ -191,7 +196,34 @@ fn search_bible(core: State<Core>, query: String, version: String, testament: Op
     let d = core.db.lock().map_err(err)?;
     let s = core.study.lock().map_err(err)?;
     let scope = search::Scope { testament: testament.as_deref(), book: book.as_deref() };
-    search::search(&d, &s, &query, core.searchable(&version), scope, limit.unwrap_or(200).min(500))
+    let meaning = meaning_pack::get(&core.dir);
+    search::search(&d, &s, &query, core.searchable(&version), scope, limit.unwrap_or(200).min(500), meaning.as_deref())
+}
+
+// ---------------------------------------------------------------- the Advanced search upgrade
+
+#[derive(Serialize)]
+struct SearchUpgradeStatus {
+    installed: bool,
+    size_mb: u32,
+}
+
+#[tauri::command(async)]
+fn search_upgrade_status(core: State<Core>) -> Result<SearchUpgradeStatus, String> {
+    Ok(SearchUpgradeStatus { installed: meaning_pack::installed(&core.get()?.dir), size_mb: meaning_pack::SIZE_MB })
+}
+
+/// Downloads the upgrade; "search-upgrade-progress" events report the percentage.
+#[tauri::command(async)]
+fn search_upgrade_install(app: AppHandle, core: State<Core>) -> Result<(), String> {
+    meaning_pack::install(&core.get()?.dir, &|pct| {
+        let _ = app.emit("search-upgrade-progress", pct);
+    })
+}
+
+#[tauri::command(async)]
+fn search_upgrade_remove(core: State<Core>) -> Result<(), String> {
+    meaning_pack::remove(&core.get()?.dir)
 }
 
 #[tauri::command(async)]
@@ -824,6 +856,14 @@ pub fn run() {
             // off the main thread, so the window is up at once even on the first run
             std::thread::spawn(move || {
                 let _ = handle.state::<Core>().0.set(open_all(&dir));
+                // the search's word list and the search upgrade, ready before the first search
+                // (on a connection of its own, so the first chapter isn't kept waiting)
+                if let Ok(core) = handle.state::<Core>().get() {
+                    if let Ok(db) = db::open_read_only(&core.bible) {
+                        search::warm(&db);
+                    }
+                }
+                let _ = meaning_pack::get(&dir);
             });
             Ok(())
         })
@@ -833,6 +873,9 @@ pub fn run() {
             chapter,
             passage,
             search_bible,
+            search_upgrade_status,
+            search_upgrade_install,
+            search_upgrade_remove,
             topic_verses,
             cross_refs,
             compare,

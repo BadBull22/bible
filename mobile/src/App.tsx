@@ -31,6 +31,7 @@ import { canRemind, setReminder, testReminder } from "./reminder";
 import { Translations } from "./Translations";
 import { UpdateBanner, UpdateSettings, useUpdates } from "./Updates";
 import { SyncSettings, useAutoSync } from "./Sync";
+import { SearchUpgradeOffer, SearchUpgradeSettings, useSearchUpgrade } from "./SearchUpgrade";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
@@ -150,7 +151,10 @@ function useBack(active: boolean, close: () => void) {
   }, [active]);
 }
 
-const WHY: Record<string, string> = { core: "Key passage", phrase: "Exact words", topical: "Topic" };
+const WHY: Record<string, string> = { story: "Well-known passage", core: "Key passage", phrase: "Exact words", topical: "Topic" };
+
+/** A search on the web, for when the Bible in the app isn't enough. */
+const webSearch = (query: string) => `https://www.google.com/search?q=${encodeURIComponent(`${query} Bible`)}`;
 const RATES: [number, string][] = [
   [0.65, "Slow"],
   [0.8, "Slower"],
@@ -291,6 +295,7 @@ export function App() {
   const [result, setResult] = useState<SearchResult | null>(null);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
+  const searchUpgrade = useSearchUpgrade();
   const [recent, setRecent] = useState<string[]>(loadRecent);
   const [article, setArticle] = useState<Article | null>(null);
 
@@ -624,7 +629,7 @@ export function App() {
       current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, version, scope, scope === "book" ? place.book : ""]);
+  }, [query, version, scope, scope === "book" ? place.book : "", searchUpgrade.installed]);
 
   function openTopic(t: Topic) {
     setSearching(true);
@@ -985,6 +990,15 @@ export function App() {
                   <p className="summary">
                     <strong>“{query}”</strong>: {result.exact === 0 ? "not found word for word" : `word for word in ${result.exact} verse${result.exact === 1 ? "" : "s"}`} ({version}).
                     {result.hits.length > 0 && ` ${result.hits.length} passages, the most relevant first.`}
+                    {result.corrected.length > 0 && (
+                      <>
+                        {" "}
+                        Searched for <strong>{result.corrected.map(([, to]) => to).join(", ")}</strong>.
+                      </>
+                    )}{" "}
+                    <button className="link" onClick={() => void phone.openLink(webSearch(query)).catch(fail)}>
+                      Search online
+                    </button>
                   </p>
                 )}
                 {query && result && (result.topics.length > 0 || result.articles.length > 0) && (
@@ -1009,6 +1023,14 @@ export function App() {
             {searching && <p className="hint">Searching…</p>}
             {!searching && query && result && shown.length === 0 && <p className="hint">Nothing found. Try fewer or different words, or another translation.</p>}
             <HitList hits={shown} showWhy={!topic} onOpen={go} />
+            {!topic && query && result && !searching && (
+              <>
+                <SearchUpgradeOffer upgrade={searchUpgrade} />
+                <div className="actions">
+                  <button onClick={() => void phone.openLink(webSearch(query)).catch(fail)}>Search online for “{query}”</button>
+                </div>
+              </>
+            )}
           </>
         )}
 
@@ -1233,6 +1255,8 @@ export function App() {
             <div className="actions">
               <button onClick={() => setShowTranslations(true)}>More translations (other languages)</button>
             </div>
+
+            <SearchUpgradeSettings upgrade={searchUpgrade} />
 
             <h2>Library</h2>
             <p className="hint">Commentaries, dictionaries, books and devotionals to read offline: free ones from CrossWire, or files you have.</p>

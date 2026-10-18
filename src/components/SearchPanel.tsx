@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { api, AskAnswer, CommentaryHit, SearchHit, Version } from "../api";
 import { AskAnswerView } from "./AskAnswerView";
 import { CloseIcon } from "./icons";
@@ -22,6 +23,12 @@ const MODES: { key: Mode; label: string; placeholder: string }[] = [
   { key: "frequency", label: "Word count", placeholder: "e.g. gold" },
   { key: "commentary", label: "Commentaries", placeholder: "e.g. regeneration, the Sabbath" },
 ];
+
+/** The labels a found passage can carry. */
+const WHY: Record<string, string> = { story: "Well-known passage", core: "Key passage", phrase: "Exact words" };
+
+/** A search on the web, for when the Bible in the app isn't enough. */
+const webSearch = (query: string) => `https://www.google.com/search?q=${encodeURIComponent(`${query} Bible`)}`;
 
 const PHRASE_LIMIT = 100;
 const TOPIC_LIMIT = 50;
@@ -205,7 +212,7 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
         <p className="result-count">
           {hits.length}
           {ran.mode === "phrase" && hits.length >= PHRASE_LIMIT ? "+" : ""} {hits.length === 1 ? "result" : "results"}
-          {ran.mode === "topic" ? " by meaning (BSB)" : ` in ${ran.version}`}
+          {ran.mode === "topic" ? " by meaning (BSB), the most relevant first" : ` in ${ran.version}`}
         </p>
       )}
       {!loading && ran && ran.mode !== "ask" && !error && hits.length === 0 && commentaryHits.length === 0 && (
@@ -215,13 +222,32 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
         <ul className="xref-list">
           {hits.map((h) => (
             <li key={`${h.book}-${h.chapter}-${h.verse}`}>
-              <button className="link-btn" onClick={() => onJump(h.book, h.chapter, h.verse)}>
-                {h.book} {h.chapter}:{h.verse}
-              </button>
+              <div className="xref-item-head">
+                <button className="link-btn" onClick={() => onJump(h.book, h.chapter, h.verse)}>
+                  {h.book} {h.chapter}:{h.verse}
+                  {h.verse_end ? `–${h.verse_end}` : ""}
+                </button>
+                {(h.why ?? [])
+                  .filter((w) => WHY[w])
+                  .slice(0, 1)
+                  .map((w) => (
+                    <span key={w} className="votes">
+                      {WHY[w]}
+                    </span>
+                  ))}
+              </div>
               <div className="snippet">{h.text}</div>
             </li>
           ))}
         </ul>
+      )}
+      {!loading && ran && (
+        <p className="search-hint">
+          <button className="link-btn" onClick={() => void openUrl(webSearch(ran.query)).catch(() => undefined)}>
+            Search online for “{ran.query}”
+          </button>{" "}
+          — opens your web browser.
+        </p>
       )}
       {mode === "ask" && (
         <p className="search-hint">
@@ -241,9 +267,10 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
       )}
       {mode === "topic" && (
         <p className="search-hint">
-          Topics &amp; themes finds verses by meaning, not just matching words (BSB text only) — a paraphrase like
-          "sacrifice of bulls" can surface "burnt offering of bulls" even without shared wording. Use Exact phrase or
-          Word count when you need literal matches in a specific translation.
+          Topics &amp; themes finds passages by meaning, not just matching words (BSB text only) — a paraphrase like
+          "sacrifice of bulls" can surface "burnt offering of bulls" even without shared wording, "Daniel's prayer
+          delayed by 21 days" finds Daniel 10, and misspelt names are put right. Use Exact phrase or Word count when you
+          need literal matches in a specific translation.
         </p>
       )}
     </aside>
