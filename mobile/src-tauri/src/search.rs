@@ -1,13 +1,18 @@
 //! Reading and searching the Bible on the phone.
 //!
-//! The search itself is the desktop app's subject search (`sermon::find`: the central
-//! passages for a subject, the exact phrase, every form of the words, and the topical
-//! Bibles), so both apps answer a question the same way. This module shows its results in
-//! the translation being read, keeps them to a testament or a book when asked, and makes
-//! sure no verse with the exact words typed is left out.
+//! The search works out what was meant (`bible_core::find`: spelling, names, numbers, the
+//! well-known stories), gathers the desktop app's subject search (`sermon::find`: the central
+//! passages for a subject, the exact phrase in any translation, every form of the words, the
+//! topical Bibles) and, with the Advanced search upgrade, the verses nearest in meaning
+//! (`bible_core::meaning`), and ranks them all into passages the way the desktop does. This
+//! module shows them in the translation being read and keeps them to a testament or a book
+//! when asked.
 
 use std::collections::HashSet;
+use std::sync::OnceLock;
 
+use bible_core::find::{self, Curated, Vocab, VerseKey};
+use bible_core::meaning::Meaning;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 
@@ -93,8 +98,9 @@ pub struct Hit {
     pub chapter: i64,
     pub verse: i64,
     pub verse_end: i64,
-    /// why it was found: "core" | "phrase" | "words" | "topical" | "some"
+    /// why it was found: "story" | "core" | "phrase" | "words" | "meaning" | "name"
     pub why: Vec<String>,
+    /// the found verses of the passage (with their numbers when there are several)
     pub text: String,
 }
 
@@ -116,6 +122,10 @@ pub struct SearchResult {
     pub topics: Vec<Topic>,
     /// dictionary articles on what was typed
     pub articles: Vec<ArticleHead>,
+    /// misspelt words and the Bible's words they were taken for
+    pub corrected: Vec<(String, String)>,
+    /// whether the Advanced search upgrade took part
+    pub by_meaning: bool,
 }
 
 /// Where to look: everywhere, one testament ("OT" / "NT"), or one book.
@@ -125,62 +135,97 @@ pub struct Scope<'a> {
     pub book: Option<&'a str>,
 }
 
-fn testament_of(conn: &Connection, book: &str) -> Option<String> {
-    conn.query_row("SELECT testament FROM books WHERE name = ?1", params![book], |r| r.get(0)).optional().ok().flatten()
-}
-
 fn phrase_query(query: &str) -> String {
     format!("\"{}\"", query.replace('"', " ").split_whitespace().collect::<Vec<_>>().join(" "))
 }
 
-pub fn search(db: &Connection, study: &Connection, query: &str, version: &str, scope: Scope, limit: usize) -> Result<SearchResult, String> {
-    let query = query.trim();
-    if !query.chars().any(char::is_alphanumeric) {
-        return Ok(SearchResult { hits: Vec::new(), exact: 0, topics: Vec::new(), articles: Vec::new() });
-    }
-    let in_scope = |book: &str| {
-        scope.book.map_or(true, |b| b == book) && scope.testament.map_or(true, |t| testament_of(db, book).as_deref() == Some(t))
-    };
+/// Reads the Bibles' words ahead of the first search (on start, off the main thread).
+pub fn warm(db: &Connection) {
+    vocab(db);
+}
 
-    let mut seen: HashSet<(String, i64, i64)> = HashSet::new();
-    let mut hits: Vec<Hit> = Vec::new();
-    for h in sermon::find(db, Some(study), query, 400) {
-        if !in_scope(&h.book) {
-            continue;
-        }
-        let text = passage(db, version, &h.book, h.chapter, h.verse, h.verse_end);
+/// The words of the Bibles, read once (for putting spelling right).
+fn vocab(db: &Connection) -> &'static Vocab {
+    static VOCAB: OnceLock<Vocab> = OnceLock::new();
+    VOCAB.get_or_init(|| Vocab::load(db).unwrap_or_default())
+}
+
+const SUPERSCRIPT: [char; 10] = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+
+fn superscript(n: i64) -> String {
+    n.to_string().chars().map(|c| SUPERSCRIPT[c.to_digit(10).unwrap_or(0) as usize]).collect()
+}
+
+/// A found passage's text: all of it when short, otherwise the verses that were found, with
+/// "…" for the ones left out.
+fn found_text(db: &Connection, version: &str, f: &find::Found) -> String {
+    if f.verse_end - f.verse < 4 {
+        return passage(db, version, &f.book, f.chapter, f.verse, f.verse_end);
+    }
+    let mut out = String::new();
+    let mut last: Option<i64> = None;
+    for &v in &f.verses {
+        let text = passage(db, version, &f.book, f.chapter, v, v);
         if text.is_empty() {
             continue;
         }
-        for v in h.verse..=h.verse_end.max(h.verse) {
-            seen.insert((h.book.clone(), h.chapter, v));
+        match last {
+            Some(l) if v == l + 1 => out.push(' '),
+            Some(_) => out.push_str(" … "),
+            None => {}
         }
-        hits.push(Hit { book: h.book, chapter: h.chapter, verse: h.verse, verse_end: h.verse_end.max(h.verse), why: h.why.iter().map(|w| w.to_string()).collect(), text });
+        out.push_str(&superscript(v));
+        out.push_str(&text);
+        last = Some(v);
     }
+    out
+}
 
-    // every verse with exactly these words in the translation being read, in Bible order
-    let phrase = phrase_query(query);
-    let mut exact = 0i64;
-    if let Ok(mut s) = db.prepare(
-        "SELECT b.name, v.chapter, v.verse, v.text FROM verses_fts f JOIN verses v ON v.id = f.rowid
-         JOIN versions ver ON ver.id = v.version_id JOIN books b ON b.id = v.book_id
-         WHERE verses_fts MATCH ?1 AND ver.code = ?2 AND (?3 IS NULL OR b.testament = ?3) AND (?4 IS NULL OR b.name = ?4)
-         ORDER BY b.order_index, v.chapter, v.verse",
-    ) {
-        let rows = s.query_map(params![phrase, version, scope.testament, scope.book], |r| {
-            Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, i64>(2)?, r.get::<_, String>(3)?))
-        });
-        if let Ok(rows) = rows {
-            for (book, chapter, verse, text) in rows.filter_map(Result::ok) {
-                exact += 1;
-                if seen.insert((book.clone(), chapter, verse)) {
-                    hits.push(Hit { book, chapter, verse, verse_end: verse, why: vec!["phrase".into()], text });
-                }
-            }
-        }
+pub fn search(db: &Connection, study: &Connection, query: &str, version: &str, scope: Scope, limit: usize, meaning: Option<&Meaning>) -> Result<SearchResult, String> {
+    let query = query.trim();
+    if !query.chars().any(char::is_alphanumeric) {
+        return Ok(SearchResult { hits: Vec::new(), exact: 0, topics: Vec::new(), articles: Vec::new(), corrected: Vec::new(), by_meaning: false });
     }
-    hits.truncate(limit);
-    Ok(SearchResult { hits, exact, topics: topics(study, query)?, articles: articles(study, query, 6)? })
+    let understood = find::understand(db, vocab(db), query);
+    let near: Vec<VerseKey> = match meaning {
+        Some(m) => m.search(&understood.text, 500).map(|n| n.into_iter().map(|x| x.0).collect()).unwrap_or_default(),
+        None => Vec::new(),
+    };
+    // the subject search, with the spelling put right
+    let subject = if understood.corrected.is_empty() { query.to_string() } else { understood.text.clone() };
+    let curated: Vec<Curated> = sermon::find(db, Some(study), &subject, 80)
+        .into_iter()
+        .map(|h| Curated { key: VerseKey { book: h.book, chapter: h.chapter, verse: h.verse }, verse_end: h.verse_end.max(h.verse), why: h.why.iter().map(|w| w.to_string()).collect() })
+        .collect();
+    let found = find::rank(db, &understood, &near, &curated, find::Scope { testament: scope.testament, book: scope.book }, limit)?;
+    let hits = found
+        .iter()
+        .filter_map(|f| {
+            let text = found_text(db, version, f);
+            (!text.is_empty()).then(|| Hit { book: f.book.clone(), chapter: f.chapter, verse: f.verse, verse_end: f.verse_end, why: f.why.clone(), text })
+        })
+        .collect();
+
+    // how many verses have exactly these words in the translation being read
+    let exact: i64 = db
+        .query_row(
+            // (the index is asked once for all its verses: joined, SQLite asked it verse by verse,
+            // seconds on a phone for "end of days")
+            "SELECT COUNT(*) FROM verses v JOIN versions ver ON ver.id = v.version_id JOIN books b ON b.id = v.book_id
+             WHERE v.id IN (SELECT rowid FROM verses_fts WHERE verses_fts MATCH ?1)
+             AND ver.code = ?2 AND (?3 IS NULL OR b.testament = ?3) AND (?4 IS NULL OR b.name = ?4)",
+            params![phrase_query(query), version, scope.testament, scope.book],
+            |r| r.get(0),
+        )
+        .unwrap_or(0);
+    Ok(SearchResult {
+        hits,
+        exact,
+        topics: topics(study, &subject)?,
+        articles: articles(study, &subject, 6)?,
+        corrected: understood.corrected,
+        by_meaning: meaning.is_some(),
+    })
 }
 
 fn source_name(code: &str) -> &'static str {

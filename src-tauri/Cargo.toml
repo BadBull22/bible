@@ -1,6 +1,6 @@
 [package]
 name = "bible-concordance"
-version = "2.9.2"
+version = "2.9.3"
 description = "Offline Bible concordance and research app"
 authors = ["you"]
 edition = "2021"
@@ -23,7 +23,7 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"
 # what the desktop and the phone app share (module readers, references, keeping in step)
-bible-core = { path = "../crates/bible-core" }
+bible-core = { path = "../crates/bible-core", features = ["meaning"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 rusqlite = { version = "0.32", features = ["bundled", "backup"] }

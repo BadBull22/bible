@@ -83,6 +83,10 @@ export interface SearchHit {
   chapter: number;
   verse: number;
   text: string;
+  /** the passage's last verse, when a search by meaning found a passage */
+  verse_end?: number;
+  /** why a search by meaning found it: story | core | phrase | words | meaning | name */
+  why?: string[];
 }
 
 export interface CrossReference {

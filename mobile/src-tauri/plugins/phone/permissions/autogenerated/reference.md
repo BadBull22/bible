@@ -1,6 +1,6 @@
 ## Default Permission
 
-Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, and handing a downloaded update to Android's installer.
+Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.
 
 #### This default permission set includes the following:
 
@@ -12,6 +12,7 @@ Sharing text or a picture, reading aloud with the phone's voices, saving or open
 - `allow-open-file`
 - `allow-pick-folder`
 - `allow-battery-settings`
+- `allow-open-link`
 - `allow-voices`
 - `allow-share-image`
 - `allow-save-image`
@@ -100,6 +101,32 @@ Enables the open_file command without any pre-configured scope.
 <td>
 
 Denies the open_file command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-open-link`
+
+</td>
+<td>
+
+Enables the open_link command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-open-link`
+
+</td>
+<td>
+
+Denies the open_link command without any pre-configured scope.
 
 </td>
 </tr>

@@ -1,6 +1,6 @@
 [package]
 name = "bible-pocket"
-version = "2.9.2"
+version = "2.9.3"
 description = "Bible Concordance for phones: read, search, bookmark and highlight, offline"
 authors = ["BadBull22"]
 edition = "2021"
@@ -32,7 +32,7 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 sha2 = "0.10"
 # what the desktop and the phone app share (since 0.4.0): the module readers, Bible references,
 # and keeping devices in step through a shared folder
-bible-core = { path = "../../crates/bible-core" }
+bible-core = { path = "../../crates/bible-core", features = ["meaning"] }
 base64 = "0.22"
 
 [profile.release]

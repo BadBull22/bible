@@ -17,7 +17,6 @@ pub use bible_core::{esword, markup, refs, sword};
 pub use bible_core::library::*;
 
 use std::collections::{HashMap, HashSet};
-use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
@@ -344,7 +343,7 @@ pub fn search_bible(conn: &Connection, code: &str, query: &str, limit: i64) -> R
         .map_err(err)?;
     let rows = stmt
         .query_map(params![q, code, limit], |r| {
-            Ok(SearchHit { version_code: code.to_string(), book: r.get(0)?, chapter: r.get(1)?, verse: r.get(2)?, text: r.get(3)? })
+            Ok(SearchHit { version_code: code.to_string(), book: r.get(0)?, chapter: r.get(1)?, verse: r.get(2)?, text: r.get(3)?, ..Default::default() })
         })
         .map_err(err)?;
     rows.collect::<Result<_, _>>().map_err(err)
@@ -960,6 +959,7 @@ pub fn topic_passages(conn: &Connection, query: &str, per_module: usize, limit: 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
 
     #[test]
     fn finds_what_the_books_say_on_a_subject() {

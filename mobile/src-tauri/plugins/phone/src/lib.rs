@@ -110,6 +110,12 @@ pub fn sync_write<R: Runtime>(app: &AppHandle<R>, uri: &str, name: &str, text: &
     app.state::<Phone<R>>().run("syncWrite", json!({ "uri": uri, "name": name, "text": text })).map(|_| ())
 }
 
+/// Opens an https:// address in the phone's browser.
+#[tauri::command(async)]
+fn open_link<R: Runtime>(app: AppHandle<R>, url: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("openLink", json!({ "url": url }))
+}
+
 /// Asks Android to let the app run in the background (for the daily reminder).
 #[tauri::command(async)]
 fn battery_settings<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
@@ -134,7 +140,7 @@ pub fn updates_dir<R: Runtime>(app: &AppHandle<R>) -> Result<std::path::PathBuf,
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("phone")
-        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, voices, share_image, save_image, install_update])
+        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, open_link, voices, share_image, save_image, install_update])
         .setup(|app, _api| {
             #[cfg(target_os = "android")]
             app.manage(Phone { handle: _api.register_android_plugin("com.ghostclaw.phone", "PhonePlugin")? });

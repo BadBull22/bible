@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 
 use bible_core::library::{self as lib, CatalogItem, InstallOptions, InstallReport, InstalledModule};
-use bible_core::{esword, sword};
+use bible_core::esword;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 
@@ -320,6 +320,7 @@ pub fn book_today(conn: &Connection, module: &str, month: u32, day: u32) -> Resu
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bible_core::sword;
 
     #[test]
     fn titles_that_are_days() {

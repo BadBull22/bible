@@ -109,13 +109,19 @@ pub struct StrongsEntry {
     pub kjv_def: Option<String>,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Default)]
 pub struct SearchHit {
     pub version_code: String,
     pub book: String,
     pub chapter: i64,
     pub verse: i64,
     pub text: String,
+    /// the passage's last verse, when a search found a passage (`verse`..=`verse_end`)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub verse_end: Option<i64>,
+    /// why a search by meaning found it: "story" | "core" | "phrase" | "words" | "meaning" | "name"
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub why: Vec<String>,
 }
 
 #[derive(Serialize, Clone)]

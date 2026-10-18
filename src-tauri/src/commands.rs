@@ -13,7 +13,6 @@ use crate::settings::{self, AppSettings};
 use crate::{ConfigDir, EmbedderState, FirstsState, GenealogyState, QaState, SettingsState};
 use regex::RegexBuilder;
 use rusqlite::params;
-use std::collections::{HashMap, HashSet};
 use tauri::State;
 
 fn book_id(conn: &rusqlite::Connection, book: &str) -> Result<i64, String> {
@@ -289,13 +288,13 @@ pub fn get_parallel_verse(
     for code in version_codes {
         if !is_bundled_version(&conn, &code) {
             if let Some(text) = library::verse(&*lib_conn(&lib)?, &code, &book, chapter, verse)? {
-                out.push(SearchHit { version_code: code.clone(), book: book.clone(), chapter, verse, text });
+                out.push(SearchHit { version_code: code.clone(), book: book.clone(), chapter, verse, text, ..Default::default() });
             }
             continue;
         }
         let mut rows = stmt
             .query_map(params![code, bid, chapter, verse], |r| {
-                Ok(SearchHit { version_code: code.clone(), book: r.get(0)?, chapter: r.get(1)?, verse: r.get(2)?, text: r.get(3)? })
+                Ok(SearchHit { version_code: code.clone(), book: r.get(0)?, chapter: r.get(1)?, verse: r.get(2)?, text: r.get(3)?, ..Default::default() })
             })
             .map_err(|e| e.to_string())?;
         if let Some(row) = rows.next() {
@@ -381,7 +380,7 @@ pub fn strongs_occurrences(
         .map_err(|e| e.to_string())?;
     let rows = stmt
         .query_map(params![strongs_number, version_code], |r| {
-            Ok(SearchHit { version_code: r.get(0)?, book: r.get(1)?, chapter: r.get(2)?, verse: r.get(3)?, text: r.get(4)? })
+            Ok(SearchHit { version_code: r.get(0)?, book: r.get(1)?, chapter: r.get(2)?, verse: r.get(3)?, text: r.get(4)?, ..Default::default() })
         })
         .map_err(|e| e.to_string())?;
     rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
@@ -415,7 +414,7 @@ pub fn search_keyword(
         .map_err(|e| e.to_string())?;
     let rows = stmt
         .query_map(params![fts_query, version_code, limit], |r| {
-            Ok(SearchHit { version_code: r.get(0)?, book: r.get(1)?, chapter: r.get(2)?, verse: r.get(3)?, text: r.get(4)? })
+            Ok(SearchHit { version_code: r.get(0)?, book: r.get(1)?, chapter: r.get(2)?, verse: r.get(3)?, text: r.get(4)?, ..Default::default() })
         })
         .map_err(|e| e.to_string())?;
     rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())
@@ -470,7 +469,7 @@ fn word_frequency_query(
         .map_err(|e| e.to_string())?;
     let candidates: Vec<SearchHit> = stmt
         .query_map(params![fts_query, version_code, testament_filter, book_filter], |r| {
-            Ok(SearchHit { version_code: r.get(0)?, book: r.get(1)?, chapter: r.get(2)?, verse: r.get(3)?, text: r.get(4)? })
+            Ok(SearchHit { version_code: r.get(0)?, book: r.get(1)?, chapter: r.get(2)?, verse: r.get(3)?, text: r.get(4)?, ..Default::default() })
         })
         .map_err(|e| e.to_string())?
         .collect::<Result<Vec<_>, _>>()
@@ -646,109 +645,92 @@ fn embedding_to_sql_literal(v: &[f32]) -> String {
     format!("[{joined}]")
 }
 
-/// Connector words carry no retrieval signal of their own, so they're dropped before
-/// the lexical half of topical search builds its FTS expressions. That's what lets a
-/// connector the reader happened to type still find a literal match: "sacrifice of
-/// bulls" matches Hosea 12:11 ("Do they sacrifice bulls in Gilead?") only once "of" is
-/// out of the way. A query made of nothing but connectors keeps them all, rather than
-/// searching for nothing.
-const LEXICAL_STOPWORDS: &[&str] = &[
-    "the", "a", "an", "of", "in", "on", "and", "or", "to", "is", "was", "that", "this", "for", "with", "his", "her",
-    "my", "me", "you", "it", "be", "are", "i", "he", "she", "they", "them",
-];
-
-/// Reduces a free-text query to its lowercase content words. Every character that isn't
-/// a letter, digit or apostrophe is discarded, which doubles as FTS5 injection
-/// protection: nothing FTS5 would read as query syntax can survive into a MATCH.
-fn content_words(query: &str) -> Vec<String> {
-    let all: Vec<String> = query
-        .to_lowercase()
-        .split(|c: char| !(c.is_alphanumeric() || c == '\''))
-        .filter(|w| !w.is_empty())
-        .map(str::to_string)
-        .collect();
-    let kept: Vec<String> = all.iter().filter(|w| !LEXICAL_STOPWORDS.contains(&w.as_str())).cloned().collect();
-    if kept.is_empty() {
-        all
-    } else {
-        kept
-    }
-}
-
-/// BSB verse ids matching an FTS5 expression, best-scoring first. A malformed
-/// expression isn't an error here -- it simply means "no lexical evidence", leaving
-/// topical search to fall back on the embedding ranking alone.
-fn fts_verse_ids(conn: &rusqlite::Connection, expr: &str, limit: i64) -> Vec<i64> {
-    // Per the aliasing gotcha, `verses_fts` is named in full inside MATCH/bm25() even
-    // though it's aliased for the join.
-    let mut stmt = match conn.prepare(
-        "SELECT v.id
-         FROM verses_fts f
-         JOIN verses v ON v.id = f.rowid
-         JOIN versions ver ON v.version_id = ver.id
-         WHERE verses_fts MATCH ?1 AND ver.code = 'BSB'
-         ORDER BY bm25(verses_fts)
-         LIMIT ?2",
-    ) {
-        Ok(s) => s,
-        Err(_) => return Vec::new(),
-    };
-    // Bound to a local rather than left as the tail expression: the MappedRows temporary
-    // borrows `stmt`, and dropping it at the end of the block would outlive `stmt` itself.
-    let ids: Vec<i64> = match stmt.query_map(params![expr, limit], |r| r.get::<_, i64>(0)) {
-        Ok(rows) => rows.filter_map(Result::ok).collect(),
-        Err(_) => Vec::new(),
-    };
-    ids
-}
-
 /// How deep into the embedding ranking to reach before fusing. The verse a reader
 /// half-remembers can sit far outside the handful of results they'll actually be shown
 /// -- "greater things" ranked John 14:12 at #110 -- so the dense side has to offer the
 /// fusion many more candidates than the caller asked for.
 const DENSE_FUSION_DEPTH: i64 = 500;
-/// Both lexical tiers are high-precision and normally tiny (the whole BSB contains two
-/// verses with the phrase "greater things"), so a small cap costs nothing.
-const LEXICAL_FUSION_CAP: i64 = 50;
-/// Standard Reciprocal Rank Fusion damping constant.
-const RRF_K: f64 = 60.0;
 
-/// Thematic/topical search over the BSB, combining two independent rankings:
-///
-/// * **lexical** -- FTS5, as an exact phrase first and then as an all-words match.
-/// * **dense** -- nearest neighbours of the query embedding, which is what lets
-///   "sacrifice of bulls" surface "burnt offering of bulls" with no shared wording.
-///
-/// The embedding alone ranks a long verse poorly when the remembered words are only a
-/// small part of it: mean-pooling dilutes them, so short verses stuffed with the
-/// query's words win instead. Pinning exact-phrase hits on top and fusing the rest by
-/// Reciprocal Rank Fusion fixes that without touching genuine paraphrase search -- when
-/// neither lexical tier matches (e.g. "the prodigal son", wording that appears nowhere
-/// in the BSB) both lists are empty and the output is exactly the embedding ranking it
-/// has always been.
+/// Thematic/topical search over the BSB: the nearest neighbours of the query embedding (which
+/// is what lets "sacrifice of bulls" surface "burnt offering of bulls" with no shared wording)
+/// fused with the exact phrase, all and most of the words, the numbers ("21 days" is "twenty-one
+/// days"), the names (Daniel's chapters count more), the subject's key passages and the
+/// well-known stories, and shown as passages -- `bible_core::find`, which the phone's search
+/// shares. Exact phrases (any translation), named stories and key passages come first.
 #[tauri::command]
 pub fn semantic_search(
     db_state: State<DbState>,
     embedder_state: State<EmbedderState>,
+    study_state: State<crate::study::StudyState>,
     query: String,
     limit: i64,
 ) -> Result<Vec<SearchHit>, String> {
-    let vector = embedder_state.0.embed(&query).map_err(|e| e.to_string())?;
     let conn = db_state.0.lock().map_err(|e| e.to_string())?;
-    semantic_search_query(&conn, &vector, &query, limit)
+    // the meaning of the search with its spelling put right ("Nebuchadnezer" -> nebuchadnezzar)
+    let understood = bible_core::find::understand(&conn, search_vocab(&conn), &query);
+    let vector = embedder_state.0.embed(&understood.text).map_err(|e| e.to_string())?;
+    let study_guard = study_state.0.as_ref().and_then(|m| m.lock().ok());
+    semantic_search_query(&conn, &vector, &query, limit, study_guard.as_deref())
+}
+
+/// The words of the bundled Bibles, read once (for putting a search's spelling right).
+fn search_vocab(conn: &rusqlite::Connection) -> &'static bible_core::find::Vocab {
+    static VOCAB: std::sync::OnceLock<bible_core::find::Vocab> = std::sync::OnceLock::new();
+    VOCAB.get_or_init(|| bible_core::find::Vocab::load(conn).unwrap_or_default())
+}
+
+const SUPERSCRIPT: [char; 10] = ['⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+
+/// A found passage's BSB text: all of it when short, otherwise the verses that were found
+/// (numbered), with "…" for the ones left out.
+fn found_text(conn: &rusqlite::Connection, f: &bible_core::find::Found) -> String {
+    let verse = |v: i64| -> String {
+        conn.query_row(
+            "SELECT v.text FROM verses v JOIN books b ON b.id = v.book_id JOIN versions ver ON ver.id = v.version_id
+             WHERE ver.code = 'BSB' AND b.name = ?1 AND v.chapter = ?2 AND v.verse = ?3",
+            params![f.book, f.chapter, v],
+            |r| r.get(0),
+        )
+        .unwrap_or_default()
+    };
+    let numbered = f.verse_end > f.verse;
+    let wanted: Vec<i64> = if f.verse_end - f.verse < 4 { (f.verse..=f.verse_end).collect() } else { f.verses.clone() };
+    let mut out = String::new();
+    let mut last: Option<i64> = None;
+    for v in wanted {
+        let text = verse(v);
+        if text.is_empty() {
+            continue;
+        }
+        match last {
+            Some(l) if v == l + 1 => out.push(' '),
+            Some(_) => out.push_str(" … "),
+            None => {}
+        }
+        if numbered {
+            out.extend(v.to_string().chars().map(|c| SUPERSCRIPT[c.to_digit(10).unwrap_or(0) as usize]));
+        }
+        out.push_str(&text);
+        last = Some(v);
+    }
+    out
 }
 
 /// Body of [`semantic_search`], taking an already-computed query embedding so callers
 /// that need it for more than one purpose in the same request (`ask_question`'s
 /// fallback layer reuses the same embedding it already computed for the curated
 /// semantic-match step) only pay the `embed()` cost once.
-fn semantic_search_query(conn: &rusqlite::Connection, vector: &[f32], query: &str, limit: i64) -> Result<Vec<SearchHit>, String> {
+fn semantic_search_query(
+    conn: &rusqlite::Connection,
+    vector: &[f32],
+    query: &str,
+    limit: i64,
+    study: Option<&rusqlite::Connection>,
+) -> Result<Vec<SearchHit>, String> {
     let literal = embedding_to_sql_literal(vector);
 
-    // Two-step: nearest-neighbor query against the vec0 table alone first (the
-    // documented sqlite-vec pattern), then join those rowids back to verse text --
-    // avoids relying on undocumented interaction between MATCH/ORDER BY/LIMIT and a
-    // JOIN in the same statement.
+    // the verses nearest in meaning: the nearest-neighbour query against the vec0 table alone
+    // (the documented sqlite-vec pattern), then their book, chapter and verse
     let mut knn_stmt = conn
         .prepare("SELECT rowid FROM verse_embeddings WHERE embedding MATCH ?1 ORDER BY distance LIMIT ?2")
         .map_err(|e| e.to_string())?;
@@ -757,55 +739,41 @@ fn semantic_search_query(conn: &rusqlite::Connection, vector: &[f32], query: &st
         .map_err(|e| e.to_string())?
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
-
-    let words = content_words(query);
-    let phrase: Vec<i64> = if words.is_empty() {
-        Vec::new()
-    } else {
-        fts_verse_ids(&conn, &format!("\"{}\"", words.join(" ")), LEXICAL_FUSION_CAP)
-    };
-    let pinned: HashSet<i64> = phrase.iter().copied().collect();
-    let all_words: Vec<i64> = if words.len() < 2 {
-        Vec::new()
-    } else {
-        let expr = words.iter().map(|w| format!("\"{w}\"")).collect::<Vec<_>>().join(" AND ");
-        fts_verse_ids(&conn, &expr, LEXICAL_FUSION_CAP).into_iter().filter(|id| !pinned.contains(id)).collect()
-    };
-
-    // Reciprocal Rank Fusion across the dense and all-words rankings, with exact-phrase
-    // hits pinned above the result: nothing should outrank the reader's literal wording.
-    let mut score: HashMap<i64, f64> = HashMap::new();
-    for list in [&dense, &all_words] {
-        for (rank, id) in list.iter().enumerate() {
-            *score.entry(*id).or_insert(0.0) += 1.0 / (RRF_K + rank as f64 + 1.0);
-        }
-    }
-    let mut fused: Vec<i64> = score.keys().copied().filter(|id| !pinned.contains(id)).collect();
-    // Verse id ascending is a deterministic tie-break, so equal scores can't reorder
-    // between identical searches.
-    fused.sort_by(|a, b| score[b].partial_cmp(&score[a]).unwrap_or(std::cmp::Ordering::Equal).then(a.cmp(b)));
-
-    let ordered: Vec<i64> = phrase.into_iter().chain(fused).take(limit.max(0) as usize).collect();
-
-    let mut verse_stmt = conn
-        .prepare(
-            "SELECT v.chapter, v.verse, v.text, b.name
-             FROM verses v
-             JOIN books b ON v.book_id = b.id
-             JOIN versions ver ON v.version_id = ver.id
-             WHERE v.id = ?1 AND ver.code = 'BSB'",
-        )
+    let mut key_stmt = conn
+        .prepare("SELECT b.name, v.chapter, v.verse FROM verses v JOIN books b ON b.id = v.book_id WHERE v.id = ?1")
         .map_err(|e| e.to_string())?;
-    let mut hits = Vec::with_capacity(ordered.len());
-    for id in ordered {
-        let hit = verse_stmt
-            .query_row(params![id], |r| {
-                Ok(SearchHit { version_code: "BSB".to_string(), book: r.get(3)?, chapter: r.get(0)?, verse: r.get(1)?, text: r.get(2)? })
-            })
-            .map_err(|e| e.to_string())?;
-        hits.push(hit);
-    }
-    Ok(hits)
+    let near: Vec<bible_core::find::VerseKey> = dense
+        .iter()
+        .filter_map(|id| key_stmt.query_row(params![id], |r| Ok(bible_core::find::VerseKey { book: r.get(0)?, chapter: r.get(1)?, verse: r.get(2)? })).ok())
+        .collect();
+
+    // with the subject search's key passages and exact phrases (any translation), the words,
+    // the names and numbers, and the well-known stories, ranked into passages (shared with
+    // the phone: bible_core::find)
+    let understood = bible_core::find::understand(conn, search_vocab(conn), query);
+    let subject = if understood.corrected.is_empty() { query.to_string() } else { understood.text.clone() };
+    let curated: Vec<bible_core::find::Curated> = crate::sermon::find(conn, study, &subject, 80)
+        .into_iter()
+        .map(|h| bible_core::find::Curated {
+            key: bible_core::find::VerseKey { book: h.book, chapter: h.chapter, verse: h.verse },
+            verse_end: h.verse_end.max(h.verse),
+            why: h.why.iter().map(|w| w.to_string()).collect(),
+        })
+        .collect();
+    let found = bible_core::find::rank(conn, &understood, &near, &curated, bible_core::find::Scope::default(), limit.max(0) as usize)?;
+    Ok(found
+        .iter()
+        .map(|f| SearchHit {
+            version_code: "BSB".to_string(),
+            book: f.book.clone(),
+            chapter: f.chapter,
+            verse: f.verse,
+            text: found_text(conn, f),
+            verse_end: (f.verse_end > f.verse).then_some(f.verse_end),
+            why: f.why.clone(),
+        })
+        .filter(|h| !h.text.is_empty())
+        .collect())
 }
 
 /// Below this cosine similarity, a semantic match against the curated set is treated as
@@ -997,7 +965,7 @@ fn ask_question_query(
     }
 
     // Layer 3: labeled best-effort fallback -- no confident answer on file.
-    let hits = semantic_search_query(conn, &vector, query, fallback_limit)?;
+    let hits = semantic_search_query(conn, &vector, query, fallback_limit, study_conn)?;
     let commentary_hits =
         commentary_conn.map(|c| commentaries::search(c, query, None, fallback_limit).unwrap_or_default()).unwrap_or_default();
     Ok(AskAnswer::Fallback { hits, commentary_hits })
@@ -1385,6 +1353,43 @@ mod ask_question_smoke_tests {
                 Ok(answer) => println!("{}", serde_json::to_string_pretty(&answer).unwrap()),
                 Err(e) => println!("ERROR: {e}"),
             }
+        }
+    }
+}
+
+/// Searches by meaning a reader actually made, with what they were looking for: the passage
+/// must come first (or near it). Uses the real bundled data and model.
+#[cfg(test)]
+mod finds_what_the_reader_remembers {
+    use super::*;
+    use crate::embeddings::Embedder;
+    use std::path::PathBuf;
+
+    #[test]
+    fn remembered_passages_come_first() {
+        crate::register_sqlite_vec();
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let conn = rusqlite::Connection::open(dir.join("resources/bible.db")).unwrap();
+        let study = rusqlite::Connection::open(dir.join("resources/study.db")).unwrap();
+        let embedder = Embedder::load(&dir.join("resources/model")).unwrap();
+        let search = |q: &str| {
+            let u = bible_core::find::understand(&conn, search_vocab(&conn), q);
+            let v = embedder.embed(&u.text).unwrap();
+            semantic_search_query(&conn, &v, q, 10, Some(&study)).unwrap().into_iter().map(|h| format!("{} {}:{}", h.book, h.chapter, h.verse)).collect::<Vec<_>>()
+        };
+        // (search, a passage it must find, how near the top)
+        for (q, want, within) in [
+            ("Daniels prayer delayed", "Daniel 10:", 1),
+            ("where was Daniels prayer delayed by 21 days", "Daniel 10:", 1),
+            ("the prodigal son", "Luke 15:", 1),
+            ("Nebuchadnezer dream statue", "Daniel 2:", 3),
+            ("end of days", "Daniel 12:", 1),
+            ("thy faith hath made thee whole", "Luke ", 3),
+            ("jesus walks on water", "Matthew 14:", 1),
+            ("Habbakuk", "Habakkuk ", 1),
+        ] {
+            let found = search(q);
+            assert!(found.iter().take(within).any(|r| r.starts_with(want)), "{q}: wanted {want} in the first {within}, got {found:?}");
         }
     }
 }

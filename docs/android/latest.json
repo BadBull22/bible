@@ -1,7 +1,7 @@
 {
-  "version": "2.9.2",
-  "url": "https://github.com/BadBull22/bible/releases/download/android-v2.9.2/BibleConcordance_Android_2.9.2.apk",
-  "sha256": "dc4f9cede99a2b11764e031c8ba5a2345776601db84d53f9468a39c4a72f4d02",
-  "size": 76189868,
-  "notes": "The daily reminder now comes at the time you set (with a button to test it). All eleven highlight colours of the computer, their names (kept in step with the computer, or named on the phone), and highlights in My Study folded by colour."
+  "version": "2.9.3",
+  "url": "https://github.com/BadBull22/bible/releases/download/android-v2.9.3/BibleConcordance_Android_2.9.3.apk",
+  "sha256": "06fe8efc98a041e4f589f57ca0e3676795b712bb17a0a83614640b08e8b99568",
+  "size": 78327052,
+  "notes": "A much stronger search: it finds the passage you remember (names, numbers, misspellings, well-known stories and key topics), shown as passages, and is much faster. The free Advanced search upgrade (31 MB, offline) finds verses by meaning. A Search online button."
 }

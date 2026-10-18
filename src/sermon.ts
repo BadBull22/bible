@@ -281,7 +281,7 @@ async function gatherTopic(topic: string, version: string, books: BookInfo[], on
         inside.score += weight;
       }
     } else {
-      cands.push({ ref: { book: h.book, chapter: h.chapter, verse: h.verse, verseEnd: h.verse }, score: weight, text: h.text, why: ["meaning"] });
+      cands.push({ ref: { book: h.book, chapter: h.chapter, verse: h.verse, verseEnd: h.verse_end ?? h.verse }, score: weight, text: h.text, why: ["meaning"] });
     }
   });
   cands.sort((a, b) => b.score - a.score);
