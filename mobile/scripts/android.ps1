@@ -81,6 +81,10 @@ if (-not (Test-Path "src-tauri\gen\android")) {
     npx tauri android init --ci
     if ($LASTEXITCODE -ne 0) { throw "tauri android init failed" }
 }
+# the app icon (three crosses, since 2026-10-20) into the Android project's launcher icons; the
+# generated project lives only here, so it is applied on every build from src-tauri\app-icon.png
+npx tauri icon src-tauri\app-icon.png | Out-Null
+if ($LASTEXITCODE -ne 0) { throw "tauri icon failed" }
 
 # --- build
 if ($Release) {

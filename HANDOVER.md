@@ -1883,6 +1883,16 @@ NOTICE.md                Attribution for every bundled data source (all public-d
 
 ## Recap of decisions already made (don't re-ask)
 
+- **App icon and logo (owner's choice, 2026-10-20): the three crosses on a hill, black on blue
+  (63, 72, 204).**
+  - The owner's original is `private/bc icon.png` (311×284; `private/` is git-ignored).
+  - The sharp 1024×1024 master is `src-tauri/app-icon.png` (copied to `mobile/src-tauri/app-icon.png`). It was made by enlarging the drawing and re-sharpening its edges onto the same blue.
+  - Desktop icons are made with `npx tauri icon app-icon.png` in `src-tauri/`. Remove the `android/`, `ios/` and `64x64.png` it also writes.
+  - The phone's launcher icons are applied on every build by `mobile/scripts/android.ps1`, because the generated Android project lives only in the build mirror.
+  - The desktop top bar shows it as `src/assets/logo.png`, with `public/favicon.png` as the favicon.
+  - The old icons are in `V:\Code\bible-backups\2026-10-20_old-icons`.
+  - **Done 2026-10-21:** the website carries the same logo: `docs/assets/icon.png` (512×512; header, page logo, apple-touch-icon) and `docs/assets/favicon-32.png` (32×32), both resized from `src-tauri/app-icon.png`. The app, phone and package versions were moved to 2.9.4 in the same commit; the download pages and `latest.json` files still name the last release (2.9.3) until a 2.9.4 release is built.
+
 - Bundle only public-domain texts offline (BSB/KJV/ASV/YLT/WEB + WLC/TR). NIV/ESV/NKJV are
   copyrighted and were never bundled; NIV/NKJV are available live via api.bible with the user's
   own key (ESV isn't offered on that platform).
