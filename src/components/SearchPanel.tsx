@@ -11,6 +11,8 @@ interface Props {
   onJump: (book: string, chapter: number, verse: number) => void;
   onOpenCommentary: (commentaryId: string, book: string, chapter: number, verse: number) => void;
   onOpenDictionary: (query: string) => void;
+  /** the Offline Assistant is unlocked: a button under the results asks it the same question */
+  onAskAssistant?: (question: string) => void;
   onClose: () => void;
 }
 
@@ -34,7 +36,7 @@ const PHRASE_LIMIT = 100;
 const TOPIC_LIMIT = 50;
 const COMMENTARY_LIMIT = 60;
 
-export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onOpenDictionary, onClose }: Props) {
+export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onOpenDictionary, onAskAssistant, onClose }: Props) {
   const [mode, setMode] = useState<Mode>("ask");
   const [query, setQuery] = useState(initialQuery ?? "");
   const [searchVersion, setSearchVersion] = useState(versionCode === "ENOCH1" ? "BSB" : versionCode);
@@ -240,6 +242,14 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
             </li>
           ))}
         </ul>
+      )}
+      {!loading && ran && onAskAssistant && (ran.mode === "ask" || ran.mode === "topic") && (
+        <p className="search-hint">
+          <button className="text-btn" onClick={() => onAskAssistant(ran.query)}>
+            Ask the Offline Assistant: “{ran.query}”
+          </button>{" "}
+          — answers from this app's texts and shows the verses it read.
+        </p>
       )}
       {!loading && ran && (
         <p className="search-hint">

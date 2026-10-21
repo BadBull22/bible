@@ -1,4 +1,5 @@
 import { startAutoSync } from "./syncFolder";
+import logo from "./assets/logo.png";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { api, BookInfo, ChapterMarks, InstalledModule, LibraryKind, LibraryMention, resolveReference, Version, VerseWithWords } from "./api";
 import { addSearchHistory } from "./searchHistory";
@@ -8,6 +9,8 @@ import { HomeScreen } from "./components/HomeScreen";
 import { WordStudyPanel } from "./components/WordStudyPanel";
 import { ParallelPanel } from "./components/ParallelPanel";
 import { SearchPanel } from "./components/SearchPanel";
+import { OfflineAiPanel } from "./components/OfflineAiPanel";
+import { ai } from "./offlineAi";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { FirstsPanel } from "./components/FirstsPanel";
 import { CommentaryPanel } from "./components/CommentaryPanel";
@@ -80,6 +83,7 @@ type SidePanel =
   | { kind: "library"; tab?: "mine" | "more"; only?: LibraryKind }
   | { kind: "pictures"; tab?: "chapter" | "gallery" | "download" }
   | { kind: "original"; strongs?: string }
+  | { kind: "ai"; question?: string }
   | null;
 
 const NO_MARKS: ChapterMarks = { bookmarks: [], highlights: [], notes: [], note_spans: [] };
@@ -146,6 +150,14 @@ function App() {
   const [loadingChapter, setLoadingChapter] = useState(true);
   const [chapterError, setChapterError] = useState<string | null>(null);
   const [panel, setPanel] = useState<SidePanel>(null);
+  // Offline Assistant: hidden until unlocked from the search bar
+  const [aiOn, setAiOn] = useState(false);
+  useEffect(() => {
+    void ai
+      .status()
+      .then((s) => setAiOn(s.enabled))
+      .catch(() => undefined);
+  }, []);
   // An installed Library book or devotional shown in the reading pane instead of the
   // Bible text; picking any Bible passage puts the Bible back.
   const [readingBook, setReadingBook] = useState<string | null>(null);
@@ -690,6 +702,22 @@ function App() {
   function runQuickSearch() {
     const q = quickQuery.trim();
     if (!q) return;
+    // a code (starting with #) may unlock the Offline Assistant; it isn't kept in the search history
+    if (q.startsWith("#")) {
+      void ai
+        .tryUnlock(q)
+        .then((ok) => {
+          if (ok) {
+            setQuickQuery("");
+            setAiOn(true);
+            setPanel({ kind: "ai" });
+          } else {
+            setPanel({ kind: "search", initialQuery: q });
+          }
+        })
+        .catch(() => setPanel({ kind: "search", initialQuery: q }));
+      return;
+    }
     // Shared with the opening Gospel screen's search box (see searchHistory.ts) -- a
     // term typed here is just as worth remembering as one typed there.
     addSearchHistory(q);
@@ -803,7 +831,7 @@ function App() {
             <MenuIcon size={18} />
           </button>
           <div className="brand">
-            <span className="mark">✦</span>
+            <img className="mark" src={logo} alt="" width={24} height={24} />
             <h1>Bible Concordance</h1>
           </div>
           {book === ENOCH_BOOK ? (
@@ -873,6 +901,7 @@ function App() {
               { key: "sermon", label: "Sermon builder", icon: <SheetIcon size={14} />, onClick: () => setReadingBook(SERMON_BUILDER) },
               { key: "basket", label: "Basket", icon: <BasketIcon size={14} />, onClick: () => setPanel({ kind: "basket" }), badge: basketItems.length },
               { key: "library", label: "Library", icon: <LibraryIcon size={14} />, onClick: () => setPanel({ kind: "library" }) },
+              ...(aiOn ? [{ key: "ai", label: "Offline Assistant", icon: <NotebookIcon size={14} />, onClick: () => setPanel({ kind: "ai" }) }] : []),
             ]}
           />
           <TopMenu
@@ -935,7 +964,7 @@ function App() {
           )}
           <main className={"main-pane" + (readingBook === SERMON_BUILDER ? " builder-pane" : "")}>
             {readingBook === SERMON_BUILDER ? (
-              <SermonBuilder versionCode={versionCode} versions={versions} books={books} chapterCounts={chapterCounts} onJump={jumpTo} onClose={() => setReadingBook(null)} />
+              <SermonBuilder versionCode={versionCode} versions={versions} books={books} chapterCounts={chapterCounts} onJump={jumpTo} onClose={() => setReadingBook(null)} assistant={aiOn} />
             ) : readingBook ? (
               <BookPanel
                 key={readingBook}
@@ -1065,6 +1094,17 @@ function App() {
               onClose={() => setPanel(null)}
             />
           )}
+          {panel?.kind === "ai" && (
+            <OfflineAiPanel
+              initialQuestion={panel.question}
+              onJump={jumpTo}
+              onClose={() => setPanel(null)}
+              onTurnedOff={() => {
+                setAiOn(false);
+                setPanel(null);
+              }}
+            />
+          )}
           {panel?.kind === "search" && (
             <SearchPanel
               versions={versions}
@@ -1076,6 +1116,7 @@ function App() {
                 setPanel({ kind: "commentary", verse: v, commentaryId });
               }}
               onOpenDictionary={(q) => setPanel({ kind: "dictionary", initialQuery: q })}
+              onAskAssistant={aiOn ? (q) => setPanel({ kind: "ai", question: q }) : undefined}
               onClose={() => setPanel(null)}
             />
           )}

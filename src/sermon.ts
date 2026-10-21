@@ -29,7 +29,8 @@ export type MaterialKind =
   | "illustration"
   | "quote"
   | "outline"
-  | "sermon";
+  | "sermon"
+  | "assistant";
 
 export interface Ref {
   book: string;
@@ -77,6 +78,7 @@ export const GROUPS: { kind: MaterialKind; label: string; about: string }[] = [
   { kind: "mention", label: "In your Library", about: "What the books, devotionals, dictionaries and commentaries you've downloaded say on the subject, and where they refer to the passages." },
   { kind: "word", label: "Word studies", about: "The Hebrew and Greek words behind the subject." },
   { kind: "note", label: "Your own notes", about: "Notes you've written that touch the subject." },
+  { kind: "assistant", label: "From the Offline Assistant", about: "What the Offline Assistant brought for you: word notes, threads, stories, outline ideas and answers, each with where it comes from. Check each before you use it." },
   { kind: "illustration", label: "Illustrations", about: "Stories from D. L. Moody's books, each with its source." },
   { kind: "quote", label: "Quotations", about: "Sayings of Moody and Spurgeon, with their source." },
   { kind: "outline", label: "How others outlined it", about: "Historic sermon outlines on the passage — to learn from, not to copy." },
@@ -878,7 +880,7 @@ export function sermonBlocks(meta: SermonMeta, items: SermonItem[], versions: Ve
       // someone else's words: named, and set apart from Scripture
       blocks.push({
         kind: "para",
-        runs: [{ text: `${m.title}: `, bold: true }, { text, italic: m.kind === "commentary" || m.kind === "illustration" || m.kind === "quote" || m.kind === "background" }],
+        runs: [{ text: `${m.title}: `, bold: true }, { text, italic: m.kind === "commentary" || m.kind === "illustration" || m.kind === "quote" || m.kind === "background" || m.kind === "assistant" }],
       });
     }
   });

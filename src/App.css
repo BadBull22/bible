@@ -178,8 +178,11 @@ kbd {
 }
 
 .brand .mark {
-  color: var(--accent-500);
-  font-size: 1.25rem;
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  display: block;
+  flex: 0 0 auto;
 }
 
 .top-bar h1 {
@@ -7369,3 +7372,52 @@ body.show-body {
 .library-community-list li {
   flex-wrap: wrap;
 }
+
+/* Offline AI (beta) panel (components/OfflineAiPanel.tsx) */
+.offline-ai-panel { display: flex; flex-direction: column; }
+.offline-ai-panel .primary-btn {
+  background: var(--accent-600); color: #fff; border: none; border-radius: 6px; padding: 6px 14px; cursor: pointer;
+}
+.offline-ai-panel .primary-btn:disabled { opacity: 0.6; cursor: default; }
+.ai-settings { padding: 8px 12px; }
+.ai-actions { display: flex; gap: 16px; margin-top: 16px; }
+.ai-chat { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.ai-messages { flex: 1; overflow-y: auto; padding: 8px 12px; }
+.ai-msg { margin: 0 0 12px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); }
+.ai-msg.ai-user { background: var(--accent-100); border-color: transparent; margin-left: 24px; }
+.ai-text { white-space: pre-wrap; line-height: 1.5; }
+.ai-unsupported { margin-top: 6px; color: var(--status-error); font-size: 0.85rem; }
+.ai-sources { margin-top: 6px; font-size: 0.85rem; }
+.ai-sources ul { padding-left: 16px; }
+.ai-ask { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--border); }
+.ai-ask textarea { flex: 1; resize: vertical; font: inherit; }
+
+.ai-disclaimer { margin: 0; padding: 0 12px 10px; font-size: 0.8rem; }
+
+/* Offline Assistant inside the sermon builder (components/SermonAssistant.tsx) */
+.sb-assistant { margin: 0 0 12px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
+.sb-assistant > summary { cursor: pointer; font-weight: 600; }
+.sb-assistant-messages { max-height: 320px; overflow-y: auto; margin-top: 8px; }
+.sb-assistant .ai-ask input { flex: 1; font: inherit; }
+.sb-assistant-ask { margin: 14px 0 4px; font-size: 0.95rem; }
+.sb-build h4 { margin: 8px 0 2px; font-size: 0.95rem; }
+.sb-build h5 { margin: 12px 0 6px; font-size: 0.9rem; }
+.sb-build-pick { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+.sb-build-pick select, .sb-build-pick input { font: inherit; }
+.sb-build-pick input { flex: 1; min-width: 160px; }
+.sb-build-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+.sb-word { margin: 0 0 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; }
+.sb-word p { margin: 4px 0; line-height: 1.45; }
+.sb-word-why { font-size: 0.85rem; }
+.sb-word-note { font-size: 0.9rem; }
+.sb-word-ai { font-style: italic; }
+.sb-thread { margin: 0 0 10px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 8px; }
+.sb-thread > summary { cursor: pointer; }
+.sb-thread-links { margin: 6px 0; padding-left: 18px; }
+.sb-thread-links li { margin: 4px 0; line-height: 1.4; }
+.sb-story-group { margin: 12px 0 4px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-muted); }
+.sb-story-text { white-space: pre-wrap; line-height: 1.5; max-height: 280px; overflow-y: auto; }
+.sb-weak { opacity: 0.7; }
+.sb-questions { margin: 6px 0; padding-left: 22px; }
+.sb-questions li { margin: 6px 0; line-height: 1.45; }
+.sb-fits { color: var(--accent-700, var(--accent)); font-size: 0.85rem; }
