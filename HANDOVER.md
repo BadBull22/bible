@@ -1891,7 +1891,7 @@ NOTICE.md                Attribution for every bundled data source (all public-d
   - The phone's launcher icons are applied on every build by `mobile/scripts/android.ps1`, because the generated Android project lives only in the build mirror.
   - The desktop top bar shows it as `src/assets/logo.png`, with `public/favicon.png` as the favicon.
   - The old icons are in `V:\Code\bible-backups\2026-10-20_old-icons`.
-  - **Done 2026-10-21:** the website carries the same logo: `docs/assets/icon.png` (512×512; header, page logo, apple-touch-icon) and `docs/assets/favicon-32.png` (32×32), both resized from `src-tauri/app-icon.png`. The app, phone and package versions were moved to 2.9.4 in the same commit; the download pages and `latest.json` files still name the last release (2.9.3) until a 2.9.4 release is built.
+  - **Done 2026-10-21:** the website carries the same logo: `docs/assets/icon.png` (512×512; header, page logo, apple-touch-icon) and `docs/assets/favicon-32.png` (32×32), both resized from `src-tauri/app-icon.png`. The app, phone and package versions were moved to 2.9.4 in the same commit. Windows 2.9.4 (release `v2.9.4`) and Android 2.9.4 (release `android-v2.9.4`, not marked Latest) were published on 2026-10-21, and the website's download pages and both `latest.json` files name them; the phone build carries the new launcher icon.
 
 - Bundle only public-domain texts offline (BSB/KJV/ASV/YLT/WEB + WLC/TR). NIV/ESV/NKJV are
   copyrighted and were never bundled; NIV/NKJV are available live via api.bible with the user's
