@@ -1,6 +1,6 @@
 [package]
 name = "bible-concordance"
-version = "2.9.3"
+version = "2.9.4"
 description = "Offline Bible concordance and research app"
 authors = ["you"]
 edition = "2021"
@@ -31,7 +31,10 @@ sqlite-vec = "0.1"
 anyhow = "1"
 regex = "1"
 reqwest = { version = "0.12", features = ["json"] }
-tokio = { version = "1", features = ["rt-multi-thread"] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
+# Offline AI (beta): Microsoft Foundry Local (its runtime is downloaded when the beta is enabled)
+foundry-local-sdk = "2.1"
+tokio-stream = "0.1"
 candle-core = "0.9"
 candle-nn = "0.9"
 candle-transformers = "0.9"

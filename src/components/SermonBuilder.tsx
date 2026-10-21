@@ -22,6 +22,7 @@ import { buildDraft, Role, ROLES, TemplateDef, templateByKey, templateFromItems,
 import { plainText } from "./RichText";
 import { PreachMode } from "./PreachMode";
 import { SermonFind } from "./SermonFind";
+import { SermonAssistant } from "./SermonAssistant";
 import { MediaPicker } from "./MediaPicker";
 import { MediaRef, pngOf, PngPicture } from "../sermonMedia";
 import { placeFor, placeMaterial, rolesFor } from "../sermonLayout";
@@ -42,6 +43,8 @@ interface Props {
   chapterCounts: Record<string, number>;
   onJump: (book: string, chapter: number, verse: number) => void;
   onClose: () => void;
+  /** the Offline Assistant is unlocked (it is hidden otherwise) */
+  assistant?: boolean;
 }
 
 type Tab = "prepare" | "review" | "print" | "slides" | "saved";
@@ -150,7 +153,7 @@ const savedForm = (w: Work) => JSON.stringify([w.title, w.series, w.preachedOn, 
  * with the question it answers -- on the right. Then a document, handouts, slides and a
  * full-screen view to preach from. It writes none of the sermon: the preaching is the
  * preacher's. */
-export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJump, onClose }: Props) {
+export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJump, onClose, assistant }: Props) {
   const [work, setWork] = useState<Work>(restore);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -945,6 +948,15 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
       {work.tab === "prepare" && (
         <div className="sb-prep">
           <section className="sb-find" aria-label="Find material">
+            {assistant && (
+              <SermonAssistant
+                topics={work.topics}
+                gathered={work.gathered}
+                books={books}
+                onJump={onJump}
+                onAdd={(m) => change((w) => ({ ...w, gathered: w.gathered.some((g) => g.key === m.key) ? w.gathered : [...w.gathered, m] }))}
+              />
+            )}
             <SermonFind
               query={work.query}
               onQuery={(q) => set({ query: q })}

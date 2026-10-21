@@ -19,6 +19,9 @@ pub struct AppSettings {
     /// as `userdata::HIGHLIGHT_COLORS`; a colour with no entry has no custom title yet.
     #[serde(default)]
     pub highlight_titles: HashMap<String, String>,
+    /// the Offline Assistant is switched on (offline_ai.rs)
+    #[serde(default)]
+    pub offline_ai: bool,
 }
 
 fn settings_path(config_dir: &Path) -> PathBuf {

@@ -26,13 +26,21 @@ pub fn init(conn: &Connection) -> Result<(), String> {
     give_uids(conn)
 }
 
-/// A uid for each sermon, preaching and basket item that has none yet (new since the last
-/// sync, or from before it existed).
+/// A uid for each sermon, preaching and basket item (and the Offline AI's chats, messages
+/// and memory) that has none yet (new since the last sync, or from before it existed).
 fn give_uids(conn: &Connection) -> Result<(), String> {
     for t in ["sermons", "sermon_preachings", "basket"] {
         conn.execute(&format!("UPDATE {t} SET uid = lower(hex(randomblob(12))) WHERE uid IS NULL OR uid = ''"), []).map_err(err)?;
     }
+    for t in ["ai_chats", "ai_messages", "ai_memory"] {
+        // (these tables are made after this file's own; absent only in a test database)
+        let _ = conn.execute(&format!("UPDATE {t} SET uid = lower(hex(randomblob(12))) WHERE uid IS NULL OR uid = ''"), []);
+    }
     Ok(())
+}
+
+fn ai_chat_id(conn: &Connection, uid: &str) -> Result<Option<i64>, String> {
+    conn.query_row("SELECT id FROM ai_chats WHERE uid = ?1", params![uid], |r| r.get(0)).optional().map_err(err)
 }
 
 fn sermon_id(conn: &Connection, uid: &str) -> Result<Option<i64>, String> {
@@ -51,7 +59,9 @@ pub fn sync_media(local: &Path, folder: &Path) -> Result<usize, String> {
 /// What a computer keeps in step.
 pub struct Desktop;
 
-const KINDS: [&str; 10] = ["bm", "hl", "note", "plan", "pday", "hlname", "sermon", "tmpl", "preach", "basket"];
+/// (the Offline AI beta's chats, messages and memory -- aichat, aimsg, aimem -- keep in step
+/// between computers only; the phone doesn't have them)
+const KINDS: [&str; 13] = ["bm", "hl", "note", "plan", "pday", "hlname", "sermon", "tmpl", "preach", "basket", "aichat", "aimsg", "aimem"];
 
 impl Store for Desktop {
     fn kinds(&self) -> &[&'static str] {
@@ -90,6 +100,24 @@ impl Store for Desktop {
                 ))
             },
         )?;
+        if conn.prepare("SELECT uid FROM ai_chats LIMIT 0").is_ok() {
+            put("SELECT uid, title, created_at FROM ai_chats", &|r| {
+                Ok((format!("aichat|{}", r.get::<_, String>(0)?), json!({ "title": r.get::<_, String>(1)?, "created_at": r.get::<_, String>(2)? })))
+            })?;
+            put(
+                "SELECT m.uid, c.uid, m.role, m.content, m.sources, m.unsupported, m.kind, m.created_at FROM ai_messages m JOIN ai_chats c ON c.id = m.chat_id",
+                &|r| {
+                    Ok((
+                        format!("aimsg|{}", r.get::<_, String>(0)?),
+                        json!({ "chat": r.get::<_, String>(1)?, "role": r.get::<_, String>(2)?, "content": r.get::<_, String>(3)?, "sources": r.get::<_, String>(4)?,
+                                "unsupported": r.get::<_, String>(5)?, "kind": r.get::<_, String>(6)?, "created_at": r.get::<_, String>(7)? }),
+                    ))
+                },
+            )?;
+            put("SELECT uid, fact, created_at FROM ai_memory", &|r| {
+                Ok((format!("aimem|{}", r.get::<_, String>(0)?), json!({ "fact": r.get::<_, String>(1)?, "created_at": r.get::<_, String>(2)? })))
+            })?;
+        }
         put("SELECT uid, position, kind, title, body, meta, created_at FROM basket", &|r| {
             Ok((
                 format!("basket|{}", r.get::<_, String>(0)?),
@@ -155,6 +183,40 @@ impl Store for Desktop {
                     conn.execute("INSERT INTO sermon_preachings (sermon_id, date, venue, audience, notes, length_min, uid) VALUES (?1,?2,?3,?4,?5,?6,?7)", vals).map_err(err)?;
                 }
             }
+            ("aichat", None) => {
+                if let Some(id) = ai_chat_id(conn, rest(key))? {
+                    conn.execute("DELETE FROM ai_messages WHERE chat_id = ?1", params![id]).map_err(err)?;
+                    conn.execute("DELETE FROM ai_chats WHERE id = ?1", params![id]).map_err(err)?;
+                }
+            }
+            ("aichat", Some(v)) => {
+                let n = conn.execute("UPDATE ai_chats SET title = ?1, created_at = ?2 WHERE uid = ?3", params![s(v, "title"), s(v, "created_at"), rest(key)]).map_err(err)?;
+                if n == 0 {
+                    conn.execute("INSERT INTO ai_chats (title, created_at, uid) VALUES (?1, ?2, ?3)", params![s(v, "title"), s(v, "created_at"), rest(key)]).map_err(err)?;
+                }
+            }
+            ("aimsg", None) => {
+                conn.execute("DELETE FROM ai_messages WHERE uid = ?1", params![rest(key)]).map_err(err)?;
+            }
+            ("aimsg", Some(v)) => {
+                let Some(chat) = ai_chat_id(conn, &s(v, "chat"))? else { return Ok(false) };
+                let vals = params![chat, s(v, "role"), s(v, "content"), s(v, "sources"), s(v, "unsupported"), s(v, "kind"), s(v, "created_at"), rest(key)];
+                let n = conn
+                    .execute("UPDATE ai_messages SET chat_id=?1, role=?2, content=?3, sources=?4, unsupported=?5, kind=?6, created_at=?7 WHERE uid=?8", vals)
+                    .map_err(err)?;
+                if n == 0 {
+                    conn.execute("INSERT INTO ai_messages (chat_id, role, content, sources, unsupported, kind, created_at, uid) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)", vals).map_err(err)?;
+                }
+            }
+            ("aimem", None) => {
+                conn.execute("DELETE FROM ai_memory WHERE uid = ?1", params![rest(key)]).map_err(err)?;
+            }
+            ("aimem", Some(v)) => {
+                let n = conn.execute("UPDATE ai_memory SET fact = ?1, created_at = ?2 WHERE uid = ?3", params![s(v, "fact"), s(v, "created_at"), rest(key)]).map_err(err)?;
+                if n == 0 {
+                    conn.execute("INSERT INTO ai_memory (fact, created_at, uid) VALUES (?1, ?2, ?3)", params![s(v, "fact"), s(v, "created_at"), rest(key)]).map_err(err)?;
+                }
+            }
             ("basket", None) => {
                 conn.execute("DELETE FROM basket WHERE uid = ?1", params![rest(key)]).map_err(err)?;
             }
@@ -172,8 +234,8 @@ impl Store for Desktop {
 
     fn order(&self, key: &str) -> u8 {
         match kind(key) {
-            "sermon" => 0,
-            "preach" => 2,
+            "sermon" | "aichat" => 0,
+            "preach" | "aimsg" => 2,
             _ => 1,
         }
     }
@@ -269,6 +331,37 @@ mod tests {
     }
     fn count(conn: &Connection, sql: &str) -> i64 {
         conn.query_row(sql, [], |r| r.get(0)).unwrap()
+    }
+
+    /// The Offline AI's chats, messages and memory go from one computer to another.
+    #[test]
+    fn ai_chats_keep_in_step() {
+        let root = std::env::temp_dir().join(format!("bc-sync-ai-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let folder = root.join("shared");
+        let mut a = device(&root, "a");
+        let mut b = device(&root, "b");
+        crate::offline_ai::init(&a).unwrap();
+        crate::offline_ai::init(&b).unwrap();
+        a.execute("INSERT INTO ai_chats (title) VALUES ('Daniel')", []).unwrap();
+        let chat = a.last_insert_rowid();
+        a.execute("INSERT INTO ai_messages (chat_id, role, content) VALUES (?1, 'user', 'Why was the answer delayed?')", [chat]).unwrap();
+        a.execute("INSERT INTO ai_messages (chat_id, role, content) VALUES (?1, 'assistant', 'Twenty-one days [Daniel 10:13].')", [chat]).unwrap();
+        a.execute("INSERT INTO ai_memory (fact) VALUES ('I preach at Grace Chapel')", []).unwrap();
+        sync(&mut a, &folder, "Study PC", "computer").unwrap();
+        sync(&mut b, &folder, "Laptop", "computer").unwrap();
+        assert_eq!(count(&b, "SELECT COUNT(*) FROM ai_chats WHERE title = 'Daniel'"), 1);
+        assert_eq!(count(&b, "SELECT COUNT(*) FROM ai_messages m JOIN ai_chats c ON c.id = m.chat_id WHERE c.title = 'Daniel'"), 2);
+        assert_eq!(count(&b, "SELECT COUNT(*) FROM ai_memory"), 1);
+        // a chat deleted on one goes on the other, with its messages
+        let cb: i64 = count(&b, "SELECT id FROM ai_chats");
+        b.execute("DELETE FROM ai_messages WHERE chat_id = ?1", [cb]).unwrap();
+        b.execute("DELETE FROM ai_chats WHERE id = ?1", [cb]).unwrap();
+        sync(&mut b, &folder, "Laptop", "computer").unwrap();
+        sync(&mut a, &folder, "Study PC", "computer").unwrap();
+        assert_eq!(count(&a, "SELECT COUNT(*) FROM ai_chats"), 0);
+        assert_eq!(count(&a, "SELECT COUNT(*) FROM ai_messages"), 0);
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]

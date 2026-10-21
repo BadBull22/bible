@@ -412,7 +412,7 @@ fn bsb_rows(conn: &Connection) -> (i64, i64) {
     .unwrap_or((i64::MIN, i64::MAX))
 }
 
-fn passage_text(conn: &Connection, book: &str, chapter: i64, start: i64, end: i64) -> String {
+pub(crate) fn passage_text(conn: &Connection, book: &str, chapter: i64, start: i64, end: i64) -> String {
     let Ok(mut stmt) = conn.prepare(
         "SELECT v.text FROM verses v JOIN books b ON b.id = v.book_id JOIN versions ver ON ver.id = v.version_id
          WHERE ver.code = 'BSB' AND b.name = ?1 AND v.chapter = ?2 AND v.verse BETWEEN ?3 AND ?4 ORDER BY v.verse",

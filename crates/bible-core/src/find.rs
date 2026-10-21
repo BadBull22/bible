@@ -41,6 +41,29 @@ const STOPWORDS: &[&str] = &[
     "there", "their", "its", "into", "after", "before", "if", "but", "so", "then", "than", "has", "had", "have", "not", "no",
 ];
 
+/// Words of today that the Bible says another way: searched for as the Bible's word too
+/// ("when did Jesus bleed" -> blood), and still there for the story names.
+const ALSO: &[(&str, &str)] = &[("bleed", "blood"), ("bled", "blood"), ("bleeds", "blood")];
+
+/// The books a person wrote, as the Bible and tradition have it (for "what did Paul say about …").
+pub fn authored_books(name: &str) -> &'static [&'static str] {
+    match name.to_lowercase().as_str() {
+        "paul" => &["Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon"],
+        "peter" => &["1 Peter", "2 Peter"],
+        "john" => &["John", "1 John", "2 John", "3 John", "Revelation"],
+        "james" => &["James"],
+        "jude" => &["Jude"],
+        "moses" => &["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy"],
+        "solomon" => &["Proverbs", "Ecclesiastes", "Song of Solomon"],
+        "david" => &["Psalms"],
+        "isaiah" => &["Isaiah"],
+        "jeremiah" => &["Jeremiah", "Lamentations"],
+        "ezekiel" => &["Ezekiel"],
+        "daniel" => &["Daniel"],
+        _ => &[],
+    }
+}
+
 /// Names that are in nearly every chapter: noticing them would favour nothing.
 const TOO_COMMON_NAMES: &[&str] = &["god", "lord", "spirit", "father", "son", "christ", "jesus", "israel", "he", "his", "him"];
 
@@ -98,6 +121,10 @@ impl Vocab {
     pub fn nearest(&self, word: &str) -> Option<String> {
         let n = word.chars().count();
         if n < 4 || !word.chars().all(|c| c.is_ascii_alphabetic()) {
+            return None;
+        }
+        // a word that begins a Bible word ("bleed" -> bleeding) is a real word, not a misspelling
+        if self.count.keys().any(|w| w.len() > word.len() && w.starts_with(word)) {
             return None;
         }
         let most = if n <= 5 { 1 } else { 2 };
@@ -247,6 +274,15 @@ pub fn understand(db: &Connection, vocab: &Vocab, query: &str) -> Understood {
                 w = stem.to_string();
             }
         }
+        // a word of today the Bible says another way
+        if let Some((_, bible)) = ALSO.iter().find(|(today, _)| *today == w) {
+            u.words.push(w.clone());
+            u.words.push(bible.to_string());
+            u.content.push(bible.to_string());
+            text_words.push(original.clone());
+            i += 1;
+            continue;
+        }
         // a misspelling
         let mut shown = original.clone();
         if !vocab.has(&w) && !STOPWORDS.contains(&w.as_str()) {
@@ -349,10 +385,21 @@ pub const STORIES: &[(&[&str], (&str, i64, i64, i64))] = &[
     (&["jacob wrestles", "jacob wrestling", "wrestled angel"], ("Genesis", 32, 22, 32)),
     (&["joseph coat", "coat many colours", "coat many colors", "joseph brothers sold"], ("Genesis", 37, 1, 36)),
     (&["burning bush"], ("Exodus", 3, 1, 15)),
+    (&["moses died", "death moses", "moses death"], ("Deuteronomy", 34, 1, 12)),
+    (&["led moses died", "lead moses died", "moses successor", "joshua moses"], ("Joshua", 1, 1, 9)),
+    (&["abraham son isaac", "abraham first son", "abraham ishmael", "hagar ishmael", "ishmael born"], ("Genesis", 16, 1, 16)),
     (&["red sea", "parting sea", "crossing sea"], ("Exodus", 14, 10, 31)),
     (&["walls jericho", "jericho walls"], ("Joshua", 6, 1, 21)),
     (&["samson delilah"], ("Judges", 16, 4, 31)),
+    (&["strongest man", "strength samson", "samson strength", "samson strong"], ("Judges", 16, 4, 31)),
+    (&["david kill saul", "david killed saul", "david spare saul", "david spared saul", "spared saul", "david saul cave", "david saul chance"], ("1 Samuel", 24, 1, 22)),
+    (&["first plague", "plague blood", "water turn blood", "nile blood", "water turned blood"], ("Exodus", 7, 14, 24)),
+    (&["abraham father", "abrahams father", "abram father", "father abraham terah", "terah"], ("Genesis", 11, 24, 32)),
+    (&["samuel mother", "samuels mother", "mother samuel", "hannah samuel"], ("1 Samuel", 1, 1, 20)),
+    (&["disciples cast demon", "disciples couldnt cast", "disciples could not cast", "boy demon disciples", "epileptic boy"], ("Matthew", 17, 14, 20)),
+    (&["swallowed ground", "earth swallowed", "ground swallowed", "korah rebellion", "korahs rebellion", "korah", "dathan abiram"], ("Numbers", 16, 20, 35)),
     (&["ruth boaz"], ("Ruth", 2, 1, 23)),
+    (&["ruth mother law", "ruths mother law", "ruth naomi"], ("Ruth", 1, 1, 22)),
     (&["elijah carmel", "prophets baal", "fire heaven elijah"], ("1 Kings", 18, 20, 40)),
     (&["still small voice", "gentle whisper"], ("1 Kings", 19, 9, 18)),
     (&["valley dry bones", "dry bones"], ("Ezekiel", 37, 1, 14)),
@@ -360,7 +407,7 @@ pub const STORIES: &[(&[&str], (&str, i64, i64, i64))] = &[
     (&["such time this", "esther queen"], ("Esther", 4, 12, 17)),
     (&["job suffering", "job trials", "job satan"], ("Job", 1, 6, 22)),
     (&["shepherd psalm", "lord my shepherd"], ("Psalms", 23, 1, 6)),
-    (&["water wine", "wedding cana"], ("John", 2, 1, 11)),
+    (&["water wine", "wedding cana", "first miracle", "first sign"], ("John", 2, 1, 11)),
     (&["nicodemus"], ("John", 3, 1, 21)),
     (&["woman well", "samaritan woman"], ("John", 4, 4, 42)),
     (&["feeding five thousand", "feeding 5000", "five loaves", "loaves fishes", "loaves fish"], ("John", 6, 1, 14)),
@@ -369,12 +416,17 @@ pub const STORIES: &[(&[&str], (&str, i64, i64, i64))] = &[
     (&["raising lazarus", "lazarus raised", "lazarus tomb"], ("John", 11, 1, 44)),
     (&["rich man lazarus"], ("Luke", 16, 19, 31)),
     (&["zacchaeus"], ("Luke", 19, 1, 10)),
+    (&["john baptist mother", "john baptists mother", "elizabeth zechariah"], ("Luke", 1, 5, 25)),
     (&["transfiguration"], ("Matthew", 17, 1, 13)),
+    (&["jesus bleed", "jesus bled", "sweat blood", "drops blood", "sweat like blood"], ("Luke", 22, 39, 46)),
+    (&["jesus bleed", "jesus bled", "jesus flogged", "jesus scourged", "crown thorns"], ("John", 19, 1, 3)),
+    (&["jesus bleed", "jesus bled", "pierced side", "blood water"], ("John", 19, 31, 37)),
     (&["last supper", "lord's supper", "lords supper", "communion"], ("Luke", 22, 7, 23)),
     (&["garden gethsemane", "gethsemane"], ("Matthew", 26, 36, 46)),
     (&["road emmaus", "emmaus"], ("Luke", 24, 13, 35)),
     (&["great commission"], ("Matthew", 28, 16, 20)),
-    (&["ascension"], ("Acts", 1, 6, 11)),
+    (&["ascension", "jesus up heaven", "taken up heaven", "jesus ascended", "ascended heaven"], ("Acts", 1, 6, 11)),
+    (&["thief cross", "thieves cross", "criminal cross", "criminals cross", "paradise today"], ("Luke", 23, 39, 43)),
     (&["day pentecost", "pentecost", "tongues fire"], ("Acts", 2, 1, 21)),
     (&["damascus road", "road damascus", "saul conversion", "paul conversion"], ("Acts", 9, 1, 19)),
     (&["parable sower", "sower seed"], ("Matthew", 13, 1, 23)),
@@ -518,7 +570,9 @@ pub fn rank(db: &Connection, u: &Understood, meaning: &[VerseKey], curated: &[Cu
         }
     }
     let name_books: HashSet<&String> = u.names.iter().filter(|n| testament_of.contains_key(*n)).collect();
-    let about_names = |k: &VerseKey| chapters.contains(&(k.book.clone(), k.chapter)) || name_books.contains(&k.book);
+    // a named author counts for the books he wrote ("what did Paul say about love" -> 1 Corinthians 13)
+    let authored: Vec<&str> = u.names.iter().flat_map(|n| authored_books(n)).copied().collect();
+    let about_names = |k: &VerseKey| chapters.contains(&(k.book.clone(), k.chapter)) || name_books.contains(&k.book) || authored.contains(&k.book.as_str());
     if !u.names.is_empty() {
         for (k, s) in score.iter_mut() {
             if about_names(k) {

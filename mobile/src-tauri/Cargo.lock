@@ -278,7 +278,7 @@ dependencies = [
 
 [[package]]
 name = "bible-pocket"
-version = "2.9.3"
+version = "2.9.4"
 dependencies = [
  "anyhow",
  "base64 0.22.1",

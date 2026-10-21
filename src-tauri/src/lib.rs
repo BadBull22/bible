@@ -27,6 +27,12 @@ mod sync;
 mod update;
 mod userdata;
 mod voice;
+pub mod offline_ai;
+pub mod assistant_words;
+pub mod assistant_threads;
+pub mod assistant_stories;
+pub mod assistant_structure;
+pub mod assistant_questions;
 
 use db::DbState;
 use embeddings::Embedder;
@@ -178,7 +184,9 @@ pub fn run() {
                     }
                 }
             }
+            offline_ai::init(&user_db).expect("failed to prepare userdata.db for the offline AI");
             app.manage(userdata::UserDataState(Mutex::new(user_db)));
+            app.manage(offline_ai::OfflineAiState::default());
             // the phone over the home Wi-Fi, if the reader turned it on
             app.manage(lan::LanState::default());
             lan::start_if_on(app.handle());
@@ -303,6 +311,24 @@ pub fn run() {
             study_commands::basket_remove,
             study_commands::basket_clear,
             study_commands::basket_reorder,
+            offline_ai::ai_try_unlock,
+            offline_ai::ai_turn_off,
+            offline_ai::ai_status,
+            offline_ai::ai_install,
+            offline_ai::ai_remove,
+            offline_ai::ai_chats,
+            offline_ai::ai_messages,
+            offline_ai::ai_delete_chat,
+            offline_ai::ai_memory,
+            offline_ai::ai_forget,
+            offline_ai::ai_ask,
+            offline_ai::ai_probe,
+            assistant_words::ai_word_insights,
+            assistant_threads::ai_threads,
+            assistant_threads::ai_thread_notes,
+            assistant_stories::ai_stories,
+            assistant_structure::ai_structure,
+            assistant_questions::ai_group_questions,
             voice::voice_status,
             voice::voice_start,
             voice::voice_speak,

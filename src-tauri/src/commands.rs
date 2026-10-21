@@ -674,7 +674,7 @@ pub fn semantic_search(
 }
 
 /// The words of the bundled Bibles, read once (for putting a search's spelling right).
-fn search_vocab(conn: &rusqlite::Connection) -> &'static bible_core::find::Vocab {
+pub(crate) fn search_vocab(conn: &rusqlite::Connection) -> &'static bible_core::find::Vocab {
     static VOCAB: std::sync::OnceLock<bible_core::find::Vocab> = std::sync::OnceLock::new();
     VOCAB.get_or_init(|| bible_core::find::Vocab::load(conn).unwrap_or_default())
 }
@@ -720,13 +720,37 @@ fn found_text(conn: &rusqlite::Connection, f: &bible_core::find::Found) -> Strin
 /// that need it for more than one purpose in the same request (`ask_question`'s
 /// fallback layer reuses the same embedding it already computed for the curated
 /// semantic-match step) only pay the `embed()` cost once.
-fn semantic_search_query(
+pub(crate) fn semantic_search_query(
     conn: &rusqlite::Connection,
     vector: &[f32],
     query: &str,
     limit: i64,
     study: Option<&rusqlite::Connection>,
 ) -> Result<Vec<SearchHit>, String> {
+    let found = semantic_found(conn, vector, query, limit, study)?;
+    Ok(found
+        .iter()
+        .map(|f| SearchHit {
+            version_code: "BSB".to_string(),
+            book: f.book.clone(),
+            chapter: f.chapter,
+            verse: f.verse,
+            text: found_text(conn, f),
+            verse_end: (f.verse_end > f.verse).then_some(f.verse_end),
+            why: f.why.clone(),
+        })
+        .filter(|h| !h.text.is_empty())
+        .collect())
+}
+
+/// The passages a search finds, ranked (see `bible_core::find`), with the verses that matched.
+pub(crate) fn semantic_found(
+    conn: &rusqlite::Connection,
+    vector: &[f32],
+    query: &str,
+    limit: i64,
+    study: Option<&rusqlite::Connection>,
+) -> Result<Vec<bible_core::find::Found>, String> {
     let literal = embedding_to_sql_literal(vector);
 
     // the verses nearest in meaning: the nearest-neighbour query against the vec0 table alone
@@ -760,20 +784,7 @@ fn semantic_search_query(
             why: h.why.iter().map(|w| w.to_string()).collect(),
         })
         .collect();
-    let found = bible_core::find::rank(conn, &understood, &near, &curated, bible_core::find::Scope::default(), limit.max(0) as usize)?;
-    Ok(found
-        .iter()
-        .map(|f| SearchHit {
-            version_code: "BSB".to_string(),
-            book: f.book.clone(),
-            chapter: f.chapter,
-            verse: f.verse,
-            text: found_text(conn, f),
-            verse_end: (f.verse_end > f.verse).then_some(f.verse_end),
-            why: f.why.clone(),
-        })
-        .filter(|h| !h.text.is_empty())
-        .collect())
+    bible_core::find::rank(conn, &understood, &near, &curated, bible_core::find::Scope::default(), limit.max(0) as usize)
 }
 
 /// Below this cosine similarity, a semantic match against the curated set is treated as
@@ -820,7 +831,7 @@ fn resolve_computed(conn: &rusqlite::Connection, firsts: &FirstsData, tag: &str)
 
 /// Builds the UI-facing answer from a `qa.json` entry, splicing a live number into its
 /// `{{n}}` token when the entry names a `computed_from` tag.
-fn build_curated_entry(entry: &QaEntry, conn: &rusqlite::Connection, firsts: &FirstsData) -> Result<AskCuratedEntry, String> {
+pub(crate) fn build_curated_entry(entry: &QaEntry, conn: &rusqlite::Connection, firsts: &FirstsData) -> Result<AskCuratedEntry, String> {
     let answer = match &entry.computed_from {
         Some(tag) => {
             let n = resolve_computed(conn, firsts, tag)?;
@@ -842,7 +853,7 @@ fn build_curated_entry(entry: &QaEntry, conn: &rusqlite::Connection, firsts: &Fi
 /// renders their foretold/fulfilled pair as a two-column card instead), so this
 /// synthesizes prose from `citations` + `fulfillment` rather than surfacing a blank
 /// answer -- the one data quirk this reuse has to account for.
-fn build_curated_entry_from_firsts(entry: &FirstsEntry) -> AskCuratedEntry {
+pub(crate) fn build_curated_entry_from_firsts(entry: &FirstsEntry) -> AskCuratedEntry {
     if entry.category == "prophecy" {
         let foretold = entry.citations.join("; ");
         let fulfilled = entry.fulfillment.join("; ");
@@ -1048,7 +1059,7 @@ pub fn get_lineage(state: State<GenealogyState>, person_id: String) -> Vec<Linea
 
 // ---------- offline commentaries + people/places/events (commentaries.db) ----------
 
-fn commentary_conn(state: &CommentaryState) -> Result<std::sync::MutexGuard<'_, rusqlite::Connection>, String> {
+pub(crate) fn commentary_conn(state: &CommentaryState) -> Result<std::sync::MutexGuard<'_, rusqlite::Connection>, String> {
     let m = state
         .0
         .as_ref()
