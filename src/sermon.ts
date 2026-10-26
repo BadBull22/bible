@@ -926,6 +926,12 @@ export interface SermonBody {
   // photo behind them (a kept file)
   slides?: import("./sermonOutputs").SlideSpec[] | null;
   slideBackground?: string | null;
+  /** a see-through picture over the background (since 2.9.5) */
+  slideOverlay?: string | null;
   /** verse numbers on Scripture slides (absent: shown) */
   slideVerseNumbers?: boolean;
+
+  // since 2.9.5: the step-by-step builder
+  mode?: "guide" | "full";
+  guide?: import("./guideData").GuideState;
 }

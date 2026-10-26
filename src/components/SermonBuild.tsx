@@ -267,6 +267,27 @@ export function SermonBuild({ topics, gathered, books, onAdd, onJump, modelReady
       <p className="search-hint">
         Choose the passage. The assistant brings what this app already has around it, with its source. Where it writes a sentence of its own (a note, a heading, a question) it says so, and the sentence was checked against the passage. Nothing goes into your sermon unless you press Add.
       </p>
+      <details className="sb-howto">
+        <summary>How it helps, from start to finish</summary>
+        <ol>
+          <li>
+            <strong>Start:</strong> choose the passage you are preaching (the list holds the passages in your sermon), or type one.
+          </li>
+          <li>
+            <strong>Look:</strong> press a button. <em>Word insights</em>: what the Hebrew or Greek adds to the English. <em>Threads</em>: other passages that tie in.{" "}
+            <em>Stories &amp; sermons</em>: what Simeon and Spurgeon preached on it, and stories. <em>Structure ideas</em>: the passage cut into parts with a short heading each.{" "}
+            <em>Group questions</em>: questions to ask a group.
+          </li>
+          <li>
+            <strong>Keep:</strong> press <em>Add to what I've gathered</em> on what is useful. It goes into the group “From the Offline Assistant” in your gathered list (left, further down),
+            marked as the assistant's, with where it comes from.
+          </li>
+          <li>
+            <strong>Use:</strong> press the + beside it to put it in your sermon (Scripture, Explain, Illustrate or Apply). <strong>Finish:</strong> you write the points, the conclusion and the
+            response yourself; the assistant does not write them.
+          </li>
+        </ol>
+      </details>
       <div className="sb-build-pick">
         {passages.length > 0 && (
           <select value={picked && !typedRef ? passageLabel(picked) : choice} onChange={(e) => (setChoice(e.target.value), setTyped(""))} aria-label="Passage to build around">

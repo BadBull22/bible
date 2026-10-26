@@ -128,8 +128,45 @@ export function placeFor(items: SermonItem[], roles: Role[], focus: string | nul
   return items.length;
 }
 
-/** Where gathered material goes. */
-export const placeMaterial = (items: SermonItem[], m: Material, focus: string | null) => placeFor(items, rolesFor(m.kind), focus);
+/** Where an item for these sections goes when it is to come FIRST in a part: at the start of the
+ * part's section that takes it, else straight after the part's head. `headId` null: the first
+ * part. An index into `items` as they are. */
+export function placeAtStart(items: SermonItem[], roles: Role[], headId: string | null): number {
+  const parts = partsOf(items);
+  const part = headId === null ? parts[0] : parts.find((p) => p.head?.id === headId);
+  if (!part) return items.length;
+  if (!part.head) return part.start;
+  const rank = (s: Slot) => {
+    const r = s.block === part.head ? null : roleOf(s.block);
+    return r ? roles.indexOf(r) : -1;
+  };
+  const fit = slotsOf(items, part)
+    .filter((s) => rank(s) >= 0)
+    .sort((a, b) => rank(a) - rank(b))[0];
+  return fit?.block ? items.indexOf(fit.block) + 1 : part.start + 1;
+}
+
+/** The point whose Scripture covers a passage: the head of the part holding a `section` of
+ * Scripture that overlaps `ref` (commentary on John 3:9-15 belongs with the point on John 3:9-15). */
+export function pointOfRef(items: SermonItem[], ref: { book: string; chapter: number; verse: number; verseEnd: number }): string | null {
+  for (const p of partsOf(items)) {
+    if (!p.head) continue;
+    for (let n = p.start; n < p.end; n++) {
+      const it = items[n];
+      if (it.type !== "material" || it.material.kind !== "section" || !it.material.ref) continue;
+      const s = it.material.ref;
+      if (s.book === ref.book && s.chapter === ref.chapter && s.verse <= ref.verseEnd && ref.verse <= s.verseEnd) return p.head.id;
+    }
+  }
+  return null;
+}
+
+/** Where gathered material goes: where the preacher is working, else the point whose Scripture
+ * it is about, else the first section that takes it. */
+export function placeMaterial(items: SermonItem[], m: Material, focus: string | null): number {
+  const home = focus ?? (m.ref && m.kind !== "section" ? pointOfRef(items, m.ref) : null);
+  return placeFor(items, rolesFor(m.kind), home);
+}
 
 /** Moves a whole part (its head and everything under it) before another part, or to the end. */
 export function movePart(items: SermonItem[], headId: string, beforeHeadId: string | null): SermonItem[] {
@@ -141,6 +178,18 @@ export function movePart(items: SermonItem[], headId: string, beforeHeadId: stri
   const at = beforeHeadId ? rest.findIndex((i) => i.id === beforeHeadId) : rest.length;
   if (at < 0) return items;
   return [...rest.slice(0, at), ...block, ...rest.slice(at)];
+}
+
+/** Moves a point (its heading and everything under it) before another point, or after the LAST
+ * POINT: unlike `movePart`, the end is the end of the points, so a Conclusion stays last. */
+export function movePoint(items: SermonItem[], headId: string, beforeHeadId: string | null): SermonItem[] {
+  if (beforeHeadId) return movePart(items, headId, beforeHeadId);
+  const from = partsOf(items).find((p) => p.head?.id === headId);
+  if (!from) return items;
+  const rest = [...items.slice(0, from.start), ...items.slice(from.end)];
+  const last = partsOf(rest).filter((p) => p.kind === "point").pop();
+  if (!last) return items;
+  return [...rest.slice(0, last.end), ...items.slice(from.start, from.end), ...rest.slice(last.end)];
 }
 
 /** Moves one item to the end of a section (or of a part, by its head). */

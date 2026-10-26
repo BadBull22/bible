@@ -11,6 +11,8 @@ import { CloseIcon } from "./icons";
 interface Props {
   /** a question to ask at once (from the search results' button) */
   initialQuestion?: string;
+  /** the code was just entered: the download starts at once when the assistant is not on this computer yet */
+  fresh?: boolean;
   onJump: (book: string, chapter: number, verse: number) => void;
   onClose: () => void;
   /** after "Turn off": the panel and its menu item go away */
@@ -24,7 +26,7 @@ const KIND_NOTE: Record<string, string> = {
   memory: "Kept for all your chats.",
 };
 
-export function OfflineAiPanel({ initialQuestion, onJump, onClose, onTurnedOff }: Props) {
+export function OfflineAiPanel({ initialQuestion, fresh, onJump, onClose, onTurnedOff }: Props) {
   const [status, setStatus] = useState<AiStatus | null>(null);
   const [progress, setProgress] = useState<{ stage: string; percent: number } | null>(null);
   const [chats, setChats] = useState<AiChat[]>([]);
@@ -74,6 +76,15 @@ export function OfflineAiPanel({ initialQuestion, onJump, onClose, onTurnedOff }
       refresh();
     }
   }
+
+  // right after the code is entered: start the download when there is none, so its progress is on show
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!fresh || autoStarted.current || !status) return;
+    autoStarted.current = true;
+    if (!(status.runtime && status.model) && !status.downloading) void install();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fresh, status]);
 
   async function send(asked?: string) {
     const q = (asked ?? question).trim();
@@ -146,11 +157,35 @@ export function OfflineAiPanel({ initialQuestion, onJump, onClose, onTurnedOff }
             <p>
               Downloaded and ready ({status?.variant === "generic-gpu" ? "using the graphics card" : "using the processor"}).
             </p>
-          ) : progress ? (
-            <p>
-              Downloading {progress.stage === "model" ? "the model" : progress.stage === "accelerator" ? "the graphics-card support" : "the AI runtime"}…{" "}
-              {Math.round(progress.percent)}%
-            </p>
+          ) : progress || status?.downloading ? (
+            <div className="ai-download" role="status" aria-live="polite">
+              <p>
+                <strong>
+                  Downloading {progress?.stage === "model" ? "the model" : progress?.stage === "accelerator" ? "the graphics-card support" : "the AI runtime"}
+                </strong>
+                {progress ? ` — ${Math.round(progress.percent)}%` : "…"}
+              </p>
+              <progress max={100} value={progress ? Math.round(progress.percent) : undefined} aria-label="Download progress" />
+              <ol className="ai-download-steps">
+                {(
+                  [
+                    ["runtime", "The AI runtime (about 40 MB)"],
+                    ["accelerator", "Graphics-card support (a few MB, when the computer has a graphics card)"],
+                    ["model", "The Phi-4-mini model (about 4 GB: the long part)"],
+                  ] as const
+                ).map(([k, label], i, all) => {
+                  const now = progress?.stage ?? "runtime";
+                  const done = all.findIndex(([x]) => x === now) > i;
+                  return (
+                    <li key={k} className={done ? "done" : now === k ? "now" : ""}>
+                      {done ? "✓ " : now === k ? "▶ " : ""}
+                      {label}
+                    </li>
+                  );
+                })}
+              </ol>
+              <p className="search-hint">You can keep using the app while it downloads. It works offline afterwards.</p>
+            </div>
           ) : (
             <>
               <p>It needs a one-time download: the AI runtime (about 40 MB) and the Phi-4-mini model (about 3–5 GB). After that it works offline.</p>
@@ -220,6 +255,11 @@ export function OfflineAiPanel({ initialQuestion, onJump, onClose, onTurnedOff }
       ) : (
         <div className="ai-chat">
           <div className="ai-messages">
+            {fresh && ready && messages.length === 0 && !busy && (
+              <p className="ai-unlocked">
+                ✓ Unlocked. The assistant is already on this computer and ready ({status?.variant === "generic-gpu" ? "using the graphics card" : "using the processor"}).
+              </p>
+            )}
             {messages.length === 0 && !busy && (
               <p className="search-hint">
                 Ask about the Bible, e.g. “Why was Daniel's answer delayed?” Follow-up questions work too. Answers come only from the app's texts and

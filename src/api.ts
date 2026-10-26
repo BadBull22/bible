@@ -489,6 +489,37 @@ export interface BookBookmark {
 }
 
 /** A sermon saved from the sermon builder. `body` (JSON, see sermon.ts) is empty in a list. */
+export interface ThemeFile {
+  path: string;
+  name: string;
+  folder: string;
+  kind: "image" | "video";
+  /** a heading or layer with see-through parts, to lay over a background, or a background */
+  role: "background" | "overlay";
+  size: number;
+}
+export type DeckKind = "notices" | "music";
+/** what the deck table holds: the two kinds of presentation, and saved selections of songs */
+export type DeckStore = DeckKind | "songlist" | "notice";
+export interface Deck {
+  id: number;
+  kind: DeckStore;
+  title: string;
+  body: string;
+  updated_at?: string;
+}
+export interface SongRow {
+  id: number;
+  title: string;
+  author: string;
+  ccli: string;
+  /** the sections and arrangement, JSON */
+  body: string;
+  /** the first line, in a list */
+  first?: string;
+  updated_at?: string;
+}
+
 export interface SavedSermon {
   /** 0 = not saved yet */
   id: number;
@@ -1003,6 +1034,27 @@ export const api = {
   bookBookmarkAdd: (bookmark: BookBookmark) => invoke<number>("book_bookmark_add", { bookmark }),
   bookBookmarkRename: (id: number, label: string) => invoke<void>("book_bookmark_rename", { id, label }),
   bookBookmarkRemove: (id: number) => invoke<void>("book_bookmark_remove", { id }),
+  /** the Sunday service's notices and music, saved apart from any sermon; `body` is JSON, empty in a list */
+  deckList: (kind: DeckStore) => invoke<Deck[]>("deck_list_cmd", { kind }),
+  deckGet: (id: number) => invoke<Deck | null>("deck_get_cmd", { id }),
+  deckSave: (deck: Deck) => invoke<number>("deck_save_cmd", { deck }),
+  /** puts the decks of a kind (the notices in the library) in the order of these ids */
+  deckOrder: (kind: DeckStore, ids: number[]) => invoke<void>("deck_order_cmd", { kind, ids }),
+  deckDelete: (id: number) => invoke<void>("deck_delete_cmd", { id }),
+  /** the saved songs whose title, writer or words contain the text (all for none); `body` is JSON, empty in a list */
+  songSearch: (query: string) => invoke<SongRow[]>("song_search_cmd", { query }),
+  songGet: (id: number) => invoke<SongRow | null>("song_get_cmd", { id }),
+  songSave: (song: SongRow) => invoke<number>("song_save_cmd", { song }),
+  /** the songs an online lyrics service lists for a title, and the words of one of them (needs the internet) */
+  /** the pictures and videos in a folder of backgrounds, a small picture of one, and a copy of one kept with the app */
+  themeList: (folder: string) => invoke<ThemeFile[]>("theme_list", { folder }),
+  themeThumb: (path: string) => invoke<ArrayBuffer>("theme_thumb", { path }),
+  themeUse: (path: string) => invoke<{ file: string; size: number }>("theme_use", { path }),
+  lyricsSearch: (query: string) => invoke<{ title: string; artist: string }[]>("lyrics_search", { query }),
+  lyricsGet: (artist: string, title: string) => invoke<string>("lyrics_get", { artist, title }),
+  /** the Top 100 worship songs chart: titles and artists only */
+  chartTopSongs: (year: number) => invoke<{ year: number; updated: string; songs: { title: string; artists: string[] }[] }>("chart_top_songs", { year }),
+  songDelete: (id: number) => invoke<void>("song_delete_cmd", { id }),
   sermonList: () => invoke<SavedSermon[]>("sermon_list"),
   sermonGet: (id: number) => invoke<SavedSermon | null>("sermon_get", { id }),
   /** saves a new sermon (id 0) or changes to an existing one; returns its id */
@@ -1035,6 +1087,9 @@ export const api = {
   /** writes a .pptx in Documents\Bible Concordance; returns its path */
   saveSermonSlides: (title: string, slides: { kind: string; title: string; body: string; image?: string; background?: string; link?: string }[]) =>
     invoke<string>("save_sermon_slides", { title, slides }),
+  /** writes a ProPresenter bundle (.probundle) in Documents\Bible Concordance; returns its path and what could not go in */
+  saveSermonProPresenter: (title: string, slides: { kind: string; title: string; body: string; image?: string; background?: string; picture?: string; link?: string; video?: string; notes?: string; song?: string; section?: string }[]) =>
+    invoke<{ path: string; warnings: string[] }>("save_sermon_propresenter", { title, slides }),
   chapterNotes: (book: string, chapter: number) => invoke<Note[]>("chapter_notes", { book, chapter }),
   /** every tag used on a note, with its count, most used first */
   noteTags: () => invoke<[string, number][]>("note_tags"),

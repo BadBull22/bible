@@ -24,6 +24,10 @@ interface Props {
   renderMaterial: (m: Material) => ReactNode;
   /** opens the picture / video / link chooser for a section */
   onPickMedia: (slotId: string) => void;
+  /** show only this part (the id of its heading): the Write step takes one part at a time */
+  only?: string;
+  /** every section open to write in, even those with nothing in them yet */
+  expand?: boolean;
 }
 
 const POINT_ROLES: Role[] = ["scripture", "explain", "illustrate", "apply", "transition", "story", "context", "prayer"];
@@ -34,7 +38,7 @@ const hasWords = (i: SermonItem | null) => !!i && (i.type === "block" || i.type 
 /** The sermon on the right: each point a card, holding its sections; a section with nothing in
  * it yet folds away into a "+ Explain" chip; one Add menu a point; points dragged by their
  * handle, and anything in them dragged to another section. */
-export function SermonOutline({ items, outline, target, onTarget, onChange, onText, onLabel, onMedia, onMark, renderMaterial, onPickMedia }: Props) {
+export function SermonOutline({ items, outline, target, onTarget, onChange, onText, onLabel, onMedia, onMark, renderMaterial, onPickMedia, only, expand }: Props) {
   // sections opened to write in although still empty
   const [opened, setOpened] = useState<Set<string>>(new Set());
   const [dropOn, setDropOn] = useState<string | null>(null);
@@ -226,10 +230,10 @@ export function SermonOutline({ items, outline, target, onTarget, onChange, onTe
     if (!h) return <div key={`loose-${part.start}`} className="sb-part loose">{slotsOf(items, part).map((s) => slotView(s, part, false))}</div>;
     const slots = slotsOf(items, part);
     const [own, ...sections] = slots;
-    const shown = (s: Slot) => s.block?.type === "block" && (hasWords(s.block) || s.members.length > 0 || opened.has(s.block.id) || target === s.block.id);
+    const shown = (s: Slot) => s.block?.type === "block" && (!!expand || hasWords(s.block) || s.members.length > 0 || opened.has(s.block.id) || target === s.block.id);
     const hidden = sections.filter((s) => !shown(s));
     const isSection = part.kind === "section" && h.type === "block";
-    const headShown = isSection ? hasWords(h) || own.members.length > 0 || opened.has(h.id) || target === h.id : true;
+    const headShown = isSection ? !!expand || hasWords(h) || own.members.length > 0 || opened.has(h.id) || target === h.id : true;
     const dropKey = `part:${h.id}`;
     return (
       <section
@@ -327,8 +331,8 @@ export function SermonOutline({ items, outline, target, onTarget, onChange, onTe
 
   return (
     <div className="sb-outline">
-      {parts.map(partView)}
-      <div
+      {parts.filter((p) => !only || (p.head?.id ?? "") === only).map((p) => partView(p, parts.indexOf(p)))}
+      {!only && <div
         className={"sb-end-drop" + (dropOn === "end" ? " on" : "")}
         onDragOver={(e) => {
           if (!isPart(e)) return;
@@ -341,7 +345,7 @@ export function SermonOutline({ items, outline, target, onTarget, onChange, onTe
           setDropOn(null);
           if (id) onChange((list) => movePart(list, id, null));
         }}
-      />
+      />}
     </div>
   );
 }

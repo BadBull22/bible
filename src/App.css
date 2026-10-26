@@ -6301,6 +6301,112 @@ body.is-resizing .leaflet-container {
   overflow: auto;
 }
 
+/* the sermon and the slides are in different orders: say so, with the button to put it right */
+.slides-match {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+  margin: 0 0 0.7rem;
+  padding: 0.5rem 0.8rem;
+  border-left: 3px solid var(--accent-500);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--accent-100);
+  color: var(--text);
+}
+
+/* dragging a slide: it dims, and a line shows where it will drop */
+.slides-strip {
+  padding: 0.3rem 0.2rem;
+}
+
+.slides-strip li {
+  position: relative;
+}
+
+.slides-strip li {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.slides-strip li.movable,
+.slides-strip li.movable .slides-strip-pick {
+  cursor: grab;
+}
+
+/* while a slide is carried: the pointer says so, a copy of the slide follows it as it was taken, the other slides
+   slide aside to open the slot it will land in, and the carried slides wait in that slot, outlined */
+body.slides-dragging,
+body.slides-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.slides-strip li {
+  transform: translateY(var(--aside, 0px));
+}
+
+.slides-strip.carrying li {
+  transition: transform 0.16s ease;
+}
+
+.slides-strip li.dragging {
+  z-index: 0;
+}
+
+.slides-strip li.dragging .slides-strip-pick {
+  opacity: 0.45;
+  border: 2px dashed var(--accent-500);
+}
+
+.slides-carried {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 50;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  border: 2px solid var(--accent-500);
+  box-shadow: var(--shadow-lg);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.slides-carried .slide-preview {
+  font-size: 5px;
+}
+
+.slides-carried-n {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-600);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.slides-strip li.dragging {
+  opacity: 0.4;
+}
+
+/* where the slide went */
+.slides-strip li.landed .slides-strip-pick {
+  animation: slides-landed 1.1s ease-out;
+}
+
+@keyframes slides-landed {
+  from {
+    box-shadow: 0 0 0 3px var(--accent-500), 0 0 16px var(--accent-500);
+  }
+  to {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
 .slides-strip-pick {
   display: flex;
   gap: 0.35rem;
@@ -6440,6 +6546,11 @@ body.is-resizing .leaflet-container {
   .slides-strip li {
     width: 9rem;
     flex: 0 0 auto;
+  }
+
+  /* the strip runs sideways: the slides move aside sideways too */
+  .slides-strip li {
+    transform: translateX(var(--aside, 0px));
   }
 }
 
@@ -7078,6 +7189,7 @@ body.show-body {
 
 /* the slide as large as the screen allows, kept 16:9 */
 .show-slide {
+  animation: show-fade 0.3s ease;
   position: relative;
   width: min(100vw, 177.78vh);
   height: min(100vh, 56.25vw);
@@ -7087,6 +7199,41 @@ body.show-body {
 .show-slide .slide-preview {
   border-radius: 0;
   font-size: min(1.9vw, 3.4vh);
+}
+
+@keyframes show-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.show-test {
+  color: #fff;
+  background: #10203a;
+  text-align: center;
+  outline: 12px solid #f59f00;
+  outline-offset: -12px;
+}
+
+.show-test div {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.show-test strong {
+  font-size: 5vw;
+}
+
+.show-test span {
+  font-size: 2.4vw;
+}
+
+.show-page {
+  background: #fff;
 }
 
 .show-clip {
@@ -7099,204 +7246,535 @@ body.show-body {
   object-fit: contain;
 }
 
+/* ---------- Present from this laptop: the presenter's screen, laid out like ProPresenter's ---------- */
 .presenter {
   position: fixed;
   inset: 0;
   z-index: 80;
-  background: #12161f;
-  color: #e8ecf4;
+  background: #1b1c1f;
+  color: #e8e8ea;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  padding: 0.7rem 1rem;
-  box-sizing: border-box;
+  font-size: 0.95rem;
 }
 
 .presenter .muted {
-  color: #9aa6bd;
+  color: #9a9ca3;
 }
 
-.presenter-bar {
+.presenter .outline-btn,
+.presenter .text-btn {
+  background: #34353a;
+  border: 1px solid #505157;
+  color: #ececef;
+}
+
+.presenter .outline-btn:hover:not(:disabled),
+.presenter .text-btn:hover:not(:disabled) {
+  background: #43444a;
+}
+
+.presenter .outline-btn.on {
+  background: #7a2230;
+  border-color: #b0293a;
+}
+
+.presenter .pill-btn.danger {
+  background: #b0293a;
+}
+
+.presenter .link-btn {
+  color: #8fb8ff;
+}
+
+.presenter select,
+.presenter input[type="number"] {
+  background: #2c2d31;
+  color: #eee;
+  border: 1px solid #505157;
+  border-radius: 4px;
+  padding: 0.2rem 0.4rem;
+}
+
+.pr-top {
   display: flex;
-  align-items: center;
-  gap: 1.4rem;
   flex-wrap: wrap;
-  font-size: 1.05rem;
+  align-items: center;
+  gap: 0.4rem 1.3rem;
+  padding: 0.55rem 0.9rem;
+  background: #2b2c30;
+  border-bottom: 1px solid #0e0e10;
 }
 
-.presenter-clock,
-.presenter-timer {
+.pr-title {
+  margin-right: auto;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+}
+
+.pr-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+}
+
+.pr-light {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: #777;
+}
+
+.pr-light.green {
+  background: #3fb950;
+}
+
+.pr-light.red {
+  background: #e5484d;
+}
+
+.pr-light.amber {
+  background: #e0a100;
+}
+
+.pr-clock,
+.pr-timer {
   font-variant-numeric: tabular-nums;
-  font-size: 1.5rem;
+}
+
+.pr-clock {
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
-.presenter-timer {
-  color: #f2c46d;
+.pr-timer {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.pr-timer > span:first-child {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.pr-timer .warn {
+  color: #ff6b6b;
+}
+
+.pr-count {
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.pr-count input {
+  width: 5rem;
+}
+
+.pr-tools {
+  display: flex;
   gap: 0.5rem;
 }
 
-.presenter-timer .link-btn {
+.pr-msg {
+  margin: 0;
+  padding: 0.45rem 0.9rem;
+  background: #26272b;
+  font-size: 0.88rem;
+}
+
+.pr-rehearsal {
+  background: #3a2f12;
+}
+
+.pr-resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.1rem;
+  padding: 0.7rem 0.9rem;
+  background: #17304d;
+  font-size: 1.05rem;
+}
+
+.pr-resume .pill-btn {
+  font-size: 1.05rem;
+  padding: 0.5rem 1.3rem;
+}
+
+.pr-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 25rem;
+}
+
+.pr-slides {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid #0e0e10;
+}
+
+.pr-grid,
+.pr-list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 0.9rem;
+  list-style: none;
+}
+
+.pr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--thumb, 190px), 1fr));
+  gap: 0.9rem 0.8rem;
+  align-content: start;
+}
+
+.pr-grid li button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 4px;
+  background: #0b0b0c;
+  color: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.pr-grid li button:hover {
+  border-color: #6c6d74;
+}
+
+/* the slide the room sees: outlined in orange; the one after it, dashed */
+.pr-grid li.live button,
+.pr-list li.live button {
+  border-color: #f59f00;
+  box-shadow: 0 0 0 1px #f59f00, 0 0 14px rgba(245, 159, 0, 0.45);
+}
+
+.pr-grid li.next button,
+.pr-list li.next button {
+  border: 3px dashed #7a5b16;
+}
+
+.pr-thumb {
+  position: relative;
+  display: flex;
+  container-type: inline-size;
+}
+
+.pr-thumb .slide-preview {
+  font-size: 2.9cqw;
+  border-radius: 0;
+}
+
+.pr-letter {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.3rem;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 3px;
+  background: #f59f00;
+  color: #111;
+  font-size: 0.78rem;
+}
+
+.pr-play {
+  position: absolute;
+  right: 0.45rem;
+  bottom: 0.3rem;
+  color: #fff;
+  font-size: 1.05rem;
+  text-shadow: 0 0 5px #000, 0 0 2px #000;
+}
+
+/* the coloured strip under a slide: its number, and the group's name on the group's first slide */
+.pr-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.12rem 0.5rem;
+  background: var(--strip, #5c5e66);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pr-strip > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.k-title {
+  --strip: #c9b30c;
+}
+
+.k-title .pr-strip {
+  color: #17140a;
+}
+
+.k-point {
+  --strip: #2f9e44;
+}
+
+.k-scripture {
+  --strip: #2b6cb0;
+}
+
+.k-words {
+  --strip: #6b6e75;
+}
+
+.k-song {
+  --strip: #b0293a;
+}
+
+.k-picture,
+.k-video {
+  --strip: #7a3fc2;
+}
+
+.k-music {
+  --strip: #a0368f;
+}
+
+.k-link {
+  --strip: #d9822b;
+}
+
+.pr-list li button {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  border: 3px solid transparent;
+  border-left: 8px solid var(--strip, #5c5e66);
+  border-radius: 4px;
+  background: #26272b;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pr-list li {
+  margin-bottom: 0.35rem;
+}
+
+.pr-n {
+  min-width: 1.6rem;
+  text-align: right;
+}
+
+.pr-chip {
+  flex: 0 0 9rem;
+  padding: 0.05rem 0.5rem;
+  border-radius: 3px;
+  background: var(--strip, #5c5e66);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.pr-text {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: #c8cad0;
+}
+
+.pr-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0.9rem;
+  background: #2b2c30;
+  border-top: 1px solid #0e0e10;
+  font-size: 0.85rem;
+}
+
+.pr-views {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pr-views button {
+  width: 1.9rem;
+  height: 1.7rem;
+  border: 1px solid #505157;
+  border-radius: 4px;
+  background: #34353a;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.pr-views button.on {
+  background: #2b6cb0;
+  border-color: #2b6cb0;
+  color: #fff;
+}
+
+.pr-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+  padding: 0.8rem;
+  overflow: auto;
+  background: #222327;
+}
+
+.pr-preview-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.7rem;
+}
+
+.pr-preview-head .muted {
+  margin-right: auto;
+}
+
+.pr-preview,
+.pr-next {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+  background: #000;
+  border: 1px solid #000;
+}
+
+.pr-preview > .slide-preview,
+.pr-next > .slide-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  font-size: 2.9cqw;
+}
+
+.pr-preview.black > .slide-preview {
+  opacity: 0.12;
+}
+
+.pr-blackmsg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ddd;
+  font-weight: 600;
+  text-shadow: 0 0 6px #000;
+}
+
+.pr-next {
+  opacity: 0.9;
+}
+
+.pr-end {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  background: #17181b;
+  color: #9a9ca3;
+  font-size: 0.85rem;
+}
+
+.pr-clip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border-radius: 6px;
+  background: #2b2c30;
+}
+
+.pr-clip-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pr-transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pr-transport input[type="range"] {
+  flex: 1 1 8rem;
+}
+
+.pr-times {
+  font-variant-numeric: tabular-nums;
   font-size: 0.8rem;
 }
 
-.presenter-tools {
-  margin-left: auto;
-  display: inline-flex;
-  gap: 0.5rem;
-}
-
-.presenter-tools .outline-btn.on {
-  background: #000;
-  color: #fff;
-}
-
-.presenter-note {
-  margin: 0;
-  padding: 0.4rem 0.7rem;
-  border-left: 4px solid #f2c46d;
-  background: #1c2230;
-}
-
-.presenter-main {
-  flex: 1;
-  min-height: 0;
+.pr-steps {
   display: grid;
-  grid-template-columns: minmax(0, 1.9fr) minmax(16rem, 1fr);
-  gap: 1rem;
-}
-
-.presenter-current {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-height: 0;
-}
-
-.presenter-current .slide-preview {
-  flex: none;
-  width: 100%;
-  max-height: 100%;
-  font-size: clamp(9px, 1.4vw, 22px);
-}
-
-.presenter-black {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  background: #000;
-  color: #fff;
-  padding: 0.2rem 0.6rem;
-  border-radius: var(--radius-sm);
-}
-
-.presenter-clip {
-  display: flex;
+  grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
-  align-items: center;
-  flex-wrap: wrap;
 }
 
-.presenter-side {
+.pr-steps button {
+  padding: 0.7rem 0.5rem;
+  font-size: 1.05rem;
+}
+
+.pr-info {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  min-height: 0;
+  gap: 0.35rem;
 }
 
-.presenter-side .slide-preview {
-  flex: none;
-  width: 100%;
-  font-size: clamp(6px, 0.7vw, 11px);
-}
-
-.presenter-end {
-  aspect-ratio: 16 / 9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed #4a5468;
-  border-radius: 4px;
-  color: #9aa6bd;
-}
-
-.presenter-notes {
-  flex: 1;
-  min-height: 4rem;
+.pr-notes {
+  min-height: 4.5rem;
+  max-height: 14rem;
   overflow: auto;
-  white-space: pre-wrap;
-  font-size: 1.25rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  background: #17181b;
+  font-size: 1.08rem;
   line-height: 1.45;
-  background: #1c2230;
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.7rem;
+  white-space: pre-wrap;
 }
 
-.presenter-steps {
-  display: flex;
-  gap: 0.6rem;
-}
-
-.presenter-steps button {
-  flex: 1;
-  font-size: 1.1rem;
-  padding: 0.6rem;
-}
-
-.presenter-strip {
-  list-style: none;
+.pr-keys {
   margin: 0;
-  padding: 0 0 0.3rem;
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  flex: none;
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
-.presenter-strip li button {
-  display: flex;
-  gap: 0.25rem;
-  align-items: flex-start;
-  width: 9.5rem;
-  background: none;
-  border: 2px solid transparent;
-  border-radius: var(--radius-sm);
-  padding: 2px;
-  color: #9aa6bd;
-  cursor: pointer;
-  font-size: 0.75rem;
-}
+@media (max-width: 900px) {
+  .pr-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
 
-.presenter-strip li.on button {
-  border-color: #f2c46d;
-}
-
-.presenter-strip .slide-preview {
-  font-size: 4px;
-}
-
-.slides-ask {
-  max-width: 34rem;
-  padding: 1rem 1.2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.slides-ask-choices {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.6rem 0.8rem;
-  align-items: center;
-}
-
-.presenter-screen {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  .pr-side {
+    max-height: 45vh;
+  }
 }
 
 /* ---------- Settings: keeping in step through a shared folder ---------- */
@@ -7379,7 +7857,18 @@ body.show-body {
   background: var(--accent-600); color: #fff; border: none; border-radius: 6px; padding: 6px 14px; cursor: pointer;
 }
 .offline-ai-panel .primary-btn:disabled { opacity: 0.6; cursor: default; }
-.ai-settings { padding: 8px 12px; }
+.ai-settings { padding: 8px 12px; flex: 1; min-height: 0; overflow-y: auto; }
+.offline-ai-panel .xref-list { flex: 1; min-height: 0; overflow-y: auto; }
+.ai-download progress { width: 100%; height: 14px; }
+.ai-download-steps { margin: 8px 0; padding-left: 20px; font-size: 0.9rem; }
+.ai-download-steps li { margin: 3px 0; color: var(--text-muted); }
+.ai-download-steps li.now { color: inherit; font-weight: 600; }
+.ai-download-steps li.done { opacity: 0.7; }
+.ai-unlocked { margin: 0 0 8px; font-weight: 600; }
+.sb-howto { margin: 6px 0; font-size: 0.9rem; }
+.sb-howto > summary { cursor: pointer; color: var(--accent); }
+.sb-howto ol { margin: 6px 0; padding-left: 20px; }
+.sb-howto li { margin: 5px 0; line-height: 1.45; }
 .ai-actions { display: flex; gap: 16px; margin-top: 16px; }
 .ai-chat { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .ai-messages { flex: 1; overflow-y: auto; padding: 8px 12px; }
@@ -7395,8 +7884,9 @@ body.show-body {
 .ai-disclaimer { margin: 0; padding: 0 12px 10px; font-size: 0.8rem; }
 
 /* Offline Assistant inside the sermon builder (components/SermonAssistant.tsx) */
-.sb-assistant { margin: 0 0 12px; border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
-.sb-assistant > summary { cursor: pointer; font-weight: 600; }
+/* the box sits in a column that does not scroll, so it scrolls inside itself when its results are long */
+.sb-assistant { flex: 0 1 auto; min-height: 0; max-height: 70%; overflow-y: auto; margin: 0 0 12px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px 6px; }
+.sb-assistant > summary { cursor: pointer; font-weight: 600; position: sticky; top: 0; z-index: 1; padding: 6px 0; background: var(--paper-raised); }
 .sb-assistant-messages { max-height: 320px; overflow-y: auto; margin-top: 8px; }
 .sb-assistant .ai-ask input { flex: 1; font: inherit; }
 .sb-assistant-ask { margin: 14px 0 4px; font-size: 0.95rem; }
@@ -7421,3 +7911,1739 @@ body.show-body {
 .sb-questions { margin: 6px 0; padding-left: 22px; }
 .sb-questions li { margin: 6px 0; line-height: 1.45; }
 .sb-fits { color: var(--accent-700, var(--accent)); font-size: 0.85rem; }
+
+/* ---------- the step-by-step sermon builder ---------- */
+.sb-modebox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.sg {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sg-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--border);
+  background: var(--paper-raised);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem 0.2rem 0.3rem;
+  font-size: 0.82rem;
+}
+
+.sg-chip:hover {
+  border-color: var(--accent-500);
+}
+
+.sg-chip-n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--chrome-bg);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.sg-chip.done .sg-chip-n {
+  background: var(--status-ok);
+  color: #fff;
+}
+
+.sg-chip.on {
+  background: var(--accent-600);
+  border-color: var(--accent-600);
+  color: #fff;
+}
+
+.sg-chip.on .sg-chip-n {
+  background: #fff;
+  color: var(--accent-600);
+}
+
+.sg-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 16rem;
+  gap: 0.75rem;
+}
+
+.sg-main,
+.sg-aside {
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+  padding: 0.9rem 1.1rem 1.2rem;
+}
+
+.sg-aside {
+  padding: 0.7rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.sg-aside h4 {
+  margin: 0 0 0.4rem;
+}
+
+.sg-head h2 {
+  margin: 0.1rem 0 0.2rem;
+  font-family: var(--serif);
+  color: var(--ink-strong);
+}
+
+.sg-why {
+  margin: 0 0 0.8rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--accent-500);
+  background: var(--accent-100);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text);
+}
+
+.sg-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.sg-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--paper);
+  padding: 0.8rem 0.95rem;
+}
+
+.sg-card h3,
+.sg-section h4 {
+  margin: 0 0 0.25rem;
+  color: var(--ink-strong);
+}
+
+.sg-card .check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0.35rem 0;
+}
+
+.sg-hint {
+  margin: 0.15rem 0 0.55rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.sg-empty {
+  margin: 0.3rem 0;
+  font-size: 0.88rem;
+}
+
+.sg-reminder {
+  margin: 0.6rem 0 0;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--accent-100);
+  color: var(--text);
+}
+
+.sg-section {
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+}
+
+.sg-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sg-addto {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.sg-addto select {
+  padding: 0.25rem 0.4rem;
+  max-width: 100%;
+}
+
+.sg-list {
+  list-style: none;
+  margin: 0.2rem 0 0.3rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sg-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+}
+
+.sg-item.on {
+  border-color: var(--status-ok);
+}
+
+.sg-item.on .sf-add {
+  background: var(--status-ok);
+  border-color: var(--status-ok);
+  color: #fff;
+}
+
+.sg-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.sg-item .pill-btn {
+  flex: none;
+}
+
+.sg-read {
+  font-size: 0.8rem;
+}
+
+.sg-thread {
+  margin: 0.3rem 0;
+}
+
+.sg-thread > summary {
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.sg-picks-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.sg-picks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sg-picks li {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  opacity: 0.6;
+}
+
+.sg-picks li.on {
+  opacity: 1;
+  border-color: var(--accent-500);
+}
+
+.sg-picks label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sg-pick-text {
+  display: block;
+  margin: 0.15rem 0 0 1.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.sg-sundays {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+  font-size: 0.88rem;
+}
+
+.sg-sunday .note-tag {
+  margin-left: 0.35rem;
+}
+
+.sg-points {
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sg-points li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sg-points input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35rem 0.55rem;
+}
+
+.sg-n {
+  flex: none;
+  width: 1.4rem;
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.sg-wide {
+  display: block;
+  width: 100%;
+  margin: 0.25rem 0;
+  padding: 0.45rem 0.65rem;
+}
+
+.sg-wide-label {
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.sg-media-btns,
+.sg-final-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.3rem 0;
+}
+
+.sg-added {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+}
+
+.sg-partnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sg-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+
+.sg-checks {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sg-checks li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.sg-mark {
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--text-faint);
+}
+
+.sg-checks .ok .sg-mark {
+  background: var(--status-ok);
+}
+
+.sg-checks .todo .sg-mark {
+  background: var(--status-error);
+}
+
+.sg-check-text {
+  flex: 1;
+}
+
+.sg-sofar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sg-sofar li {
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem 0.5rem;
+  border-left: 3px solid var(--border);
+}
+
+.sg-sofar li.target {
+  border-left-color: var(--accent-500);
+  background: var(--accent-100);
+  color: var(--text);
+}
+
+.sg-sofar li.target .muted {
+  color: var(--text-muted);
+}
+
+.sg-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.6rem;
+}
+
+@media (max-width: 900px) {
+  .sg-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .sg-aside {
+    max-height: 9rem;
+  }
+}
+
+
+/* ---- the Sunday service: notices, music, sermon; songs; adding to a show ---- */
+
+.service {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1rem 1.2rem 2rem;
+  max-width: 80rem;
+  width: 100%;
+  margin: 0 auto;
+  /* the page it sits in does not scroll (it is a full-height builder pane): this does */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.service-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.service-head h2 {
+  margin: 0;
+  font-family: var(--serif);
+}
+
+.service-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 0.9rem;
+}
+
+.service-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--accent-500);
+  border-radius: var(--radius-lg);
+}
+
+.service-card.k-notices {
+  border-top-color: #d99a2b;
+}
+
+.service-card.k-music {
+  border-top-color: #b04bb5;
+}
+
+.service-card.k-sermon {
+  border-top-color: #3f8f4f;
+}
+
+.service-card h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+}
+
+.service-card p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.service-list {
+  list-style: none;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.service-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.3rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
+.service-list li.on {
+  border-color: var(--accent-500);
+  background: var(--chrome-bg);
+}
+
+.service-open {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  text-align: left;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.service-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.8rem 1rem;
+  background: var(--chrome-bg);
+  border-radius: var(--radius-lg);
+}
+
+.service-foot .pill-btn {
+  font-size: 1.05rem;
+  padding: 0.55rem 1.4rem;
+}
+
+.deck-builder .sb-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.deck-builder .sb-title {
+  flex: 1;
+  min-width: 14rem;
+}
+
+.deck-empty {
+  margin: 0 0 0.6rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--chrome-bg);
+  border-radius: var(--radius-md);
+}
+
+.songs-find {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.songs-find input {
+  flex: 1;
+  min-width: 14rem;
+}
+
+.songs-cols {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) minmax(16rem, 1.4fr);
+  gap: 0.8rem;
+  margin-top: 0.6rem;
+  min-height: 12rem;
+}
+
+.songs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 46vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.songs-list li > button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 0.05rem;
+  padding: 0.35rem 0.5rem;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  cursor: pointer;
+}
+
+.songs-list li.on > button,
+.songs-list li > button:hover {
+  border-color: var(--accent-500);
+  background: var(--chrome-bg);
+}
+
+.songs-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.songs-side-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+}
+
+.songs-order {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.songs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.1rem 0.2rem 0.1rem 0.6rem;
+  background: var(--accent-600);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.songs-chip button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 0.3rem;
+  font-size: 1rem;
+}
+
+.songs-preview {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 30vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.songs-preview li {
+  display: flex;
+  flex-direction: column;
+  padding: 0.3rem 0.5rem;
+  background: var(--chrome-bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  white-space: pre-line;
+}
+
+.songs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.3rem;
+}
+
+.songs-editor,
+.songs-dialog,
+.live-add {
+  width: min(56rem, 94vw);
+}
+
+.songs-fields {
+  display: grid;
+  grid-template-columns: 2fr 1.4fr 1fr;
+  gap: 0.6rem;
+}
+
+.songs-fields label,
+.songs-words {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.songs-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.songs-words textarea {
+  font-family: var(--serif);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.media-adder {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.media-adder-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.live-add .mp-body {
+  overflow-y: auto;
+}
+
+/* inside the presenter (dark): the windows to add a verse, a song, music or a picture */
+.pr .mp-backdrop {
+  z-index: 90;
+}
+
+.pr .mp {
+  background: #25262b;
+  color: #e8e8ea;
+  border: 1px solid #46474d;
+}
+
+.pr .mp input,
+.pr .mp textarea,
+.pr .mp select {
+  background: #1b1c1f;
+  color: #eee;
+  border: 1px solid #505157;
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+}
+
+.pr .mp .mode-toggle {
+  background: #1b1c1f;
+}
+
+.pr .mp .mode-toggle button {
+  color: #b9bbc2;
+}
+
+.pr .mp .mode-toggle button.active {
+  color: #1b1c1f;
+}
+
+.pr .mp .songs-list li.on .songs-row,
+.pr .mp .songs-preview li {
+  background: #34353a;
+}
+
+.pr .mp .sf-chip {
+  background: #34353a;
+  color: #eee;
+  border-color: #505157;
+}
+
+.pr .mp .status-error {
+  color: #ff8d8d;
+}
+
+.pr-tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem 0;
+  background: #222327;
+  border-bottom: 1px solid #0e0e10;
+}
+
+.pr-tabs button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  background: #2c2d31;
+  color: #b9bbc2;
+  border: 1px solid #3a3b40;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+}
+
+.pr-tabs button.on {
+  background: #3b3d44;
+  color: #fff;
+  border-color: #ef8a1f;
+  box-shadow: inset 0 3px 0 #ef8a1f;
+}
+
+.pr-tabs button i {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: #9a9ca3;
+}
+
+@media (max-width: 760px) {
+  .songs-cols,
+  .songs-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.songs-found {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.slides-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 1.2rem auto 0;
+  padding: 1rem 1.6rem 1.4rem;
+  max-width: 34rem;
+  text-align: center;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.slides-empty-arrow {
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--accent-500);
+}
+
+.slides-empty strong {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+}
+
+.slides-empty p {
+  margin: 0;
+}
+
+.songs-h {
+  margin: 0 0 0.3rem;
+  font-family: var(--serif);
+  font-size: 1rem;
+}
+
+.songs-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.songs-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+}
+
+.songs-list li.on .songs-row {
+  border-color: var(--accent-500);
+  background: var(--chrome-bg);
+}
+
+.songs-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.songs-row-text .muted {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.82rem;
+}
+
+.songs-set {
+  padding: 0.5rem 0.7rem;
+  background: var(--chrome-bg);
+  border-radius: var(--radius-md);
+  gap: 0.5rem;
+}
+
+.songs-empty {
+  margin: 0.5rem 0;
+  padding: 0.8rem;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+}
+
+.songs-set-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 38vh;
+  overflow-y: auto;
+}
+
+.songs-set-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.songs-set-row > b {
+  width: 1.4rem;
+  text-align: right;
+}
+
+.songs-set-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+}
+
+.songs-order-edit {
+  margin: 0.2rem 0 0.3rem 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pr .mp .songs-set {
+  background: #2d2e33;
+}
+
+/* ---- moving backgrounds, a picture over the background, the countdown, the lower third ---- */
+
+.slide-preview {
+  position: relative;
+}
+
+/* the words and pictures sit above the layers behind them */
+.slide-preview > *:not(.slide-layer):not(.slide-beside):not(.slide-box):not(.slide-corner) {
+  position: relative;
+  z-index: 2;
+}
+
+.slide-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.slide-preview .slide-bgvideo {
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.slide-dim {
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 1;
+}
+
+.slide-preview .slide-overlay {
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.slide-preview .slide-beside {
+  z-index: 2;
+}
+
+.slide-count {
+  font-size: 5.5em;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #f2c46d;
+}
+
+.k-countdown {
+  --strip: #0f8b8d;
+}
+
+.show-lower {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1.2% 4%;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.82) 40%);
+  color: #fff;
+  font-family: Georgia, serif;
+  font-size: clamp(10px, 3.2cqw, 56px);
+  text-align: left;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.show-slide .show-lower {
+  font-size: min(3vw, 5vh);
+}
+
+.show-lower span {
+  display: inline-block;
+  padding: 0.25em 0.9em;
+  background: rgba(20, 30, 60, 0.9);
+  border-left: 0.25em solid #f2c46d;
+}
+
+.pr-lower {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.pr-lower input {
+  flex: 1;
+  min-width: 0;
+  background: #1b1c1f;
+  color: #eee;
+  border: 1px solid #505157;
+  border-radius: 4px;
+  padding: 0.3rem 0.5rem;
+}
+
+.pr-volume {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pr-volume input {
+  flex: 1;
+}
+
+/* the songs: a list down the left of the presenter to start one */
+.pr-body.with-rail {
+  grid-template-columns: 15rem minmax(0, 1fr) 25rem;
+}
+
+.pr-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+  padding: 0.7rem;
+  background: #222327;
+  border-right: 1px solid #0e0e10;
+}
+
+.pr-rail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.pr-rail-tools {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.pr-rail-tools input {
+  flex: 1;
+  min-width: 0;
+  background: #1b1c1f;
+  color: #eee;
+  border: 1px solid #505157;
+  border-radius: 4px;
+  padding: 0.25rem 0.4rem;
+}
+
+.pr-rail-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pr-rail-list button,
+.pr-grid .pr-group-head button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border: 2px solid transparent;
+  border-left: 6px solid #b0293a;
+  border-radius: 4px;
+  background: #2c2d31;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pr-rail-list button:hover,
+.pr-grid .pr-group-head button:hover {
+  background: #3a3b40;
+}
+
+.pr-rail-list li.live button {
+  border-color: #f59f00;
+  background: #3b3d44;
+}
+
+.pr-rail-list span,
+.pr-grid .pr-group-head span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pr-rail-list i,
+.pr-grid .pr-group-head i {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: #9a9ca3;
+}
+
+.pr-rail-list kbd,
+.pr-grid .pr-group-head kbd {
+  font-size: 0.72rem;
+  padding: 0 0.3rem;
+  background: #f59f00;
+  color: #1b1c1f;
+  border-radius: 3px;
+}
+
+.pr-group-head {
+  grid-column: 1 / -1;
+  margin-top: 0.4rem;
+}
+
+.pr-grid .pr-group-head button {
+  font-size: 1.05rem;
+  border-width: 2px;
+  border-left-width: 6px;
+  border-left-color: #b0293a;
+}
+
+.slides-song-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent-500);
+  padding: 0 0.2rem 0.15rem;
+}
+
+/* picking a look from a folder */
+.theme-picker {
+  width: min(70rem, 96vw);
+}
+
+.theme-now {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.5rem;
+}
+
+.theme-folders {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.theme-folders .songs-chip.on {
+  outline: 2px solid var(--accent-500);
+}
+
+.theme-folder-pick {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  font-size: inherit;
+}
+
+.theme-empty {
+  margin: 0.4rem 0;
+  padding: 0.8rem;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.7rem;
+  max-height: 48vh;
+  overflow-y: auto;
+  padding: 0.2rem;
+}
+
+.theme-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem;
+  background: var(--chrome-bg);
+  border-radius: var(--radius-md);
+}
+
+.theme-thumb {
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  background: #1c2440;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.theme-thumb.image.overlay {
+  background: #1c2440 center / cover;
+}
+
+.theme-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.theme-hint {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.theme-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.theme-film {
+  color: #f2c46d;
+  font-weight: 600;
+}
+
+.theme-name {
+  font-size: 0.82rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-size {
+  font-size: 0.75rem;
+}
+
+.theme-use {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.theme-use button {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.4rem;
+}
+
+/* song lists */
+.songs-h-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.songs-lists {
+  list-style: none;
+  margin: 0 0 0.4rem;
+  padding: 0.3rem;
+  max-height: 22vh;
+  overflow-y: auto;
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.songs-lists li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.songs-lists li strong {
+  flex: 1;
+  min-width: 0;
+}
+
+.songs-list-date {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-500);
+  font-size: 0.85rem;
+}
+
+.songs-save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.songs-save input[type="text"],
+.songs-save input:not([type]) {
+  flex: 1;
+  min-width: 10rem;
+}
+
+.pr .mp .songs-lists {
+  background: #1b1c1f;
+  border-color: #46474d;
+}
+
+/* the music page: your saved songs down the left from the start */
+.deck-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-layout.with-songs {
+  display: grid;
+  grid-template-columns: 22rem minmax(0, 1fr);
+  gap: 0.8rem;
+}
+
+.song-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 0;
+  padding: 0.6rem;
+  background: var(--chrome-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.song-side-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.song-side-tools {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.song-side-tools input {
+  flex: 1;
+  min-width: 0;
+}
+
+.song-side-note {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.song-side-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.song-side-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.35rem;
+  background: var(--paper-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.song-side-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.song-side-text .muted {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-side-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.song-side .pill-btn,
+.song-side .outline-btn {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.55rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .deck-layout.with-songs {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* the notices page: the saved notices down the left, as the songs are on the music page */
+.notice-move {
+  display: flex;
+  flex-direction: column;
+}
+
+.notice-move .text-btn {
+  padding: 0 0.25rem;
+  font-size: 0.65rem;
+  line-height: 1.1;
+}
+
+.notice-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: none !important;
+  border: none !important;
+}
+
+.notice-editor {
+  width: min(44rem, 94vw);
+}
+
+.notice-name {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.notice-slides {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.notice-slides li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--chrome-bg);
+  border-radius: var(--radius-md);
+}
+
+.notice-slides label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.notice-slide-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.notice-slide-tools {
+  margin-left: auto;
+  display: flex;
+}
+
+.pr .mp .notice-slides li {
+  background: #2d2e33;
+}
+
+.song-side-foot .muted {
+  font-size: 0.8rem;
+}
+
+.song-side-list li .text-btn {
+  padding: 0.1rem 0.3rem;
+  font-size: 0.8rem;
+}
+
+/* a slide with its parts placed in boxes (a heading graphic spaced round, or placed by hand) */
+.slide-preview > *:not(.slide-layer):not(.slide-beside):not(.slide-box):not(.slide-corner) {
+  position: relative;
+  z-index: 2;
+}
+
+.slide-preview .slide-box {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+.slide-preview .slide-words {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5em;
+  overflow: hidden;
+}
+
+.slide-preview .slide-pic {
+  max-width: none;
+  max-height: none;
+  object-fit: contain;
+}
+
+.layout-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 44rem;
+  container-type: inline-size;
+}
+
+.layout-wrap > .slide-preview {
+  width: 100%;
+}
+
+.layout-handles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+
+.layout-handle {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.layout-handle:hover {
+  border-color: #f59f00;
+}
+
+.layout-tag {
+  position: absolute;
+  left: -1px;
+  top: -1.45em;
+  padding: 0 0.45em;
+  font: 600 11px/1.45 var(--sans);
+  white-space: nowrap;
+  color: #1b1c1f;
+  background: #f2c46d;
+  border-radius: 3px 3px 0 0;
+  cursor: grab;
+  pointer-events: auto;
+  user-select: none;
+}
+
+.layout-handle.words .layout-tag {
+  background: #8fb8ff;
+}
+
+.layout-handle.picture .layout-tag {
+  background: #7bd88f;
+}
+
+.layout-grip {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border: 2px solid #f59f00;
+  border-radius: 2px;
+  cursor: nwse-resize;
+  pointer-events: auto;
+}
+
+.layout-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+}
+
+/* no text is selected while a part of a slide is dragged */
+.layout-wrap,
+.layout-tag,
+.layout-grip {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* hundreds of saved sermons: the list scrolls inside its card, with a search and a sort above it */
+.service-find {
+  display: flex;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.service-find input {
+  flex: 1;
+  min-width: 0;
+}
+
+.service-list {
+  flex: 1;
+  min-height: 0;
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.service-card {
+  min-height: 0;
+}
+
+.service-count {
+  font-size: 0.8rem;
+}
+
+.deck-state.saved {
+  color: var(--status-ok);
+  font-weight: 600;
+}
+
+/* the Top 100 worship songs (SongLibrary.tsx) */
+.top100 .mp-head { display: flex; align-items: center; gap: 0.75rem; }
+.top100 .mp-head .text-btn { margin-left: auto; }
+.top100-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0.4rem 0; }
+.top100-tools input:not([type="checkbox"]) { flex: 1; min-width: 12rem; }
+.top100-tools .sb-inline { display: inline-flex; align-items: center; gap: 0.4rem; }
+.top100-tools .sb-inline input { flex: none; width: auto; min-width: 0; margin: 0; }
+.top100-list { list-style: none; margin: 0; padding: 0; max-height: 52vh; overflow-y: auto; display: flex; flex-direction: column; gap: 0.3rem; }
+.top100-list li { display: flex; align-items: center; gap: 0.6rem; padding: 0.35rem 0.5rem; background: var(--paper-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.top100-list li { border-left-width: 4px; }
+.top100-list li.kept { border-left-color: #2e9e5b; }
+.top100-list li.new { border-left-color: #e08a1e; background: color-mix(in srgb, #e08a1e 10%, var(--paper-raised)); }
+.top100-list li.dropped { border-left-color: var(--text-muted); opacity: 0.75; }
+.top100-badge { background: #e08a1e; color: #fff; font-size: 0.72rem; font-weight: 700; padding: 0.05rem 0.4rem; border-radius: 999px; white-space: nowrap; }
+.top100-off { color: var(--text-muted); font-size: 0.78rem; white-space: nowrap; }
+.top100-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.8rem; margin: 0.2rem 0 0.4rem; font-size: 0.82rem; color: var(--text-muted); }
+.top100-dot { display: inline-block; width: 0.8rem; height: 0.8rem; border-radius: 3px; border: 1px solid var(--border); margin-right: 0.15rem; vertical-align: -1px; }
+.top100-dot.kept { background: #2e9e5b; border-color: #2e9e5b; }
+.top100-dot.new { background: #e08a1e; border-color: #e08a1e; }
+.top100-dot.dropped { background: var(--text-muted); border-color: var(--text-muted); }
+.top100-rank { min-width: 2rem; text-align: right; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.top100-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.top100-text .muted { font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top100-kept { color: var(--accent); font-weight: 600; white-space: nowrap; }
+.song-side-files { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* a song's words: large, the song and its part small in the top corner */
+.slide-lyrics {
+  font-size: 2.3em;
+  line-height: 1.3;
+}
+
+.slide-corner {
+  position: absolute;
+  top: 3%;
+  right: 3%;
+  max-width: 55%;
+  z-index: 3;
+  font-size: 0.8em;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.6);
+}

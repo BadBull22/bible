@@ -27,12 +27,16 @@ import { MediaPicker } from "./MediaPicker";
 import { MediaRef, pngOf, PngPicture } from "../sermonMedia";
 import { placeFor, placeMaterial, rolesFor } from "../sermonLayout";
 import { SermonOutline } from "./SermonOutline";
+import { SermonGuide } from "./SermonGuide";
+import { EMPTY_GUIDE, GuideContext, GuideState } from "../guideData";
 import { SermonPlanner, STAGES } from "./SermonPlanner";
 import { SheetOutput } from "./SheetOutput";
 import { niceDate, preachingLine, SermonPreachings } from "./SermonPreachings";
 import { SermonReview } from "./SermonReview";
 import type { WordsRequest } from "./SermonWords";
+import { stillFor } from "../stills";
 import { SlidesEditor } from "./SlidesEditor";
+import { dropGap, moveInSermon, moveSlides, SlideOrder, sermonFollows, stepGap, syncSermon, unitOf } from "../slideOrder";
 import { Presenter } from "./SlideShow";
 import { ChevronLeftIcon } from "./icons";
 
@@ -45,6 +49,8 @@ interface Props {
   onClose: () => void;
   /** the Offline Assistant is unlocked (it is hidden otherwise) */
   assistant?: boolean;
+  /** from the Sunday service page: a saved sermon to open (its id), or 0 for a new one */
+  openId?: number | null;
 }
 
 type Tab = "prepare" | "review" | "print" | "slides" | "saved";
@@ -72,10 +78,16 @@ interface Work {
   items: SermonItem[];
   /** the slides as the preacher changed them (null: made from the sermon) */
   slides: SlideSpec[] | null;
-  /** a photo behind every slide (a kept file) */
+  /** a photo or a moving background behind every slide (a kept file) */
   slideBackground: string | null;
+  /** a see-through picture over it */
+  slideOverlay: string | null;
   /** verse numbers on Scripture slides */
   slideVerseNumbers: boolean;
+  /** how this sermon is built: step by step (the default) or in the full builder */
+  mode: "guide" | "full";
+  /** where the step-by-step builder has got to */
+  guide: GuideState;
   tab: Tab;
 }
 
@@ -100,9 +112,23 @@ const EMPTY: Work = {
   items: [],
   slides: null,
   slideBackground: null,
+  slideOverlay: null,
   slideVerseNumbers: true,
+  mode: "guide",
+  guide: EMPTY_GUIDE,
   tab: "prepare",
 };
+
+const MODE_KEY = "sermon:mode";
+/** The mode a new sermon starts in: step by step, unless the preacher last chose the full builder. */
+function defaultMode(): "guide" | "full" {
+  try {
+    return localStorage.getItem(MODE_KEY) === "full" ? "full" : "guide";
+  } catch {
+    return "guide";
+  }
+}
+const newWork = (): Work => ({ ...EMPTY, mode: defaultMode(), guide: EMPTY_GUIDE });
 
 // The sermon being worked on is kept on this computer as it changes, so it survives leaving
 // the builder, closing the app or a crash; a saved sermon is also saved as it changes.
@@ -115,12 +141,13 @@ function restore(): Work {
     const w = JSON.parse(localStorage.getItem(LOCAL_KEY) ?? "null") as Partial<Work> | null;
     if (w && typeof w === "object" && Array.isArray(w.items)) {
       const tab = (["prepare", "review", "print", "slides", "saved"] as Tab[]).includes(w.tab as Tab) ? (w.tab as Tab) : "prepare";
-      return { ...EMPTY, ...w, tab };
+      const mode = w.mode ?? (w.items?.length ? "full" : defaultMode());
+      return { ...EMPTY, ...w, mode, guide: { ...EMPTY_GUIDE, ...(w.guide ?? {}) }, tab };
     }
   } catch {
     /* nothing kept, or unreadable */
   }
-  return EMPTY;
+  return newWork();
 }
 
 const ADDABLE: Role[] = ["intro", "context", "scripture", "explain", "illustrate", "apply", "transition", "story", "conclusion", "response", "prayer"];
@@ -141,7 +168,10 @@ function bodyOf(w: Work): SermonBody {
     showPrompts: w.showPrompts,
     slides: w.slides,
     slideBackground: w.slideBackground,
+    slideOverlay: w.slideOverlay,
     slideVerseNumbers: w.slideVerseNumbers,
+    mode: w.mode,
+    guide: w.guide,
   };
 }
 
@@ -153,7 +183,7 @@ const savedForm = (w: Work) => JSON.stringify([w.title, w.series, w.preachedOn, 
  * with the question it answers -- on the right. Then a document, handouts, slides and a
  * full-screen view to preach from. It writes none of the sermon: the preaching is the
  * preacher's. */
-export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJump, onClose, assistant }: Props) {
+export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJump, onClose, assistant, openId }: Props) {
   const [work, setWork] = useState<Work>(restore);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -182,7 +212,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   const [pictures, setPictures] = useState<Map<string, PngPicture>>(new Map());
   const run = useRef(0);
   const workRef = useRef(work);
-  const undoStack = useRef<Work[]>([]);
+  const undoStack = useRef<{ w: Work; label?: string }[]>([]);
   const [undoCount, setUndoCount] = useState(0);
   const lastSaved = useRef<string | null>(work.id ? savedForm(work) : null);
 
@@ -200,9 +230,9 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   }, [work]);
 
   const set = (patch: Partial<Work>) => setWork((w) => ({ ...w, ...patch }));
-  /** A change to the sermon's structure that Undo can take back. */
-  const change = (f: (w: Work) => Work) => {
-    undoStack.current.push(workRef.current);
+  /** A change to the sermon's structure that Undo can take back (`label`: what it was, shown on the Undo button). */
+  const change = (f: (w: Work) => Work, label?: string) => {
+    undoStack.current.push({ w: workRef.current, label });
     if (undoStack.current.length > 60) undoStack.current.shift();
     setUndoCount(undoStack.current.length);
     setWork(f);
@@ -210,7 +240,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   function undo() {
     const prev = undoStack.current.pop();
     setUndoCount(undoStack.current.length);
-    if (prev) setWork({ ...prev, tab: workRef.current.tab });
+    if (prev) setWork({ ...prev.w, tab: workRef.current.tab });
   }
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -223,6 +253,14 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // sent here from the Sunday service page: to a saved sermon (its id), or to a new one (0)
+  useEffect(() => {
+    if (openId === undefined || openId === null) return;
+    if (openId > 0) void openSaved(openId);
+    else startNew();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId]);
 
   const loadSaved = () => {
     api.sermonList().then(setSaved).catch(() => undefined);
@@ -248,14 +286,27 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     loadTemplates();
   }, []);
 
-  // a saved sermon is saved again a moment after each change
+  // a saved sermon is saved again a moment after each change (very soon after moving slides, which is a finished act)
+  const quick = useRef(false);
   useEffect(() => {
     if (!work.id || !work.title.trim()) return;
     const now = savedForm(work);
     if (now === lastSaved.current) return;
-    const t = window.setTimeout(() => void save(true), 2500);
+    const t = window.setTimeout(() => void save(true), quick.current ? 300 : 2500);
     return () => window.clearTimeout(t);
   }, [work]); // eslint-disable-line react-hooks/exhaustive-deps
+  /** Saves a saved sermon now if it changed since it was last saved: before leaving it, so the last change is not lost. */
+  const saveNow = () => {
+    const w = workRef.current;
+    if (w.id && w.title.trim() && savedForm(w) !== lastSaved.current) void save(true);
+  };
+  useEffect(() => {
+    window.addEventListener("beforeunload", saveNow);
+    return () => {
+      window.removeEventListener("beforeunload", saveNow);
+      saveNow(); // the builder is closed
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // the pictures in the sermon, ready for the document
   const pictureFiles = work.items.flatMap((i) => (i.type === "media" && i.media.kind === "image" && i.media.file ? [i.media.file] : [])).join("|");
@@ -368,7 +419,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
 
   /** Adds material where the preacher is working (after the row last clicked), or takes it
    * out again. */
-  function toggle(m: Material) {
+  function toggle(m: Material, home?: string | null) {
     if (chosen.has(m.key)) {
       change((w) => ({ ...w, items: w.items.filter((i) => !(i.type === "material" && i.material.key === m.key)) }));
       return;
@@ -376,10 +427,24 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     const row: SermonItem = { id: newId(), type: "material", material: m };
     change((w) => {
       // into the section that takes it: the one being worked in, or the next point's
-      const at = placeMaterial(w.items, m, target);
+      const at = placeMaterial(w.items, m, target ?? home ?? null);
       const items = [...w.items.slice(0, at), row, ...w.items.slice(at)];
       // something added while studying a passage is kept with what was found
       return { ...w, items, gathered: w.gathered.some((g) => g.key === m.key) ? w.gathered : [...w.gathered, m] };
+    });
+  }
+
+  /** The Scripture parts chosen in the step-by-step builder: some added, some taken out, as one change. */
+  function setSections(add: Material[], removeKeys: string[]) {
+    change((w) => {
+      const gone = new Set(removeKeys);
+      let items = w.items.filter((i) => !(i.type === "material" && gone.has(i.material.key)));
+      for (const m of add) {
+        const at = placeMaterial(items, m, null);
+        items = [...items.slice(0, at), { id: newId(), type: "material", material: m } as SermonItem, ...items.slice(at)];
+      }
+      const have = new Set(w.gathered.map((g) => g.key));
+      return { ...w, items, gathered: [...w.gathered, ...add.filter((m) => !have.has(m.key))] };
     });
   }
 
@@ -480,6 +545,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   async function save(quiet = false) {
     const w = workRef.current;
     const title = w.title.trim() || w.topics[0] || "Untitled sermon";
+    quick.current = false;
     setError(null);
     setSaveState("saving");
     try {
@@ -495,10 +561,13 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
         stage: w.stage,
         venue: w.venue,
       });
-      lastSaved.current = savedForm({ ...w, id, title });
-      setWork((x) => ({ ...x, id, title: x.title.trim() ? x.title : title }));
-      setSaveState("saved");
-      if (!quiet) flash("Sermon saved. From now on it saves itself as you work.");
+      // another sermon may have been opened while this saved (a save made on the way out): it must not take this one's id
+      if (workRef.current.id === w.id) {
+        lastSaved.current = savedForm({ ...w, id, title });
+        setWork((x) => ({ ...x, id, title: x.title.trim() ? x.title : title }));
+        setSaveState("saved");
+        if (!quiet) flash("Sermon saved. From now on it saves itself as you work.");
+      }
       loadSaved();
     } catch (e) {
       setSaveState("idle");
@@ -507,6 +576,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   }
 
   async function openSaved(id: number) {
+    saveNow();
     setError(null);
     try {
       const s = await api.sermonGet(id);
@@ -538,7 +608,10 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
         items,
         slides: b.slides ?? null,
         slideBackground: b.slideBackground ?? null,
+        slideOverlay: b.slideOverlay ?? null,
         slideVerseNumbers: b.slideVerseNumbers ?? true,
+        mode: b.mode ?? (items.length ? "full" : defaultMode()),
+        guide: { ...EMPTY_GUIDE, ...(b.guide ?? {}) },
         tab: "prepare",
       };
       lastSaved.current = savedForm(w);
@@ -553,15 +626,16 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   }
 
   function startNew() {
+    saveNow();
     run.current++;
     setBusy(null);
     setError(null);
     setTarget(null);
-    undoStack.current.push(workRef.current);
+    undoStack.current.push({ w: workRef.current, label: "started a new sermon" });
     setUndoCount(undoStack.current.length);
     lastSaved.current = null;
     setSaveState("idle");
-    setWork(EMPTY);
+    setWork(newWork());
   }
 
   async function saveTemplate() {
@@ -587,6 +661,28 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     loadTemplates();
   }
 
+  /** The slides for ProPresenter: a native bundle with the pictures, videos and music inside it. */
+  async function saveProPresenter() {
+    setSavingSlides(true);
+    try {
+      const ready = await Promise.all(
+        slides.map(async (s) => ({
+          ...s,
+          background: (s.background === undefined ? work.slideBackground : s.background) || undefined,
+          link: s.link?.startsWith("media:") ? undefined : s.link,
+          // a kept video or music file goes inside the bundle
+          video: s.kind === "link" && s.link?.startsWith("media:") ? s.link.slice(6) : undefined,
+        })),
+      );
+      const done = await api.saveSermonProPresenter(work.title.trim() || "Sermon", ready);
+      flash(`Saved for ProPresenter: ${done.path}${done.warnings.length ? ` (${done.warnings.length} to check: ${done.warnings.join(" ")})` : ""}`);
+    } catch (e) {
+      setError(`Couldn't save the slides for ProPresenter: ${e}`);
+    } finally {
+      setSavingSlides(false);
+    }
+  }
+
   async function saveSlides(embed: boolean) {
     setSavingSlides(true);
     try {
@@ -594,8 +690,10 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
       const ready = await Promise.all(
         slides.map(async (s) => ({
           ...s,
-          // a slide's own background ("" is plain navy), or the one chosen for all of them
-          background: (s.background === undefined ? work.slideBackground : s.background) || undefined,
+          // a slide's own background ("" is plain navy), or the one chosen for all of them (a moving one as a still picture from it)
+          background: await stillFor(s.background === undefined ? work.slideBackground : s.background),
+          // the layer over the background (a heading graphic): the slide's own, or the one for all slides ("" is none)
+          overlay: (s.overlay === undefined ? work.slideOverlay : s.overlay) || undefined,
           link: s.link?.startsWith("media:") ? await api.sermonMediaPath(s.link.slice(6)).catch(() => undefined) : s.link,
           // a kept video or music file to put inside the PowerPoint (when the preacher chose that)
           video: embed && s.kind === "link" && s.link?.startsWith("media:") ? s.link.slice(6) : undefined,
@@ -644,7 +742,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
   const nav = work.items.filter((i) => i.type === "heading" || (i.type === "block" && i.level === 1));
   const total = minutes + Math.round(written / 130);
   const TABS: { key: Tab; label: string }[] = [
-    { key: "prepare", label: "Prepare" },
+    { key: "prepare", label: work.mode === "guide" ? "Step by step" : "Prepare" },
     { key: "review", label: "Review" },
     { key: "print", label: "Print & handouts" },
     { key: "slides", label: "Slides" },
@@ -843,9 +941,86 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     </section>
   );
 
+  // ---------------------------------------------------------------- moving slides, and the sermon with them
+  const slideOrder: SlideOrder = {
+    unit: (i) => unitOf(slides, work.items, i),
+    gap: (i, gap) => dropGap(slides, work.items, i, gap),
+    step: (i, dir) => stepGap(slides, work.items, i, dir),
+    move: (i, gap) => {
+      const u = unitOf(slides, work.items, i);
+      const to = dropGap(slides, work.items, i, gap);
+      if (!u || to === null) return null;
+      // one change, so Undo takes slides and sermon back together; slides that follow the sermon are made again from it
+      const item = slides[u[0]]?.from ? work.items.find((x) => x.id === slides[u[0]].from) : undefined;
+      const moved = moveSlides(slides, u, to);
+      const items = moveInSermon(work.items, slides, u, to);
+      // slides that follow the sermon are made again from it; the big idea or a slide of their own can't follow it,
+      // so moving one makes the slides the preacher's own
+      const own = work.slides !== null || !item;
+      quick.current = true;
+      change((w) => ({ ...w, items: moveInSermon(w.items, slides, u, to), slides: own ? moved.slides : null }), item?.type === "heading" ? "moved a point and its slides" : "moved a slide");
+      return own ? moved.at : Math.max(0, slidesOf(meta, items, versionCode, work.slideVerseNumbers).findIndex((s) => s.from === slides[u[0]].from));
+    },
+    // slides the preacher moved before the sermon followed them (an older version, or edits): the sermon is out of step
+    inStep: work.slides === null || sermonFollows(work.items, slides),
+    match: () => {
+      quick.current = true;
+      change((w) => ({ ...w, items: syncSermon(w.items, slides) }), "made the sermon match the slides");
+    },
+  };
+
+  // ---------------------------------------------------------------- the step-by-step builder
+  const guideContext: GuideContext = {
+    title: work.title,
+    query: work.query,
+    topics: work.topics,
+    items: work.items,
+    gathered: work.gathered,
+    bigIdea: work.bigIdea,
+    purpose: work.purpose,
+    shape: work.shape,
+    points: work.points,
+    targetMinutes: work.targetMinutes,
+    guide: work.guide,
+    busy,
+    chosen,
+    target,
+    versionCode,
+    versions,
+    books,
+    setGuide: (patch) => setWork((w) => ({ ...w, guide: { ...w.guide, ...patch } })),
+    setFields: (patch) => set(patch),
+    gather: (q) => void runGather(q),
+    toggle,
+    setSections,
+    build: (shape, points) => buildNow(shape, points),
+    setTarget,
+    change: (f) => change((w) => ({ ...w, items: f(w.items) })),
+    pickMedia: (slot) => setPicker({ after: slot }),
+    usedNote,
+    onJump,
+    onText: edit,
+    onLabel: editLabel,
+    onMedia: editMedia,
+    onMark: mark,
+    renderMaterial: preview,
+    goTab: (tab) => set({ tab }),
+    save: () => void save(),
+    preach: () => setPreaching(true),
+    useFullBuilder: () => {
+      try {
+        localStorage.setItem(MODE_KEY, "full");
+      } catch {
+        /* a convenience only */
+      }
+      set({ mode: "full", tab: "prepare" });
+    },
+    saved: !!work.id,
+  };
+
   // ---------------------------------------------------------------- the page
   return (
-    <article className={"sermon-builder sb" + (work.tab === "prepare" ? " sb-preparing" : "")}>
+    <article className={"sermon-builder sb" + (work.tab === "prepare" ? " sb-preparing" : "") + (work.tab === "prepare" && work.mode === "guide" ? " sb-guided" : "")}>
       <header className="sb-head">
         <input className="sb-title" value={work.title} onChange={(e) => set({ title: e.target.value })} placeholder="Sermon title" aria-label="Sermon title" />
         <input type="date" value={work.preachedOn} onChange={(e) => set({ preachedOn: e.target.value })} aria-label="Date to preach it" title="Date to preach it" />
@@ -861,6 +1036,22 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
             </button>
           )}
         </span>
+        <label className="check sb-modebox" title="Tick to build in the full builder (every tool at once). Untick for the step-by-step builder, which guides you through.">
+          <input
+            type="checkbox"
+            checked={work.mode === "full"}
+            onChange={(e) => {
+              const mode = e.target.checked ? "full" : "guide";
+              try {
+                localStorage.setItem(MODE_KEY, mode);
+              } catch {
+                /* a convenience only */
+              }
+              set({ mode, tab: "prepare" });
+            }}
+          />{" "}
+          Full builder
+        </label>
         <button className="text-btn" onClick={undo} disabled={undoCount === 0} title="Undo the last change (Ctrl+Z)">
           ↶ Undo
         </button>
@@ -945,7 +1136,21 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
         </p>
       )}
 
-      {work.tab === "prepare" && (
+      {work.tab === "prepare" && work.mode === "guide" && (
+        <>
+          {assistant && (
+            <SermonAssistant
+              topics={work.topics}
+              gathered={work.gathered}
+              books={books}
+              onJump={onJump}
+              onAdd={(m) => change((w) => ({ ...w, gathered: w.gathered.some((g) => g.key === m.key) ? w.gathered : [...w.gathered, m] }))}
+            />
+          )}
+          <SermonGuide ctx={guideContext} />
+        </>
+      )}
+      {work.tab === "prepare" && work.mode === "full" && (
         <div className="sb-prep">
           <section className="sb-find" aria-label="Find material">
             {assistant && (
@@ -1102,9 +1307,11 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
 
       {presenting !== null && (
         <Presenter
-          slides={slides}
-          background={work.slideBackground}
+          decks={[{ kind: "sermon", title: work.title.trim() || "Sermon", slides, background: work.slideBackground, overlay: work.slideOverlay, resumeKey: String(work.id || work.title.trim() || "draft") }]}
           start={presenting}
+          versions={versions}
+          books={books}
+          versionCode={versionCode}
           onEnd={() => setPresenting(null)}
         />
       )}
@@ -1114,8 +1321,10 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
             slides={slides}
             edited={work.slides !== null}
             background={work.slideBackground}
-            onChange={(s) => change((w) => ({ ...w, slides: s }))}
-            onBackground={(f) => change((w) => ({ ...w, slideBackground: f }))}
+            onChange={(s) => change((w) => ({ ...w, slides: s }), "changed the slides")}
+            onBackground={(f) => change((w) => ({ ...w, slideBackground: f }), "changed the background")}
+            overlay={work.slideOverlay}
+            onOverlay={(f) => change((w) => ({ ...w, slideOverlay: f }), "changed the picture over the background")}
             verseNumbers={work.slideVerseNumbers}
             onVerseNumbers={(on) =>
               change((w) => ({
@@ -1127,8 +1336,14 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
               }))
             }
             onSave={(embed) => void saveSlides(embed)}
+            versions={versions}
+            books={books}
+            versionCode={versionCode}
+            onSaveProPresenter={() => void saveProPresenter()}
             saving={savingSlides}
             onPresent={(from) => setPresenting(from)}
+            order={slideOrder}
+            undo={{ can: undoCount > 0, label: undoStack.current[undoStack.current.length - 1]?.label ?? null, run: undo }}
           />
           <p className="search-hint">
             Saved as a PowerPoint file in Documents\Bible Concordance — it opens in PowerPoint, ProPresenter, Keynote, Google Slides and LibreOffice.
