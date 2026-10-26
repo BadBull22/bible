@@ -8,6 +8,7 @@ running log of this same day, in order) and `PRESENTER_OPTIONS.md` (the options 
 
 ## 0. Start here
 
+- **UPDATE (2026-10-26, evening): all of this is now released as 2.9.5** (commit `dcdfe8a`, GitHub release `v2.9.5`; see section 10 at the end). The rest of this bullet describes the state before that.
 - **State:** everything below is in the **working tree on `V:\Code\bible`, uncommitted, unbuilt, unpublished.** HEAD is `74d3850` ("Website: Android
   download is now 2.9.4"); the latest release is **2.9.4**. Versions in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` are
   already **2.9.5** (see §6 for the version question).
@@ -246,3 +247,10 @@ Photos were kept, but a **moving background** (video) was dropped and the **over
 
 ### 9h. A music or video link slide showed its title and "Play" over the playing clip (owner)
 `SlideShow.tsx`: the words of a slide with a clip are taken off (`bare`) in the projector screen and in the operator preview while the clip is playing or paused (`clip !== "stopped"`); they come back when it stops. Checked with real clicks: before play 1 title and 1 "Play"; while playing and while paused none.
+
+## 10. Released as 2.9.5 (2026-10-26, evening)
+- **Checks before the build:** `tsc` clean, the seven `scripts/test_*.mts` pass, `cargo test --lib` 108 passed (14 ignored). A walk through the dev app (Home, a reference, a search, every Study, Reference and Explore menu item, the Sunday service page, every sermon-builder tab) gave **0 page errors**.
+- **Build:** `npm run tauri build -- --config <a file with {"bundle":{"createUpdaterArtifacts":false}}>` (setup `.exe` and `.msi`), both signed by hand (`npx tauri signer sign -f %USERPROFILE%\.tauri\bible-concordance-updater.key -p ""`), then `scripts\release.ps1 -SkipBuild -Notes "..."` (collects the files into `installer\` and writes `latest.json`). Both signatures were verified (Ed25519 over the BLAKE2b-512 hash) against the local files and again against the files downloaded back from GitHub; the live `latest.json` says 2.9.5 and carries the same two signatures. Sizes: setup 378,148,680 bytes, msi 439,824,384.
+- **Commit and release:** `dcdfe8a` "2.9.5: Slideshow Builder, step by step, adding backgrounds" (71 files, as BadBull22; scanned: no email, key or test-port line); release `v2.9.5` marked Latest, notes "Slideshow Builder, step by step, adding backgrounds." (the owner's wording). Website: `docs/index.html` and `docs/windows/index.html` Windows lines name 2.9.5; the Android lines stay 2.9.4.
+- **Still open from section 7:** sync of notices, songs and lists between computers and the phone; the ProPresenter export has never been opened in ProPresenter; the CCLI licence question; the sermon outline's dragging on Windows; nothing here exists on Android. **CCLI's chart could not be read** (a script-built page, and SongSelect needs a login), so the Top 100 list updates from PraiseCharts only.
+- **Not tried by anyone:** a real projector and clicker; a saved PowerPoint opened in PowerPoint; a YouTube link in the presenter (a local video was tried).

@@ -1893,6 +1893,8 @@ NOTICE.md                Attribution for every bundled data source (all public-d
   - The old icons are in `V:\Code\bible-backups\2026-10-20_old-icons`.
   - **Done 2026-10-21:** the website carries the same logo: `docs/assets/icon.png` (512×512; header, page logo, apple-touch-icon) and `docs/assets/favicon-32.png` (32×32), both resized from `src-tauri/app-icon.png`. The app, phone and package versions were moved to 2.9.4 in the same commit. Windows 2.9.4 (release `v2.9.4`) and Android 2.9.4 (release `android-v2.9.4`, not marked Latest) were published on 2026-10-21, and the website's download pages and both `latest.json` files name them; the phone build carries the new launcher icon.
 
+- **Release 2.9.5 (2026-10-26):** committed (`dcdfe8a`) and published as GitHub release `v2.9.5` (Latest; signed setup `.exe` and `.msi`, `latest.json`); the website's Windows pages point at it. Notes (the owner's wording): "Slideshow Builder, step by step, adding backgrounds." It holds the step-by-step sermon builder, moving slides, the Sunday service page (Notices, Music, Sermon), the laptop presenter, songs and the Top 100 worship list, themes and backgrounds saved into PowerPoint, and the ProPresenter export. **Android stays at 2.9.4** (no phone build of 2.9.5). Details: `HANDOVER_2026-10-26_SUNDAY_SERVICE.md`.
+
 - Bundle only public-domain texts offline (BSB/KJV/ASV/YLT/WEB + WLC/TR). NIV/ESV/NKJV are
   copyrighted and were never bundled; NIV/NKJV are available live via api.bible with the user's
   own key (ESV isn't offered on that platform).
