@@ -106,7 +106,10 @@ export function groupGuide(meta: SermonMeta, items: SermonItem[]): SheetBlock[] 
   return out;
 }
 
-export type SlideKind = "title" | "point" | "scripture" | "text" | "song" | "image" | "link";
+/** "countdown": a clock counting down to zero ("The service starts in 5:00"); its words say how long, or to what time */
+import type { SlideLayout } from "./slideLayout";
+
+export type SlideKind = "title" | "point" | "scripture" | "text" | "song" | "image" | "link" | "countdown";
 
 export interface SlideSpec {
   kind: SlideKind;
@@ -117,23 +120,37 @@ export interface SlideSpec {
   /** this slide's own background: a kept photo, "" for plain navy, or absent to use the one
    * chosen for all the slides */
   background?: string;
+  /** a see-through picture over this slide's background: a kept file, "" for none, or absent to use the one for all the slides */
+  overlay?: string;
+  /** where the heading graphic, the words and the picture beside them have been put by hand (percent of the slide); absent: spaced automatically */
+  layout?: SlideLayout;
+  /** the written heading is left off the slide (a heading graphic over the background stands in for it) */
+  noHeading?: boolean;
   /** a picture beside the words (heading, words, song, Scripture and title slides) */
   picture?: string;
   /** what a "link" slide opens: a web address, or "media:<file>" for a kept file */
   link?: string;
   /** the preacher's own notes, shown only to them in the presenter view */
   notes?: string;
+  /** the sermon item a slide was made from (a point's heading, a passage, a picture), so that moving
+   * the slide can move the sermon the same way (slideOrder.ts); absent on the preacher's own slides */
+  from?: string;
+  /** a song's slide: the song it is of, and which part of it (Verse 1, Chorus...); the show groups the slides by song */
+  song?: string;
+  section?: string;
+  /** the title slide stays at the top: it can't be moved (only a title slide can be pinned) */
+  pinned?: boolean;
 }
 
 /** Slides from the sermon: the title, the big idea, each point, and each Scripture passage
  * (a long passage over several slides, a few verses each). `verseNumbers`: show the verse
  * numbers on Scripture slides. */
 export function slidesOf(meta: SermonMeta, items: SermonItem[], version: string, verseNumbers = true): SlideSpec[] {
-  const out: SlideSpec[] = [{ kind: "title", title: meta.title.trim() || "Sermon", body: [meta.series.trim(), when(meta.preachedOn)].filter(Boolean).join(" · ") }];
+  const out: SlideSpec[] = [{ kind: "title", title: meta.title.trim() || "Sermon", body: [meta.series.trim(), when(meta.preachedOn)].filter(Boolean).join(" · "), pinned: true }];
   if (meta.bigIdea?.trim()) out.push({ kind: "point", title: stripMarks(meta.bigIdea.trim()), body: "" });
   for (const i of items) {
     if (i.type === "heading" && i.text !== "More material you ticked") {
-      out.push({ kind: "point", title: stripMarks(i.text), body: "" });
+      out.push({ kind: "point", title: stripMarks(i.text), body: "", from: i.id });
     } else if (i.type === "material" && isScripture(i.material)) {
       const text = tidyQuotes(i.material.text.replace(/⟪\d+⟫/g, "").replace(/\s+/g, " ").trim());
       const v = (i.material.source ?? version).split(" · ")[0];
@@ -143,12 +160,12 @@ export function slidesOf(meta: SermonMeta, items: SermonItem[], version: string,
         // each slide names its own verses ("John 3:16–18"), when they are known
         const where =
           ref && c.from != null ? `${ref.book} ${ref.chapter}:${c.from}${c.to != null && c.to > c.from ? `–${c.to}` : ""}` : `${i.material.title}${chunks.length > 1 ? ` (${n + 1}/${chunks.length})` : ""}`;
-        out.push({ kind: "scripture", title: `${where} · ${v}`, body: c.text });
+        out.push({ kind: "scripture", title: `${where} · ${v}`, body: c.text, from: i.id });
       });
     } else if (i.type === "media") {
       const m = i.media;
-      if (m.kind === "image" && m.file) out.push({ kind: "image", title: m.title, body: "", image: m.file });
-      else if (m.url || m.file) out.push({ kind: "link", title: m.title, body: m.kind === "video" || m.kind === "audio" ? "▶ Play" : "Open", link: m.url ?? `media:${m.file}` });
+      if (m.kind === "image" && m.file) out.push({ kind: "image", title: m.title, body: "", image: m.file, from: i.id });
+      else if (m.url || m.file) out.push({ kind: "link", title: m.title, body: m.kind === "video" || m.kind === "audio" ? "▶ Play" : "Open", link: m.url ?? `media:${m.file}`, from: i.id });
     }
   }
   return out;

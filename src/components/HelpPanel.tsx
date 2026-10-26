@@ -446,7 +446,7 @@ const SECTIONS: Section[] = [
     id: "sermon",
     title: "Sermon builder",
     keywords:
-      "sermon builder preach preacher pastor minister message outline points topic gather prepare series word document template big idea preach mode slides powerpoint handout fill in blanks small group lectionary calendar spurgeon simeon illustrations quotes library review edit hebrew greek word strong's definition lexicon preached preaching history tracker find search past sermons verse numbers background",
+      "sermon builder step by step guided simple full builder preach preacher pastor minister message outline points topic gather prepare series word document template big idea preach mode slides powerpoint handout fill in blanks small group lectionary calendar spurgeon simeon illustrations quotes library review edit hebrew greek word strong's definition lexicon preached preaching history tracker find search past sermons verse numbers background",
     body: (
       <>
         <p>
@@ -454,9 +454,16 @@ const SECTIONS: Section[] = [
           into a document, handouts, slides and a pulpit view. It finds and arranges; it never writes for you. The sermon is
           yours.
         </p>
+        <p>
+          <strong>Two ways to build.</strong> <em>Step by step</em> is the default: eight short steps (the passage, how to tell it,
+          what it meant, other Scripture, stories and pictures, the ending, writing, and a last look). Each step says why it matters
+          and offers a few suggestions with where each comes from; <em>+</em> puts one in the right point, and you can skip any step.
+          Tick <strong>Full builder</strong> at the top for every tool at once, as described below. It is the same sermon in both, so
+          you can switch whenever you like and nothing is lost. The box also sets how new sermons begin.
+        </p>
         <ul>
           <li>
-            <strong>Prepare</strong> is one screen in two halves that scroll on their own. On the left, type a subject (<em>faith in God</em>)
+            <strong>Prepare</strong> (in the full builder) is one screen in two halves that scroll on their own. On the left, type a subject (<em>faith in God</em>)
             or a passage (<em>John 3</em>) and press <em>Find</em>: Scripture, cross-references, commentary, your Library books, Spurgeon's
             sermons, outlines, stories and more, in groups that stay at the top while you scroll. Click a title to read it all; <em>Read</em>{" "}
             shows the chapter and <em>Study this passage</em> everything on it — both on the left, without leaving your sermon. Press{" "}
@@ -492,7 +499,14 @@ const SECTIONS: Section[] = [
           </li>
           <li>
             <strong>Slides:</strong> made from your sermon, then yours to change — reorder, edit, delete, and add words, song words,
-            Scripture, pictures and video or music links, on navy or on a photo. Save as PowerPoint; a link on a slide plays when clicked
+            Scripture, pictures and video or music links, on navy or on a photo. <strong>Press a slide and drag it up or down</strong> in
+            the list: a copy of it follows the mouse and the other slides slide aside to open the slot it will go into, so you see the
+            list you will get; let go and it stays there, highlighted. (Or use{" "}
+            <em>▲ Earlier</em> and <em>▼ Later</em>.) The sermon moves the same way, so the slides and the sermon always match: a point's
+            slide takes the whole point with it, and a passage's slides move that passage into the point where you drop it. Only the title
+            slide stays first; the big idea and any slide you added yourself just move. <em>Undo</em>, at the top of the
+            Slides page, says what it will take back and takes the slides and the sermon back together. If the sermon ever ends up in a
+            different order from your slides, a bar says so, and <em>Make the sermon match the slides</em> puts it right in one go. Save as PowerPoint; a link on a slide plays when clicked
             in the slide show. The bar at the top stays in view: the background for all slides, <em>Verse numbers</em> on or off, and a
             button for each kind of slide to add. Under the slide you're editing, give that one slide its own background and put a
             picture beside its words. A passage is put on slides a few whole verses at a time, and the words shrink to fit. When the

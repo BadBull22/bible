@@ -1,6 +1,7 @@
 mod apocrypha;
 mod commands;
 mod commentaries;
+mod decks;
 mod db;
 pub mod embeddings;
 pub mod firsts;
@@ -9,6 +10,7 @@ pub mod library;
 mod lan;
 mod library_commands;
 mod logging;
+mod lyrics;
 mod pictures;
 mod original_search;
 mod models;
@@ -17,11 +19,13 @@ pub mod qa;
 mod qa_parser;
 mod sermon;
 mod sermon_media;
+mod propresenter;
 mod slides;
 mod preaching;
 mod settings;
 mod sheet;
 mod study;
+mod themes;
 mod study_commands;
 mod sync;
 mod update;
@@ -256,6 +260,21 @@ pub fn run() {
             study_commands::book_bookmark_add,
             study_commands::book_bookmark_rename,
             study_commands::book_bookmark_remove,
+            themes::theme_list,
+            themes::theme_thumb,
+            themes::theme_use,
+            lyrics::lyrics_search,
+            lyrics::lyrics_get,
+            lyrics::chart_top_songs,
+            decks::deck_list_cmd,
+            decks::deck_get_cmd,
+            decks::deck_save_cmd,
+            decks::deck_delete_cmd,
+            decks::deck_order_cmd,
+            decks::song_search_cmd,
+            decks::song_get_cmd,
+            decks::song_save_cmd,
+            decks::song_delete_cmd,
             study_commands::sermon_list,
             study_commands::sermon_get,
             study_commands::sermon_save,
@@ -277,6 +296,7 @@ pub fn run() {
             study_commands::sermon_template_save,
             study_commands::sermon_template_delete,
             slides::save_sermon_slides,
+            propresenter::save_sermon_propresenter,
             slides::show_window_open,
             slides::show_window_move,
             preaching::sermon_outlines,

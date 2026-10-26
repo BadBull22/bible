@@ -4,10 +4,13 @@ import { api, PictureCollection, PictureInfo } from "../api";
 import { usePictureUrl } from "../pictures";
 import { addBytes, addFiles, kindOfUrl, KIND_LABEL, MediaRef, normaliseUrl, youtubeId } from "../sermonMedia";
 import { CloseIcon } from "./icons";
+import { backdrop } from "../backdrop";
 
 interface Props {
   /** what to add, and for what: "anything" in a sermon, "picture" for a slide's background */
   only?: "picture";
+  /** the tab to open on */
+  start?: Source;
   onAdd: (media: MediaRef[]) => void;
   onClose: () => void;
 }
@@ -57,8 +60,8 @@ function BibleThumb({ p, onPick }: { p: PictureInfo; onPick: () => void }) {
 
 /** Adds pictures, video, music, files or web links to a sermon (or a picture for slides): from
  * this computer, the nature photos, the Bible pictures, or a link to paste. */
-export function MediaPicker({ only, onAdd, onClose }: Props) {
-  const [source, setSource] = useState<Source>("computer");
+export function MediaPicker({ only, start, onAdd, onClose }: Props) {
+  const [source, setSource] = useState<Source>(start ?? "computer");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nature, setNature] = useState<Background[] | null>(null);
@@ -149,7 +152,7 @@ export function MediaPicker({ only, onAdd, onClose }: Props) {
   ];
 
   return (
-    <div className="mp-backdrop" role="dialog" aria-modal="true" aria-label={only === "picture" ? "Choose a picture" : "Add a picture, video, music or a link"} onClick={onClose}>
+    <div className="mp-backdrop" role="dialog" aria-modal="true" aria-label={only === "picture" ? "Choose a picture" : "Add a picture, video, music or a link"} {...backdrop(onClose)}>
       <div className="mp" onClick={(e) => e.stopPropagation()}>
         <div className="mp-head">
           <strong>{only === "picture" ? "Choose a picture" : "Add a picture, video, music, a file or a link"}</strong>

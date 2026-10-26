@@ -353,7 +353,11 @@ pub(crate) async fn engine(app: &AppHandle) -> Result<Arc<foundry_local_sdk::Mod
     }
     let (manager, gpu) = manager(app, false).await?;
     let model = manager.catalog().get_model(&model_alias()).await.map_err(err)?;
-    choose_variant(&model, gpu)?;
+    // what is really used is what the label says: it is written again at every load, not only at the download
+    let variant = choose_variant(&model, gpu)?;
+    if let Ok(dir) = folder(app) {
+        let _ = std::fs::write(dir.join("variant.txt"), &variant);
+    }
     if !model.is_cached().await.map_err(err)? {
         return Err("The model isn't downloaded yet (Study → Offline Assistant → Settings).".into());
     }

@@ -62,6 +62,16 @@ CREATE TABLE IF NOT EXISTS sermon_refs (
     sermon_id INTEGER NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, verse_end INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS sermon_refs_sermon ON sermon_refs(sermon_id);
 CREATE INDEX IF NOT EXISTS sermon_refs_where ON sermon_refs(book, chapter);
+CREATE TABLE IF NOT EXISTS decks (
+    id INTEGER PRIMARY KEY, kind TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, position INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
+CREATE INDEX IF NOT EXISTS decks_kind ON decks(kind);
+CREATE TABLE IF NOT EXISTS songs (
+    id INTEGER PRIMARY KEY, title TEXT NOT NULL, author TEXT NOT NULL DEFAULT '', ccli TEXT NOT NULL DEFAULT '',
+    words TEXT NOT NULL DEFAULT '', body TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
 CREATE VIRTUAL TABLE IF NOT EXISTS sermon_fts USING fts5(title, series, topics, big_idea, words, tokenize = 'porter unicode61');
 ";
 
@@ -96,6 +106,12 @@ fn migrate(conn: &Connection) -> Result<(), String> {
     }
     if !cols.iter().any(|c| c == "venue") {
         conn.execute_batch("ALTER TABLE sermons ADD COLUMN venue TEXT NOT NULL DEFAULT ''").map_err(err)?;
+    }
+    // the order the notices in the library are kept in -- since 2.9.5
+    let mut s = conn.prepare("PRAGMA table_info(decks)").map_err(err)?;
+    let cols: Vec<String> = s.query_map([], |r| r.get(1)).map_err(err)?.collect::<Result<_, _>>().map_err(err)?;
+    if !cols.iter().any(|c| c == "position") {
+        conn.execute_batch("ALTER TABLE decks ADD COLUMN position INTEGER NOT NULL DEFAULT 0").map_err(err)?;
     }
     first_index(conn)?;
     Ok(())

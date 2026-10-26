@@ -39,6 +39,20 @@ pub struct Slide {
     /// a "link" slide, so it plays without the original file; without it the slide links
     #[serde(default)]
     pub video: Option<String>,
+    /// the preacher's own notes for the slide (kept in the notes of a ProPresenter slide)
+    #[serde(default)]
+    pub notes: Option<String>,
+    /// a song's slide: the song, and the part of it (Verse 1, Chorus...)
+    #[serde(default)]
+    pub song: Option<String>,
+    #[serde(default)]
+    pub section: Option<String>,
+    /// a see-through picture over the background and under the words (a heading graphic, a layer): a media file
+    #[serde(default)]
+    pub overlay: Option<String>,
+    /// the written heading is left off the slide (the graphic is the heading, or a song's name is not wanted in the corner)
+    #[serde(default, rename = "noHeading")]
+    pub no_heading: bool,
 }
 
 /// A video or music file PowerPoint can play from inside the file: its type and whether it
@@ -215,6 +229,8 @@ fn body_size(text: &str) -> u32 {
 /// What a slide refers to besides its text: the relationship ids it uses.
 struct SlideRefs<'a> {
     background: Option<(&'a str, u32, u32)>,
+    /// the see-through layer over the background (rId8)
+    overlay: Option<(&'a str, u32, u32)>,
     picture: Option<(&'a str, u32, u32)>,
     link: Option<&'a str>,
     /// a clip inside the slide (rId5-rId7): true for a video, false for music
@@ -255,13 +271,15 @@ fn background(bg: Option<(&str, u32, u32)>) -> (String, String) {
 
 fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
     let (bg, shade) = background(refs.background);
+    // a layer over the background and under the words, filling the slide
+    let shade = shade + &refs.overlay.map(|(rid, w, h)| picture(8, rid, (0, 0, W, H), w, h)).unwrap_or_default();
     // with a picture beside them, the words take the left 55% and the picture the rest
     let side = if s.kind == "image" { None } else { refs.picture };
     let tw = |full: i64| if side.is_some() { W * 55 / 100 - 700_000 } else { full };
     let beside = side.map(|(rid, w, h)| picture(5, rid, (W * 55 / 100 + 100_000, 500_000, W * 45 / 100 - 600_000, H - 1_000_000), w, h)).unwrap_or_default();
     let shapes = match s.kind.as_str() {
         "title" => {
-            text_box(2, "Title", 600_000, 2_000_000, tw(W - 1_200_000), 1_700_000, &s.title, if side.is_some() { 44 } else { 54 }, "FFFFFF", true, false, "b")
+            (if s.no_heading { String::new() } else { text_box(2, "Title", 600_000, 2_000_000, tw(W - 1_200_000), 1_700_000, &s.title, if side.is_some() { 44 } else { 54 }, "FFFFFF", true, false, "b") })
                 + &text_box(3, "Subtitle", 600_000, 3_900_000, tw(W - 1_200_000), 1_200_000, &s.body, 26, "C9D6EE", false, false, "t")
         }
         "scripture" => {
@@ -269,8 +287,14 @@ fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
             text_box(2, "Passage", 700_000, 700_000, tw(W - 1_400_000), H - 2_300_000, &format!("“{}”", s.body.trim()), size, "FFFFFF", false, false, "ctr")
                 + &text_box(3, "Reference", 700_000, H - 1_400_000, tw(W - 1_400_000), 700_000, &s.title, 26, "F2C46D", true, false, "t")
         }
-        "text" | "song" => {
-            text_box(2, "Heading", 700_000, 350_000, tw(W - 1_400_000), 1_000_000, &s.title, 32, "F2C46D", true, false, "ctr")
+        // a song's words are the slide: large and centred, the song and its part small at the top right
+        "song" => {
+            let size = body_size(&s.body).min(if side.is_some() { 36 } else { 44 });
+            text_box(2, "Words", 700_000, 600_000, tw(W - 1_400_000), H - 1_300_000, s.body.trim(), size, "FFFFFF", false, false, "ctr")
+                + &(if s.no_heading { String::new() } else { text_box(3, "Song and part", W - 4_300_000, 150_000, 4_100_000, 450_000, &s.title, 14, "A9B7D6", false, false, "t") })
+        }
+        "text" => {
+            (if s.no_heading { String::new() } else { text_box(2, "Heading", 700_000, 350_000, tw(W - 1_400_000), 1_000_000, &s.title, 32, "F2C46D", true, false, "ctr") })
                 + &text_box(3, "Words", 700_000, 1_400_000, tw(W - 1_400_000), H - 1_900_000, s.body.trim(), body_size(&s.body).min(if side.is_some() { 30 } else { 36 }), "FFFFFF", false, false, "ctr")
         }
         "image" => {
@@ -286,7 +310,7 @@ fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
                 + &linked_box(3, "Link", 700_000, 3_800_000, W - 1_400_000, 1_200_000, &label, 28, "F2C46D", false, false, "t", refs.link)
         }
         _ => {
-            text_box(2, "Point", 700_000, 1_600_000, tw(W - 1_400_000), 2_200_000, &s.title, if side.is_some() { 40 } else { 48 }, "FFFFFF", true, false, "b")
+            (if s.no_heading { String::new() } else { text_box(2, "Point", 700_000, 1_600_000, tw(W - 1_400_000), 2_200_000, &s.title, if side.is_some() { 40 } else { 48 }, "FFFFFF", true, false, "b") })
                 + &text_box(3, "Under the point", 700_000, 4_000_000, tw(W - 1_400_000), 2_000_000, &s.body, 28, "C9D6EE", false, true, "t")
         }
     } + &beside;
@@ -319,7 +343,7 @@ pub fn build_pptx(slides: &[Slide], media: &dyn Fn(&str) -> Option<Vec<u8>>) -> 
     // each picture once, as ppt/media/mediaN.<ext>: file name -> (part name, type, size)
     let mut pictures: Vec<(String, String, &'static str, u32, u32, Vec<u8>)> = Vec::new();
     for s in slides {
-        for f in [s.image.as_deref(), s.background.as_deref(), s.picture.as_deref()].into_iter().flatten() {
+        for f in [s.image.as_deref(), s.background.as_deref(), s.picture.as_deref(), s.overlay.as_deref()].into_iter().flatten() {
             if pictures.iter().any(|p| p.0 == f) {
                 continue;
             }
@@ -433,6 +457,10 @@ pub fn build_pptx(slides: &[Slide], media: &dyn Fn(&str) -> Option<Vec<u8>>) -> 
         if let Some(p) = pic {
             rels += &format!(r#"<Relationship Id="rId3" Type="{REL_TYPE}/image" Target="../media/{}"/>"#, p.1);
         }
+        let over = find(s.overlay.as_ref());
+        if let Some(p) = over {
+            rels += &format!(r#"<Relationship Id="rId8" Type="{REL_TYPE}/image" Target="../media/{}"/>"#, p.1);
+        }
         let link = s.link.as_deref().map(str::trim).filter(|l| !l.is_empty() && s.kind == "link");
         if let Some(l) = link {
             rels += &format!(r#"<Relationship Id="rId4" Type="{REL_TYPE}/hyperlink" Target="{}" TargetMode="External"/>"#, esc(&link_target(l)));
@@ -445,7 +473,7 @@ pub fn build_pptx(slides: &[Slide], media: &dyn Fn(&str) -> Option<Vec<u8>>) -> 
                 p = c.1
             );
         }
-        let refs = SlideRefs { background: bg.map(|p| ("rId2", p.3, p.4)), picture: pic.map(|p| ("rId3", p.3, p.4)), link: link.map(|_| "rId4"), clip: clip.map(|c| c.4) };
+        let refs = SlideRefs { background: bg.map(|p| ("rId2", p.3, p.4)), overlay: over.map(|p| ("rId8", p.3, p.4)), picture: pic.map(|p| ("rId3", p.3, p.4)), link: link.map(|_| "rId4"), clip: clip.map(|c| c.4) };
         files.push((format!("ppt/slides/slide{}.xml", i + 1), slide_xml(s, &refs)));
         files.push((
             format!("ppt/slides/_rels/slide{}.xml.rels", i + 1),
@@ -601,6 +629,30 @@ mod tests {
         assert!(read(&mut z, "ppt/slides/_rels/slide4.xml.rels").contains("file:///C:/Users/me/My%20Videos/clip.mp4"));
         // a picture that isn't there: the slide is made without it
         assert!(!read(&mut z, "ppt/slides/slide5.xml").contains("<p:pic>"));
+    }
+
+    #[test]
+    fn a_layer_goes_over_the_background_and_a_heading_can_be_left_off() {
+        let media = |f: &str| matches!(f, "bg.png" | "layer.png").then(poster_png);
+        let slides = vec![
+            Slide { kind: "point".into(), title: "Grace".into(), background: Some("bg.png".into()), overlay: Some("layer.png".into()), no_heading: true, ..Default::default() },
+            Slide { kind: "song".into(), title: "A Song · Verse 1".into(), body: "one\ntwo".into(), no_heading: true, ..Default::default() },
+            Slide { kind: "song".into(), title: "A Song · Chorus".into(), body: "three\nfour".into(), ..Default::default() },
+        ];
+        let bytes = build_pptx(&slides, &media).unwrap();
+        let mut z = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+        let mut read = |name: &str| {
+            let mut s = String::new();
+            std::io::Read::read_to_string(&mut z.by_name(name).unwrap(), &mut s).unwrap();
+            s
+        };
+        let (s1, r1, s2, s3) = (read("ppt/slides/slide1.xml"), read("ppt/slides/_rels/slide1.xml.rels"), read("ppt/slides/slide2.xml"), read("ppt/slides/slide3.xml"));
+        assert!(s1.contains(r#"<a:blip r:embed="rId8"/>"#), "the layer is on the slide: {s1}");
+        assert!(r1.contains(r#"Id="rId8""#) && r1.contains(r#"Id="rId2""#), "the layer and the background are both related: {r1}");
+        assert!(s1.find("Shade").unwrap() < s1.find(r#"r:embed="rId8""#).unwrap(), "the layer is over the shade");
+        assert!(!s1.contains("Grace"), "the written heading is left off");
+        assert!(!s2.contains("Verse 1") && s2.contains("one"), "a song's corner name can be left off");
+        assert!(s3.contains("Chorus") && s3.contains("three"), "and is there when not left off");
     }
 
     #[test]

@@ -10,7 +10,7 @@
 //! mobile/data/build_backgrounds.py, downloaded once into `backgrounds\`.
 
 use std::fs;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
@@ -63,6 +63,50 @@ pub fn add(data: &Path, original_name: &str, bytes: &[u8]) -> Result<MediaFile, 
         fs::write(&path, bytes).map_err(err)?;
     }
     Ok(MediaFile { file, size: bytes.len() as u64 })
+}
+
+/// Keeps a copy of a file that is on this computer (a looping background of tens of megabytes, say), copying it in
+/// pieces so it is never all in memory; named by its contents, as `add` does.
+pub fn import_file(data: &Path, source: &Path) -> Result<MediaFile, String> {
+    let dir = media_dir(data);
+    fs::create_dir_all(&dir).map_err(err)?;
+    let mut input = fs::File::open(source).map_err(err)?;
+    let tmp = dir.join(format!("import-{}.tmp", std::process::id()));
+    let result = (|| -> Result<(String, u64), String> {
+        let mut out = fs::File::create(&tmp).map_err(err)?;
+        let mut hasher = Sha256::new();
+        let mut buf = vec![0u8; 1 << 20];
+        let mut size = 0u64;
+        loop {
+            let n = input.read(&mut buf).map_err(err)?;
+            if n == 0 {
+                break;
+            }
+            hasher.update(&buf[..n]);
+            out.write_all(&buf[..n]).map_err(err)?;
+            size += n as u64;
+            if size > MAX_BYTES as u64 {
+                return Err("That file is larger than 1 GB.".into());
+            }
+        }
+        out.flush().map_err(err)?;
+        Ok((hasher.finalize().iter().take(10).map(|b| format!("{b:02x}")).collect(), size))
+    })();
+    let (hash, size) = match result {
+        Ok(v) => v,
+        Err(e) => {
+            let _ = fs::remove_file(&tmp);
+            return Err(e);
+        }
+    };
+    let file = format!("{hash}.{}", extension(&source.to_string_lossy()));
+    let dest = dir.join(&file);
+    if dest.exists() {
+        let _ = fs::remove_file(&tmp);
+    } else {
+        fs::rename(&tmp, &dest).map_err(err)?;
+    }
+    Ok(MediaFile { file, size })
 }
 
 pub fn path_of(data: &Path, file: &str) -> Result<PathBuf, String> {

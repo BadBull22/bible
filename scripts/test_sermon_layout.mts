@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { movePart, moveIntoSlot, partsOf, placeFor, placeMaterial, rolesFor, slotsOf } from "../src/sermonLayout.ts";
+import { movePart, moveIntoSlot, partsOf, placeFor, placeMaterial, pointOfRef, rolesFor, slotsOf } from "../src/sermonLayout.ts";
 
 let n = 0;
 const id = () => `i${++n}`;
@@ -73,6 +73,25 @@ assert.equal(m2.length, items.length);
 assert.equal(moveIntoSlot(items, e1.id, e2.id), items);
 assert.equal(moveIntoSlot(items, p1.id, e2.id), items);
 
+
+// material about a verse range goes to the point whose Scripture covers it
+const sec = (a: number, b: number) => ({ id: id(), type: "material", material: { key: `s:${a}`, kind: "section", title: `John 3:${a}-${b}`, text: "", topic: "", ref: { book: "John", chapter: 3, verse: a, verseEnd: b } } }) as any;
+const g1 = heading("Part 1"), gs1 = block("scripture", "The verses", 2), ge1 = block("explain", "What it says", 2);
+const g2 = heading("Part 2"), gs2 = block("scripture", "The verses", 2), ge2 = block("explain", "What it says", 2);
+const sec1 = sec(1, 8), sec2 = sec(9, 15);
+let gi: any[] = [g1, gs1, sec1, ge1, g2, gs2, sec2, ge2];
+assert.equal(pointOfRef(gi, { book: "John", chapter: 3, verse: 10, verseEnd: 12 }), g2.id);
+assert.equal(pointOfRef(gi, { book: "John", chapter: 3, verse: 2, verseEnd: 2 }), g1.id);
+assert.equal(pointOfRef(gi, { book: "John", chapter: 4, verse: 2, verseEnd: 2 }), null);
+const clark = { id: id(), type: "material", material: { key: "c1", kind: "commentary", title: "Clarke on John 3:10", text: "", topic: "", ref: { book: "John", chapter: 3, verse: 10, verseEnd: 10 } } } as any;
+const at2 = placeMaterial(gi, clark.material, null);
+gi = [...gi.slice(0, at2), clark, ...gi.slice(at2)];
+assert.equal(gi[gi.indexOf(clark) - 1].id, ge2.id, "commentary on verse 10 goes into Part 2's explanation");
+// with no section covering it, the old rule still applies (first empty fitting section)
+const other = { key: "c2", kind: "commentary", title: "x", text: "", topic: "", ref: { book: "Romans", chapter: 1, verse: 1, verseEnd: 1 } } as any;
+assert.equal(gi[placeMaterial(gi, other, null) - 1].id, ge1.id);
+// a clicked point still wins
+assert.equal(gi[placeMaterial(gi, clark.material, g1.id) - 1].id, ge1.id);
 console.log("sermonLayout: all checks passed");
 
 // ---- Scripture on slides (sermonOutputs): whole verses, a few to a slide

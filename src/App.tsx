@@ -32,6 +32,7 @@ import { PicturesPanel } from "./components/PicturesPanel";
 import { OriginalSearchPanel } from "./components/OriginalSearchPanel";
 import { UpdateBanner } from "./components/Updates";
 import { SermonBuilder } from "./components/SermonBuilder";
+import { ServiceHome } from "./components/ServiceHome";
 import { useBasket } from "./basket";
 import { ReadAloudBar } from "./components/ReadAloudBar";
 import { splitSentences } from "./readHighlight";
@@ -83,7 +84,7 @@ type SidePanel =
   | { kind: "library"; tab?: "mine" | "more"; only?: LibraryKind }
   | { kind: "pictures"; tab?: "chapter" | "gallery" | "download" }
   | { kind: "original"; strongs?: string }
-  | { kind: "ai"; question?: string }
+  | { kind: "ai"; question?: string; fresh?: boolean }
   | null;
 
 const NO_MARKS: ChapterMarks = { bookmarks: [], highlights: [], notes: [], note_spans: [] };
@@ -97,6 +98,8 @@ const ENOCH_BOOK = "Enoch";
 // The sermon builder fills the reading area the way a Library book does: this stands in
 // for a book's name in `readingBook` (no module can be called this).
 const SERMON_BUILDER = "@sermon";
+// The Sunday service page (notices, music, sermon) is the same kind of stand-in.
+const SERVICE = "@service";
 
 // Resizable layout: sidebar and side-panel widths are per-viewer conveniences kept in
 // localStorage (with try/catch: storage can be unavailable) and clamped to sane bounds.
@@ -161,6 +164,8 @@ function App() {
   // An installed Library book or devotional shown in the reading pane instead of the
   // Bible text; picking any Bible passage puts the Bible back.
   const [readingBook, setReadingBook] = useState<string | null>(null);
+  // sent to the sermon builder from the Sunday service page: a saved sermon's id, or 0 for a new one
+  const [sermonOpen, setSermonOpen] = useState<number | undefined>(undefined);
   const [libraryBooks, setLibraryBooks] = useState<InstalledModule[]>([]);
   // The app opens on a search prompt instead of straight into Genesis 1 -- this flips to
   // false the moment the reader picks somewhere to go, and never flips back this session.
@@ -710,7 +715,7 @@ function App() {
           if (ok) {
             setQuickQuery("");
             setAiOn(true);
-            setPanel({ kind: "ai" });
+            setPanel({ kind: "ai", fresh: true });
           } else {
             setPanel({ kind: "search", initialQuery: q });
           }
@@ -898,7 +903,24 @@ function App() {
             icon={<NotebookIcon size={15} />}
             items={[
               { key: "study", label: "My Study", icon: <NotebookIcon size={14} />, onClick: () => setPanel({ kind: "study" }) },
-              { key: "sermon", label: "Sermon builder", icon: <SheetIcon size={14} />, onClick: () => setReadingBook(SERMON_BUILDER) },
+              {
+                key: "service",
+                label: "Sunday service",
+                icon: <SheetIcon size={14} />,
+                onClick: () => {
+                  setSermonOpen(undefined);
+                  setReadingBook(SERVICE);
+                },
+              },
+              {
+                key: "sermon",
+                label: "Sermon builder",
+                icon: <SheetIcon size={14} />,
+                onClick: () => {
+                  setSermonOpen(undefined);
+                  setReadingBook(SERMON_BUILDER);
+                },
+              },
               { key: "basket", label: "Basket", icon: <BasketIcon size={14} />, onClick: () => setPanel({ kind: "basket" }), badge: basketItems.length },
               { key: "library", label: "Library", icon: <LibraryIcon size={14} />, onClick: () => setPanel({ kind: "library" }) },
               ...(aiOn ? [{ key: "ai", label: "Offline Assistant", icon: <NotebookIcon size={14} />, onClick: () => setPanel({ kind: "ai" }) }] : []),
@@ -937,7 +959,7 @@ function App() {
           )}
         </header>
         <div className="app-body" style={panelWidth ? ({ "--panel-width": `${panelWidth}px` } as React.CSSProperties) : undefined}>
-          {sidebarOpen && !focusMode && readingBook !== SERMON_BUILDER && (
+          {sidebarOpen && !focusMode && readingBook !== SERMON_BUILDER && readingBook !== SERVICE && (
             <>
               <Sidebar
                 books={books}
@@ -962,9 +984,20 @@ function App() {
               />
             </>
           )}
-          <main className={"main-pane" + (readingBook === SERMON_BUILDER ? " builder-pane" : "")}>
-            {readingBook === SERMON_BUILDER ? (
-              <SermonBuilder versionCode={versionCode} versions={versions} books={books} chapterCounts={chapterCounts} onJump={jumpTo} onClose={() => setReadingBook(null)} assistant={aiOn} />
+          <main className={"main-pane" + (readingBook === SERMON_BUILDER || readingBook === SERVICE ? " builder-pane" : "")}>
+            {readingBook === SERVICE ? (
+              <ServiceHome
+                versions={versions}
+                books={books}
+                versionCode={versionCode}
+                onOpenSermon={(id) => {
+                  setSermonOpen(id ?? 0);
+                  setReadingBook(SERMON_BUILDER);
+                }}
+                onClose={() => setReadingBook(null)}
+              />
+            ) : readingBook === SERMON_BUILDER ? (
+              <SermonBuilder versionCode={versionCode} versions={versions} books={books} chapterCounts={chapterCounts} onJump={jumpTo} onClose={() => setReadingBook(null)} assistant={aiOn} openId={sermonOpen} />
             ) : readingBook ? (
               <BookPanel
                 key={readingBook}
@@ -1097,6 +1130,7 @@ function App() {
           {panel?.kind === "ai" && (
             <OfflineAiPanel
               initialQuestion={panel.question}
+              fresh={panel.fresh}
               onJump={jumpTo}
               onClose={() => setPanel(null)}
               onTurnedOff={() => {
