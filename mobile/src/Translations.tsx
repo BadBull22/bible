@@ -127,7 +127,7 @@ export function Translations({ onChanged, ask, say }: Props) {
       {error && <p className="hint status">{error}</p>}
       <h3>Add a Bible from a file</h3>
       <p className="hint">
-        An e-Sword (.bblx), MySword (.bbl.mybible) or SWORD (.zip) Bible you already have on the phone or in your cloud storage. Only add Bibles you have the right to
+        An e-Sword (.bblx), MySword (.bbl.mybible), MyBible (.SQLite3) or SWORD (.zip) Bible you already have on the phone or in your cloud storage. Only add Bibles you have the right to
         use: many shared online are copies of copyrighted translations made without permission. Bibles bought in e-Sword are locked and can't be opened.
       </p>
       <div className="actions">

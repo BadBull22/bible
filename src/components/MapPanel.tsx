@@ -3,6 +3,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { api, EntityDetail, EntitySummary, MapPlace } from "../api";
 import { CloseIcon } from "./icons";
+import { AtlasView } from "./AtlasView";
 
 interface Props {
   onClose: () => void;
@@ -11,6 +12,8 @@ interface Props {
    * showing/selected on when it mounts, so switching panels doesn't lose your spot. */
   initialFocusId: string | null;
   onFocusPlace: (id: string) => void;
+  /** open on the atlas the reader added (from the Library), not on the interactive map */
+  startOnAtlas?: boolean;
 }
 
 type Mode = "ancient" | "modern";
@@ -193,9 +196,37 @@ function jitterPositions(items: { id: string; lat: number; lon: number; weight: 
   return out;
 }
 
-export function MapPanel({ onClose, onJump, initialFocusId, onFocusPlace }: Props) {
+export function MapPanel({ onClose, onJump, initialFocusId, onFocusPlace, startOnAtlas }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  // an atlas the reader added (MyBible's Bible Maps, say) is a second view of this panel
+  const [atlasCount, setAtlasCount] = useState(0);
+  const [view, setView] = useState<"map" | "atlas">(startOnAtlas ? "atlas" : "map");
+  useEffect(() => {
+    api
+      .atlasMaps()
+      .then((m) => setAtlasCount(m.length))
+      .catch(() => setAtlasCount(0));
+  }, []);
+  // where the interactive map was looking when the atlas took its place (a hidden map measures itself as empty)
+  const savedView = useRef<{ center: L.LatLng; zoom: number } | null>(null);
+  const showAtlas = () => {
+    const m = mapRef.current;
+    if (m) savedView.current = { center: m.getCenter(), zoom: m.getZoom() };
+    setView("atlas");
+  };
+  useEffect(() => {
+    // the interactive map was hidden while the atlas showed: it measures itself again and looks where it looked
+    if (view !== "map") return;
+    const t = setTimeout(() => {
+      const m = mapRef.current;
+      if (!m) return;
+      m.invalidateSize();
+      const s = savedView.current;
+      if (s) m.setView(s.center, s.zoom, { animate: false });
+    }, 80);
+    return () => clearTimeout(t);
+  }, [view]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [places, setPlaces] = useState<MapPlace[]>([]);
@@ -493,11 +524,23 @@ export function MapPanel({ onClose, onJump, initialFocusId, onFocusPlace }: Prop
   return (
     <aside className="side-panel wide">
       <div className="side-panel-header">
-        <h3>Map: places of the biblical world</h3>
+        <h3>{view === "atlas" ? "Maps: your atlas" : "Map: places of the biblical world"}</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />
         </button>
       </div>
+      {atlasCount > 0 && (
+        <div className="mode-toggle" role="tablist" aria-label="Which maps">
+          <button role="tab" aria-selected={view === "map"} className={view === "map" ? "active" : ""} onClick={() => setView("map")}>
+            Interactive map
+          </button>
+          <button role="tab" aria-selected={view === "atlas"} className={view === "atlas" ? "active" : ""} onClick={showAtlas}>
+            Atlas (maps you added)
+          </button>
+        </div>
+      )}
+      {view === "atlas" && <AtlasView onJump={onJump} />}
+      <div style={{ display: view === "atlas" ? "none" : "contents" }}>
       <div className="mode-toggle" role="tablist" aria-label="Name era">
         <button role="tab" aria-selected={mode === "ancient"} className={mode === "ancient" ? "active" : ""} onClick={() => applyMode("ancient")}>
           Ancient names
@@ -615,6 +658,7 @@ export function MapPanel({ onClose, onJump, initialFocusId, onFocusPlace }: Prop
           )}
         </div>
       )}
+      </div>
     </aside>
   );
 }

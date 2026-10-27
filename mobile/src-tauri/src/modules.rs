@@ -101,7 +101,7 @@ pub fn add_file(conn: &mut Connection, path: &Path, name: &str, work: &Path, bun
     let _ = std::fs::remove_dir_all(work);
     std::fs::create_dir_all(work).map_err(err)?;
     let result = read_any(path, name, work);
-    let added = result.and_then(|(code, title, language, copyright, program, verses, mut warnings)| {
+    let added = result.and_then(|(code, title, language, copyright, program, verses, mut warnings, red)| {
         if bundled.iter().any(|b| b.eq_ignore_ascii_case(&code)) {
             return Err(format!("The {code} is in the app already."));
         }
@@ -116,9 +116,10 @@ pub fn add_file(conn: &mut Connection, path: &Path, name: &str, work: &Path, bun
         let replaces = tx.query_row("SELECT 1 FROM bibles WHERE code = ?1", params![code], |_| Ok(())).is_ok();
         tx.execute("DELETE FROM verses WHERE code = ?1", params![code]).map_err(err)?;
         {
-            let mut put = tx.prepare("INSERT OR REPLACE INTO verses (code, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)").map_err(err)?;
+            let mut put = tx.prepare("INSERT OR REPLACE INTO verses (code, book, chapter, verse, text, red) VALUES (?1,?2,?3,?4,?5,?6)").map_err(err)?;
             for (b, ch, v, t) in &verses {
-                put.execute(params![code, b, ch, v, t]).map_err(err)?;
+                let ranges = red.get(&(*b, *ch, *v)).and_then(|r| serde_json::to_string(r).ok());
+                put.execute(params![code, b, ch, v, t, ranges]).map_err(err)?;
             }
         }
         let note = if copyright.trim().is_empty() { "Your own copy".to_string() } else { format!("Your own copy · {}", copyright.trim()).chars().take(300).collect() };
@@ -137,7 +138,7 @@ pub fn add_file(conn: &mut Connection, path: &Path, name: &str, work: &Path, bun
     added
 }
 
-type Found = (String, String, String, String, String, Vec<(&'static str, i64, i64, String)>, Vec<String>);
+type Found = (String, String, String, String, String, Vec<(&'static str, i64, i64, String)>, Vec<String>, std::collections::HashMap<(&'static str, i64, i64), Vec<(usize, usize)>>);
 
 /// The Bible in the file, whatever it is packed in: (code, title, language, copyright,
 /// program, verses, warnings).
@@ -162,7 +163,11 @@ fn read_any(path: &Path, name: &str, work: &Path) -> Result<Found, String> {
         let mut zip = zip::ZipArchive::new(std::fs::File::open(path).map_err(err)?).map_err(|_| "This isn't a zip file the app can open.".to_string())?;
         let names: Vec<String> = (0..zip.len()).filter_map(|i| zip.by_index(i).ok().map(|f| f.name().to_string())).collect();
         // an e-Sword or MySword Bible packed on its own
-        let modules: Vec<&String> = names.iter().filter(|n| esword::is_module_name(n)).collect();
+        let mut modules: Vec<&String> = names.iter().filter(|n| esword::is_module_name(n)).collect();
+        // a MyBible Bible comes with a second file for its footnotes: the Bible is the one to add
+        if modules.len() > 1 {
+            modules.retain(|n| !n.to_lowercase().contains(".commentaries."));
+        }
         if modules.len() == 1 && names.len() <= 3 {
             let inner_name = modules[0].rsplit(['/', '\\']).next().unwrap_or(modules[0]).to_string();
             let inner = work.join("module.sqlite");
@@ -177,7 +182,7 @@ fn read_any(path: &Path, name: &str, work: &Path) -> Result<Found, String> {
         }
         return Err("This zip holds no Bible module the app knows.".into());
     }
-    Err("This isn't a Bible module the app can read. It can add e-Sword (.bblx), MySword (.bbl.mybible) and SWORD (.zip) Bibles.".into())
+    Err("This isn't a Bible module the app can read. It can add e-Sword (.bblx), MySword (.bbl.mybible), MyBible (.SQLite3) and SWORD (.zip) Bibles.".into())
 }
 
 fn from_esword(path: &Path, name: &str) -> Result<Found, String> {
@@ -187,6 +192,7 @@ fn from_esword(path: &Path, name: &str) -> Result<Found, String> {
             "commentary" => "a commentary",
             "dictionary" => "a dictionary",
             "devotional" => "a devotional",
+            "atlas" => "an atlas of maps",
             _ => "a book",
         };
         return Err(format!("This is {what}, not a Bible. On the phone, only Bibles can be added from a file for now; add it on the computer."));
@@ -195,7 +201,8 @@ fn from_esword(path: &Path, name: &str) -> Result<Found, String> {
     let code = code_of(&m.abbreviation, base);
     let title = if m.title.trim().is_empty() { code.clone() } else { m.title.trim().to_string() };
     let verses = m.verses.into_iter().map(|(b, c, v, t)| (b, c, v, plain(&t))).filter(|v| !v.3.is_empty()).collect();
-    Ok((code, title, language_name(&m.lang), m.copyright, m.program.to_string(), verses, m.warnings))
+    let red = m.red.into_iter().map(|(b, c, v, r)| ((b, c, v), r)).collect();
+    Ok((code, title, language_name(&m.lang), m.copyright, m.program.to_string(), verses, m.warnings, red))
 }
 
 fn from_sword(zip: &mut zip::ZipArchive<std::fs::File>, work: &Path) -> Result<Found, String> {
@@ -261,7 +268,7 @@ fn from_sword(zip: &mut zip::ZipArchive<std::fs::File>, work: &Path) -> Result<F
     }
     let title = conf.get("Description").unwrap_or(&conf.name).trim().to_string();
     let copyright = conf.get("DistributionLicense").or(conf.get("Copyright")).unwrap_or("").to_string();
-    Ok((code_of(&conf.name, &conf.name), title, language_name(conf.get("Lang").unwrap_or("")), copyright, "SWORD".into(), verses, warnings))
+    Ok((code_of(&conf.name, &conf.name), title, language_name(conf.get("Lang").unwrap_or("")), copyright, "SWORD".into(), verses, warnings, Default::default()))
 }
 
 #[cfg(test)]
@@ -297,6 +304,46 @@ mod tests {
         assert_eq!(t, "Johannes vers 16.");
         // the same again replaces it; a bundled one is refused
         assert!(add_file(&mut conn, &file, "tb.bbl.mybible", &dir.join("work"), &["TB".into()]).unwrap_err().contains("in the app already"));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_mybible_bible_zipped_with_its_footnotes() {
+        let dir = std::env::temp_dir().join(format!("bc-phone-mb-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let bible = dir.join("MB'4.SQLite3");
+        let notes = dir.join("MB'4.commentaries.SQLite3");
+        {
+            let c = Connection::open(&bible).unwrap();
+            c.execute_batch("CREATE TABLE info(name TEXT, value TEXT); CREATE TABLE verses(book_number NUMERIC, chapter NUMERIC, verse NUMERIC, text TEXT); INSERT INTO info VALUES ('description', 'Test MyBible'), ('language', 'en');").unwrap();
+            for v in 1..=25 {
+                c.execute("INSERT INTO verses VALUES (500, 3, ?1, ?2)", params![v, if v == 16 { "<pb/><J>John verse</J> 16.".to_string() } else { format!("<pb/>John<f>[1]</f> verse {v}.") }]).unwrap();
+            }
+            Connection::open(&notes).unwrap().execute_batch("CREATE TABLE commentaries(book_number NUMERIC, chapter_number_from NUMERIC, verse_number_from NUMERIC, marker TEXT, text TEXT);").unwrap();
+        }
+        let zip_path = dir.join("MB4.zip");
+        {
+            let mut z = zip::ZipWriter::new(std::fs::File::create(&zip_path).unwrap());
+            for f in [&bible, &notes] {
+                z.start_file(f.file_name().unwrap().to_str().unwrap(), zip::write::SimpleFileOptions::default()).unwrap();
+                std::io::Write::write_all(&mut z, &std::fs::read(f).unwrap()).unwrap();
+            }
+            z.finish().unwrap();
+        }
+        let mut conn = Connection::open_in_memory().unwrap();
+        crate::bibles::init(&conn).unwrap();
+        let a = add_file(&mut conn, &zip_path, "MB4.zip", &dir.join("work"), &["BSB".into()]).unwrap();
+        assert_eq!((a.code.as_str(), a.language.as_str(), a.verses, a.books), ("MB4", "English", 25, 1), "{a:?}");
+        let t: String = conn.query_row("SELECT text FROM verses WHERE code='MB4' AND book='John' AND chapter=3 AND verse=16", [], |r| r.get(0)).unwrap();
+        assert_eq!(t, "John verse 16.");
+        // the words of Jesus are kept, and come back with the chapter
+        let ch = crate::bibles::chapter(&conn, "MB4", "John", 3).unwrap();
+        assert_eq!(ch.iter().find(|v| v.verse == 16).map(|v| v.red.clone()), Some(vec![(0, 1)]));
+        assert!(ch.iter().find(|v| v.verse == 17).unwrap().red.is_empty());
+        // the same file on its own, named with an apostrophe as the NIV'78 download is
+        let a = add_file(&mut conn, &bible, "MB'4.SQLite3", &dir.join("work"), &["BSB".into()]).unwrap();
+        assert_eq!(a.code, "MB4");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

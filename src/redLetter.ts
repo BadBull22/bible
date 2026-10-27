@@ -2,6 +2,7 @@
 // data-pipeline/build_red_letter.py as inclusive [first, last] *word* ranges per verse
 // (words = maximal runs of letters/digits, counted on the displayed text), and loaded
 // lazily as its own chunk the first time a chapter needs it.
+import { api } from "./api";
 import { VerseSegment } from "./verseSegments";
 
 type RedLetterData = Record<string, Record<string, Record<string, Record<string, [number, number][]>>>>;
@@ -13,9 +14,28 @@ export function loadRedLetter(): Promise<RedLetterData> {
   return cache;
 }
 
+/** The words of Jesus in Bibles the reader added from a file (MyBible and the like keep them in the file):
+ * asked of the library once per chapter, then kept here. */
+const libraryRed = new Map<string, Record<string, [number, number][]>>();
+
+/** Fetches the words of Jesus of a chapter of an added Bible (the built-in Bibles are in the data above).
+ * Resolves to true when something new arrived, so the page can draw again. */
+export async function prefetchLibraryRed(data: RedLetterData, version: string, book: string, chapter: number): Promise<boolean> {
+  const key = `${version}|${book}|${chapter}`;
+  if (data[version] || libraryRed.has(key)) return false;
+  const found = await api.libraryRedLetter(version, book, chapter).catch(() => ({}));
+  libraryRed.set(key, found);
+  return Object.keys(found).length > 0;
+}
+
+/** After a Bible is added to or removed from the library, what was fetched may be out of date. */
+export function clearLibraryRed() {
+  libraryRed.clear();
+}
+
 /** Word ranges for each verse of a chapter in a translation (empty if none are His words). */
 export function chapterRedLetter(data: RedLetterData, version: string, book: string, chapter: number): Record<string, [number, number][]> {
-  return data[version]?.[book]?.[String(chapter)] ?? {};
+  return data[version]?.[book]?.[String(chapter)] ?? libraryRed.get(`${version}|${book}|${chapter}`) ?? {};
 }
 
 export interface SegmentPart {

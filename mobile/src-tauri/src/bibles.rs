@@ -29,10 +29,16 @@ pub fn init(conn: &Connection) -> Result<(), String> {
             rtl INTEGER NOT NULL DEFAULT 0, installed_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
          CREATE TABLE IF NOT EXISTS verses (
             code TEXT NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, text TEXT NOT NULL,
-            PRIMARY KEY (code, book, chapter, verse)) WITHOUT ROWID;
+            red TEXT, PRIMARY KEY (code, book, chapter, verse)) WITHOUT ROWID;
          CREATE TABLE IF NOT EXISTS catalog (id INTEGER PRIMARY KEY CHECK (id = 1), fetched_on TEXT NOT NULL, csv TEXT NOT NULL);",
     )
-    .map_err(err)
+    .map_err(err)?;
+    // the words of Jesus of a Bible added from a file (inclusive word ranges as JSON), added to older databases
+    let has_red = conn.prepare("SELECT 1 FROM pragma_table_info('verses') WHERE name = 'red'").map_err(err)?.exists([]).map_err(err)?;
+    if !has_red {
+        conn.execute_batch("ALTER TABLE verses ADD COLUMN red TEXT").map_err(err)?;
+    }
+    Ok(())
 }
 
 /// The book codes of eBible.org's verse-per-line files (and the USFM ones, in case), in
@@ -299,8 +305,13 @@ pub fn remove(conn: &Connection, code: &str) -> Result<(), String> {
 }
 
 pub fn chapter(conn: &Connection, code: &str, book: &str, chapter: i64) -> Result<Vec<Verse>, String> {
-    let mut s = conn.prepare("SELECT verse, text FROM verses WHERE code = ?1 AND book = ?2 AND chapter = ?3 ORDER BY verse").map_err(err)?;
-    let rows = s.query_map(params![code, book, chapter], |r| Ok(Verse { verse: r.get(0)?, text: r.get(1)?, red: Vec::new() })).map_err(err)?;
+    let mut s = conn.prepare("SELECT verse, text, red FROM verses WHERE code = ?1 AND book = ?2 AND chapter = ?3 ORDER BY verse").map_err(err)?;
+    let rows = s
+        .query_map(params![code, book, chapter], |r| {
+            let red: Option<String> = r.get(2)?;
+            Ok(Verse { verse: r.get(0)?, text: r.get(1)?, red: red.and_then(|j| serde_json::from_str(&j).ok()).unwrap_or_default() })
+        })
+        .map_err(err)?;
     rows.collect::<Result<_, _>>().map_err(err)
 }
 

@@ -122,6 +122,24 @@ pub fn install(conn: &mut Connection, app_dir: &Path, name: &str, progress: &dyn
     result
 }
 
+/// The footnotes and study notes that came in the same zip as a Bible (a MyBible download holds
+/// "ESV.SQLite3" and "ESV.commentaries.SQLite3") are added to the library as a commentary.
+/// Returns a sentence for the reader, or None when the file had none.
+pub fn add_notes_of(conn: &mut Connection, app_dir: &Path, path: &Path) -> Option<String> {
+    let bytes = std::fs::read(path).ok()?;
+    let (module, name) = lib::esword_companion(&bytes)?;
+    let tmp = dir_of(app_dir).join("tmp").join("_notes");
+    let _ = std::fs::remove_dir_all(&tmp);
+    std::fs::create_dir_all(&tmp).ok()?;
+    let file = tmp.join("module.sqlite");
+    let done = std::fs::write(&file, &module).map_err(err).and_then(|_| esword::read(&file, Some(&name))).and_then(|m| lib::install_esword(conn, &m, Some(&name), true, BUILT_IN));
+    let _ = std::fs::remove_dir_all(&tmp);
+    Some(match done {
+        Ok(r) => format!("Its footnotes and study notes were added to your commentaries ({}, {} notes).", r.title, r.entries),
+        Err(e) => format!("Its footnotes and study notes could not be added: {e}"),
+    })
+}
+
 /// Adds a module from a file the reader chose (the phone plugin copied it to `path`). A Bible
 /// is answered with `IS_BIBLE`, for the caller to add it to the translations instead.
 pub fn add_file(conn: &mut Connection, app_dir: &Path, path: &Path, name: &str) -> Result<InstallReport, String> {
@@ -139,6 +157,9 @@ pub fn add_file(conn: &mut Connection, app_dir: &Path, path: &Path, name: &str) 
             let m = esword::read(&file, Some(&inner))?;
             if m.kind == "bible" {
                 return Err(IS_BIBLE.to_string());
+            }
+            if m.kind == "atlas" {
+                return Err("An atlas of maps can be added in the computer app; the phone doesn't show maps from a file.".into());
             }
             return lib::install_esword(conn, &m, Some(&inner), true, BUILT_IN);
         }

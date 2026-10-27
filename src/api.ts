@@ -49,6 +49,31 @@ export const NON_CANON_BOOKS = new Set([
   "Psalms of Solomon", "Odes", "Letter to the Laodiceans", "1 Enoch (Greek)",
 ]);
 
+/** A map of an atlas the reader added to the library (the grid: letters across, numbers down). */
+export interface AtlasMap {
+  id: number;
+  atlas: string;
+  atlas_title: string;
+  licence: string;
+  ord: number;
+  title: string;
+  mime: string;
+  body: string;
+  cols: number;
+  rows: number;
+}
+
+/** A place on an atlas's maps: which map, and which grid square (counted from 0). */
+export interface AtlasPlace {
+  name: string;
+  map_id: number;
+  map_ord: number;
+  map_title: string;
+  atlas: string;
+  col: number;
+  row: number;
+}
+
 export interface Verse {
   book: string;
   chapter: number;
@@ -708,7 +733,7 @@ export interface BasketVerseMeta {
 
 // ---------------------------------------------------------------- the Library (SWORD modules)
 
-export type LibraryKind = "bible" | "commentary" | "dictionary" | "devotional" | "book" | "other";
+export type LibraryKind = "bible" | "commentary" | "dictionary" | "devotional" | "book" | "atlas" | "other";
 
 /** A repository the Library can browse (CrossWire, eBible.org, ...). */
 export interface LibrarySource {
@@ -1138,6 +1163,11 @@ export const api = {
   libraryImportInstall: () => invoke<InstallReport>("library_import_install"),
   libraryImportCancel: () => invoke<void>("library_import_cancel"),
   libraryRemove: (name: string) => invoke<void>("library_remove", { name }),
+  atlasMaps: () => invoke<AtlasMap[]>("atlas_maps"),
+  atlasImage: (id: number) => invoke<ArrayBuffer>("atlas_image", { id }),
+  atlasPlaces: (query: string, limit?: number) => invoke<AtlasPlace[]>("atlas_places", { query, limit: limit ?? 40 }),
+  libraryRedLetter: (versionCode: string, book: string, chapter: number) =>
+    invoke<Record<string, [number, number][]>>("library_red_letter", { versionCode, book, chapter }),
   libraryInstalled: (kind: LibraryKind | null = null) => invoke<InstalledModule[]>("library_installed", { kind }),
   libraryToc: (name: string) => invoke<TocEntry[]>("library_toc", { name }),
   librarySection: (id: number) => invoke<BookSection | null>("library_section", { id }),
