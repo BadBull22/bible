@@ -30,7 +30,7 @@ user's own key from the publisher's platform, and remain the property of their p
 | Tyndale Open Study Notes | Free Use Bible API (bible.helloao.org, AO Lab) | CC BY-SA 4.0 |
 | John Wesley's Explanatory Notes on the Bible (1754–65); Scofield Reference Notes (1917 edition) | CrossWire Bible Society SWORD modules `Wesley`, `Scofield` | Public domain |
 | Tyndale House Greek New Testament (THGNT, 2017) — second Greek NT reading text | Tyndale House, Cambridge; assembled from STEPBible TAGNT edition markings | CC BY-SA 4.0 |
-| Interlinear word data with grammar: Translators Amalgamated Hebrew OT (TAHOT) and Greek NT (TAGNT) | STEPBible.org, Tyndale House, Cambridge (`STEPBible/STEPBible-Data`) | CC BY 4.0 — "Data created by www.STEPBible.org based on work at Tyndale House Cambridge" |
+| Interlinear word data with grammar: Translators Amalgamated Hebrew OT (TAHOT) and Greek NT (TAGNT) (in the desktop app; and in the phone app's optional "Original words" download) | STEPBible.org, Tyndale House, Cambridge (`STEPBible/STEPBible-Data`) | CC BY 4.0 — "Data created by www.STEPBible.org based on work at Tyndale House Cambridge" |
 | Grammar-code explanations (TEHMC, TEGMC) | STEPBible.org (`STEPBible/STEPBible-Data`) | CC BY 4.0 |
 | Easton's Bible Dictionary (1897), Smith's Bible Dictionary (1884), Nave's Topical Bible (1896), Torrey's New Topical Textbook (1897) | CrossWire Bible Society SWORD modules `Easton`, `Smith`, `Nave`, `Torrey` | Public domain |
 | Theographic Bible Metadata (people, places, events) | `robertrouse/theographic-bible-metadata`, via Free Use Bible API | CC BY-SA 4.0 |

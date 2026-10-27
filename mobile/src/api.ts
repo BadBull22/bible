@@ -108,6 +108,33 @@ export interface Word {
   numbers: string[];
 }
 
+/** What a grammar code says: "V-AAI-3S" as "Verb Aorist Active Indicative 3rd Singular". */
+export interface MorphPart {
+  code: string;
+  summary: string;
+  detail: string;
+}
+
+/** One Hebrew or Greek word of a verse (the "Original words" download). */
+export interface OriginalWord {
+  pos: number;
+  kind: string;
+  language: "Hebrew" | "Greek";
+  original: string;
+  translit: string;
+  /** what it means in English in this place */
+  gloss: string;
+  /** "G25", "H430"; empty for a particle with no number of its own */
+  strongs: string;
+  /** the dictionary form, and what it means */
+  lemma: string;
+  lemma_gloss: string;
+  morph: string;
+  morph_parts: MorphPart[];
+  /** the Greek editions with this word (none for Hebrew) */
+  editions: string[];
+}
+
 export interface StrongsEntry {
   number: string;
   language: string;
@@ -241,6 +268,12 @@ export const api = {
   /** downloads the Advanced search upgrade ("search-upgrade-progress" events report the percentage) */
   searchUpgradeInstall: () => invoke<void>("search_upgrade_install"),
   searchUpgradeRemove: () => invoke<void>("search_upgrade_remove"),
+  /** the "Original words" download: the Greek and Hebrew words of a verse one by one */
+  originalStatus: () => invoke<{ installed: boolean; size_mb: number }>("original_status"),
+  originalInstall: () => invoke<void>("original_install"),
+  originalRemove: () => invoke<void>("original_remove"),
+  /** the words of a verse, and the credit to show with them (empty if they are not downloaded) */
+  originalWords: (book: string, chapter: number, verse: number) => invoke<[OriginalWord[], string]>("original_words", { book, chapter, verse }),
   topicVerses: (id: number, version: string) => invoke<Hit[]>("topic_verses", { id, version }),
   crossRefs: (version: string, book: string, chapter: number, verse: number) => invoke<Hit[]>("cross_refs", { version, book, chapter, verse }),
   /** the verse in every translation: [code, text] */
@@ -321,6 +354,8 @@ export const api = {
   libraryCommentary: (book: string, chapter: number) => invoke<CommentaryOn[]>("library_commentary", { book, chapter }),
   librarySearch: (query: string) => invoke<{ id: number; module: string; title: string; headword: string }[]>("library_search", { query }),
   libraryEntry: (id: number) => invoke<LibEntry | null>("library_entry", { id }),
+  /** the installed lexicons' entries for a Strong's number */
+  libraryLexicon: (strongs: string) => invoke<LibEntry[]>("library_lexicon", { strongs }),
   libraryDevotional: (module: string, month: number, day: number) => invoke<LibEntry | null>("library_devotional", { module, month, day }),
   libraryToc: (module: string) => invoke<TocEntry[]>("library_toc", { module }),
   librarySection: (id: number) => invoke<LibSection | null>("library_section", { id }),

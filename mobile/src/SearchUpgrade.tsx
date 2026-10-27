@@ -69,7 +69,7 @@ function Progress({ pct }: { pct: number }) {
       <div className="bar" aria-hidden>
         <i style={{ width: `${pct}%` }} />
       </div>
-      <p className="hint">Downloading… {pct}%</p>
+      <p className="hint keep">Downloading… {pct}%</p>
     </>
   );
 }

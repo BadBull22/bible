@@ -1,21 +1,31 @@
 import { useEffect, useState } from "react";
-import { api, StrongsEntry, StrongsUse, Word } from "./api";
+import { api, LibEntry, StrongsEntry, StrongsUse, Word } from "./api";
+import { LinkedText } from "./Library";
+import { OriginalOffer, OriginalPack, OriginalWords } from "./OriginalWords";
 
 interface Props {
   book: string;
   chapter: number;
   verse: number;
   version: string;
+  /** the "Original words" download (shared, so downloading it here shows everywhere) */
+  pack: OriginalPack;
   onGo: (book: string, chapter: number, verse: number | null) => void;
+  /** opens the Library, where fuller lexicons can be installed */
+  onLibrary: () => void;
   fail: (e: unknown) => void;
 }
 
-/** The verse's words with their Hebrew or Greek behind them (Strong's numbers): tap a word
- * for its meaning, how often it is used, and every verse that uses it. */
-export function WordStudy({ book, chapter, verse, version, onGo, fail }: Props) {
+/** The verse's words with their Hebrew or Greek behind them: the original words one by one (once downloaded), or the
+ * English words with their Strong's numbers. Tap a word for its meaning, how often it is used, every verse that uses it,
+ * and what the lexicons installed from the Library say. */
+export function WordStudy({ book, chapter, verse, version, pack, onGo, onLibrary, fail }: Props) {
   const [words, setWords] = useState<Word[] | null>(null);
   const [used, setUsed] = useState(version);
-  const [number, setNumber] = useState<string | null>(null);
+  // the numbers being studied: one, or the several an English word stands for (each a tab)
+  const [numbers, setNumbers] = useState<string[] | null>(null);
+  // which list: the original words (when downloaded) or the English words; none chosen: the original ones if they are there
+  const [mode, setMode] = useState<"original" | "english" | null>(null);
 
   useEffect(() => {
     api
@@ -28,41 +38,71 @@ export function WordStudy({ book, chapter, verse, version, onGo, fail }: Props) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book, chapter, verse, version]);
 
-  if (number) return <Entry number={number} version={used} onBack={() => setNumber(null)} onPick={setNumber} onGo={onGo} fail={fail} />;
-  if (!words) return <p className="hint">Loading…</p>;
-  if (words.length === 0) return <p className="hint">This verse has no word study.</p>;
+  if (numbers) return <Entry numbers={numbers} version={used} onBack={() => setNumbers(null)} onGo={onGo} onLibrary={onLibrary} fail={fail} />;
+  const showing = mode ?? (pack.installed ? "original" : "english");
   return (
     <>
-      <p className="hint">
-        Tap a word to see the Hebrew or Greek behind it{used !== version ? ` (word study uses the ${used} here)` : ""}.
-      </p>
-      <div className="words">
-        {words.map((w, i) => (
-          <button key={i} onClick={() => setNumber(w.numbers[0])}>
-            {w.text}
-            <small>{w.numbers.join(" ")}</small>
-          </button>
-        ))}
+      <div className="seg" role="group" aria-label="How to see the words">
+        <button className={showing === "original" ? "on" : ""} onClick={() => setMode("original")} aria-pressed={showing === "original"}>
+          Original words
+        </button>
+        <button className={showing === "english" ? "on" : ""} onClick={() => setMode("english")} aria-pressed={showing === "english"}>
+          English words
+        </button>
       </div>
+      {showing === "original" ? (
+        pack.installed ? (
+          <OriginalWords book={book} chapter={chapter} verse={verse} onStudy={setNumbers} fail={fail} />
+        ) : (
+          <OriginalOffer pack={pack} />
+        )
+      ) : !words ? (
+        <p className="hint">Loading…</p>
+      ) : words.length === 0 ? (
+        <p className="hint">This verse has no word study.</p>
+      ) : (
+        <>
+          <p className="hint">
+            Tap a word to see the Hebrew or Greek behind it{used !== version ? ` (word study uses the ${used} here)` : ""}. A word that stands for more than one Hebrew or Greek word shows each.
+          </p>
+          <div className="words">
+            {words.map((w, i) => (
+              <button key={i} onClick={() => setNumbers(w.numbers)}>
+                {w.text}
+                <small>{w.numbers.join(" ")}</small>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </>
   );
 }
 
 function Entry({
-  number,
+  numbers,
   version,
   onBack,
-  onPick,
   onGo,
+  onLibrary,
   fail,
 }: {
-  number: string;
+  numbers: string[];
   version: string;
   onBack: () => void;
-  onPick: (n: string) => void;
   onGo: Props["onGo"];
+  onLibrary: Props["onLibrary"];
   fail: Props["fail"];
 }) {
+  // the number shown; a "from G25" in an entry opens that one in place of it
+  const [shown, setShown] = useState(numbers);
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    setShown(numbers);
+    setActive(0);
+  }, [numbers]);
+  const number = shown[Math.min(active, shown.length - 1)];
+
   const [entry, setEntry] = useState<StrongsEntry | null | undefined>(undefined);
   const [uses, setUses] = useState<StrongsUse[] | null>(null);
   const [showUses, setShowUses] = useState(false);
@@ -84,7 +124,7 @@ function Entry({
   const linked = (text: string) =>
     text.split(/\b([HG]\d{1,5})\b/).map((part, i) =>
       i % 2 ? (
-        <button key={i} className="link" onClick={() => onPick(part)}>
+        <button key={i} className="link" onClick={() => setShown([part])}>
           {part}
         </button>
       ) : (
@@ -97,6 +137,15 @@ function Entry({
       <button className="link" onClick={onBack}>
         ‹ Words
       </button>
+      {shown.length > 1 && (
+        <div className="seg" role="tablist" aria-label="The Hebrew or Greek words behind this word">
+          {shown.map((n, i) => (
+            <button key={n} role="tab" aria-selected={i === active} className={i === active ? "on" : ""} onClick={() => setActive(i)}>
+              {n}
+            </button>
+          ))}
+        </div>
+      )}
       {entry === undefined && <p className="hint">Loading…</p>}
       {entry === null && <p className="hint">No dictionary entry for {number}.</p>}
       {entry && (
@@ -129,6 +178,7 @@ function Entry({
               </>
             )}
           </dl>
+          <Lexicons number={number} greek={entry.language !== "Hebrew"} onGo={onGo} onLibrary={onLibrary} fail={fail} />
           {entry.counts.length > 0 && (
             <div className="counts">
               {entry.counts.map(([v, verses, times]) => (
@@ -162,6 +212,41 @@ function Entry({
           )}
           <p className="attribution">Strong's Exhaustive Concordance (public domain), with the words of the {version} tagged by number.</p>
         </>
+      )}
+    </div>
+  );
+}
+
+/** What the lexicons installed from the Library say about the word (BDB for Hebrew; Abbott-Smith, Dodson... for Greek). */
+function Lexicons({ number, greek, onGo, onLibrary, fail }: { number: string; greek: boolean; onGo: Props["onGo"]; onLibrary: Props["onLibrary"]; fail: Props["fail"] }) {
+  const [entries, setEntries] = useState<LibEntry[] | null>(null);
+  useEffect(() => {
+    setEntries(null);
+    api.libraryLexicon(number).then(setEntries).catch((e) => (setEntries([]), fail(e)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [number]);
+  if (!entries) return null;
+  return (
+    <div className="lexicons">
+      <h3>From your Library</h3>
+      {entries.length === 0 ? (
+        <p className="hint">
+          Fuller {greek ? "Greek" : "Hebrew"} lexicons keyed to Strong's numbers — {greek ? "Abbott-Smith, Dodson, an intermediate Greek–English lexicon" : "BDB glosses"} — can be installed free from the Library and will show here.{" "}
+          <button className="link" onClick={onLibrary}>
+            Open the Library
+          </button>
+        </p>
+      ) : (
+        entries.map((e, i) => (
+          <details key={e.id} open={i === 0}>
+            <summary>
+              {e.title} — {e.headword}
+            </summary>
+            <div className="lexicon-body">
+              <LinkedText text={e.body} onGo={onGo} />
+            </div>
+          </details>
+        ))
       )}
     </div>
   );

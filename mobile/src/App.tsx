@@ -32,6 +32,7 @@ import { canRemind, setReminder, testReminder } from "./reminder";
 import { Translations } from "./Translations";
 import { UpdateBanner, UpdateSettings, useUpdates } from "./Updates";
 import { SyncSettings, useAutoSync } from "./Sync";
+import { OriginalPack, OriginalSettings, useOriginalPack } from "./OriginalWords";
 import { SearchUpgradeOffer, SearchUpgradeSettings, useSearchUpgrade } from "./SearchUpgrade";
 import { AskAnswer } from "./AskAnswer";
 import { Library } from "./Library";
@@ -266,6 +267,28 @@ export function App() {
   const [picker, setPicker] = useState<null | { book: Book | null; testament: "OT" | "NT" }>(null);
   const [today, setToday] = useState<null | { label: string; text: string; book: string; chapter: number; verse: number }>(null);
   const pane = useRef<HTMLDivElement>(null);
+  const moreBox = useRef<HTMLDivElement>(null);
+  /** More: tapping a heading shows (or hides) the explanations under it, up to the next heading. The headings that have some show a small (i). */
+  const toggleExplanations = (e: React.MouseEvent) => {
+    const h = (e.target as HTMLElement).closest("h2");
+    if (!h || !moreBox.current?.contains(h)) return;
+    const shown = !h.classList.contains("open");
+    h.classList.toggle("open", shown);
+    for (let el = h.nextElementSibling; el && el.tagName !== "H2"; el = el.nextElementSibling) {
+      if (el.classList.contains("hint")) el.classList.toggle("shown", shown);
+      el.querySelectorAll(".hint").forEach((x) => x.classList.toggle("shown", shown));
+    }
+  };
+  useEffect(() => {
+    // (after every drawing: a heading shows its (i) when something under it is an explanation)
+    moreBox.current?.querySelectorAll("h2").forEach((h) => {
+      let has = false;
+      for (let el = h.nextElementSibling; el && el.tagName !== "H2"; el = el.nextElementSibling) {
+        if ((el.classList.contains("hint") && !el.classList.contains("keep") && !el.classList.contains("status")) || el.querySelector(".hint:not(.keep):not(.status)")) has = true;
+      }
+      h.classList.toggle("has-info", has);
+    });
+  });
   const [secondVerses, setSecondVerses] = useState<Map<number, string>>(new Map());
   // the book's introduction, or the commentary's notes on the chapter
   const [study, setStudy] = useState<null | { kind: "intro"; text: string } | { kind: "notes"; notes: CommentaryNote[] }>(null);
@@ -300,6 +323,8 @@ export function App() {
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const searchUpgrade = useSearchUpgrade();
+  // the Greek and Hebrew words one by one (an optional download), in Word Study and in More
+  const originalPack = useOriginalPack();
   const [recent, setRecent] = useState<string[]>(loadRecent);
   const [article, setArticle] = useState<Article | null>(null);
 
@@ -1243,10 +1268,10 @@ export function App() {
         )}
 
         {tab === "more" && (
-          <>
+          <div className="more" ref={moreBox} onClick={toggleExplanations}>
             <h2>Bible dictionary</h2>
             <input className="field" value={word} onChange={(e) => setWord(e.target.value)} placeholder="A person, place or word — e.g. Passover" aria-label="Look up in the dictionary" autoCapitalize="none" autoCorrect="off" />
-            {found && found.length === 0 && <p className="hint">No article by that name. Try the main search box for verses on it.</p>}
+            {found && found.length === 0 && <p className="hint keep">No article by that name. Try the main search box for verses on it.</p>}
             {found && found.length > 0 && (
               <ul className="hits plain">
                 {found.map((a) => (
@@ -1258,7 +1283,7 @@ export function App() {
             )}
 
             <h2>Translations</h2>
-            <p className="hint">
+            <p className="hint keep">
               Built in: {versions.filter((v) => !v.downloaded).map((v) => v.code).join(", ")}.
               {versions.some((v) => v.downloaded) && ` Downloaded: ${versions.filter((v) => v.downloaded).map((v) => v.name).join(", ")}.`}
             </p>
@@ -1267,6 +1292,8 @@ export function App() {
             </div>
 
             <SearchUpgradeSettings upgrade={searchUpgrade} />
+
+            <OriginalSettings pack={originalPack} />
 
             <h2>Library</h2>
             <p className="hint">Commentaries, dictionaries, books and devotionals to read offline: free ones from CrossWire, or files you have.</p>
@@ -1381,7 +1408,7 @@ export function App() {
                 ))}
               </select>
             ) : (
-              <p className="hint">{voices ? "This phone offers one voice. More can be added in the phone's settings under Text-to-speech." : "Looking for the phone's voices…"}</p>
+              <p className="hint keep">{voices ? "This phone offers one voice. More can be added in the phone's settings under Text-to-speech." : "Looking for the phone's voices…"}</p>
             )}
             <div className="actions">
               <button onClick={() => void phone.speak("For God so loved the world, that he gave his only begotten Son.", rate, voice).catch(fail)}>Try this voice</button>
@@ -1405,12 +1432,12 @@ export function App() {
               ))}
             </ul>
             <p className="licence">
-              Topics: Nave's Topical Bible and Torrey's New Topical Textbook. Dictionary: Easton's and Smith's Bible Dictionaries. Word study: Strong's Exhaustive Concordance.
+              Topics: Nave's Topical Bible and Torrey's New Topical Textbook. Dictionary: Easton's and Smith's Bible Dictionaries. Word study: Strong's Exhaustive Concordance; the optional Original words: STEPBible (Tyndale House, Cambridge; CC BY 4.0).
               Cross-references: OpenBible.info (CC BY 4.0).{" "}
               {about && about.name ? `Study notes and book introductions: ${about.name} (${about.licence}), ${about.website}.` : ""} The rest is public domain. Everything works offline;
               only downloading more translations (from eBible.org), the nature backgrounds and a new version of the app needs the internet.
             </p>
-          </>
+          </div>
         )}
       </main>
 
@@ -1469,6 +1496,11 @@ export function App() {
           onListen={() => void listenFrom(chosenVerse.verse)}
           onGo={go}
           onChanged={changed}
+          originalPack={originalPack}
+          onLibrary={() => {
+            setChosen(null);
+            setLibrary("home");
+          }}
           about={about}
           ask={ask}
           say={say}
@@ -1673,6 +1705,8 @@ interface VerseSheetProps {
   onListen: () => void;
   onGo: (book: string, chapter: number, verse: number | null) => void;
   onChanged: () => void;
+  originalPack: OriginalPack;
+  onLibrary: () => void;
   about: CommentaryAbout | null;
   ask: (message: string, yes: string, then: () => void) => void;
   say: (message: string) => void;
@@ -1689,7 +1723,7 @@ const textTags = (text: string) =>
 
 /** Everything that can be done with one verse: mark it, write a note on it, pass it on,
  * hear it, and see what else Scripture says alongside it. */
-function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, onClose, onBookmark, onHighlight, onListen, onGo, onChanged, about, ask, say, fail }: VerseSheetProps) {
+function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, onClose, onBookmark, onHighlight, onListen, onGo, onChanged, originalPack, onLibrary, about, ask, say, fail }: VerseSheetProps) {
   const [view, setView] = useState<"main" | "note" | "refs" | "compare" | "words" | "notes" | "picture" | "tags">("main");
   const [note, setNote] = useState("");
   const [had, setHad] = useState(false);
@@ -1841,7 +1875,7 @@ function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, o
           </div>
         </>
       )}
-      {view === "words" && <WordStudy book={book} chapter={chapter} verse={verse.verse} version={version} onGo={onGo} fail={fail} />}
+      {view === "words" && <WordStudy book={book} chapter={chapter} verse={verse.verse} version={version} pack={originalPack} onGo={onGo} onLibrary={onLibrary} fail={fail} />}
       {view === "notes" && (
         <div className="commentary">
           {!comments && <p className="hint">Loading…</p>}

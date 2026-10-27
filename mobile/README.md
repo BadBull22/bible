@@ -42,9 +42,16 @@ Since 0.3.0:
   (`src-tauri/src/backgrounds.rs`, checked by SHA-256; made by `data/backgrounds_candidates.py`
   and `data/build_backgrounds.py` from `data/backgrounds.json`).
 - **Read aloud**: choose among the phone's English voices, a Slow speed, a sleep timer.
-- **Word study** (tap a verse): each word's Strong's number, the Hebrew/Greek entry, how often
-  it is used, every verse using it — for the BSB and KJV (`src/WordStudy.tsx`,
-  `src-tauri/src/study_extra.rs`).
+- **Word study** (tap a verse, then Words): the English words with their Strong's numbers (BSB and KJV; a word that stands
+  for more than one Hebrew or Greek word shows a tab for each), the Hebrew/Greek entry, how often it is used, every verse
+  using it, and **the entries of the lexicons installed from the Library** (BDB, Abbott-Smith, Dodson...) for the word
+  (`src/WordStudy.tsx`, `src-tauri/src/study_extra.rs`, `library::lexicon_entries`).
+- **Original words** (since 2.9.5, an optional 12 MB download, More): every word of the Hebrew Old Testament and the Greek New
+  Testament, one by one, as the computer app's interlinear shows them: as written, how to say it, what it means here, its
+  Strong's number, dictionary form and grammar in plain words; a Greek-text choice (critical text, Textus Receptus, all). STEPBible's
+  data (CC BY 4.0). The pack is made by `data/build_original_pack.py` into `installer/packs/original-words-v1.zip` and downloaded
+  once from the GitHub release `original-pack-v1`, checked by SHA-256 (`src-tauri/src/original_pack.rs`, `src/OriginalWords.tsx`).
+  See `HANDOVER_2026-10-27_PHONE_ORIGINAL_WORDS.md`.
 - **Study notes**: the Tyndale Open Study Notes (CC BY-SA 4.0, attributed) on a verse or a
   whole chapter, and each book's introduction ("About <book>", "Study notes" under the heading).
 - **Side by side**: a second translation under each verse.

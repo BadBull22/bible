@@ -1405,3 +1405,165 @@ details.hl-group > .hits li { background: transparent; }
 .card.answer .badge.conf-commentary_opinion { color: var(--muted); }
 .card.answer .badge.conf-stated,
 .card.answer .badge.conf-computed { color: var(--accent); }
+
+/* ---------- word study: the original words, one by one ---------- */
+
+.seg {
+  display: flex;
+  gap: 0.3rem;
+  margin: 0 0 0.7rem;
+  flex-wrap: wrap;
+}
+
+.seg button {
+  flex: 1;
+  min-height: 2.3rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--raised);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.seg button.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+}
+
+.ow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.8rem;
+}
+
+.ow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.05rem 0.7rem;
+  align-items: baseline;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--raised);
+  color: var(--text);
+  text-align: left;
+}
+
+.ow.plain {
+  opacity: 0.85;
+}
+
+.ow-orig {
+  grid-column: 1;
+  font-family: var(--reading);
+  font-size: 1.7rem;
+  line-height: 1.35;
+}
+
+.ow-gloss {
+  grid-column: 2;
+  grid-row: 1;
+  font-weight: 700;
+  text-align: right;
+  max-width: 11rem;
+}
+
+.ow-tr {
+  grid-column: 1;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.ow-num {
+  grid-column: 2;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.ow-lemma,
+.ow-gram {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.ow-lemma span[lang] {
+  font-family: var(--reading);
+  font-size: 1rem;
+}
+
+.lexicons {
+  margin: 0.8rem 0;
+}
+
+.lexicons h3 {
+  margin: 0 0 0.3rem;
+}
+
+.lexicons details {
+  margin: 0.3rem 0;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--raised);
+}
+
+.lexicons summary {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lexicon-body p {
+  margin: 0.4rem 0;
+}
+
+/* the Greek of the original words: fonts that carry every accent (the grave, the circumflex, the breathings); the phone's own
+   serif (Noto Serif) first, then the ones a computer has */
+.ow-orig[lang="grc"],
+.ow-lemma span[lang="grc"] {
+  font-family: "Noto Serif", "Cambria", "Times New Roman", "Gentium Plus", serif;
+}
+
+.ow-orig[lang="he"],
+.ow-lemma span[lang="he"] {
+  font-family: "Noto Serif Hebrew", "Noto Sans Hebrew", "Cambria", "Times New Roman", serif;
+}
+
+/* More: headings and options only; a heading's explanations appear when it is tapped */
+.more .hint:not(.keep):not(.status):not(.shown) {
+  display: none;
+}
+
+.more h2.has-info {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.more h2.has-info::after {
+  content: "i";
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  color: var(--muted);
+  font: italic 700 0.8rem/1.15rem Georgia, serif;
+  text-align: center;
+}
+
+.more h2.has-info.open::after {
+  background: var(--accent, #3d6fb5);
+  border-color: var(--accent, #3d6fb5);
+  color: #fff;
+}

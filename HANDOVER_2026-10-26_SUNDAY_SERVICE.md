@@ -191,6 +191,11 @@ changed `SlideShow`, `SlidesEditor`, `SermonBuilder`, `MediaPicker`, `App.tsx`, 
 5. Try it on the **real projector** and the **pastor's laptop**, with his clicker if he has one.
 
 ## 6. Open decisions and questions for the owner
+- **Afrikaans (Bible Society of South Africa) — CLOSED, declined, 2026-10-27.** The BSSA wrote that it grants no digital licences to third-party apps or websites to reproduce, host, distribute or
+  incorporate its translations (1933/1953, 1953, 1983, 2020, Die Bybel vir almal), and suggested deep links to BibleSA instead (`biblesa.co.za/af/bybel/AFR53/MAT.18`, a verse as `MAT.18:21`). The owner replied
+  that an online link does not fit an offline app, and thanked them. **So: never bundle any BSSA text (installer, APK, website, data pipeline); no BibleSA-link feature unless the owner asks.** Older notes saying
+  Afrikaans "waits on the Bible Society's permission" (`HANDOVER_2026-10-11…`, `…2026-10-16_V2_9_0.md`) are now out of date. **Decided by the owner (2026-10-27): the Library stays exactly as it is.** The 1933/1953 module is not bundled; a user chooses and downloads it from CrossWire, which states it has the right to
+  distribute it, and the Library shows the module's own licence first. Do **not** unpin it, reword it or remove it. Whether the BSSA would object to that route was not asked of them.
 - **CCLI:** does the church have a licence or a SongSelect login? (Showing words on screen needs the church's own licence; the app says so but cannot check it.) Asked; not answered.
 - **Version number** for the next build (§5.3), and whether this is a test installer again or a release.
 - **Which next:** (a) **import the church's songs from ProPresenter** (`.pro` files; I know the format from the export work — a reader would split the text slides into verses), (b) **sync** notices, songs, lists and
