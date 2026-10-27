@@ -124,3 +124,34 @@ Release steps for the phone (the website's `docs/android/latest.json`, the GitHu
 
 ## 9. The desktop Settings screen made compact (owner: "endless scrolling, minimise descriptions, a help button with collapsible options")
 `SettingsPanel.tsx` is now nine collapsible groups (closed, one line each): Help & guides, Look & reading (appearance and reading comfort together), Read aloud, Name your highlights, Online translations, Keep in step with other devices, Updates, If something goes wrong, About. Each group's explanations (the `search-hint` paragraphs, also those inside the sync, voice and update parts) are hidden until the small **?** on the group is pressed. **Help & guides** holds the User guide and Getting started buttons and small collapsible tips (keyboard shortcuts, going to a passage, hard-to-read text, hearing a chapter, where keys are kept). Which groups are open is remembered (`localStorage` `bc-settings-open`); "Show me" from Getting started opens the keys group. Checked in the dev app with real clicks: nine groups, no scrolling when closed, the explanations hidden then shown, the open groups kept after a reload, both key fields present, 0 page errors. Not in a release yet (the 2.9.5 release was made before this). The phone's More screen was not changed.
+
+## 10. RELEASED as 2.9.6 (2026-10-27, afternoon): what changed, and how it was checked
+**Read this section first; it supersedes §0 and §4 where they say "not released".** The owner tried the test build on the phone, asked for a tidier More screen (explanations on request) and a tidier desktop Settings screen, then asked for both apps to be released.
+
+**What changed (versions moved from 2.9.5 to 2.9.6 in every package, Cargo and Tauri file; the computer app and the phone are in step)**
+- *Phone, Word Study:* the Greek and Hebrew words one by one (optional 12 MB download, More → Original words), a tab for each number of a word, and the entries of the lexicons installed in the Library (§1).
+- *Phone, More screen:* only headings and options; a heading that has an explanation shows a small "i" and tapping it shows or hides that section's explanations (`toggleExplanations` in `mobile/src/App.tsx`; CSS `.more .hint…`, `h2.has-info`). Hints that say how things stand (progress, "Downloaded", the paired computer, the sync folder, installed translations) carry the class `keep`/`status` and stay visible.
+- *Computer, Settings:* nine collapsible groups, explanations behind a "?" on each group, a "Help & guides" group with small tips (§9).
+- *The word pack:* GitHub release `original-pack-v1` (12,211,282 bytes, SHA-256 `8c0281d5…bdd275`); the downloaded file was checked against that fingerprint.
+
+**Published**
+| | |
+|---|---|
+| Commit `12d00e9` | the 2.9.6 work (28 files; as BadBull22; scanned: no email, key or test-port line; the untracked `mobile/src-tauri/resources/` holding `phone.db.gz` and an empty `bible.db` was NOT staged) |
+| Release `original-pack-v1` | the pack (not marked Latest) |
+| Release `android-v2.9.6` (not Latest) | `BibleConcordance_Android_2.9.6.apk`, 79,456,700 bytes, SHA-256 `3fbbe955…ec21`, versionCode 2009006, signed with the owner's key (certificate `6211364a…6f3a`, the same as 2.9.4, so it installs over the old app and keeps its data). **Checked: the APK carries `original-pack-v1` and does NOT carry the test address `127.0.0.1:8123`** (searched in both `.so` files) |
+| Release `v2.9.6` (Latest) | signed setup `.exe` (378,152,593 bytes) and `.msi` (439,869,440), `latest.json`; notes "A tidier Settings screen: groups you open when you need them, with explanations on request." Both signatures verified against the local files and again against the files downloaded from GitHub |
+| Commit `8141a65` and the next website commit | the website's Android and Windows pages and `docs/android/latest.json` |
+
+**How it was checked**
+- Computer: `tsc` clean, the seven `scripts/test_*.mts` pass, `cargo test --lib` 108 passed (14 ignored). The Settings screen was driven in the dev app with real clicks (nine groups, no scrolling when closed, explanations hidden then shown, open groups remembered, both key fields present, 0 page errors). A walk through the main screens on 2026-10-26 gave 0 page errors.
+- Phone: `tsc` clean; `cargo test --lib` in `mobile/src-tauri` 37 passed and the **3 desktop sermon tests fail there as before** (they need the desktop's databases; not caused by this work); the real-pack test (`--ignored`) passes. A signed test build with `BC_ORIGINAL_PACK_URL` pointing at a local server was installed on the owner's phone (the app started, no crash in the log) and the owner tried it; the release build was then made **without** the variable.
+- Release files: signatures verified (Ed25519 over the BLAKE2b-512 hash); the live Android page's link, listed SHA-256 and `latest.json` were compared with the file the link gives.
+- **Not seen by me:** the phone's screens (the owner looked); a saved PowerPoint opened in PowerPoint; the real projector.
+
+**Gotchas met this time**
+- A GitHub download can answer `503 Maximum threads for service reached` (a 496-byte reply): retry later; it is not the upload.
+- Two commands in a row failed once with "the auto mode classifier gave no verdict" (a transient check failure): the command had NOT run; check with `git log` and run it again.
+- The Android build needs the pack server only for a test build: `python -m http.server 8123 --bind 127.0.0.1` in `installer\packs`, `adb reverse tcp:8123 tcp:8123`, `BC_ORIGINAL_PACK_URL` set when compiling; all three were stopped and removed afterwards.
+
+**Still open:** the real lexicon modules were not tried (only a stand-in): the owner can install Dodson, Abbott-Smith or BDB from the Library and look at "From your Library"; grammar search, word-by-word under the reading text and other items in §5; sync of notices and songs; nothing of the Sunday-service work exists on the phone.
