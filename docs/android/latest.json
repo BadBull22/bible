@@ -1,7 +1,7 @@
 {
-  "version": "2.9.7",
-  "url": "https://github.com/BadBull22/bible/releases/download/android-v2.9.7/BibleConcordance_Android_2.9.7.apk",
-  "sha256": "3a5f1f1709a225495a5b4ba852ff590d44d91007fc8f3454812ff219626b3d63",
-  "size": 79457340,
-  "notes": "A tidier More screen (explanations under their heading, folded About with the version, one slider for reading speed, compact Appearance, Additional downloads), the Bible dictionary in the Search tab, and My Study opening on Highlights with folding bookmarks."
+  "version": "2.9.8",
+  "url": "https://github.com/BadBull22/bible/releases/download/android-v2.9.8/BibleConcordance_Android_2.9.8.apk",
+  "sha256": "e7ec20d792b0c6d6077444575dccac2b290e2a2149d9d43a111139eba0240ce9",
+  "size": 79565556,
+  "notes": "Bibles you already own, in the MyBible format, can be added as full Bibles with the words of Jesus in red and their notes as commentaries, dictionaries added from a file are identified, and the More screen is tidier."
 }
