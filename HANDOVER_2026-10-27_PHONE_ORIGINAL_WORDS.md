@@ -161,6 +161,18 @@ The owner asked for a revised More / Search / My Study design, tried the test bu
 
 **Published:** release `android-v2.9.7` (not Latest): `BibleConcordance_Android_2.9.7.apk`, 79,457,340 bytes, SHA-256 `3a5f1f1709a225495a5b4ba852ff590d44d91007fc8f3454812ff219626b3d63`, versionCode 2009007, signed with the owner's key (certificate `6211364a…6f3a`, same as before, installs over the old app and keeps its data). Checked: both `.so` files carry `original-pack-v1` and neither carries the test address `127.0.0.1:8123`. The website's Android page, `docs/android/latest.json` and the home page name 2.9.7. The test file `installer\BibleConcordance_Android_2.9.6-redesign-TEST.apk` (git-ignored) can be deleted.
 
+**Record of the release**
+| | |
+|---|---|
+| Commit `1312e0d` | the app changes, the version bump to 2.9.7 and the handover notes (11 files; as BadBull22; scanned: no email, key or test-port line; the untracked `mobile/src-tauri/resources/` was NOT staged) |
+| Release `android-v2.9.7` (not Latest) | the APK; downloaded back from GitHub: size and SHA-256 match |
+| Commit `1519be2` | the website: `docs/android/index.html` (version, links, file name, SHA-256), `docs/android/latest.json`, `docs/index.html` (Android lines only) |
+| Live check | after about two minutes bible4me.org served 2.9.7 everywhere on the Android page, the home page's Android lines and `latest.json`; the file behind the link matched the listed SHA-256 and size; the Windows lines still say 2.9.6 (correct) |
+
+**State at the end of the day:** HEAD `1519be2` pushed; working tree clean except the untracked `mobile/src-tauri/resources/`; computer app 2.9.6 (Latest release `v2.9.6`), phone app 2.9.7. The owner tested every item they had asked to check on the redesign and all passed (the ones I had not tried myself: the other "i" panels, the slider's effect on the voice, dictionary look-ups from Search, downloads from the new accordion, light and sepia themes). The Recent-searches list that was empty after my test session was not raised again.
+**Next time:** the older open items listed above (sync of notices and songs, real lexicon modules on the phone, a saved PowerPoint opened in PowerPoint, a real projector, church CCLI question, the Sunday-service work that Android lacks). Before any build: antivirus shields off; the test-port line must stay out of `src-tauri/tauri.conf.json`.
+
+
 **What changed**
 - *More, explanations:* tapping a heading with an "i" now opens a panel **directly under that heading** (a copy of the section's explanations, `toggleExplanations` / constant `EXPLAIN`); the original hints stay hidden.
 - *More, About:* folded; its title line shows "Version x.y.z" (from `useUpdates().current`).
