@@ -155,3 +155,23 @@ Release steps for the phone (the website's `docs/android/latest.json`, the GitHu
 - The Android build needs the pack server only for a test build: `python -m http.server 8123 --bind 127.0.0.1` in `installer\packs`, `adb reverse tcp:8123 tcp:8123`, `BC_ORIGINAL_PACK_URL` set when compiling; all three were stopped and removed afterwards.
 
 **Still open:** the real lexicon modules were not tried (only a stand-in): the owner can install Dodson, Abbott-Smith or BDB from the Library and look at "From your Library"; grammar search, word-by-word under the reading text and other items in §5; sync of notices and songs; nothing of the Sunday-service work exists on the phone.
+
+## 11. Phone redesign, RELEASED as Android 2.9.7 (2026-10-27, evening)
+The owner asked for a revised More / Search / My Study design, tried the test build on the phone, said everything they had asked to check passed, and asked for a release with the version bumped. **Only the phone app moved to 2.9.7** (`mobile/package.json`, `mobile/package-lock.json`, `mobile/src-tauri/Cargo.toml`, `Cargo.lock`, `tauri.conf.json`); the computer app stays at 2.9.6 (the two have been out of step before, e.g. Android 2.9.4 while the computer was 2.9.5). Changed files: `mobile/src/App.tsx`, `styles.css`, `SearchUpgrade.tsx`, `OriginalWords.tsx`.
+
+**Published:** release `android-v2.9.7` (not Latest): `BibleConcordance_Android_2.9.7.apk`, 79,457,340 bytes, SHA-256 `3a5f1f1709a225495a5b4ba852ff590d44d91007fc8f3454812ff219626b3d63`, versionCode 2009007, signed with the owner's key (certificate `6211364a…6f3a`, same as before, installs over the old app and keeps its data). Checked: both `.so` files carry `original-pack-v1` and neither carries the test address `127.0.0.1:8123`. The website's Android page, `docs/android/latest.json` and the home page name 2.9.7. The test file `installer\BibleConcordance_Android_2.9.6-redesign-TEST.apk` (git-ignored) can be deleted.
+
+**What changed**
+- *More, explanations:* tapping a heading with an "i" now opens a panel **directly under that heading** (a copy of the section's explanations, `toggleExplanations` / constant `EXPLAIN`); the original hints stay hidden.
+- *More, About:* folded; its title line shows "Version x.y.z" (from `useUpdates().current`).
+- *Words of Jesus in red* and *verse for the day*: switches removed; both are always on (`loadSaved` forces `red` and `dayVerse` true, so an old "off" is ignored).
+- *Read aloud, Speed:* one slider -10…+10, 0 (Normal) in the middle, left slower, right faster (`rate = 2^(step/10)`, `rateToStep` / `stepToRate`); the saved `rate` stays a number, so old settings convert.
+- *Appearance:* Reading and Appearance merged into one block of one-line rows (text size with A−/A+, Theme, Text colour, Contrast, Font as drop-downs).
+- *Additional downloads:* new heading with "Everything you add is available offline." and three folding blocks: Library, Advanced search (Recommended), Original words (Recommended); the word "offline" is gone from their titles; a tick shows when installed. `SearchUpgradeSettings` / `OriginalSettings` take `bare` to drop their own heading.
+- *Search tab:* the Bible dictionary moved here, above Recent (shown when no search is open); Recent still lists only typed searches.
+- *My Study:* opens on Highlights (tab order Highlights, Bookmarks, Notes); a bookmark shows only its reference; tap it and the verse opens with two buttons, **Go there** and **Close** (the owner approved this over the "tap to enlarge" wording). Also fixed: a stray word "Details" that showed above the bookmark and note lists (an empty hidden `<summary>` now stands in).
+
+**How it was checked:** `tsc` clean; test build installed on the owner's phone and each screen photographed over the cable (More top to bottom, the "i" panel under Appearance, About with the version, the slider, Search with the dictionary, My Study with Highlights, Bookmarks folded and opened, Close, Go there which opened Mark 15 at verse 13). **Not tried:** the other "i" panels, the slider's effect on the actual speech speed, dictionary look-ups from the new place, downloading Advanced search / Original words from the new accordion, the light and sepia themes, a small phone.
+**One thing to ask the owner:** the Recent searches list was empty at the end of my testing although it had entries earlier; only the Clear button empties it and I do not know which of my taps (or what else) did it. It only holds recent search words.
+**Still open:** the earlier items above.
+
