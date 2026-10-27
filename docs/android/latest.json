@@ -1,7 +1,7 @@
 {
-  "version": "2.9.4",
-  "url": "https://github.com/BadBull22/bible/releases/download/android-v2.9.4/BibleConcordance_Android_2.9.4.apk",
-  "sha256": "5038ee24e4fcc6ff9939ead4973f509432dff7b82d5140c179f625fad16a7b27",
-  "size": 79374460,
-  "notes": "A new app icon (three crosses), and Search finds more well-known stories by name, understands words the Bible says another way, and knows which books a writer wrote."
+  "version": "2.9.6",
+  "url": "https://github.com/BadBull22/bible/releases/download/android-v2.9.6/BibleConcordance_Android_2.9.6.apk",
+  "sha256": "3fbbe95572b29f89898b88170e4d745a5186dd74786093706d9084002b87ec21",
+  "size": 79456700,
+  "notes": "Word Study shows the original Greek and Hebrew words one by one (an optional 12 MB download), a word with two numbers shows both, the lexicons you install in the Library show in Word Study, and the More screen is tidier."
 }
