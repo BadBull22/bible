@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { api, BasketItem, BasketKind, BasketVerseMeta, SheetBlock, SheetRun } from "./api";
 import { pictureAsPng } from "./pictures";
 import { loadPrefs } from "./readingPrefs";
-import { chapterRedLetter, loadRedLetter, splitRed } from "./redLetter";
+import { chapterRedLetter, loadRedLetter, prefetchLibraryRed, splitRed } from "./redLetter";
 import { tidyPunctuation } from "./verseSegments";
 
 const EVENT = "basket-changed";
@@ -80,6 +80,7 @@ export async function basketSheet(items: BasketItem[], title: string, blankLines
         if (m) {
           const verses = (await api.getChapter(m.version, m.book, m.chapter).catch(() => [])).filter((v) => v.verse >= m.verseStart && v.verse <= m.verseEnd);
           if (verses.length) {
+            if (red) await prefetchLibraryRed(red, m.version, m.book, m.chapter);
             const ranges = red ? chapterRedLetter(red, m.version, m.book, m.chapter) : {};
             const runs: SheetRun[] = [];
             verses.forEach((v, j) => {

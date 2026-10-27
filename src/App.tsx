@@ -70,7 +70,7 @@ type SidePanel =
   | { kind: "settings"; focus?: "online" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
-  | { kind: "map" }
+  | { kind: "map"; atlas?: boolean }
   | { kind: "timeline"; focusPersonId?: string }
   // commentary / entities follow the reader's current book+chapter (so paging keeps them in sync)
   | { kind: "commentary"; verse: number | null; commentaryId?: string }
@@ -1250,6 +1250,7 @@ function App() {
               }}
               onOpenCommentary={(id) => setPanel({ kind: "commentary", verse: null, commentaryId: id })}
               onOpenDictionary={() => setPanel({ kind: "dictionary" })}
+              onOpenAtlas={() => setPanel({ kind: "map", atlas: true })}
               onOpenBook={openLibraryBook}
               onClose={() => setPanel(null)}
             />
@@ -1283,6 +1284,7 @@ function App() {
                 onJump={jumpTo}
                 initialFocusId={focusedPlaceId}
                 onFocusPlace={setFocusedPlaceId}
+                startOnAtlas={panel.atlas}
               />
             </Suspense>
           )}

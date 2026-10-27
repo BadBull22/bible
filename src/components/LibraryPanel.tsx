@@ -3,10 +3,11 @@ import { listen } from "@tauri-apps/api/event";
 import { api, CatalogItem, InstalledModule, InstallReport, LibraryKind, LibraryProgress, LibrarySource } from "../api";
 import { CloseIcon } from "./icons";
 import { RecommendedBibles } from "./RecommendedBibles";
+import { clearLibraryRed } from "../redLetter";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 /** Files the app can add: books, SWORD modules, e-Sword and MySword modules (also in a .gz). */
-const ACCEPTED = /\.(epub|pdf|zip|gz|bblx|cmtx|dctx|topx|lexx|devx|refx|bbli|cmti|dcti|topi|lexi|devi|mybible)$/i;
+const ACCEPTED = /\.(epub|pdf|zip|gz|bblx|cmtx|dctx|topx|lexx|devx|refx|bbli|cmti|dcti|topi|lexi|devi|mybible|sqlite3)$/i;
 
 /** Community libraries of e-Sword and MySword modules. The app only opens their pages in the
  * browser; the reader downloads there, by their own choice, and adds the files here. */
@@ -47,6 +48,8 @@ interface Props {
   onUseVersion: (code: string) => void;
   onOpenCommentary: (id: string) => void;
   onOpenDictionary: () => void;
+  /** an atlas of maps (opens in the Map panel) */
+  onOpenAtlas: () => void;
   onOpenBook: (name: string) => void;
   onClose: () => void;
 }
@@ -59,6 +62,7 @@ const KIND_LABEL: Record<LibraryKind, string> = {
   dictionary: "Dictionary",
   devotional: "Devotional",
   book: "Book",
+  atlas: "Maps",
   other: "Other",
 };
 
@@ -69,6 +73,7 @@ const KIND_FILTERS: { key: LibraryKind | "all"; label: string }[] = [
   { key: "dictionary", label: "Dictionaries" },
   { key: "devotional", label: "Devotionals" },
   { key: "book", label: "Books" },
+  { key: "atlas", label: "Maps" },
 ];
 
 const STAGE_LABEL: Record<LibraryProgress["stage"], string> = {
@@ -106,17 +111,18 @@ function readFilters(): Filters {
 
 /** "1 entry", "31,102 verses". */
 const countOf = (n: number, kind: LibraryKind) => `${n.toLocaleString()} ${n === 1 ? ONE_WORD[kind] ?? "entry" : ENTRY_WORD[kind] ?? "entries"}`;
-const ONE_WORD: Record<LibraryKind, string> = { bible: "verse", commentary: "note", dictionary: "entry", devotional: "reading", book: "section", other: "entry" };
+const ONE_WORD: Record<LibraryKind, string> = { bible: "verse", commentary: "note", dictionary: "entry", devotional: "reading", book: "section", atlas: "map", other: "entry" };
 const ENTRY_WORD: Record<LibraryKind, string> = {
   bible: "verses",
   commentary: "notes",
   dictionary: "entries",
   devotional: "readings",
   book: "sections",
+  atlas: "maps",
   other: "entries",
 };
 
-export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenCommentary, onOpenDictionary, onOpenBook, onClose }: Props) {
+export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenCommentary, onOpenDictionary, onOpenAtlas, onOpenBook, onClose }: Props) {
   const [tab, setTab] = useState<Tab>(initialTab ?? "mine");
   const [sources, setSources] = useState<LibrarySource[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -187,9 +193,9 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
     setFileState("checking");
     try {
       const name = file.name.toLowerCase();
-      if (/\.(mobi|azw3?|kfx)$/.test(name)) throw "Kindle files can't be added. Only EPUB e-books, PDF books, SWORD modules (.zip) and e-Sword or MySword modules can.";
+      if (/\.(mobi|azw3?|kfx)$/.test(name)) throw "Kindle files can't be added. Only EPUB e-books, PDF books, SWORD modules (.zip) and e-Sword, MySword or MyBible modules can.";
       if (!ACCEPTED.test(name))
-        throw "Only EPUB e-books (.epub), PDF books (.pdf), SWORD modules (.zip) and e-Sword or MySword modules (.bblx, .cmtx, .dctx, .topx, .lexx, .devx, .refx, .mybible) can be added.";
+        throw "Only EPUB e-books (.epub), PDF books (.pdf), SWORD modules (.zip) and e-Sword, MySword or MyBible modules (.bblx, .cmtx, .dctx, .topx, .lexx, .devx, .refx, .mybible, .SQLite3) can be added.";
       setFileReport(await api.libraryImportCheck(new Uint8Array(await file.arrayBuffer()), file.name));
       setFileState("ready");
     } catch (e) {
@@ -202,6 +208,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
     setFileState("installing");
     try {
       setFileReport(await api.libraryImportInstall());
+      clearLibraryRed();
       setFileState("done");
       reloadInstalled();
     } catch (e) {
@@ -232,6 +239,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
       try {
         await api.libraryImportCheck(new Uint8Array(await f.arrayBuffer()), f.name);
         const r = await api.libraryImportInstall();
+        clearLibraryRed();
         out.push({ name: f.name, result: `${KIND_LABEL[r.kind] ?? r.kind}: ${r.title} (${countOf(r.entries, r.kind)})`, ok: true });
       } catch (e) {
         out.push({ name: f.name, result: String(e), ok: false });
@@ -271,6 +279,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
     setConfirmRemove(null);
     try {
       await api.libraryRemove(name);
+      clearLibraryRed();
       setCatalog((c) => c?.map((x) => (x.name === name ? { ...x, installed: false, installed_version: null } : x)) ?? c);
       reloadInstalled();
     } catch (e) {
@@ -306,6 +315,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
     if (m.kind === "bible") onUseVersion(m.name);
     else if (m.kind === "commentary") onOpenCommentary(`lib:${m.name}`);
     else if (m.kind === "dictionary") onOpenDictionary();
+    else if (m.kind === "atlas") onOpenAtlas();
     else onOpenBook(m.name);
   }
 
@@ -315,6 +325,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
     dictionary: "Open",
     devotional: "Read",
     book: "Read",
+    atlas: "Open",
     other: "Open",
   };
 
@@ -519,8 +530,8 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
               and eBible.org publish;
             </li>
             <li>
-              an <strong>e-Sword or MySword module</strong> (<em>.bblx .cmtx .dctx .topx .lexx .devx .refx</em>, or{" "}
-              <em>.mybible</em>, also packed in <em>.gz</em> or <em>.zip</em>) — a Bible joins the translation list, a commentary the
+              an <strong>e-Sword, MySword or MyBible module</strong> (<em>.bblx .cmtx .dctx .topx .lexx .devx .refx</em>,{" "}
+              <em>.mybible</em> or a MyBible Bible's <em>.SQLite3</em>, also packed in <em>.gz</em> or <em>.zip</em>) — a Bible joins the translation list, a commentary the
               Commentary panel, a dictionary, lexicon or topics the Dictionary panel and Word Study, a book or devotional your books.
               Modules locked by their publisher (e-Sword's own and bought modules) can't be opened, and the app says so.
             </li>
@@ -536,7 +547,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
           <input
             ref={fileRef}
             type="file"
-            accept=".epub,.pdf,.zip,.gz,.bblx,.cmtx,.dctx,.topx,.lexx,.devx,.refx,.bbli,.cmti,.dcti,.topi,.lexi,.devi,.mybible,application/epub+zip,application/pdf,application/zip"
+            accept=".epub,.pdf,.zip,.gz,.bblx,.cmtx,.dctx,.topx,.lexx,.devx,.refx,.bbli,.cmti,.dcti,.topi,.lexi,.devi,.mybible,.sqlite3,application/epub+zip,application/pdf,application/zip"
             hidden
             onChange={(e) => {
               const f = e.target.files?.[0];

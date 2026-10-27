@@ -112,9 +112,17 @@ CREATE TABLE IF NOT EXISTS modules (
     installed_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
 CREATE TABLE IF NOT EXISTS lib_verses (
     id INTEGER PRIMARY KEY, module TEXT NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL,
-    verse INTEGER NOT NULL, text TEXT NOT NULL);
+    verse INTEGER NOT NULL, text TEXT NOT NULL, red TEXT);
 CREATE INDEX IF NOT EXISTS lib_verses_loc ON lib_verses(module, book, chapter, verse);
 CREATE VIRTUAL TABLE IF NOT EXISTS lib_verses_fts USING fts5(text, content='lib_verses', content_rowid='id');
+CREATE TABLE IF NOT EXISTS lib_atlas_map (
+    id INTEGER PRIMARY KEY, module TEXT NOT NULL, ord INTEGER NOT NULL, title TEXT NOT NULL, mime TEXT NOT NULL,
+    image BLOB NOT NULL, body TEXT NOT NULL, cols INTEGER NOT NULL, rows INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS lib_atlas_map_loc ON lib_atlas_map(module, ord);
+CREATE TABLE IF NOT EXISTS lib_atlas_place (
+    id INTEGER PRIMARY KEY, module TEXT NOT NULL, name TEXT NOT NULL, name_fold TEXT NOT NULL,
+    map_ord INTEGER NOT NULL, col INTEGER NOT NULL, row INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS lib_atlas_place_name ON lib_atlas_place(module, name_fold);
 CREATE TABLE IF NOT EXISTS lib_comm (
     id INTEGER PRIMARY KEY, module TEXT NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL,
     verse_start INTEGER NOT NULL, text TEXT NOT NULL);
@@ -146,8 +154,8 @@ pub fn has_column(conn: &Connection, table: &str, column: &str) -> bool {
         .unwrap_or(false)
 }
 
-/// Later additions to the schema, applied to libraries created before them:
-/// `modules.features` (the module's Feature= tags, e.g. GreekDef) and `lib_dict.strongs`
+/// Later additions to the schema, applied to libraries created before them: `lib_verses.red`
+/// (the words of Jesus), `modules.features` (the module's Feature= tags, e.g. GreekDef) and `lib_dict.strongs`
 /// (an entry's Strong's number in the app's form, "G25"/"H1254", for lexicons keyed by
 /// Strong's numbers -- what Word Study looks up).
 pub fn migrate(conn: &Connection, dir: &Path) -> Result<(), String> {
@@ -156,6 +164,10 @@ pub fn migrate(conn: &Connection, dir: &Path) -> Result<(), String> {
     }
     if !has_column(conn, "modules", "source") {
         conn.execute_batch("ALTER TABLE modules ADD COLUMN source TEXT NOT NULL DEFAULT 'crosswire'").map_err(err)?;
+    }
+    // the words of Jesus in a Bible added from a file: a JSON list of inclusive word ranges
+    if !has_column(conn, "lib_verses", "red") {
+        conn.execute_batch("ALTER TABLE lib_verses ADD COLUMN red TEXT").map_err(err)?;
     }
     if !has_column(conn, "lib_dict", "strongs") {
         conn.execute_batch("ALTER TABLE lib_dict ADD COLUMN strongs TEXT").map_err(err)?;
@@ -584,6 +596,8 @@ pub fn delete_module_rows(tx: &Connection, name: &str) -> Result<(), String> {
         .map_err(err)?;
         tx.execute(&format!("DELETE FROM {table} WHERE module = ?1"), params![name]).map_err(err)?;
     }
+    tx.execute("DELETE FROM lib_atlas_map WHERE module = ?1", params![name]).map_err(err)?;
+    tx.execute("DELETE FROM lib_atlas_place WHERE module = ?1", params![name]).map_err(err)?;
     tx.execute("DELETE FROM lib_refs WHERE module = ?1", params![name]).map_err(err)?;
     tx.execute("DELETE FROM lib_refs_done WHERE module = ?1", params![name]).map_err(err)?;
     tx.execute("DELETE FROM modules WHERE name = ?1", params![name]).map_err(err)?;
@@ -793,7 +807,7 @@ pub const MAX_IMPORT_BYTES: usize = 400 * 1024 * 1024;
 /// code in the translation list, e.g. "PWL"), or "own-<title>" for anything else.
 pub fn esword_name(m: &esword::Module, file_name: Option<&str>) -> String {
     let clean = |s: &str| s.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '-' || *c == '_').take(24).collect::<String>();
-    if m.kind == "bible" {
+    if m.kind == "bible" || m.program == "MyBible" {
         let abbr = clean(m.abbreviation.trim());
         if !abbr.is_empty() {
             return abbr;
@@ -832,9 +846,11 @@ pub fn install_esword(conn: &mut Connection, m: &esword::Module, file_name: Opti
     let mut entries: i64 = 0;
     let (table, text_col) = match m.kind {
         "bible" => {
-            let mut s = tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)").map_err(err)?;
+            let mut s = tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text, red) VALUES (?1,?2,?3,?4,?5,?6)").map_err(err)?;
+            let red: std::collections::HashMap<(&str, i64, i64), String> =
+                m.red.iter().filter_map(|(b, ch, v, ranges)| serde_json::to_string(ranges).ok().map(|j| ((*b, *ch, *v), j))).collect();
             for (b, ch, v, text) in &m.verses {
-                s.execute(params![module, b, ch, v, text]).map_err(err)?;
+                s.execute(params![module, b, ch, v, text, red.get(&(*b, *ch, *v))]).map_err(err)?;
                 entries += 1;
             }
             ("lib_verses", "text")
@@ -871,6 +887,18 @@ pub fn install_esword(conn: &mut Connection, m: &esword::Module, file_name: Opti
                 entries += 1;
             }
             ("lib_book", "text")
+        }
+        "atlas" => {
+            let mut s = tx.prepare("INSERT INTO lib_atlas_map(module, ord, title, mime, image, body, cols, rows) VALUES (?1,?2,?3,?4,?5,?6,?7,?8)").map_err(err)?;
+            for mp in &m.maps {
+                s.execute(params![module, mp.ord, mp.title, mp.mime, mp.image, mp.body, mp.cols, mp.rows]).map_err(err)?;
+                entries += 1;
+            }
+            let mut s = tx.prepare("INSERT INTO lib_atlas_place(module, name, name_fold, map_ord, col, row) VALUES (?1,?2,?3,?4,?5,?6)").map_err(err)?;
+            for (name, map, col, row) in &m.places {
+                s.execute(params![module, name, fold(name), map, col, row]).map_err(err)?;
+            }
+            ("lib_atlas_map", "body")
         }
         other => return Err(format!("unsupported module kind {other}")),
     };
@@ -923,6 +951,30 @@ pub fn install_esword(conn: &mut Connection, m: &esword::Module, file_name: Opti
 
 /// An e-Sword or MySword module inside the bytes the reader chose: the file itself, or one
 /// packed in a .gz or a .zip (as MySword's site gives them). None: not one of these.
+/// The footnotes and study notes that come in the same zip as a MyBible Bible
+/// ("ESV.zip" holds "ESV.SQLite3" and "ESV.commentaries.SQLite3"): the second file and its name.
+pub fn esword_companion(bytes: &[u8]) -> Option<(Vec<u8>, String)> {
+    if !bytes.starts_with(b"PK") {
+        return None;
+    }
+    let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).ok()?;
+    let names: Vec<String> = (0..zip.len()).filter_map(|i| zip.by_index(i).ok().map(|f| f.name().to_string())).filter(|n| esword::is_module_name(n)).collect();
+    if names.len() < 2 || zip.len() > 3 {
+        return None;
+    }
+    let notes: Vec<&String> = names.iter().filter(|n| n.to_lowercase().contains(".commentaries.")).collect();
+    if notes.len() != 1 {
+        return None;
+    }
+    let mut f = zip.by_name(notes[0]).ok()?;
+    let mut out = Vec::new();
+    (&mut f).take(MAX_IMPORT_BYTES as u64 + 1).read_to_end(&mut out).ok()?;
+    if !esword::is_sqlite(&out) {
+        return None;
+    }
+    Some((out, notes[0].rsplit(['/', '\\']).next().unwrap_or(notes[0]).to_string()))
+}
+
 pub fn esword_bytes(bytes: &[u8], file_name: Option<&str>) -> Result<Option<(Vec<u8>, String)>, String> {
     let name = file_name.unwrap_or("").to_string();
     if esword::is_sqlite(bytes) {
@@ -941,7 +993,11 @@ pub fn esword_bytes(bytes: &[u8], file_name: Option<&str>) -> Result<Option<(Vec
     }
     if bytes.starts_with(b"PK") {
         let mut zip = zip::ZipArchive::new(Cursor::new(bytes)).map_err(|_| "This isn't a zip file the app can open.".to_string())?;
-        let inner: Vec<String> = (0..zip.len()).filter_map(|i| zip.by_index(i).ok().map(|f| f.name().to_string())).filter(|n| esword::is_module_name(n)).collect();
+        let mut inner: Vec<String> = (0..zip.len()).filter_map(|i| zip.by_index(i).ok().map(|f| f.name().to_string())).filter(|n| esword::is_module_name(n)).collect();
+        // a MyBible Bible comes with a second file for its footnotes ("ESV.commentaries.SQLite3"): the Bible is the one to add
+        if inner.len() > 1 {
+            inner.retain(|n| !n.to_lowercase().contains(".commentaries."));
+        }
         if inner.len() == 1 && zip.len() <= 3 {
             let mut f = zip.by_name(&inner[0]).map_err(err)?;
             let mut out = Vec::new();

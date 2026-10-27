@@ -439,7 +439,13 @@ fn bible_install(app: AppHandle, core: State<Core>, id: String, today: String) -
 fn bible_add_file(core: State<Core>, path: String, name: String) -> Result<modules::Added, String> {
     let opened = core.get()?;
     let file = PathBuf::from(&path);
-    let added = modules::add_file(&mut *opened.bibles.lock().map_err(err)?, &file, &name, &opened.dir.join("import-work"), &opened.bundled);
+    let mut added = modules::add_file(&mut *opened.bibles.lock().map_err(err)?, &file, &name, &opened.dir.join("import-work"), &opened.bundled);
+    // a Bible that came with its footnotes and study notes: they go to the commentaries
+    if let Ok(a) = added.as_mut() {
+        if let Some(sentence) = library::add_notes_of(&mut *opened.library.lock().map_err(err)?, &opened.dir, &file) {
+            a.warnings.push(sentence);
+        }
+    }
     // the copy in the cache is not needed any more
     let _ = fs::remove_file(&file);
     added
@@ -661,8 +667,12 @@ fn library_install(app: AppHandle, core: State<Core>, name: String) -> Result<bi
 fn library_add_file(core: State<Core>, path: String, name: String) -> Result<bible_core::library::InstallReport, String> {
     let opened = core.get()?;
     let file = PathBuf::from(&path);
-    let result = match library::add_file(&mut *opened.library.lock().map_err(err)?, &opened.dir, &file, &name) {
-        Err(e) if e == library::IS_BIBLE => modules::add_file(&mut *opened.bibles.lock().map_err(err)?, &file, &name, &opened.dir.join("import-work"), &opened.bundled).map(|a| {
+    let first = library::add_file(&mut *opened.library.lock().map_err(err)?, &opened.dir, &file, &name);
+    let result = match first {
+        Err(e) if e == library::IS_BIBLE => modules::add_file(&mut *opened.bibles.lock().map_err(err)?, &file, &name, &opened.dir.join("import-work"), &opened.bundled).map(|mut a| {
+            if let Some(sentence) = opened.library.lock().ok().and_then(|mut l| library::add_notes_of(&mut l, &opened.dir, &file)) {
+                a.warnings.push(sentence);
+            }
             bible_core::library::InstallReport {
                 name: a.code,
                 kind: "bible".into(),

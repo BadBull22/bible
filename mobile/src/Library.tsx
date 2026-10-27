@@ -108,7 +108,7 @@ export function Library({ book, chapter, start, onGo, onBibles, ask, say }: Prop
   return (
     <>
       <h3>Library</h3>
-      <p className="hint">Commentaries, dictionaries, books and devotionals to read offline. Download free ones from CrossWire, or add files you have (SWORD, e-Sword, MySword).</p>
+      <p className="hint">Commentaries, dictionaries, books and devotionals to read offline. Download free ones from CrossWire, or add files you have (SWORD, e-Sword, MySword, MyBible).</p>
       {error && <p className="hint status">{error}</p>}
       <div className="actions">
         <button onClick={() => setView({ at: "get" })}>Get more</button>

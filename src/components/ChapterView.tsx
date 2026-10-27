@@ -1,7 +1,7 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { api, NON_CANON_BOOKS, ChapterMarks, highlightLabel, HIGHLIGHT_COLORS_BRIGHT, HIGHLIGHT_COLORS_SOFT, HighlightColor, Version, VerseWithWords } from "../api";
 import { copyText, formatVerseForCopy } from "../clipboard";
-import { chapterRedLetter, loadRedLetter, splitRed } from "../redLetter";
+import { chapterRedLetter, loadRedLetter, prefetchLibraryRed, splitRed } from "../redLetter";
 import { segmentVerse, tidyPunctuation } from "../verseSegments";
 import { sentencesIn, showReading, watchForManualScroll } from "../readHighlight";
 import { addVersesToBasket } from "../basket";
@@ -167,6 +167,18 @@ export function ChapterView({
   const extras = parallel.on ? parallel.codes.filter((c) => c !== versionCode && selectable.some((v) => v.code === c)).slice(0, 3) : [];
   const parallelMode = parallel.on;
   const extrasKey = extras.join("|");
+  // the words of Jesus in Bibles added from a file come from the library, a chapter at a time
+  const [, setLibraryRedTick] = useState(0);
+  useEffect(() => {
+    if (!redData) return;
+    let live = true;
+    Promise.all([versionCode, ...(extrasKey ? extrasKey.split("|") : [])].map((c) => prefetchLibraryRed(redData, c, book, chapter))).then((got) => {
+      if (live && got.some(Boolean)) setLibraryRedTick((n) => n + 1);
+    });
+    return () => {
+      live = false;
+    };
+  }, [redData, versionCode, extrasKey, book, chapter]);
   const [extraChapter, setExtraChapter] = useState<{ key: string; verses: Record<string, Record<number, string>> }>({ key: "", verses: {} });
 
   useEffect(() => {

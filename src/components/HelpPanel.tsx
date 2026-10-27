@@ -651,8 +651,9 @@ const SECTIONS: Section[] = [
           </li>
           <li>
             <strong>e-Sword and MySword modules</strong>: <em>Add from file</em> also takes modules made for e-Sword (
-            <em>.bblx .cmtx .dctx .topx .lexx .devx .refx</em>) and MySword (<em>.mybible</em>, also packed in <em>.gz</em> or{" "}
-            <em>.zip</em>). A Bible joins your translation list, a commentary the Commentary panel, a dictionary, lexicon or
+            <em>.bblx .cmtx .dctx .topx .lexx .devx .refx</em>), MySword (<em>.mybible</em>) and the MyBible app (a Bible in a{" "}
+            <em>.SQLite3</em> file; its separate <em>commentaries</em> file of footnotes is not needed), also packed in <em>.gz</em> or{" "}
+            <em>.zip</em>. A Bible joins your translation list, a commentary the Commentary panel, a dictionary, lexicon or
             topics the Dictionary panel, and a book or devotional your books. <em>Several files…</em> and{" "}
             <em>A whole folder…</em> add many at once and report on each. Modules locked by their publisher (e-Sword's own and
             bought modules) can't be opened; the app says so and adds nothing. Only add modules you have the right to use —

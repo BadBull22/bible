@@ -189,6 +189,31 @@ pub fn library_remove(app: AppHandle, state: State<LibraryState>, name: String) 
     Ok(())
 }
 
+/// The maps of the atlases the reader added (an atlas is a library module of the kind "atlas").
+#[tauri::command]
+pub fn atlas_maps(state: State<LibraryState>) -> Result<Vec<library::AtlasMapInfo>, String> {
+    library::atlas_maps(&*lib_conn(&state)?)
+}
+
+/// One map's picture (its bytes; the page knows the type from `atlas_maps`).
+#[tauri::command]
+pub fn atlas_image(state: State<LibraryState>, id: i64) -> Result<tauri::ipc::Response, String> {
+    let bytes = library::atlas_image(&*lib_conn(&state)?, id)?.ok_or_else(|| "No such map.".to_string())?;
+    Ok(tauri::ipc::Response::new(bytes))
+}
+
+/// Where a place is on the atlases' maps (the map and the grid square).
+#[tauri::command]
+pub fn atlas_places(state: State<LibraryState>, query: String, limit: Option<i64>) -> Result<Vec<library::AtlasPlace>, String> {
+    library::atlas_places(&*lib_conn(&state)?, &query, limit.unwrap_or(40))
+}
+
+/// The words of Jesus in a chapter of a Bible added from a file (verse -> word ranges).
+#[tauri::command]
+pub fn library_red_letter(state: State<LibraryState>, version_code: String, book: String, chapter: i64) -> Result<std::collections::HashMap<String, Vec<(usize, usize)>>, String> {
+    library::red_letter(&*lib_conn(&state)?, &version_code, &book, chapter)
+}
+
 #[tauri::command]
 pub fn library_installed(state: State<LibraryState>, kind: Option<String>) -> Result<Vec<InstalledModule>, String> {
     library::installed(&*lib_conn(&state)?, kind.as_deref())

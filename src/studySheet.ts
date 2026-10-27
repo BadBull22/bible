@@ -3,7 +3,7 @@
 // from the same list in Rust (src-tauri/src/sheet.rs).
 import { api, CrossReference, HIGHLIGHT_COLOR_NAMES, SheetBlock, SheetRun, Version } from "./api";
 import { loadPrefs } from "./readingPrefs";
-import { chapterRedLetter, loadRedLetter, splitRed } from "./redLetter";
+import { chapterRedLetter, loadRedLetter, prefetchLibraryRed, splitRed } from "./redLetter";
 import { tidyPunctuation } from "./verseSegments";
 
 export interface SheetOptions {
@@ -64,6 +64,7 @@ export async function buildSheet(o: SheetOptions, versions: Version[]): Promise<
   // --- the passage, in each chosen translation
   const texts = await Promise.all(o.translations.map((code) => api.getChapter(code, book, chapter).catch(() => [])));
   const redData = loadPrefs().redLetter ? await loadRedLetter() : null;
+  if (redData) await Promise.all(o.translations.map((code) => prefetchLibraryRed(redData, code, book, chapter)));
   blocks.push({ kind: "heading", text: "The passage" });
   o.translations.forEach((code, i) => {
     const verses = texts[i].filter((v) => inRange(v.verse));

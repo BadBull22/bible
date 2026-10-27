@@ -203,6 +203,9 @@ fn read_book(bytes: &[u8], file_name: Option<&str>) -> Result<epub::Epub, String
     }
 }
 const IMPORT_NAME: &str = "name.txt";
+/// The footnotes and study notes that came in the same zip as a MyBible Bible, waiting beside it.
+const IMPORT_NOTES: &str = "notes.sqlite";
+const IMPORT_NOTES_NAME: &str = "notes-name.txt";
 
 /// Checks a file the reader chose -- an EPUB e-book, a PDF book or a SWORD module zip -- and reports
 /// what installing it would add. The file is kept in the holding folder for `import_install`.
@@ -218,7 +221,23 @@ pub fn import_check(state: &LibraryState, bytes: &[u8], file_name: Option<&str>)
         let path = dir.join(IMPORT_ESWORD);
         std::fs::write(&path, &module_bytes).map_err(err)?;
         std::fs::write(dir.join(IMPORT_NAME), &name).map_err(err)?;
-        esword::read(&path, Some(&name)).and_then(|m| install_esword(&mut *state.conn.lock().map_err(err)?, &m, Some(&name), false, BUILT_IN))
+        esword::read(&path, Some(&name)).and_then(|m| install_esword(&mut *state.conn.lock().map_err(err)?, &m, Some(&name), false, BUILT_IN)).map(|mut report| {
+            // a MyBible Bible zipped with its footnotes and study notes: they are added as a commentary
+            if report.kind == "bible" {
+                if let Some((notes, notes_name)) = esword_companion(bytes) {
+                    let file = dir.join(IMPORT_NOTES);
+                    if std::fs::write(&file, notes).is_ok() && std::fs::write(dir.join(IMPORT_NOTES_NAME), &notes_name).is_ok() {
+                        match esword::read(&file, Some(&notes_name)) {
+                            Ok(n) => report.warnings.push(format!("Its footnotes and study notes ({} notes) will be added to your commentaries too.", n.notes.len())),
+                            Err(_) => {
+                                let _ = std::fs::remove_file(&file);
+                            }
+                        }
+                    }
+                }
+            }
+            report
+        })
     } else if pdf::is_pdf(bytes) || epub::is_epub(bytes) {
         read_book(bytes, file_name).and_then(|book| {
             std::fs::write(dir.join(IMPORT_EPUB), bytes).map_err(err)?;
@@ -246,6 +265,19 @@ pub fn import_install(state: &LibraryState, progress: &dyn Fn(&str)) -> Result<I
         esword::read(&dir.join(IMPORT_ESWORD), name.as_deref()).and_then(|m| {
             progress("saving");
             install_esword(&mut *state.conn.lock().map_err(err)?, &m, name.as_deref(), true, BUILT_IN)
+        })
+        .map(|mut report| {
+            // the notes that came with a Bible
+            let notes = dir.join(IMPORT_NOTES);
+            if notes.is_file() {
+                let notes_name = std::fs::read_to_string(dir.join(IMPORT_NOTES_NAME)).ok().filter(|n| !n.is_empty());
+                let added = esword::read(&notes, notes_name.as_deref()).and_then(|m| install_esword(&mut *state.conn.lock().map_err(err)?, &m, notes_name.as_deref(), true, BUILT_IN));
+                match added {
+                    Ok(n) => report.warnings.push(format!("Its footnotes and study notes were added to your commentaries ({}, {} notes).", n.title, n.entries)),
+                    Err(e) => report.warnings.push(format!("Its footnotes and study notes could not be added: {e}")),
+                }
+            }
+            report
         })
     } else if dir.join(IMPORT_EPUB).is_file() {
         let file_name = std::fs::read_to_string(dir.join(IMPORT_NAME)).ok().filter(|n| !n.is_empty());
@@ -313,6 +345,94 @@ pub fn chapter(conn: &Connection, code: &str, book: &str, chapter: i64) -> Resul
         .query_map(params![code, book, chapter], |r| Ok(Verse { book: book.to_string(), chapter, verse: r.get(0)?, text: r.get(1)? }))
         .map_err(err)?;
     rows.collect::<Result<_, _>>().map_err(err)
+}
+
+// ---------------------------------------------------------------- atlases (pictures of maps the reader added)
+
+#[derive(Serialize)]
+pub struct AtlasMapInfo {
+    pub id: i64,
+    /// the atlas's library name, its title and where it comes from
+    pub atlas: String,
+    pub atlas_title: String,
+    pub licence: String,
+    /// the map's number in the atlas and its title
+    pub ord: i64,
+    pub title: String,
+    pub mime: String,
+    /// the text under the map (the numbered places, with verse markers)
+    pub body: String,
+    /// the grid: letters across, numbers down
+    pub cols: i64,
+    pub rows: i64,
+}
+
+/// Every map of every atlas in the library, in the order of the atlas.
+pub fn atlas_maps(conn: &Connection) -> Result<Vec<AtlasMapInfo>, String> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT a.id, a.module, m.title, m.licence, a.ord, a.title, a.mime, a.body, a.cols, a.rows
+             FROM lib_atlas_map a JOIN modules m ON m.name = a.module ORDER BY m.title, a.ord",
+        )
+        .map_err(err)?;
+    let rows = stmt
+        .query_map([], |r| {
+            Ok(AtlasMapInfo { id: r.get(0)?, atlas: r.get(1)?, atlas_title: r.get(2)?, licence: r.get(3)?, ord: r.get(4)?, title: r.get(5)?, mime: r.get(6)?, body: r.get(7)?, cols: r.get(8)?, rows: r.get(9)? })
+        })
+        .map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
+/// A map's picture.
+pub fn atlas_image(conn: &Connection, id: i64) -> Result<Option<Vec<u8>>, String> {
+    conn.query_row("SELECT image FROM lib_atlas_map WHERE id = ?1", params![id], |r| r.get(0)).optional().map_err(err)
+}
+
+#[derive(Serialize)]
+pub struct AtlasPlace {
+    pub name: String,
+    pub map_id: i64,
+    pub map_ord: i64,
+    pub map_title: String,
+    pub atlas: String,
+    /// the grid square on that map, counted from 0
+    pub col: i64,
+    pub row: i64,
+}
+
+/// The places whose names contain `query`, with the map and grid square of each (names that start with it first).
+pub fn atlas_places(conn: &Connection, query: &str, limit: i64) -> Result<Vec<AtlasPlace>, String> {
+    let q = fold(query.trim()).replace('\\', "").replace('%', "").replace('_', "");
+    if q.is_empty() {
+        return Ok(Vec::new());
+    }
+    let mut stmt = conn
+        .prepare(
+            "SELECT p.name, a.id, a.ord, a.title, a.module, p.col, p.row
+             FROM lib_atlas_place p JOIN lib_atlas_map a ON a.module = p.module AND a.ord = p.map_ord
+             WHERE p.name_fold LIKE '%' || ?1 || '%'
+             ORDER BY (p.name_fold LIKE ?1 || '%') DESC, p.name_fold, a.ord LIMIT ?2",
+        )
+        .map_err(err)?;
+    let rows = stmt
+        .query_map(params![q, limit.clamp(1, 200)], |r| Ok(AtlasPlace { name: r.get(0)?, map_id: r.get(1)?, map_ord: r.get(2)?, map_title: r.get(3)?, atlas: r.get(4)?, col: r.get(5)?, row: r.get(6)? }))
+        .map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
+/// The words of Jesus in a chapter of a Bible added from a file: verse -> inclusive word ranges
+/// (a word is a run of letters and digits), as the red-letter data of the built-in Bibles.
+pub fn red_letter(conn: &Connection, code: &str, book: &str, chapter: i64) -> Result<std::collections::HashMap<String, Vec<(usize, usize)>>, String> {
+    let mut stmt = conn.prepare("SELECT verse, red FROM lib_verses WHERE module = ?1 AND book = ?2 AND chapter = ?3 AND red IS NOT NULL").map_err(err)?;
+    let rows = stmt.query_map(params![code, book, chapter], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?))).map_err(err)?;
+    let mut out = std::collections::HashMap::new();
+    for row in rows {
+        let (verse, json) = row.map_err(err)?;
+        if let Ok(ranges) = serde_json::from_str::<Vec<(usize, usize)>>(&json) {
+            out.insert(verse.to_string(), ranges);
+        }
+    }
+    Ok(out)
 }
 
 pub fn verse(conn: &Connection, code: &str, book: &str, chapter: i64, verse: i64) -> Result<Option<String>, String> {
@@ -1333,6 +1453,35 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
+    /// A small MyBible Bible (ph4.org's format), made here: Genesis 1:1-30 and John 3:16-35, books numbered 10 and 500.
+    fn mybible_bible(code: &str, notes_file: bool) -> Vec<u8> {
+        let p = std::env::temp_dir().join(format!("bc-mybible-{}-{code}.SQLite3", std::process::id()));
+        let _ = std::fs::remove_file(&p);
+        {
+            let c = Connection::open(&p).unwrap();
+            if notes_file {
+                c.execute_batch(
+                    "CREATE TABLE info(name TEXT, value TEXT); INSERT INTO info VALUES ('description', 'Test MyBible');
+                     CREATE TABLE commentaries(book_number NUMERIC, chapter_number_from NUMERIC, verse_number_from NUMERIC, chapter_number_to NUMERIC, verse_number_to NUMERIC, marker TEXT, text TEXT);
+                     INSERT INTO commentaries VALUES (10, 1, 1, 1, 1, 'a', 'a note');",
+                )
+                .unwrap();
+            } else {
+                c.execute_batch("CREATE TABLE info(name TEXT, value TEXT); CREATE TABLE verses(book_number NUMERIC, chapter NUMERIC, verse NUMERIC, text TEXT);").unwrap();
+                c.execute("INSERT INTO info VALUES ('description', ?1), ('language', 'en'), ('detailed_info', 'Your own copy, not to share.')", params![format!("Test MyBible {code}")]).unwrap();
+                for v in 1..=30 {
+                    c.execute("INSERT INTO verses VALUES (10, 1, ?1, ?2)", params![v, format!("<pb/>Genesis<f>[1]</f> verse {v}.")]).unwrap();
+                }
+                for v in 16..=35 {
+                    c.execute("INSERT INTO verses VALUES (500, 3, ?1, ?2)", params![v, if v == 16 { "<J>John verse</J> 16.".to_string() } else { format!("John verse {v}.") }]).unwrap();
+                }
+            }
+        }
+        let bytes = std::fs::read(&p).unwrap();
+        let _ = std::fs::remove_file(&p);
+        bytes
+    }
+
     /// A small MySword Bible, made here: Genesis 1:1-30 and John 3:16-35.
     fn mysword_bible(abbr: &str) -> Vec<u8> {
         let p = std::env::temp_dir().join(format!("bc-mysword-{}-{abbr}.bbl.mybible", std::process::id()));
@@ -1392,6 +1541,73 @@ mod tests {
         };
         assert_eq!(import_check(&state, &zipped, Some("tb3.zip")).unwrap().name, "TB3");
         import_cancel(&state);
+
+        // a MyBible Bible, zipped with its footnotes file as the downloads come: the Bible is added, as a Bible
+        let zipped = {
+            let mut z = zip::ZipWriter::new(Cursor::new(Vec::new()));
+            z.start_file("MB4.SQLite3", zip::write::SimpleFileOptions::default()).unwrap();
+            std::io::Write::write_all(&mut z, &mybible_bible("MB4", false)).unwrap();
+            z.start_file("MB4.commentaries.SQLite3", zip::write::SimpleFileOptions::default()).unwrap();
+            std::io::Write::write_all(&mut z, &mybible_bible("MB4", true)).unwrap();
+            z.finish().unwrap().into_inner()
+        };
+        let r = import_check(&state, &zipped, Some("MB4.zip")).unwrap();
+        assert_eq!((r.kind.as_str(), r.name.as_str(), r.entries), ("bible", "MB4", 50), "{r:?}");
+        assert!(r.warnings.iter().any(|w| w.contains("will be added to your commentaries")), "{:?}", r.warnings);
+        let done = import_install(&state, &|_| {}).unwrap();
+        assert!(done.warnings.iter().any(|w| w.contains("were added to your commentaries")), "{:?}", done.warnings);
+        {
+            let conn = state.conn.lock().unwrap();
+            // its notes are a commentary of their own, its red letters are kept
+            assert!(installed(&conn, Some("commentary")).unwrap().iter().any(|m| m.name == "MB4-notes" && m.entries == 1));
+            let red = red_letter(&conn, "MB4", "John", 3).unwrap();
+            assert_eq!(red.get("16"), Some(&vec![(0, 1)]), "{red:?}");
+            assert!(red_letter(&conn, "MB4", "Genesis", 1).unwrap().is_empty());
+            assert!(versions(&conn).unwrap().iter().any(|v| v.code == "MB4"));
+            assert_eq!(verse(&conn, "MB4", "Genesis", 1, 2).unwrap().as_deref(), Some("Genesis verse 2."));
+            assert_eq!(chapter(&conn, "MB4", "John", 3).unwrap().len(), 20);
+        }
+        // the same file on its own; and its footnotes file on its own is a commentary
+        assert_eq!(import_check(&state, &mybible_bible("MB5", false), Some("MB5.SQLite3")).unwrap().name, "MB5");
+        import_cancel(&state);
+        let r = import_check(&state, &mybible_bible("MB6", true), Some("MB6.commentaries.SQLite3")).unwrap();
+        assert_eq!((r.kind.as_str(), r.name.as_str(), r.entries), ("commentary", "MB6-notes", 1), "{r:?}");
+        import_cancel(&state);
+
+        // an atlas (MyBible's form): its maps, the place index and the pictures are kept, and read back
+        {
+            let atlas = {
+                let p = dir.join("bc-atlas.SQLite3");
+                let _ = std::fs::remove_file(&p);
+                Connection::open(&p)
+                    .unwrap()
+                    .execute_batch(
+                        "CREATE TABLE info(name TEXT, value TEXT); CREATE TABLE dictionary(topic TEXT, definition TEXT); CREATE TABLE content_fragments(id TEXT, fragment TEXT);
+                         INSERT INTO info VALUES ('description', 'Test Atlas'), ('type', 'atlas'), ('detailed_info', 'Rights reserved');
+                         INSERT INTO content_fragments VALUES ('a.png', '<img src=\"data:image/png;base64,iVBORw0KGgo=\">');
+                         INSERT INTO dictionary VALUES ('#01. The Land', '<figure><!-- INCLUDE(a.png) --></figure><ol><li data-marker=\"1.\"><p>Hebron</p></li></ol>'),
+                           ('Hebron', 'Hebron: <a href=\"S:#01. The Land\">1:B3</a>.'), ('Hebrew Sea', 'x: <a href=\"S:#01. The Land\">1:C1</a>.');",
+                    )
+                    .unwrap();
+                std::fs::read(&p).unwrap()
+            };
+            let r = import_check(&state, &atlas, Some("TestAtlas.SQLite3")).unwrap();
+            assert_eq!((r.kind.as_str(), r.entries), ("atlas", 1), "{r:?}");
+            import_install(&state, &|_| {}).unwrap();
+            let conn = state.conn.lock().unwrap();
+            let maps = atlas_maps(&conn).unwrap();
+            assert_eq!(maps.len(), 1);
+            assert_eq!((maps[0].title.as_str(), maps[0].atlas_title.as_str(), maps[0].cols, maps[0].rows, maps[0].mime.as_str()), ("The Land", "Test Atlas", 3, 3, "image/png"));
+            assert_eq!(atlas_image(&conn, maps[0].id).unwrap().map(|b| b.len()), Some(8));
+            let hits = atlas_places(&conn, "heb", 10).unwrap();
+            assert_eq!(hits.iter().map(|h| (h.name.as_str(), h.col, h.row)).collect::<Vec<_>>(), vec![("Hebrew Sea", 2, 0), ("Hebron", 1, 2)]);
+            assert!(atlas_places(&conn, "zzz", 10).unwrap().is_empty());
+            // removing it takes the maps and places with it
+            drop(conn);
+            remove(&mut *state.conn.lock().unwrap(), "TestAtlas").unwrap();
+            let conn = state.conn.lock().unwrap();
+            assert!(atlas_maps(&conn).unwrap().is_empty() && atlas_places(&conn, "heb", 10).unwrap().is_empty());
+        }
 
         // one the app already has is refused, as for SWORD modules
         let e = import_check(&state, &mysword_bible("BSB"), Some("bsb.bbl.mybible")).unwrap_err();
