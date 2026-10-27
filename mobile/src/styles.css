@@ -1567,3 +1567,200 @@ details.hl-group > .hits li { background: transparent; }
   border-color: var(--accent, #3d6fb5);
   color: #fff;
 }
+
+/* More: an explanation opens directly under its heading */
+.more .info-pop {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.6rem;
+  background: var(--accent-soft);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.more .info-pop p {
+  margin: 0 0 0.4rem;
+}
+
+.more .info-pop p:last-child {
+  margin-bottom: 0;
+}
+
+/* More: compact rows (a label and its control side by side) */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-height: 2.4rem;
+  margin: 0.15rem 0;
+}
+
+.row > span {
+  flex: none;
+}
+
+.row .select-field {
+  flex: 1;
+  max-width: 62%;
+  min-height: 2.3rem;
+  margin: 0;
+  padding: 0.2rem 0.5rem;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.stepper button {
+  min-width: 2.6rem;
+  min-height: 2.2rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--raised);
+  font-weight: 600;
+}
+
+.stepper button:disabled {
+  opacity: 0.4;
+}
+
+.stepper .size-now {
+  min-width: 2.8rem;
+}
+
+/* reading speed: one slider, 0 in the middle */
+.speed {
+  margin: 0.3rem 0 0.2rem;
+}
+
+.speed-head {
+  display: flex;
+  justify-content: space-between;
+}
+
+.speed input[type="range"] {
+  width: 100%;
+  margin: 0.3rem 0 0;
+  accent-color: var(--accent);
+}
+
+.speed-ends {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* More: folding blocks (Additional downloads, About) */
+.fold {
+  margin: 0.3rem 0;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--raised);
+}
+
+.fold > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.6rem;
+  padding: 0 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.fold > summary::after {
+  content: "›";
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 1.3rem;
+  transition: transform 0.15s;
+}
+
+.fold[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.fold > summary em {
+  color: var(--accent);
+  font-style: normal;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.fold > summary small {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.fold > :not(summary) {
+  margin-left: 0.8rem;
+  margin-right: 0.8rem;
+}
+
+.fold > :last-child {
+  margin-bottom: 0.7rem;
+}
+
+.about-fold > .about {
+  margin-left: 1.9rem;
+}
+
+/* Search: the dictionary above Recent */
+.dictionary {
+  margin: 0.4rem 0 0.8rem;
+}
+
+.dictionary h3 {
+  margin: 0 0 0.3rem;
+}
+
+/* My Study: a bookmark is one line until tapped */
+.hits li.mark-fold:not(.open) {
+  padding-top: 0.45rem;
+  padding-bottom: 0.45rem;
+}
+
+.hits li.mark-fold:not(.open) .hit-head {
+  margin-bottom: 0;
+}
+
+.hits li.mark-fold .hit-head strong::before {
+  content: "›";
+  display: inline-block;
+  margin-right: 0.4rem;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+
+.hits li.mark-fold.open .hit-head strong::before {
+  transform: rotate(90deg);
+}
+
+.open-here {
+  display: block;
+  margin-top: 0.4rem;
+}
+
+/* My Study: the plain list (bookmarks, notes) has no folding heading of its own */
+details.hl-all > summary {
+  display: none;
+}
+
+.fold > summary {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+.fold > summary em {
+  font-size: 0.78rem;
+}
+

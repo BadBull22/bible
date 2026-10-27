@@ -96,13 +96,12 @@ export function SearchUpgradeOffer({ upgrade }: { upgrade: SearchUpgrade }) {
 }
 
 /** In More. */
-export function SearchUpgradeSettings({ upgrade }: { upgrade: SearchUpgrade }) {
+export function SearchUpgradeSettings({ upgrade, bare }: { upgrade: SearchUpgrade; bare?: boolean }) {
   return (
     <>
-      <h2>Advanced search upgrade (offline)</h2>
-      <p className="hint">
-        Lets the search find verses by what you mean, not only by the words you type, as the computer app does. It stays on this phone and works without the internet; nothing you
-        search for is sent anywhere.
+      {!bare && <h2>Advanced search upgrade</h2>}
+      <p className={bare ? "hint keep" : "hint"}>
+        Lets the search find verses by what you mean, not only by the words you type, as the computer app does. Nothing you search for is sent anywhere.
       </p>
       {upgrade.installed ? (
         <>

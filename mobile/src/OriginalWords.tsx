@@ -99,13 +99,12 @@ export function OriginalOffer({ pack }: { pack: OriginalPack }) {
 }
 
 /** In More. */
-export function OriginalSettings({ pack }: { pack: OriginalPack }) {
+export function OriginalSettings({ pack, bare }: { pack: OriginalPack; bare?: boolean }) {
   return (
     <>
-      <h2>Original words (offline)</h2>
-      <p className="hint">
-        Every word of the Hebrew Old Testament and the Greek New Testament, one by one, in Word Study (tap a verse, then Words): as written, how to say it, what it means, its dictionary form and its grammar in plain words. It stays on
-        this phone and works without the internet.
+      {!bare && <h2>Original words</h2>}
+      <p className={bare ? "hint keep" : "hint"}>
+        Every word of the Hebrew Old Testament and the Greek New Testament, one by one, in Word Study (tap a verse, then Words): as written, how to say it, what it means, its dictionary form and its grammar in plain words.
       </p>
       {pack.installed ? (
         <>

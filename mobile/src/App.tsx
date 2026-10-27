@@ -87,7 +87,8 @@ function loadSaved(): Saved {
     updates: true,
   };
   try {
-    return { ...start, ...(JSON.parse(localStorage.getItem(SAVED_KEY) ?? "{}") as Partial<Saved>) };
+    // (the words of Jesus in red and the verse for the day are always on; they have no switch any more)
+    return { ...start, ...(JSON.parse(localStorage.getItem(SAVED_KEY) ?? "{}") as Partial<Saved>), red: true, dayVerse: true };
   } catch {
     return start;
   }
@@ -158,13 +159,12 @@ const WHY: Record<string, string> = { story: "Well-known passage", core: "Key pa
 
 /** A search on the web, for when the Bible in the app isn't enough. */
 const webSearch = (query: string) => `https://www.google.com/search?q=${encodeURIComponent(`${query} Bible`)}`;
-const RATES: [number, string][] = [
-  [0.65, "Slow"],
-  [0.8, "Slower"],
-  [1, "Normal"],
-  [1.2, "Faster"],
-  [1.5, "Fast"],
-];
+/** An explanation in More (as against a line saying how things stand). */
+const EXPLAIN = ".hint:not(.keep):not(.status)";
+
+/** The reading speed slider: -10 (slowest) to +10 (fastest), 0 in the middle = the normal speed; each step is about 7 %. */
+const rateToStep = (rate: number) => Math.max(-10, Math.min(10, Math.round(Math.log2(rate) * 10)));
+const stepToRate = (step: number) => Math.round(2 ** (step / 10) * 100) / 100;
 
 const refLabel = (h: { book: string; chapter: number; verse: number; verse_end?: number }) =>
   `${h.book} ${h.chapter}:${h.verse}${h.verse_end && h.verse_end > h.verse ? `–${h.verse_end}` : ""}`;
@@ -242,13 +242,13 @@ export function App() {
   const [textColor, setTextColor] = useState<TextColor>(saved.textColor);
   const [contrast, setContrast] = useState<Contrast>(saved.contrast);
   const [font, setFont] = useState<Font>(saved.font);
-  const [dayVerse, setDayVerse] = useState(saved.dayVerse);
+  const dayVerse = true;
   const [autoUpdates, setAutoUpdates] = useState(saved.updates);
   const updates = useUpdates(saved.updates);
   const [rate, setRate] = useState(saved.rate);
   const [voice, setVoice] = useState<string | null>(saved.voice);
   const [voices, setVoices] = useState<PhoneVoice[] | null>(null);
-  const [red, setRed] = useState(saved.red);
+  const red = true;
   const [second, setSecond] = useState<string | null>(saved.second);
   const [reminder, setReminderTime] = useState<string | null>(saved.reminder);
   const [tab, setTab] = useState<Tab>("read");
@@ -274,17 +274,22 @@ export function App() {
     if (!h || !moreBox.current?.contains(h)) return;
     const shown = !h.classList.contains("open");
     h.classList.toggle("open", shown);
+    h.nextElementSibling?.classList.contains("info-pop") && h.nextElementSibling.remove();
+    if (!shown) return;
+    const pop = document.createElement("div");
+    pop.className = "info-pop";
     for (let el = h.nextElementSibling; el && el.tagName !== "H2"; el = el.nextElementSibling) {
-      if (el.classList.contains("hint")) el.classList.toggle("shown", shown);
-      el.querySelectorAll(".hint").forEach((x) => x.classList.toggle("shown", shown));
+      const hints = el.matches(EXPLAIN) ? [el] : Array.from(el.querySelectorAll(EXPLAIN));
+      hints.forEach((x) => pop.appendChild(Object.assign(document.createElement("p"), { textContent: x.textContent ?? "" })));
     }
+    h.after(pop);
   };
   useEffect(() => {
     // (after every drawing: a heading shows its (i) when something under it is an explanation)
     moreBox.current?.querySelectorAll("h2").forEach((h) => {
       let has = false;
       for (let el = h.nextElementSibling; el && el.tagName !== "H2"; el = el.nextElementSibling) {
-        if ((el.classList.contains("hint") && !el.classList.contains("keep") && !el.classList.contains("status")) || el.querySelector(".hint:not(.keep):not(.status)")) has = true;
+        if (el.matches(EXPLAIN) || el.querySelector(EXPLAIN)) has = true;
       }
       h.classList.toggle("has-info", has);
     });
@@ -329,7 +334,8 @@ export function App() {
   const [article, setArticle] = useState<Article | null>(null);
 
   // my study
-  const [kind, setKind] = useState<MarkKind>("bookmarks");
+  const [kind, setKind] = useState<MarkKind>("highlights");
+  const [openMarks, setOpenMarks] = useState<Set<string>>(new Set());
   const [list, setList] = useState<Mark[]>([]);
   // the reader's names for the highlight colours (kept in step with the computer)
   const [names, setNames] = useState<Record<string, string>>({});
@@ -997,6 +1003,22 @@ export function App() {
                   ))}
                 </div>
                 {!query && <p className="hint">Type a word, a phrase or a subject above — “your faith has healed you”, “gifts of the Spirit”, “forgiveness”. A reference such as “Romans 8:28” opens the passage.</p>}
+                {!query && !typed.trim() && (
+                  <section className="dictionary">
+                    <h3>Bible dictionary</h3>
+                    <input className="field" value={word} onChange={(e) => setWord(e.target.value)} placeholder="A person, place or word — e.g. Passover" aria-label="Look up in the dictionary" autoCapitalize="none" autoCorrect="off" />
+                    {found && found.length === 0 && <p className="hint">No article by that name. Try the main search box for verses on it.</p>}
+                    {found && found.length > 0 && (
+                      <ul className="hits plain">
+                        {found.map((a) => (
+                          <li key={a.id} onClick={() => openArticle(a.id)}>
+                            <strong>{a.name}</strong> <small>{a.source}</small>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                )}
                 {recent.length > 0 && !typed.trim() && (
                   <section className="recent">
                     <h3>
@@ -1074,8 +1096,8 @@ export function App() {
             <div className="chips segmented" role="tablist">
               {(
                 [
-                  ["bookmarks", "Bookmarks"],
                   ["highlights", "Highlights"],
+                  ["bookmarks", "Bookmarks"],
                   ["notes", "Notes"],
                 ] as const
               ).map(([key, label]) => (
@@ -1107,16 +1129,32 @@ export function App() {
             {(kind === "highlights" ? COLORS.filter((c) => list.some((m) => m.color === c)) : [null]).map((color) => (
               // highlights: one folded group per colour, as on the computer
               <details key={color ?? "all"} className={color ? `hl-group hl-${color}` : "hl-all"} open={color == null}>
-                {color && (
+                {color ? (
                   <summary>
                     <i className={`dot hl-${color}`} /> <span>{colorName(color, names)}</span> <small>{list.filter((m) => m.color === color).length}</small>
                   </summary>
+                ) : (
+                  // (an empty heading, hidden by the style: a details block without one shows the word “Details”)
+                  <summary />
                 )}
                 <ul className="hits">
                   {(kind === "highlights" ? list : shownList)
                     .filter((m) => color == null || m.color === color)
                     .map((m) => (
-                      <li key={`${m.book}-${m.chapter}-${m.verse}`} className={color ? `hl-${color}` : ""} onClick={() => go(m.book, m.chapter, m.verse)}>
+                      <li
+                        key={`${m.book}-${m.chapter}-${m.verse}`}
+                        className={`${color ? `hl-${color}` : ""}${kind === "bookmarks" ? " mark-fold" : ""}${kind === "bookmarks" && openMarks.has(`${m.book} ${m.chapter}:${m.verse}`) ? " open" : ""}`}
+                        onClick={() => {
+                          if (kind !== "bookmarks") return go(m.book, m.chapter, m.verse);
+                          // a bookmark shows only its reference until tapped
+                          const key = `${m.book} ${m.chapter}:${m.verse}`;
+                          setOpenMarks((s) => {
+                            const n = new Set(s);
+                            if (!n.delete(key)) n.add(key);
+                            return n;
+                          });
+                        }}
+                      >
                         <div className="hit-head">
                           <strong>{refLabel(m)}</strong>
                           <button
@@ -1133,7 +1171,7 @@ export function App() {
                           </button>
                         </div>
                         {kind === "notes" && <p className="note-body">{m.color}</p>}
-                        {m.tags.length > 0 && (
+                        {m.tags.length > 0 && (kind !== "bookmarks" || openMarks.has(`${m.book} ${m.chapter}:${m.verse}`)) && (
                           <div className="tag-row">
                             {m.tags.map((t) => (
                               <span key={t} className="tag">
@@ -1142,7 +1180,32 @@ export function App() {
                             ))}
                           </div>
                         )}
-                        <span>{m.text}</span>
+                        {(kind !== "bookmarks" || openMarks.has(`${m.book} ${m.chapter}:${m.verse}`)) && <span>{m.text}</span>}
+                        {kind === "bookmarks" && openMarks.has(`${m.book} ${m.chapter}:${m.verse}`) && (
+                          <div className="actions open-here">
+                            <button
+                              className="primary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                go(m.book, m.chapter, m.verse);
+                              }}
+                            >
+                              Go there
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenMarks((s) => {
+                                  const n = new Set(s);
+                                  n.delete(`${m.book} ${m.chapter}:${m.verse}`);
+                                  return n;
+                                });
+                              }}
+                            >
+                              Close
+                            </button>
+                          </div>
+                        )}
                       </li>
                     ))}
                 </ul>
@@ -1269,19 +1332,6 @@ export function App() {
 
         {tab === "more" && (
           <div className="more" ref={moreBox} onClick={toggleExplanations}>
-            <h2>Bible dictionary</h2>
-            <input className="field" value={word} onChange={(e) => setWord(e.target.value)} placeholder="A person, place or word — e.g. Passover" aria-label="Look up in the dictionary" autoCapitalize="none" autoCorrect="off" />
-            {found && found.length === 0 && <p className="hint keep">No article by that name. Try the main search box for verses on it.</p>}
-            {found && found.length > 0 && (
-              <ul className="hits plain">
-                {found.map((a) => (
-                  <li key={a.id} onClick={() => openArticle(a.id)}>
-                    <strong>{a.name}</strong> <small>{a.source}</small>
-                  </li>
-                ))}
-              </ul>
-            )}
-
             <h2>Translations</h2>
             <p className="hint keep">
               Built in: {versions.filter((v) => !v.downloaded).map((v) => v.code).join(", ")}.
@@ -1291,15 +1341,29 @@ export function App() {
               <button onClick={() => setShowTranslations(true)}>More translations (other languages)</button>
             </div>
 
-            <SearchUpgradeSettings upgrade={searchUpgrade} />
-
-            <OriginalSettings pack={originalPack} />
-
-            <h2>Library</h2>
-            <p className="hint">Commentaries, dictionaries, books and devotionals to read offline: free ones from CrossWire, or files you have.</p>
-            <div className="actions">
-              <button onClick={() => setLibrary("home")}>Open the library</button>
-            </div>
+            <h2>Additional downloads</h2>
+            <p className="hint keep">Everything you add is available offline.</p>
+            <details className="fold">
+              <summary>Library</summary>
+              <p className="hint keep">Commentaries, dictionaries, books and devotionals: free ones from CrossWire, or files you have.</p>
+              <div className="actions">
+                <button onClick={() => setLibrary("home")}>Open the library</button>
+              </div>
+            </details>
+            <details className="fold">
+              <summary>
+                Advanced search <em>(Recommended)</em>
+                {searchUpgrade.installed && <small>✓</small>}
+              </summary>
+              <SearchUpgradeSettings upgrade={searchUpgrade} bare />
+            </details>
+            <details className="fold">
+              <summary>
+                Original words <em>(Recommended)</em>
+                {originalPack.installed && <small>✓</small>}
+              </summary>
+              <OriginalSettings pack={originalPack} bare />
+            </details>
 
             <h2>Name your highlights</h2>
             <p className="hint">Give each colour a meaning (“Promises”, “Old Testament prophecy”). Names you give on the computer show here too when the two keep in step.</p>
@@ -1332,73 +1396,70 @@ export function App() {
             </div>
             {backupNote && <p className="hint status">{backupNote}</p>}
 
-            <h2>Reading</h2>
-            <h3>Text size</h3>
-            <div className="actions">
-              <button disabled={size <= 0.85} onClick={() => setSize((s) => Math.round((s - 0.1) * 100) / 100)}>
-                A−
-              </button>
-              <span className="size-now">{Math.round(size * 100)}%</span>
-              <button disabled={size >= 1.8} onClick={() => setSize((s) => Math.round((s + 0.1) * 100) / 100)}>
-                A+
-              </button>
-            </div>
             <h2>Appearance</h2>
-            <h3>Theme</h3>
-            <div className="chips">
-              {(["system", "light", "sepia", "dark"] as const).map((t) => (
-                <button key={t} className={theme === t ? "on" : ""} onClick={() => setTheme(t)}>
-                  {t === "system" ? "Same as phone" : t === "light" ? "Light" : t === "sepia" ? "Sepia" : "Dark"}
+            <div className="row">
+              <span>Text size</span>
+              <div className="stepper">
+                <button disabled={size <= 0.85} onClick={() => setSize((s) => Math.round((s - 0.1) * 100) / 100)} aria-label="Smaller text">
+                  A−
                 </button>
-              ))}
-            </div>
-            <h3>Text colour</h3>
-            <div className="chips">
-              {(
-                [
-                  ["default", "Standard"],
-                  ["strong", "Strongest"],
-                  ["sepia", "Warm"],
-                  ["blue", "Blue-black"],
-                ] as const
-              ).map(([value, label]) => (
-                <button key={value} className={textColor === value ? "on" : ""} onClick={() => setTextColor(value)}>
-                  {label}
+                <span className="size-now">{Math.round(size * 100)}%</span>
+                <button disabled={size >= 1.8} onClick={() => setSize((s) => Math.round((s + 0.1) * 100) / 100)} aria-label="Larger text">
+                  A+
                 </button>
-              ))}
+              </div>
             </div>
-            <h3>Contrast</h3>
-            <div className="chips">
-              <button className={contrast === "standard" ? "on" : ""} onClick={() => setContrast("standard")}>
-                Standard
-              </button>
-              <button className={contrast === "high" ? "on" : ""} onClick={() => setContrast("high")}>
-                High
-              </button>
-            </div>
+            <label className="row">
+              <span>Theme</span>
+              <select className="select-field" value={theme} onChange={(e) => setTheme(e.target.value as Theme)}>
+                <option value="system">Same as phone</option>
+                <option value="light">Light</option>
+                <option value="sepia">Sepia</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            <label className="row">
+              <span>Text colour</span>
+              <select className="select-field" value={textColor} onChange={(e) => setTextColor(e.target.value as TextColor)}>
+                <option value="default">Standard</option>
+                <option value="strong">Strongest</option>
+                <option value="sepia">Warm</option>
+                <option value="blue">Blue-black</option>
+              </select>
+            </label>
+            <label className="row">
+              <span>Contrast</span>
+              <select className="select-field" value={contrast} onChange={(e) => setContrast(e.target.value as Contrast)}>
+                <option value="standard">Standard</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+            <label className="row">
+              <span>Font</span>
+              <select className="select-field" value={font} onChange={(e) => setFont(e.target.value as Font)}>
+                <option value="serif">Classic</option>
+                <option value="sans">Modern</option>
+              </select>
+            </label>
             <p className="hint">High contrast makes the grey labels and hints darker (lighter on the dark page), for reading in bright light.</p>
-            <h3>Font</h3>
-            <div className="chips">
-              <button className={font === "serif" ? "on" : ""} onClick={() => setFont("serif")} style={{ fontFamily: "var(--serif)" }}>
-                Classic
-              </button>
-              <button className={font === "sans" ? "on" : ""} onClick={() => setFont("sans")} style={{ fontFamily: "var(--sans)" }}>
-                Modern
-              </button>
-            </div>
 
             <h2>Read aloud</h2>
-            <h3>Speed</h3>
-            <div className="chips">
-              {RATES.map(([value, label]) => (
-                <button key={value} className={rate === value ? "on" : ""} onClick={() => setRate(value)}>
-                  {label}
-                </button>
-              ))}
+            <div className="speed">
+              <div className="speed-head">
+                <span>Speed</span>
+                <strong>{rateToStep(rate) === 0 ? "Normal" : `${rateToStep(rate) > 0 ? "+" : ""}${rateToStep(rate)}`}</strong>
+              </div>
+              <input type="range" min={-10} max={10} step={1} value={rateToStep(rate)} onChange={(e) => setRate(stepToRate(Number(e.target.value)))} aria-label="Reading speed: slower to the left, faster to the right" />
+              <div className="speed-ends">
+                <span>Slower</span>
+                <span>0</span>
+                <span>Faster</span>
+              </div>
             </div>
-            <h3>Voice</h3>
             {voices && voices.length > 0 ? (
-              <select className="select-field" value={voice ?? ""} onChange={(e) => setVoice(e.target.value || null)} aria-label="Voice">
+              <label className="row">
+                <span>Voice</span>
+                <select className="select-field" value={voice ?? ""} onChange={(e) => setVoice(e.target.value || null)} aria-label="Voice">
                 <option value="">The phone's default voice</option>
                 {voices.map((v) => (
                   <option key={v.name} value={v.name}>
@@ -1406,7 +1467,8 @@ export function App() {
                     {v.local ? "" : " (needs internet)"}
                   </option>
                 ))}
-              </select>
+                </select>
+              </label>
             ) : (
               <p className="hint keep">{voices ? "This phone offers one voice. More can be added in the phone's settings under Text-to-speech." : "Looking for the phone's voices…"}</p>
             )}
@@ -1414,16 +1476,13 @@ export function App() {
               <button onClick={() => void phone.speak("For God so loved the world, that he gave his only begotten Son.", rate, voice).catch(fail)}>Try this voice</button>
             </div>
             <p className="hint">Tap a verse and choose Listen from here. While it reads, the bar at the bottom has a sleep timer.</p>
-            <label className="toggle">
-              <input type="checkbox" checked={red} onChange={(e) => setRed(e.target.checked)} /> Words of Jesus in red
-            </label>
-            <label className="toggle">
-              <input type="checkbox" checked={dayVerse} onChange={(e) => setDayVerse(e.target.checked)} /> Show a verse for the day when the app opens
-            </label>
 
             <UpdateSettings updates={updates} enabled={autoUpdates} onEnabled={setAutoUpdates} />
 
-            <h2>About</h2>
+            <details className="fold about-fold">
+              <summary>
+                About <small>Version {updates.current || "…"}</small>
+              </summary>
             <ul className="about">
               {versions.map((v) => (
                 <li key={v.code}>
@@ -1437,6 +1496,7 @@ export function App() {
               {about && about.name ? `Study notes and book introductions: ${about.name} (${about.licence}), ${about.website}.` : ""} The rest is public domain. Everything works offline;
               only downloading more translations (from eBible.org), the nature backgrounds and a new version of the app needs the internet.
             </p>
+            </details>
           </div>
         )}
       </main>
