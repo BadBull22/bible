@@ -231,6 +231,18 @@ pub struct Entry {
     pub body: String,
 }
 
+/// The entries of the installed lexicons (BDB, Abbott-Smith, Dodson...) for one Strong's number ("G26"), as Word Study shows them.
+pub fn lexicon_entries(conn: &Connection, strongs: &str) -> Result<Vec<Entry>, String> {
+    let mut st = conn
+        .prepare(
+            "SELECT d.id, d.module, m.title, d.headword, d.body FROM lib_dict d JOIN modules m ON m.name = d.module
+             WHERE m.kind = 'dictionary' AND d.strongs = ?1 ORDER BY m.title, d.id LIMIT 12",
+        )
+        .map_err(err)?;
+    let rows = st.query_map(params![strongs.trim().to_uppercase()], |r| Ok(Entry { id: r.get(0)?, module: r.get(1)?, title: r.get(2)?, headword: r.get(3)?, body: r.get(4)? })).map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
 pub fn dictionary_entry(conn: &Connection, id: i64) -> Result<Option<Entry>, String> {
     conn.query_row(
         "SELECT d.id, d.module, m.title, d.headword, d.body FROM lib_dict d JOIN modules m ON m.name = d.module WHERE d.id = ?1",
@@ -321,6 +333,34 @@ pub fn book_today(conn: &Connection, module: &str, month: u32, day: u32) -> Resu
 mod tests {
     use super::*;
     use bible_core::sword;
+
+    #[test]
+    fn the_installed_lexicons_answer_for_a_strongs_number() {
+        let dir = std::env::temp_dir().join(format!("bc-phone-lex-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let conn = open(&dir).unwrap();
+        conn.execute_batch(
+            "INSERT INTO modules (name, kind, title, lang, language, licence, about, version, versification) VALUES
+                 ('Dodson', 'dictionary', 'Dodson Greek Lexicon', 'en', 'English', 'PD', '', '1', 'KJV'),
+                 ('AbbottSmith', 'dictionary', 'Abbott-Smith Manual Greek Lexicon', 'en', 'English', 'PD', '', '1', 'KJV'),
+                 ('Easton', 'dictionary', 'Easton Bible Dictionary', 'en', 'English', 'PD', '', '1', 'KJV'),
+                 ('Spurgeon', 'book', 'A book', 'en', 'English', 'PD', '', '1', 'KJV');
+             INSERT INTO lib_dict (module, key, headword, headword_fold, body, strongs) VALUES
+                 ('Dodson', '00025', 'ἀγαπάω', 'αγαπαω', 'to love', 'G25'),
+                 ('AbbottSmith', '00025', 'ἀγαπάω', 'αγαπαω', 'to love (LXX)', 'G25'),
+                 ('Dodson', '00026', 'ἀγάπη', 'αγαπη', 'love', 'G26'),
+                 ('Easton', 'Love', 'Love', 'love', 'Love, in Easton', NULL);",
+        )
+        .unwrap();
+        let g25 = lexicon_entries(&conn, "g25").unwrap();
+        assert_eq!(g25.iter().map(|e| e.title.as_str()).collect::<Vec<_>>(), vec!["Abbott-Smith Manual Greek Lexicon", "Dodson Greek Lexicon"], "by the lexicon's name, whatever the case typed");
+        assert_eq!(g25[1].body, "to love");
+        assert_eq!(lexicon_entries(&conn, "G26").unwrap().len(), 1);
+        assert!(lexicon_entries(&conn, "G999").unwrap().is_empty(), "no entry: nothing");
+        assert!(lexicon_entries(&conn, "").unwrap().is_empty());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[test]
     fn titles_that_are_days() {

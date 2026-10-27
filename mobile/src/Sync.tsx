@@ -147,7 +147,7 @@ export function SyncSettings({ onChanged }: { onChanged: () => void }) {
       <p className="hint">For when the phone can open the same folder as the computer (a folder a sync app keeps in step with your cloud storage).</p>
       {st?.folder ? (
         <>
-          <p className="hint">
+          <p className="hint keep">
             Keeping in step through <strong>{st.folder}</strong>
           </p>
           <div className="actions">
@@ -223,7 +223,7 @@ function Computer({ st, onPaired }: { st: SyncStatus | null; onPaired: (s: SyncS
   if (st?.computer)
     return (
       <>
-        <p className="hint">
+        <p className="hint keep">
           Paired with <strong>{st.computer}</strong> over the home Wi-Fi.
         </p>
         <div className="actions">
@@ -256,7 +256,7 @@ function Computer({ st, onPaired }: { st: SyncStatus | null; onPaired: (s: SyncS
           ))}
         </div>
       )}
-      {found && found.length === 1 && <p className="hint">Found: {found[0].name}</p>}
+      {found && found.length === 1 && <p className="hint keep">Found: {found[0].name}</p>}
       {found && (
         <div className="pair-form">
           {found.length === 0 && <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="192.168.1.20" inputMode="decimal" aria-label="The computer's address" />}

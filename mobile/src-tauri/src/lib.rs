@@ -20,6 +20,7 @@ pub mod db;
 pub mod lan;
 pub mod library;
 pub mod meaning_pack;
+pub mod original_pack;
 pub mod modules;
 pub mod packs;
 pub mod search;
@@ -242,6 +243,36 @@ fn search_upgrade_install(app: AppHandle, core: State<Core>) -> Result<(), Strin
 #[tauri::command(async)]
 fn search_upgrade_remove(core: State<Core>) -> Result<(), String> {
     meaning_pack::remove(&core.get()?.dir)
+}
+
+// The "Original words" download (since 2.9.6): the Greek and Hebrew words of a verse, one by one.
+#[tauri::command(async)]
+fn original_status(core: State<Core>) -> Result<SearchUpgradeStatus, String> {
+    Ok(SearchUpgradeStatus { installed: original_pack::installed(&core.get()?.dir), size_mb: original_pack::SIZE_MB })
+}
+
+/// Downloads the words; "original-pack-progress" events report the percentage.
+#[tauri::command(async)]
+fn original_install(app: AppHandle, core: State<Core>) -> Result<(), String> {
+    original_pack::install(&core.get()?.dir, &|pct| {
+        let _ = app.emit("original-pack-progress", pct);
+    })
+}
+
+#[tauri::command(async)]
+fn original_remove(core: State<Core>) -> Result<(), String> {
+    original_pack::remove(&core.get()?.dir)
+}
+
+/// The words of a verse, one by one, with the credit that goes with them; empty if they are not downloaded.
+#[tauri::command(async)]
+fn original_words(core: State<Core>, book: String, chapter: i64, verse: i64) -> Result<(Vec<original_pack::OriginalWord>, String), String> {
+    let dir = &core.get()?.dir;
+    if !original_pack::installed(dir) {
+        return Ok((Vec::new(), String::new()));
+    }
+    let conn = original_pack::open(dir)?;
+    Ok((original_pack::verse_words(&conn, &book, chapter, verse)?, original_pack::credit(&conn)))
 }
 
 #[tauri::command(async)]
@@ -676,6 +707,11 @@ fn library_entry(core: State<Core>, id: i64) -> Result<Option<library::Entry>, S
 }
 
 #[tauri::command(async)]
+fn library_lexicon(core: State<Core>, strongs: String) -> Result<Vec<library::Entry>, String> {
+    library::lexicon_entries(&*core.get()?.library.lock().map_err(err)?, &strongs)
+}
+
+#[tauri::command(async)]
 fn library_devotional(core: State<Core>, module: String, month: u32, day: u32) -> Result<Option<library::Entry>, String> {
     library::devotional(&*core.get()?.library.lock().map_err(err)?, &module, month, day)
 }
@@ -895,6 +931,10 @@ pub fn run() {
             ask_question,
             search_upgrade_install,
             search_upgrade_remove,
+            original_status,
+            original_install,
+            original_remove,
+            original_words,
             topic_verses,
             cross_refs,
             compare,
@@ -933,6 +973,7 @@ pub fn run() {
             library_commentary,
             library_search,
             library_entry,
+            library_lexicon,
             library_devotional,
             library_toc,
             library_section,
