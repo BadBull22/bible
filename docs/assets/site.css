@@ -413,3 +413,14 @@ footer a:hover { color: var(--accent-600); }
   .shots-wide { grid-template-columns: 1fr; }
   .shots-tall { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Legal pages: privacy, terms, disclaimer, refunds */
+.legal-nav { display: flex; flex-wrap: wrap; gap: 0.4rem 0.6rem; margin: 6px 0 22px; font-size: 0.85rem; }
+.legal-nav a { padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-muted); text-decoration: none; }
+.legal-nav a:hover { color: var(--accent-600); border-color: var(--accent-500); }
+.legal-nav a[aria-current="page"] { background: var(--navy-900); border-color: var(--navy-900); color: #fff; }
+main.legal p, main.legal li { font-size: 0.93rem; line-height: 1.65; color: var(--text-muted); }
+main.legal li { margin-bottom: 6px; }
+main.legal strong { color: var(--text); }
+main.legal .free-note p { font-size: 0.93rem; }
+main.legal .other-device { margin-top: 36px; }
