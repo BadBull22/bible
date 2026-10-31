@@ -134,7 +134,6 @@ main.container {
   padding: 0.25rem 0.6rem;
   border-radius: 999px;
 }
-.badge.beta { color: var(--android); background: var(--android-100); }
 
 h2.section-title {
   font-family: var(--serif);
