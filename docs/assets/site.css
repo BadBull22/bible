@@ -234,6 +234,11 @@ h2.section-title {
 .btn-secondary:hover { border-color: var(--accent-500); color: var(--accent-600); }
 .btn:active { transform: translateY(1px); }
 .file-meta { margin-top: 14px; font-size: 0.8rem; color: var(--text-faint); }
+/* Microsoft's official Store badge: shown as supplied, not altered */
+.store-badge { display: inline-block; line-height: 0; border-radius: 6px; }
+.store-badge img { display: block; height: 56px; width: auto; }
+.store-badge:hover { opacity: 0.92; }
+.store-badge:focus-visible { outline: 2px solid var(--accent-500); outline-offset: 3px; }
 .note {
   margin-top: 18px;
   padding: 12px 16px;
