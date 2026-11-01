@@ -195,9 +195,17 @@ h2.section-title {
 .compare th, .compare td { padding: 9px 14px; border-bottom: 1px solid var(--border); text-align: left; }
 .compare th { background: var(--chrome-bg); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
 .compare td:not(:first-child), .compare th:not(:first-child) { text-align: center; width: 22%; }
-.compare tr:last-child td { border-bottom: none; }
+.compare tbody:last-of-type tr:last-child td { border-bottom: none; }
 .compare .yes { color: var(--android); font-weight: 700; }
 .compare .no { color: var(--text-faint); }
+.compare-more { text-align: center; margin: 16px 0 0; }
+.btn.compare-toggle {
+  cursor: pointer; font-family: inherit; font-size: 0.9rem; padding: 0.55rem 1.3rem;
+  background: var(--accent-100); border: 1.5px solid var(--accent-500); color: var(--accent-600);
+  box-shadow: var(--shadow-sm);
+}
+.btn.compare-toggle:hover { background: var(--accent-500); border-color: var(--accent-500); color: #fff; box-shadow: var(--shadow-md); }
+.btn.compare-toggle:focus-visible { outline: 3px solid var(--accent-500); outline-offset: 2px; }
 
 /* ---------- download cards ---------- */
 

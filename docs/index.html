@@ -215,6 +215,8 @@
     <tr><td>Commentary</td><td class="yes">Seven commentaries</td><td class="yes">Tyndale study notes, and more to download</td></tr>
     <tr><td>More Bibles to download, in many languages</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
     <tr><td>Light and dark themes, text colour, high contrast</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
+  </tbody>
+  <tbody id="compare-more">
     <tr><td>Keep phone and computer in step over your home Wi-Fi</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
     <tr><td>Backup file that works in both apps</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
     <tr><td>Verse pictures to save or share</td><td class="no">&mdash;</td><td class="yes">&#10003;</td></tr>
@@ -228,6 +230,30 @@
     <tr><td>Tells you when a new version is out and installs it</td><td class="yes">&#10003;</td><td class="yes">&#10003;</td></tr>
   </tbody>
 </table>
+<p class="compare-more">
+  <button type="button" class="btn btn-secondary compare-toggle" id="compare-toggle" aria-controls="compare-more" aria-expanded="false" hidden></button>
+</p>
+<script>
+// The list is long, so only the first rows show at first; without JavaScript every row stays visible.
+(function () {
+  var more = document.getElementById("compare-more");
+  var btn = document.getElementById("compare-toggle");
+  if (!more || !btn) return;
+  var n = more.rows.length;
+  function show(open) {
+    more.hidden = !open;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    btn.textContent = open ? "Show less ▴" : "Show " + n + " more ▾";
+  }
+  btn.hidden = false;
+  show(false);
+  btn.addEventListener("click", function () {
+    var open = more.hidden;
+    show(open);
+    if (!open) btn.scrollIntoView({ block: "nearest" });
+  });
+})();
+</script>
 
 <h2 class="section-title">Music</h2>
 <a class="music-card" href="https://music.youtube.com/channel/UCOmYicXYhihT-vUOFE99ETw" target="_blank" rel="noopener">
