@@ -30,7 +30,7 @@ import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "./plan
 import { parseReference, Reference } from "./refs";
 import { canRemind, setReminder, testReminder } from "./reminder";
 import { Translations } from "./Translations";
-import { UpdateBanner, UpdateSettings, useUpdates } from "./Updates";
+import { UpdateBanner, UpdateSettings, usePlayBuild, useUpdates } from "./Updates";
 import { SyncSettings, useAutoSync } from "./Sync";
 import { OriginalPack, OriginalSettings, useOriginalPack } from "./OriginalWords";
 import { SearchUpgradeOffer, SearchUpgradeSettings, useSearchUpgrade } from "./SearchUpgrade";
@@ -245,6 +245,7 @@ export function App() {
   const dayVerse = true;
   const [autoUpdates, setAutoUpdates] = useState(saved.updates);
   const updates = useUpdates(saved.updates);
+  const playBuild = usePlayBuild(); // the Google Play build has no "run in the background" button (it needs a permission Play restricts)
   const [rate, setRate] = useState(saved.rate);
   const [voice, setVoice] = useState<string | null>(saved.voice);
   const [voices, setVoices] = useState<PhoneVoice[] | null>(null);
@@ -1257,10 +1258,13 @@ export function App() {
                   <button onClick={() => void testReminder().then((ok) => say(ok ? "A test reminder will come in about a minute" : "Notifications aren't allowed for this app")).catch(fail)}>
                     Test the reminder
                   </button>
-                  <button onClick={() => void phone.batterySettings().catch(fail)}>Let it run in the background</button>
+                  {!playBuild && <button onClick={() => void phone.batterySettings().catch(fail)}>Let it run in the background</button>}
                 </div>
                 <p className="hint">
-                  If the test doesn't arrive, allow the app to run in the background. On Huawei and Honor phones also open Settings → Apps → App launch → Bible
+                  {playBuild
+                    ? "If the test doesn't arrive, check that notifications are allowed for the app in Android's settings. The reminder may come a few minutes after the time you chose. "
+                    : "If the test doesn't arrive, allow the app to run in the background. "}
+                  On Huawei and Honor phones also open Settings → Apps → App launch → Bible
                   Concordance, switch to <em>Manage manually</em> and turn on all three; on Samsung, Settings → Battery → Background usage limits.
                 </p>
               </>

@@ -883,9 +883,18 @@ fn updates_dir(app: &AppHandle) -> Result<PathBuf, String> {
     tauri_plugin_phone::updates_dir(app)
 }
 
+/// true in the Google Play build, which Play updates (so the app does not look for updates itself)
+#[tauri::command]
+fn play_build() -> bool {
+    cfg!(feature = "play")
+}
+
 /// The newer version on offer, if there is one (asks the website).
 #[tauri::command(async)]
 fn update_check(app: AppHandle) -> Result<Option<update::Offer>, String> {
+    if cfg!(feature = "play") {
+        return Ok(None);
+    }
     let offer = update::check(env!("CARGO_PKG_VERSION"))?;
     if offer.is_none() {
         // up to date: an update downloaded earlier has been installed, or is no longer wanted
@@ -901,6 +910,9 @@ fn update_check(app: AppHandle) -> Result<Option<update::Offer>, String> {
 /// again here, so the page cannot name a file of its own.
 #[tauri::command(async)]
 fn update_download(app: AppHandle) -> Result<String, String> {
+    if cfg!(feature = "play") {
+        return Err("This version is updated by Google Play.".into());
+    }
     let offer = update::check(env!("CARGO_PKG_VERSION"))?.ok_or("You already have the newest version.")?;
     let path = update::download(&offer, &updates_dir(&app)?, &|pct| {
         let _ = app.emit("update-progress", pct);
@@ -1006,7 +1018,8 @@ pub fn run() {
             background_image,
             backgrounds_remove,
             update_check,
-            update_download
+            update_download,
+            play_build
         ])
         .run(tauri::generate_context!())
         .expect("error while running the app");

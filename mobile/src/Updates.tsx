@@ -13,6 +13,22 @@ const onPhone = /Android/i.test(navigator.userAgent);
 
 const megabytes = (bytes: number) => (bytes > 0 ? `${Math.round(bytes / 1048576)} MB` : "");
 
+// The Google Play build is updated by Play: it has no update screens and no install permission.
+let playAsked: Promise<boolean> | null = null;
+function isPlayBuild(): Promise<boolean> {
+  playAsked ??= api.playBuild().catch(() => false);
+  return playAsked;
+}
+
+/** true in the Google Play build (false until known, and on a computer). */
+export function usePlayBuild(): boolean {
+  const [play, setPlay] = useState(false);
+  useEffect(() => {
+    void isPlayBuild().then(setPlay);
+  }, []);
+  return play;
+}
+
 export interface Updates {
   /** this copy's version */
   current: string;
@@ -59,17 +75,20 @@ export function useUpdates(enabled: boolean): Updates {
       /* then it looks again */
     }
     if (!enabled || !onPhone || last === todayIso()) return;
-    api
-      .updateCheck()
-      .then((found) => {
-        try {
-          localStorage.setItem(CHECKED_KEY, todayIso());
-        } catch {
-          /* a convenience only */
-        }
-        setOffer(found);
-      })
-      .catch(() => undefined);
+    void isPlayBuild().then((play) => {
+      if (play) return; // Google Play does the updating
+      api
+        .updateCheck()
+        .then((found) => {
+          try {
+            localStorage.setItem(CHECKED_KEY, todayIso());
+          } catch {
+            /* a convenience only */
+          }
+          setOffer(found);
+        })
+        .catch(() => undefined);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -141,6 +160,15 @@ export function UpdateBanner({ updates }: { updates: Updates }) {
 
 /** More > Updates: this copy's version, the daily check's switch, and "Check now". */
 export function UpdateSettings({ updates, enabled, onEnabled }: { updates: Updates; enabled: boolean; onEnabled: (on: boolean) => void }) {
+  const play = usePlayBuild();
+  if (play) {
+    return (
+      <>
+        <h2>Updates</h2>
+        <p className="hint keep">This is version {updates.current || "…"}. Google Play keeps this app up to date, and your bookmarks, highlights and notes are kept when it updates.</p>
+      </>
+    );
+  }
   return (
     <>
       <h2>Updates</h2>

@@ -330,6 +330,8 @@ export const api = {
   readingStats: (today: string) => invoke<ReadingStats>("reading_stats", { today }),
 
   /** the newer version of the app on offer, if there is one (asks bible4me.org) */
+  /** true in the Google Play build, which Play updates */
+  playBuild: () => invoke<boolean>("play_build"),
   updateCheck: () => invoke<UpdateOffer | null>("update_check"),
   /** downloads it ("update-progress" events report the percentage); returns the file's path */
   updateDownload: () => invoke<string>("update_download"),
