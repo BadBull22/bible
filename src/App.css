@@ -9759,3 +9759,33 @@ body.show-body {
   cursor: pointer;
   font-weight: 600;
 }
+
+/* ---------- opening screen: reading streak (2.9.9) ---------- */
+
+.home-streak {
+  margin: 0.9rem auto 0;
+  max-width: 44rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ---------- "What's new" window and the automatic backup setting (2.9.9) ---------- */
+
+.whatsnew-list {
+  margin: 0.4rem 0 0.4rem 1.1rem;
+  padding: 0;
+  line-height: 1.5;
+}
+
+.whatsnew-list li {
+  margin-bottom: 0.55rem;
+}
+
+.set-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.55rem 0;
+  font-size: 0.9rem;
+}

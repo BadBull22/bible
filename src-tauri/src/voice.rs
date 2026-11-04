@@ -147,7 +147,8 @@ fn start_sidecar(p: &VoicePaths) -> Result<Running, String> {
         let _ = BufReader::new(stdout).read_line(&mut line);
         let _ = tx.send(line);
     });
-    let line = match rx.recv_timeout(Duration::from_secs(90)) {
+    // generous: the first start after an install or update waits while Windows and antivirus programs check the new files
+    let line = match rx.recv_timeout(Duration::from_secs(180)) {
         Ok(l) => l,
         Err(_) => {
             let _ = child.kill();
@@ -348,18 +349,30 @@ pub async fn voice_speak(app: AppHandle, text: String, voice: String, speed: f32
     })
     .await
     .map_err(|e| e.to_string())??;
+    // what was asked, for the log if it fails (the text itself is kept short; it is scripture)
+    let asked = format!("{} characters, voice {voice}, speed {speed}: \"{}\"", text.chars().count(), text.chars().take(60).collect::<String>());
+    let started = std::time::Instant::now();
     let resp = reqwest::Client::new()
         .post(format!("http://127.0.0.1:{port}/speak"))
         .json(&serde_json::json!({ "text": text, "voice": voice, "speed": speed }))
         .timeout(Duration::from_secs(120))
         .send()
         .await
-        .map_err(|e| format!("The voice didn't answer: {e}"))?;
+        .map_err(|e| {
+            let msg = format!("The voice didn't answer: {e}");
+            crate::logging::write("warn", "voice", &format!("{msg} (after {:.1} s; {asked})", started.elapsed().as_secs_f32()));
+            msg
+        })?;
     if !resp.status().is_success() {
+        let status = resp.status();
         let msg = resp.text().await.unwrap_or_default();
+        crate::logging::write("warn", "voice", &format!("the voice answered {status}: {msg} (after {:.1} s; {asked})", started.elapsed().as_secs_f32()));
         return Err(format!("The voice couldn't read that: {msg}"));
     }
-    let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
+    let bytes = resp.bytes().await.map_err(|e| {
+        crate::logging::write("warn", "voice", &format!("the voice's audio did not arrive: {e} (after {:.1} s; {asked})", started.elapsed().as_secs_f32()));
+        e.to_string()
+    })?;
     Ok(tauri::ipc::Response::new(bytes.to_vec()))
 }
 

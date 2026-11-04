@@ -466,6 +466,28 @@ export interface ExportResult {
   bookmarks: number;
 }
 
+/** What the reader has read, from the days on which a chapter was read to its end (the same as the phone's). */
+export interface ReadingStats {
+  /** days in a row with some reading, up to today (or yesterday, if nothing is read yet today) */
+  streak: number;
+  best_streak: number;
+  read_today: boolean;
+  /** days with some reading, ever */
+  days: number;
+  /** different chapters read at least once */
+  chapters: number;
+}
+
+export interface AutoBackupResult {
+  /** a backup was written just now */
+  wrote: boolean;
+  folder: string;
+  /** the one written now, or the newest that was already there */
+  file: string | null;
+  /** automatic backups in the folder now */
+  kept: number;
+}
+
 /** The natural read-aloud voice: present, running, or downloadable. */
 export interface VoiceStatus {
   available: boolean;
@@ -1125,6 +1147,15 @@ export const api = {
   setPlanDay: (plan_id: string, day: number, done: boolean) => invoke<void>("set_plan_day", { planId: plan_id, day, done }),
   exportStudy: () => invoke<ExportResult>("export_study"),
   importStudy: (json: string) => invoke<ImportResult>("import_study", { json }),
+  /** a chapter was read to its end on this day (yyyy-mm-dd) */
+  markRead: (book: string, chapter: number, day: string) => invoke<void>("mark_read", { book, chapter, day }),
+  readingStats: (today: string) => invoke<ReadingStats>("reading_stats", { today }),
+  /** where automatic backups go when no other folder was chosen */
+  autoBackupFolder: () => invoke<string>("auto_backup_folder"),
+  /** writes a backup into the folder (the default one when null) unless one from the last week is there; `force` writes one anyway */
+  autoBackup: (folder: string | null, force: boolean) => invoke<AutoBackupResult>("auto_backup", { folder, force }),
+  /** tells the app the page has started: if it never does, the app says the window did not open */
+  appReady: () => invoke<void>("app_ready"),
   /** the last lines of the app's error log */
   logRecent: (lines = 200) => invoke<string>("log_recent", { lines }),
   logPath: () => invoke<string | null>("log_path"),

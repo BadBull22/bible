@@ -84,6 +84,9 @@ function cap(s: string) {
   return s[0].toUpperCase() + s.slice(1);
 }
 
+/** After the natural voice fails, a new Listen at least this long later tries it again. */
+const RETRY_NATURAL_AFTER_MS = 60_000;
+
 const PREFS_KEY = "readAloud:prefs";
 // Sarah is the voice the user already chose for their Ghost Claw assistant.
 export const DEFAULT_READ_PREFS: ReadAloudPrefs = { voice: "af_sarah", speed: 1, continueChapters: true };
@@ -160,6 +163,8 @@ export class ReadAloud {
   private cache = new Map<number, Promise<string>>();
   private prefs: ReadAloudPrefs = loadReadPrefs();
   private natural: boolean | null = null;
+  /** when the natural voice last failed, so a later Listen can try it again */
+  private naturalFailedAt = 0;
   state: ReaderState = { status: "idle", verse: null, tag: null, message: null, engine: "natural" };
 
   constructor(
@@ -201,6 +206,9 @@ export class ReadAloud {
   }
 
   async start(items: ReadItem[], startIndex = 0) {
+    // After a failure the Windows voice is used for a while (so a chapter carrying on into the next one does not
+    // wait again); a new Listen a minute or more later tries the natural voice again.
+    if (this.natural === false && Date.now() - this.naturalFailedAt > RETRY_NATURAL_AFTER_MS) this.natural = null;
     this.items = items;
     await this.playFrom(Math.max(0, Math.min(startIndex, items.length - 1)));
   }
@@ -272,9 +280,11 @@ export class ReadAloud {
       await audio.play();
     } catch (e) {
       if (gen !== this.generation) return;
-      // natural voice failed: say why, and fall back to the Windows voice from here on
+      // natural voice failed: say why, and use the Windows voice for now (the app's log keeps the reason)
       this.natural = false;
-      this.set({ engine: "windows", message: `The natural voice isn't working (${e}); using the Windows voice instead.` });
+      this.naturalFailedAt = Date.now();
+      console.warn("natural voice failed:", e);
+      this.set({ engine: "windows", message: `The natural voice isn't working (${e}); using the Windows voice instead. It is tried again the next time you press Listen.` });
       this.speakWindows(item, i, gen);
     }
   }
@@ -347,5 +357,31 @@ export class ReadAloud {
     invoke<VoiceStatus>("voice_status")
       .then((s) => s.available && !s.running && invoke("voice_start"))
       .catch(() => undefined);
+  }
+
+  /**
+   * Once for each version of the app, starts the natural voice in the background. The first start after an install
+   * or update can take long (Windows and antivirus programs check the new files), and it is better that this happens
+   * while the reader is looking at something else than after pressing Listen. Later starts take a couple of seconds,
+   * so the voice is then left until it is wanted.
+   */
+  static warmUpOnce(appVersion: string) {
+    const key = `voice:warmed:${appVersion}`;
+    try {
+      if (localStorage.getItem(key)) return;
+    } catch {
+      return;
+    }
+    invoke<VoiceStatus>("voice_status")
+      .then(async (s) => {
+        if (!s.available) return; // nothing to start (not downloaded): try again next time
+        if (!s.running) await invoke("voice_start");
+        try {
+          localStorage.setItem(key, "1");
+        } catch {
+          /* it just tries again next time */
+        }
+      })
+      .catch((e) => console.warn("starting the natural voice in the background failed:", e));
   }
 }

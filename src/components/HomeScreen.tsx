@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { api, AskAnswer, BookInfo, HomeStats, PlanProgress, resolveReference, SearchHit } from "../api";
+import { api, AskAnswer, BookInfo, HomeStats, PlanProgress, ReadingStats, resolveReference, SearchHit } from "../api";
 import { addSearchHistory, getSearchHistory } from "../searchHistory";
 import { AskAnswerView } from "./AskAnswerView";
 import { verseOfTheDay } from "../dailyVerse";
-import { buildPlan, currentDay, PLANS } from "../readingPlans";
+import { buildPlan, currentDay, PLANS, todayIso } from "../readingPlans";
 import { copyText, formatVerseForCopy } from "../clipboard";
 import { SearchIcon } from "./icons";
 
@@ -19,6 +19,12 @@ interface Props {
   studyVersion: number;
   onOpenPlans: () => void;
   onOpenDictionary: (query: string) => void;
+  /** Opens the page listing the Bible's authors -- used by the "Authors" tile. */
+  onOpenAuthors: () => void;
+  /** The chapter the reader was last at, for the "Continue reading" button (null: nowhere yet). */
+  resume: { book: string; chapter: number } | null;
+  /** The Bible the reader is using: the verse of the day is shown in it. */
+  versionCode: string;
 }
 
 const EXAMPLES = ["John 3:16", "the creation of light", "the prodigal son", "Psalm 23", "the parting of the Red Sea"];
@@ -44,7 +50,13 @@ interface StatTile {
   action?: () => void;
 }
 
-function buildStatTiles(stats: HomeStats, onGo: Props["onGo"], onOpenCrossRefs: Props["onOpenCrossRefs"], onOpenParallel: Props["onOpenParallel"]): StatTile[] {
+function buildStatTiles(
+  stats: HomeStats,
+  onGo: Props["onGo"],
+  onOpenCrossRefs: Props["onOpenCrossRefs"],
+  onOpenParallel: Props["onOpenParallel"],
+  onOpenAuthors: Props["onOpenAuthors"],
+): StatTile[] {
   const n = (x: number) => x.toLocaleString();
   return [
     {
@@ -59,7 +71,8 @@ function buildStatTiles(stats: HomeStats, onGo: Props["onGo"], onOpenCrossRefs: 
       value: n(stats.chapters),
       label: "Chapters",
       sub: `${stats.ot_chapters} Old Testament, ${stats.nt_chapters} New`,
-      // No independent destination -- would just repeat the Books tile's jump.
+      // "Books" starts the Old Testament at Genesis, so this one starts the New Testament at Matthew.
+      action: () => onGo("Matthew", 1, null),
     },
     {
       key: "verses",
@@ -70,10 +83,12 @@ function buildStatTiles(stats: HomeStats, onGo: Props["onGo"], onOpenCrossRefs: 
     },
     {
       key: "authors",
-      value: "~40",
+      value: "40",
       label: "Authors",
-      sub: "traditional estimate, across ~1,500 years",
-      // Not in the bundled data at all (no authorship field) -- see NOTICE.md.
+      sub: "traditional list, across ~1,500 years",
+      // Not in the bundled data (no authorship field): the page it opens is written into the app
+      // itself (src/bibleAuthors.ts), with a note on each writer and the books they wrote.
+      action: onOpenAuthors,
     },
     {
       key: "xrefs",
@@ -92,8 +107,24 @@ function buildStatTiles(stats: HomeStats, onGo: Props["onGo"], onOpenCrossRefs: 
   ];
 }
 
-export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpenParallel, studyVersion, onOpenPlans, onOpenDictionary }: Props) {
+/** "5 days in a row", with what to do next, and how much has been read. */
+function streakLine(s: ReadingStats): string {
+  const days = (n: number) => `${n} ${n === 1 ? "day" : "days"}`;
+  const parts: string[] = [];
+  if (s.streak > 0) {
+    parts.push(`Reading streak: ${days(s.streak)} in a row${s.read_today ? "" : ", read a chapter to the end today to keep it going"}`);
+  } else {
+    parts.push("Read a chapter to the end to start a reading streak");
+  }
+  if (s.best_streak > s.streak) parts.push(`best: ${days(s.best_streak)}`);
+  parts.push(`${s.chapters} different ${s.chapters === 1 ? "chapter" : "chapters"} read`);
+  return parts.join(" · ");
+}
+
+export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpenParallel, studyVersion, onOpenPlans, onOpenDictionary, onOpenAuthors, resume, versionCode }: Props) {
   const [dailyText, setDailyText] = useState<string | null>(null);
+  const [dailyVersion, setDailyVersion] = useState("BSB");
+  const [readStats, setReadStats] = useState<ReadingStats | null>(null);
   const [plans, setPlans] = useState<PlanProgress[]>([]);
   const [copiedDaily, setCopiedDaily] = useState(false);
   const [dailyBook, dailyChapter, dailyVerse] = verseOfTheDay();
@@ -112,11 +143,28 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
   useEffect(() => {
     api.homeStats().then(setStats).catch(console.error);
     api
-      .getVerseWithStrongs("BSB", dailyBook, dailyChapter, dailyVerse)
-      .then((v) => setDailyText(v.text))
-      .catch(() => setDailyText(null));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      .readingStats(todayIso())
+      .then(setReadStats)
+      .catch(() => setReadStats(null));
   }, []);
+
+  // The verse of the day in the Bible the reader is using; the built-in BSB when that one can't give it
+  // (a Bible that is online only, or Enoch's single translation).
+  useEffect(() => {
+    let stale = false;
+    const fetchIn = (code: string) => api.getVerseWithStrongs(code, dailyBook, dailyChapter, dailyVerse).then((v) => ({ code, text: v.text }));
+    fetchIn(versionCode)
+      .catch(() => (versionCode === "BSB" ? Promise.reject(new Error("no verse")) : fetchIn("BSB")))
+      .then((r) => {
+        if (stale) return;
+        setDailyText(r.text);
+        setDailyVersion(r.code);
+      })
+      .catch(() => !stale && setDailyText(null));
+    return () => {
+      stale = true;
+    };
+  }, [versionCode, dailyBook, dailyChapter, dailyVerse]);
 
   useEffect(() => {
     api.planProgress().then(setPlans).catch(() => setPlans([]));
@@ -201,6 +249,13 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
             aria-label="Find a passage to begin reading"
           />
         </form>
+        {!query.trim() && resume && books.some((b) => b.name === resume.book) && resume.chapter <= (chapterCounts[resume.book] ?? 0) && (
+          <div className="home-examples">
+            <button className="pill-btn" onClick={() => onGo(resume.book, resume.chapter, null)}>
+              Continue reading: {resume.book} {resume.chapter}
+            </button>
+          </div>
+        )}
         {!query.trim() && history.length > 0 && (
           <div className="home-examples">
             <span className="muted">Recent:</span>
@@ -256,11 +311,11 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
                 <button className="link-btn" onClick={() => goAndRemember(dailyBook, dailyChapter, dailyVerse)}>
                   {dailyBook} {dailyChapter}:{dailyVerse}
                 </button>{" "}
-                <span className="muted">(BSB)</span>{" "}
+                <span className="muted">({dailyVersion})</span>{" "}
                 <button
                   className="text-btn"
                   onClick={async () => {
-                    setCopiedDaily(await copyText(formatVerseForCopy(dailyBook, dailyChapter, dailyVerse, dailyText, "BSB")));
+                    setCopiedDaily(await copyText(formatVerseForCopy(dailyBook, dailyChapter, dailyVerse, dailyText, dailyVersion)));
                     window.setTimeout(() => setCopiedDaily(false), 1500);
                   }}
                 >
@@ -296,13 +351,14 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
           })}
         </div>
       )}
+      {!query.trim() && readStats && (readStats.chapters > 0 || readStats.streak > 0) && <p className="home-streak">{streakLine(readStats)}</p>}
       {/* Hidden while actively searching, same reasoning as the example chips above:
           keep the screen focused on results rather than competing for attention. */}
       {!query.trim() && stats && (
         <div className="home-stats">
           <p className="home-stats-heading">Inside this Bible</p>
           <div className="home-stats-grid">
-            {buildStatTiles(stats, onGo, onOpenCrossRefs, onOpenParallel).map((tile) => {
+            {buildStatTiles(stats, onGo, onOpenCrossRefs, onOpenParallel, onOpenAuthors).map((tile) => {
               const content = (
                 <>
                   <div className="home-stat-number">{tile.value}</div>
