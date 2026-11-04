@@ -3,6 +3,12 @@
 #   pwsh -File mobile\scripts\android.ps1                 # a debug APK to try on a phone
 #   pwsh -File mobile\scripts\android.ps1 -Release        # the signed APK to hand out
 #   pwsh -File mobile\scripts\android.ps1 -Install        # build, then install on the phone plugged in
+#   pwsh -File mobile\scripts\android.ps1 -Release -Play  # the signed .aab for Google Play (upload that file)
+#   pwsh -File mobile\scripts\android.ps1 -Release -Play -TestApk -Targets x86_64   # the same app as an APK for the PC's emulator
+#
+# -Play is the Google Play build: no update check or Install button (Play updates the app, and does
+# not allow an app to install its own updates) and none of the permissions Play restricts
+# (REQUEST_INSTALL_PACKAGES, the exact alarms, the battery question). The website APK keeps them.
 #
 # The project lives on a network share, where the Android tools cannot work (Tauri's
 # Android setup refuses the share's path, and Gradle does thousands of small writes), so the
@@ -16,6 +22,13 @@
 param(
     [switch]$Release,
     [switch]$Install,
+    # the Google Play build (see above); with -Release it makes an .aab, or with -TestApk an APK to try
+    [switch]$Play,
+    [switch]$TestApk,
+    # Android's internal build number. Normally worked out from the version (2.9.8 -> 2009008). Google Play never
+    # accepts the same number twice, even for an upload that was discarded, so a re-upload of the same version
+    # needs a higher one here, e.g. -VersionCode 2009009. The version people see (2.9.8) does not change.
+    [int]$VersionCode = 0,
     # phones are 64-bit ARM (32-bit ARM is included for older ones); the emulator on a PC is x86_64
     [string[]]$Targets = @("aarch64", "armv7"),
     [string]$Mirror = "$env:LOCALAPPDATA\bible-concordance-build\mobile-mirror",
@@ -30,6 +43,11 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 $ndk = Get-ChildItem "$env:ANDROID_HOME\ndk" -Directory -ErrorAction SilentlyContinue | Sort-Object Name | Select-Object -Last 1
 if (-not $ndk) { throw "No Android NDK found under $env:ANDROID_HOME\ndk" }
 $env:NDK_HOME = $ndk.FullName
+# Android 15+ phones can run with 16 KB memory pages and Google Play wants the native library laid out for
+# them ("Recompile your app with 16 KB native library alignment"). The installed NDK (27) still links for 4 KB
+# pages, so the linker is told. 64-bit only: 32-bit ARM phones keep 4 KB pages. Check a built file afterwards:
+# the library's LOAD segments should show align 16384 (0x4000).
+foreach ($t in "AARCH64", "X86_64") { Set-Item "env:CARGO_TARGET_${t}_LINUX_ANDROID_RUSTFLAGS" "-C link-arg=-Wl,-z,max-page-size=16384" }
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 if (-not (Test-Path "$env:JAVA_HOME\bin\java.exe")) { throw "Android Studio's Java not found at $env:JAVA_HOME" }
 # Gradle downloads itself and its libraries with Java, which has its own list of trusted
@@ -81,6 +99,45 @@ if (-not (Test-Path "src-tauri\gen\android")) {
     npx tauri android init --ci
     if ($LASTEXITCODE -ne 0) { throw "tauri android init failed" }
 }
+# --- the permissions: the Play build drops the ones Play restricts, the website APK keeps them. The
+# generated manifest stays between builds, so it is set one way or the other every time.
+$manifest = "src-tauri\gen\android\app\src\main\AndroidManifest.xml"
+$m = Get-Content $manifest -Raw
+$m = [regex]::Replace($m, '\s*<!-- play:start -->.*?<!-- play:end -->', '', 'Singleline')
+if ($Play) {
+    if ($m -notmatch 'xmlns:tools=') { $m = $m.Replace('<manifest ', '<manifest xmlns:tools="http://schemas.android.com/tools" ') }
+    $q = [char]34
+    $drop = foreach ($p in "REQUEST_INSTALL_PACKAGES", "SCHEDULE_EXACT_ALARM", "USE_EXACT_ALARM", "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS") {
+        "    <uses-permission android:name=${q}android.permission.$p${q} tools:node=${q}remove${q} />"
+    }
+    $block = "    <!-- play:start -->" + [Environment]::NewLine + ($drop -join [Environment]::NewLine) + [Environment]::NewLine + "    <!-- play:end -->"
+    $at = $m.IndexOf("<application")
+    if ($at -lt 0) { throw "No <application> in $manifest" }
+    $m = $m.Insert($at, $block + [Environment]::NewLine + "    ")
+}
+Set-Content -Path $manifest -Value $m -NoNewline
+$features = if ($Play) { @("--features", "play") } else { @() }
+
+# the Android shell's start-up code (MainActivity.kt: it hands the size of the status bar and navigation bar
+# to the page, which Android 15+ draws under). The generated project is not kept in git, so the copy that is
+# kept in src-tauri\android replaces the generated one on every build.
+$identifier = (Get-Content "src-tauri\tauri.conf.json" -Raw | ConvertFrom-Json).identifier
+$activityDir = "src-tauri\gen\android\app\src\main\java\" + ($identifier -replace '\.', '\')
+if (-not (Test-Path $activityDir)) { throw "No generated Android sources at $activityDir" }
+Copy-Item "src-tauri\android\MainActivity.kt" "$activityDir\MainActivity.kt" -Force
+# the release build shrinks the code (R8): the page's call into the shell must survive
+$rules = "src-tauri\gen\android\app\proguard-rules.pro"
+if (-not (Select-String -Path $rules -SimpleMatch "JavascriptInterface" -Quiet)) {
+    Add-Content -Path $rules -Value "`n-keep class $identifier.MainActivity** { *; }`n-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }"
+}
+if ($VersionCode -gt 0) {
+    # Tauri's own setting (bundle.android.versionCode), merged over tauri.conf.json for this build only
+    $override = "$Mirror\mobile\src-tauri\versioncode.conf.json"
+    Set-Content -Path $override -Value ('{"bundle":{"android":{"versionCode":' + $VersionCode + '}}}') -Encoding ascii
+    $features += @("--config", $override)
+    Write-Host "Android versionCode set to $VersionCode" -ForegroundColor Yellow
+}
+
 # the app icon (three crosses, since 2026-10-20) into the Android project's launcher icons; the
 # generated project lives only here, so it is applied on every build from src-tauri\app-icon.png
 npx tauri icon src-tauri\app-icon.png | Out-Null
@@ -134,16 +191,25 @@ if ($Release) {
     $rules = "src-tauri\gen\android\app\proguard-rules.pro"
     $keep = "-keep class app.tauri.** { *; }`n-keep class com.ghostclaw.phone.** { *; }"
     if (-not (Select-String -Path $rules -SimpleMatch "-keep class app.tauri.**" -Quiet)) { Add-Content -Path $rules -Value "`n$keep" }
-    npx tauri android build --apk --target @Targets
+    if ($Play -and -not $TestApk) {
+        npx tauri android build --aab --target @Targets @features
+    } else {
+        npx tauri android build --apk --target @Targets @features
+    }
 } else {
-    npx tauri android build --apk --debug --target @Targets
+    npx tauri android build --apk --debug --target @Targets @features
 }
 if ($LASTEXITCODE -ne 0) { throw "tauri android build failed" }
 
-$apk = Get-ChildItem "src-tauri\gen\android\app\build\outputs\apk" -Recurse -Filter *.apk | Sort-Object LastWriteTime | Select-Object -Last 1
-if (-not $apk) { throw "No APK was produced" }
+$isAab = $Play -and $Release -and -not $TestApk
+$apk = if ($isAab) {
+    Get-ChildItem "src-tauri\gen\android\app\build\outputs\bundle" -Recurse -Filter *.aab | Sort-Object LastWriteTime | Select-Object -Last 1
+} else {
+    Get-ChildItem "src-tauri\gen\android\app\build\outputs\apk" -Recurse -Filter *.apk | Sort-Object LastWriteTime | Select-Object -Last 1
+}
+if (-not $apk) { throw "Nothing was produced" }
 $version = (Get-Content "$mobile\package.json" -Raw | ConvertFrom-Json).version
-$name = "BibleConcordance_Android_$version" + $(if ($Release) { "" } else { "_debug" }) + ".apk"
+$name = "BibleConcordance_Android_$version" + $(if ($Play) { "_play" } else { "" }) + $(if ($Release) { "" } else { "_debug" }) + $(if ($TestApk) { "_test" } else { "" }) + $(if ($isAab) { ".aab" } else { ".apk" })
 New-Item -ItemType Directory -Force "$root\installer" | Out-Null
 Copy-Item $apk.FullName "$root\installer\$name" -Force
 Write-Host ("{0}  {1:N1} MB" -f "installer\$name", ($apk.Length / 1MB)) -ForegroundColor Green

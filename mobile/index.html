@@ -8,6 +8,28 @@
   </head>
 
   <body>
+    <script>
+      // The size of the status bar and navigation bar, in CSS pixels, from the Android shell
+      // (MainActivity.kt): the page is drawn under them and pads itself (styles.css: --sat ... --sal).
+      // The shell also calls window.__setInsets whenever they change (turning the phone, for one).
+      window.__setInsets = function (top, right, bottom, left) {
+        var s = document.documentElement.style;
+        s.setProperty("--inset-top", top + "px");
+        s.setProperty("--inset-right", right + "px");
+        s.setProperty("--inset-bottom", bottom + "px");
+        s.setProperty("--inset-left", left + "px");
+      };
+      (function () {
+        function ask() {
+          try {
+            if (window.AndroidInsets) window.__setInsets.apply(null, window.AndroidInsets.get().split(",").map(Number));
+          } catch (e) {}
+        }
+        ask();
+        window.addEventListener("resize", ask);
+        window.addEventListener("orientationchange", ask);
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

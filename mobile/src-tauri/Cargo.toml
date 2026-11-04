@@ -12,6 +12,12 @@ edition = "2021"
 name = "bible_pocket_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+# `play` is the Google Play build (tauri android build --features play, scripts\android.ps1 -Play):
+# Play updates the app itself and does not allow an app to install its own updates, so this build
+# has no update check or download (the manifest also drops the install, exact-alarm and battery permissions)
+[features]
+play = []
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 # packs the desktop's Ask index for the phone (build.rs)
