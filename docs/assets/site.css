@@ -247,6 +247,12 @@ h2.section-title {
 .store-badge img { display: block; height: 56px; width: auto; }
 .store-badge:hover { opacity: 0.92; }
 .store-badge:focus-visible { outline: 2px solid var(--accent-500); outline-offset: 3px; }
+/* Google's official "Get it on Google Play" badge: shown as supplied, not altered. The picture carries
+   its own clear space around the black badge, so the negative margins only cancel that empty edge. */
+.play-badge { display: inline-block; line-height: 0; border-radius: 10px; align-self: center; margin: -12px -13px; }
+.play-badge img { display: block; height: 80px; width: auto; }
+.play-badge:hover { opacity: 0.92; }
+.play-badge:focus-visible { outline: 2px solid var(--accent-500); outline-offset: -8px; }
 .note {
   margin-top: 18px;
   padding: 12px 16px;
