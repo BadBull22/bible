@@ -6,6 +6,7 @@ import { addSearchHistory } from "./searchHistory";
 import { Sidebar } from "./components/Sidebar";
 import { ChapterView } from "./components/ChapterView";
 import { HomeScreen } from "./components/HomeScreen";
+import { AuthorsPanel } from "./components/AuthorsPanel";
 import { WordStudyPanel } from "./components/WordStudyPanel";
 import { ParallelPanel } from "./components/ParallelPanel";
 import { SearchPanel } from "./components/SearchPanel";
@@ -19,6 +20,11 @@ import { ResizeHandle } from "./components/ResizeHandle";
 import { SplashScreen } from "./components/SplashScreen";
 import { ClosingSplash } from "./components/ClosingSplash";
 import { WELCOME_COUNT_KEY, WELCOME_MAX_AUTO, WELCOME_OFF_KEY, WELCOME_SEEN_KEY, WelcomeWindow } from "./components/WelcomeWindow";
+import { WhatsNewWindow } from "./components/WhatsNewWindow";
+import { WHATS_NEW, WhatsNewEntry, whatsNewFor } from "./whatsNew";
+import { runAutoBackup } from "./autoBackup";
+import { todayIso } from "./readingPlans";
+import { getVersion } from "@tauri-apps/api/app";
 import { InterlinearPanel } from "./components/InterlinearPanel";
 import { DictionaryPanel } from "./components/DictionaryPanel";
 import { StudyPanel } from "./components/StudyPanel";
@@ -85,6 +91,7 @@ type SidePanel =
   | { kind: "pictures"; tab?: "chapter" | "gallery" | "download" }
   | { kind: "original"; strongs?: string }
   | { kind: "ai"; question?: string; fresh?: boolean }
+  | { kind: "authors" }
   | null;
 
 const NO_MARKS: ChapterMarks = { bookmarks: [], highlights: [], notes: [], note_spans: [] };
@@ -125,6 +132,31 @@ function storeWidth(key: string, value: number) {
   }
 }
 const ENOCH_VERSION = "ENOCH1";
+// The Bible the reader chose last is kept, so the app opens on it next time: BSB the first time, and
+// whenever that Bible is no longer there. Enoch's one translation is never kept (it follows the book).
+const VERSION_KEY = "reader:version";
+function readStoredVersion(): string {
+  try {
+    const v = localStorage.getItem(VERSION_KEY);
+    if (v && v !== ENOCH_VERSION) return v;
+  } catch {
+    /* fall through */
+  }
+  return "BSB";
+}
+// Where the reader was last (kept when they read somewhere), for the opening screen's "Continue reading".
+const PLACE_KEY = "reader:place";
+function readStoredPlace(): { book: string; chapter: number } | null {
+  try {
+    const p = JSON.parse(localStorage.getItem(PLACE_KEY) ?? "null");
+    if (p && typeof p.book === "string" && Number.isInteger(p.chapter) && p.chapter > 0) return { book: p.book, chapter: p.chapter };
+  } catch {
+    /* fall through */
+  }
+  return null;
+}
+// What the reader last saw of "What's new": the version whose notes were shown (or that was installed new).
+const WHATS_NEW_KEY = "whatsnew:seen";
 const HISTORY_LIMIT = 50;
 
 function App() {
@@ -146,9 +178,18 @@ function App() {
     [baseBooks, extraBooks],
   );
   const chapterCounts = useMemo(() => ({ ...baseCounts, ...Object.fromEntries(extraBooks.list) }), [baseCounts, extraBooks]);
-  const [versionCode, setVersionCode] = useState("BSB");
+  const [versionCode, setVersionCode] = useState(readStoredVersion);
+  useEffect(() => {
+    if (versionCode === ENOCH_VERSION) return;
+    try {
+      localStorage.setItem(VERSION_KEY, versionCode);
+    } catch {
+      /* per-viewer convenience only */
+    }
+  }, [versionCode]);
   const [book, setBook] = useState("Genesis");
   const [chapter, setChapter] = useState(1);
+  const [lastPlace, setLastPlace] = useState(readStoredPlace);
   const [verses, setVerses] = useState<VerseWithWords[]>([]);
   const [loadingChapter, setLoadingChapter] = useState(true);
   const [chapterError, setChapterError] = useState<string | null>(null);
@@ -170,6 +211,16 @@ function App() {
   // The app opens on a search prompt instead of straight into Genesis 1 -- this flips to
   // false the moment the reader picks somewhere to go, and never flips back this session.
   const [homeActive, setHomeActive] = useState(true);
+  // Remember where the reader is, once they have gone somewhere (not the Genesis 1 the app starts with).
+  useEffect(() => {
+    if (homeActive) return;
+    setLastPlace({ book, chapter });
+    try {
+      localStorage.setItem(PLACE_KEY, JSON.stringify({ book, chapter }));
+    } catch {
+      /* per-viewer convenience only */
+    }
+  }, [book, chapter, homeActive]);
   // The place last opened in People & Places or the Map, so switching between the two
   // panels lands on the same place instead of losing your spot.
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(null);
@@ -268,7 +319,14 @@ function App() {
   const chapterRequest = useRef(0);
 
   useEffect(() => {
-    api.listVersions().then(setVersions).catch(console.error);
+    api
+      .listVersions()
+      .then((vs) => {
+        setVersions(vs);
+        // the Bible kept from last time may have been taken out of the Library since
+        setVersionCode((cur) => (vs.some((v) => v.code === cur) ? cur : "BSB"));
+      })
+      .catch(console.error);
     api.listBooks().then(setBooks).catch(console.error);
     const loadLibraryBooks = () =>
       api
@@ -651,6 +709,47 @@ function App() {
       .catch(() => undefined);
   }, [showSplash]);
 
+  // "What's new": once after an update, a moment after the screen has settled (so it does not land on
+  // top of the Getting started window); never on a fresh install, which has nothing to compare with.
+  const [appVersion, setAppVersion] = useState("");
+  const [whatsNewEntry, setWhatsNewEntry] = useState<WhatsNewEntry | null>(null);
+  useEffect(() => {
+    if (showSplash) return;
+    let timer = 0;
+    getVersion()
+      .then((v) => {
+        setAppVersion(v);
+        const entry = whatsNewFor(v);
+        let seen: string | null = null;
+        let returning = false;
+        try {
+          seen = localStorage.getItem(WHATS_NEW_KEY);
+          returning = seen !== null || localStorage.getItem(WELCOME_SEEN_KEY) === "1";
+          if (seen !== v) localStorage.setItem(WHATS_NEW_KEY, v);
+        } catch {
+          return;
+        }
+        if (seen === v || !returning || !entry) return;
+        timer = window.setTimeout(() => setWhatsNewEntry(entry), 2500);
+      })
+      .catch(() => undefined);
+    return () => window.clearTimeout(timer);
+  }, [showSplash]);
+
+  // The natural read-aloud voice, started in the background once for each version of the app: its first start
+  // can be slow (the new files are checked by Windows and antivirus programs), which is better done now.
+  useEffect(() => {
+    if (showSplash || !appVersion) return;
+    const timer = window.setTimeout(() => ReadAloud.warmUpOnce(appVersion), 8000);
+    return () => window.clearTimeout(timer);
+  }, [showSplash, appVersion]);
+
+  // A backup of the reader's notes once a week (unless it is switched off in Settings), a while after start-up.
+  useEffect(() => {
+    const timer = window.setTimeout(() => void runAutoBackup(), 45_000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   function closeWelcome(dontShowAgain: boolean) {
     setWelcomeOpen(false);
     try {
@@ -812,6 +911,7 @@ function App() {
           }}
         />
       )}
+      {whatsNewEntry && !welcomeOpen && <WhatsNewWindow entry={whatsNewEntry} onClose={() => setWhatsNewEntry(null)} />}
       {closing && (
         <ClosingSplash
           verse={farewellVerse}
@@ -1017,6 +1117,9 @@ function App() {
                 studyVersion={studyVersion}
                 onOpenPlans={() => setPanel({ kind: "study", tab: "plans" })}
                 onOpenDictionary={(q) => setPanel({ kind: "dictionary", initialQuery: q })}
+                onOpenAuthors={() => setPanel({ kind: "authors" })}
+                resume={lastPlace}
+                versionCode={versionCode}
               />
             ) : (
               <ChapterView
@@ -1041,6 +1144,7 @@ function App() {
                 onListen={canListen ? listen : null}
                 pictureCount={chapterPictureCount}
                 onShowPictures={() => setPanel({ kind: "pictures" })}
+                onChapterRead={(b, c) => void api.markRead(b, c, todayIso()).catch(() => undefined)}
                 readingVerse={readingHere}
                 readingTag={readingHere != null ? readState.tag : null}
                 marks={marks}
@@ -1187,6 +1291,7 @@ function App() {
               onHighlightTitlesChange={setHighlightTitles}
               onOpenHelp={() => setPanel({ kind: "help" })}
               onOpenWelcome={() => setWelcomeOpen(true)}
+              onOpenWhatsNew={() => setWhatsNewEntry(whatsNewFor(appVersion) ?? WHATS_NEW[0] ?? null)}
               focus={panel.focus}
               onClose={() => setPanel(null)}
             />
@@ -1239,6 +1344,7 @@ function App() {
             />
           )}
           {panel?.kind === "basket" && <BasketPanel onJump={jumpTo} onClose={() => setPanel(null)} />}
+          {panel?.kind === "authors" && <AuthorsPanel onJump={jumpTo} onClose={() => setPanel(null)} />}
           {panel?.kind === "library" && (
             <LibraryPanel
               key={`${panel.tab ?? ""}:${panel.only ?? ""}`}
@@ -1302,7 +1408,7 @@ function App() {
 /** Mirrors the CSS defaults (.side-panel / .side-panel.wide) so the handle's first drag
  * starts from the width actually on screen. */
 function panelDefaultWidth(kind: NonNullable<SidePanel>["kind"]): number {
-  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket", "library", "pictures", "original"].includes(kind);
+  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket", "library", "pictures", "original", "authors"].includes(kind);
   const vw = window.innerWidth;
   return wide ? Math.min(640, vw * 0.42) : Math.min(400, vw * 0.36);
 }

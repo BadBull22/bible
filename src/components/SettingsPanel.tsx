@@ -9,6 +9,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { copyText } from "../clipboard";
 import { VoiceDownload } from "./VoiceDownload";
 import { UpdateSettings } from "./Updates";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
+import { autoBackupOn, backupFolder, setAutoBackupOn, setBackupFolder } from "../autoBackup";
+
+/** The app's page in the Microsoft Store, where it can be rated and reviewed. */
+const STORE_PAGE = "https://apps.microsoft.com/detail/9NWNL186FS6W";
+const SHARE_TEXT = "Bible Concordance: a free Bible study app for Windows and Android that works offline, with no account and no adverts. https://bible4me.org";
 
 /** Plays a short sample in the chosen voice ("Preparing…" the first time, while the
  * voice starts). */
@@ -127,6 +134,8 @@ interface Props {
   onOpenHelp: () => void;
   /** reopen the Getting started window (voice, Library, pictures, API keys) */
   onOpenWelcome: () => void;
+  /** open the "What's new in this version" window */
+  onOpenWhatsNew: () => void;
   /** open scrolled to this section (used by Getting started's "Show me") */
   focus?: "online";
   onClose: () => void;
@@ -232,6 +241,7 @@ export function SettingsPanel({
   onHighlightTitlesChange,
   onOpenHelp,
   onOpenWelcome,
+  onOpenWhatsNew,
   focus,
   onClose,
 }: Props) {
@@ -242,6 +252,7 @@ export function SettingsPanel({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [version, setVersion] = useState<string>("");
   const [voiceAvailable, setVoiceAvailable] = useState(true);
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   useEffect(() => {
     getVersion()
@@ -511,6 +522,10 @@ export function SettingsPanel({
         <SyncSettings />
       </Group>
 
+      <Group {...g("backup")} title="Back up your notes" hints={false}>
+        <BackupSettings />
+      </Group>
+
       <Group {...g("updates")} title="Updates" hints={false}>
         <UpdateSettings />
       </Group>
@@ -527,6 +542,30 @@ export function SettingsPanel({
             <br />
             Made by <strong>Erich P. Tonsing</strong> as a personal Bible study tool.
           </p>
+          <div className="note-editor-actions">
+            <button className="outline-btn" onClick={() => void openUrl("https://bible4me.org").catch(() => undefined)} title="https://bible4me.org">
+              Visit our website: bible4me.org
+            </button>
+            <button className="outline-btn" onClick={onOpenWhatsNew}>
+              What's new in this version
+            </button>
+          </div>
+          <div className="note-editor-actions">
+            <button className="outline-btn" onClick={() => void openUrl(STORE_PAGE).catch(() => undefined)} title="Opens the app's page in the Microsoft Store, where you can leave a rating">
+              Rate on the Microsoft Store
+            </button>
+            <button
+              className="outline-btn"
+              onClick={async () => {
+                const ok = await copyText(SHARE_TEXT);
+                setShareStatus(ok ? "Copied: paste it into a message to a friend." : "Couldn't copy.");
+              }}
+              title="Copies a short message with the website's address"
+            >
+              Tell a friend
+            </button>
+          </div>
+          {shareStatus && <p className="muted">{shareStatus}</p>}
           <p>
             This app is <strong>free to use by anyone</strong>. You may install it, use it, copy it and share it with others at no cost, for personal, educational, church or ministry use. <strong>It must never be sold, licensed for a fee, or charged for in any form</strong>,
             and it may not be used to sell the texts it contains.
@@ -553,6 +592,86 @@ export function SettingsPanel({
         </div>
       </Group>
     </aside>
+  );
+}
+
+/** The weekly automatic backup: on or off, the folder, and "Back up now". */
+function BackupSettings() {
+  const [on, setOn] = useState(autoBackupOn);
+  const [custom, setCustom] = useState<string | null>(backupFolder);
+  const [defaultFolder, setDefaultFolder] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  useEffect(() => {
+    api.autoBackupFolder().then(setDefaultFolder).catch(() => setDefaultFolder(""));
+  }, []);
+  const folder = custom ?? defaultFolder;
+
+  async function chooseFolder() {
+    try {
+      const picked = await openFolderDialog({ directory: true, multiple: false, title: "Choose the folder for the automatic backups", defaultPath: folder || undefined });
+      if (typeof picked === "string" && picked) {
+        setBackupFolder(picked);
+        setCustom(picked);
+        setStatus(null);
+      }
+    } catch (e) {
+      setStatus(String(e));
+    }
+  }
+
+  async function backUpNow() {
+    setBusy(true);
+    setStatus(null);
+    try {
+      const r = await api.autoBackup(custom, true);
+      setStatus(r.file ? `Backed up: ${r.file}` : "Nothing to back up yet.");
+    } catch (e) {
+      setStatus(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <p className="search-hint" style={{ display: "block" }}>
+        Your notes, highlights, bookmarks, reading plans and sermons are copied to a file once a week, so they are not lost if this computer breaks or the app is removed. The last eight copies are kept. To get them back, use <strong>My Study &rarr; Import backup</strong>.
+      </p>
+      <label className="set-check">
+        <input
+          type="checkbox"
+          checked={on}
+          onChange={(e) => {
+            setOn(e.target.checked);
+            setAutoBackupOn(e.target.checked);
+          }}
+        />{" "}
+        Back up automatically once a week
+      </label>
+      {folder && <p className="log-path">{folder}</p>}
+      <div className="note-editor-actions">
+        <button className="outline-btn" onClick={() => void chooseFolder()}>
+          Choose another folder
+        </button>
+        {custom && (
+          <button
+            className="outline-btn"
+            onClick={() => {
+              setBackupFolder(null);
+              setCustom(null);
+              setStatus(null);
+            }}
+          >
+            Use the usual folder
+          </button>
+        )}
+        <button className="outline-btn" disabled={busy} onClick={() => void backUpNow()}>
+          {busy ? "Backing up…" : "Back up now"}
+        </button>
+      </div>
+      {status && <p className="muted">{status}</p>}
+    </>
   );
 }
 

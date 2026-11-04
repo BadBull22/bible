@@ -49,6 +49,18 @@ use tauri::Manager;
 
 pub struct ConfigDir(pub PathBuf);
 pub struct SettingsState(pub Mutex<AppSettings>);
+
+/// Set when the web view's page has started (`app_ready`): if it never is, the window stays blank.
+#[derive(Default)]
+pub struct AppReady(pub std::sync::atomic::AtomicBool);
+
+/// How long to wait for the page before telling the reader that the window did not start.
+const START_WATCH_SECS: u64 = 30;
+
+#[tauri::command]
+fn app_ready(ready: tauri::State<AppReady>) {
+    ready.0.store(true, std::sync::atomic::Ordering::SeqCst);
+}
 pub struct EmbedderState(pub Embedder);
 pub struct GenealogyState(pub GenealogyData);
 pub struct FirstsState(pub FirstsData);
@@ -74,6 +86,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(update::PendingUpdate::default())
+        .manage(AppReady::default())
         // Close is intercepted on the FRONTEND, via the window's own onCloseRequested
         // hook (App.tsx) -- not here. This degrades safely if that hook is ever somehow
         // not registered: with no Rust-side prevent_close(), the window just closes
@@ -208,9 +221,38 @@ pub fn run() {
                 .resolve("resources/pictures.json", tauri::path::BaseDirectory::Resource)
                 .expect("failed to resolve pictures.json resource path");
             app.manage(pictures::load(&pictures_catalog, &data_dir));
+
+            // A blank window (the web view crashing as it starts, most often because of an overlay or
+            // antivirus program) cannot say so itself, so say it from here: the page reports in with
+            // `app_ready` within a few seconds, and if it has not after half a minute, tell the reader why.
+            let watcher = app.handle().clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_secs(START_WATCH_SECS));
+                if watcher.state::<AppReady>().0.load(std::sync::atomic::Ordering::SeqCst) {
+                    return;
+                }
+                logging::write("warn", "app", "the window had not started after 30 seconds (the web view may have crashed)");
+                let log = logging::path().map(|p| format!("\n\nThe app's log file is {}.", p.display())).unwrap_or_default();
+                use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                watcher
+                    .dialog()
+                    .message(format!(
+                        "Bible Concordance's window did not start.\n\nThis is almost always caused by another program on the computer, not by the app. \
+                         Programs that draw over other programs (such as RivaTuner Statistics Server or MSI Afterburner) and some antivirus programs can stop the \
+                         window from opening. Close them, or add Bible Concordance to their exceptions, then start the app again. If it keeps happening, restart the computer.{log}"
+                    ))
+                    .title("Bible Concordance")
+                    .kind(MessageDialogKind::Warning)
+                    .show(|_| {});
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            app_ready,
+            study_commands::mark_read,
+            study_commands::reading_stats,
+            study_commands::auto_backup,
+            study_commands::auto_backup_folder,
             commands::list_versions,
             commands::list_books,
             commands::chapter_counts,

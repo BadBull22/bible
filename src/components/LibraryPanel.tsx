@@ -30,6 +30,14 @@ const COMMUNITY: { name: string; url: string; about: string }[] = [
     url: "https://bible.org/article/e-sword%C2%AE-modules-bibleorg",
     about: "bible.org's own studies and articles (Keathley and others) as e-Sword modules, shared by their publisher.",
   },
+  {
+    // The MyBible-format files the app can add (2.9.8). A separate website with no connection to this app:
+    // it also offers modern translations that are still in copyright, which is why the note above the list
+    // tells the reader to check each file's rights. Remove this entry to take the link out.
+    name: "PH4.org",
+    url: "https://www.ph4.org/b4_1.php?l=en",
+    about: "Bibles, commentaries, dictionaries and devotionals in the MyBible format (and others), by language; no account. A separate website, not part of this app.",
+  },
 ];
 
 /** MySword's own downloads, by kind: straight from its website, no account. */
@@ -676,9 +684,10 @@ function CommunityLibraries() {
     <section className="library-community">
       <h4 className="section-label">More modules: community libraries</h4>
       <p className="muted">
-        Users of e-Sword and MySword share modules on these sites; they open in your browser. Check each module's rights before you
-        download it, then add the file above. (e-Sword's own website has no modules to download: its library is only inside the
-        e-Sword program.)
+        Users of e-Sword and MySword share modules on these sites, and PH4.org offers files in the MyBible format; they open in your
+        browser. These websites are separate from Bible Concordance and have no connection with it: nothing from them is included in
+        the app, and the app never downloads from them. Check each module's rights before you download it, then add the file above.
+        (e-Sword's own website has no modules to download: its library is only inside the e-Sword program.)
       </p>
       <form
         className="library-community-search"

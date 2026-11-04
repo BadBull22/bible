@@ -73,6 +73,11 @@ CREATE TABLE IF NOT EXISTS songs (
     created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')));
 CREATE VIRTUAL TABLE IF NOT EXISTS sermon_fts USING fts5(title, series, topics, big_idea, words, tokenize = 'porter unicode61');
+-- each chapter read, and on which day (the computer's own date): for the reading streak and how much of
+-- the Bible has been read (since 2.9.9; the same as the phone's)
+CREATE TABLE IF NOT EXISTS reading_log (
+    book TEXT NOT NULL, chapter INTEGER NOT NULL, read_on TEXT NOT NULL,
+    PRIMARY KEY (book, chapter, read_on));
 ";
 
 /// Highlight colours the UI offers; anything else is rejected so a bad value can't be
@@ -1118,6 +1123,71 @@ pub fn write_export(dir: &Path, stamp: &str, backup: &Backup) -> Result<ExportRe
     })
 }
 
+// ---------------------------------------------------------------- reading streak
+
+/// A yyyy-mm-dd date as a count of days (proleptic Gregorian), for differences.
+pub fn day_number(date: &str) -> Option<i64> {
+    let mut parts = date.get(..10)?.split('-').map(|p| p.parse::<i64>().ok());
+    let (y, m, d) = (parts.next()??, parts.next()??, parts.next()??);
+    if !(1..=12).contains(&m) || !(1..=31).contains(&d) {
+        return None;
+    }
+    // days from civil (Howard Hinnant's algorithm)
+    let y = if m <= 2 { y - 1 } else { y };
+    let era = (if y >= 0 { y } else { y - 399 }) / 400;
+    let yoe = y - era * 400;
+    let mp = (m + 9) % 12;
+    let doy = (153 * mp + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    Some(era * 146097 + doe - 719468)
+}
+
+/// Notes that a chapter was read on a day (yyyy-mm-dd, the computer's date).
+pub fn mark_read(conn: &Connection, book: &str, chapter: i64, day: &str) -> Result<(), String> {
+    day_number(day).ok_or("Not a date.")?;
+    conn.execute("INSERT OR IGNORE INTO reading_log (book, chapter, read_on) VALUES (?1,?2,?3)", params![book, chapter, day]).map_err(err)?;
+    Ok(())
+}
+
+#[derive(Serialize, Debug, Default, PartialEq)]
+pub struct ReadingStats {
+    /// days in a row with some reading, up to today (or yesterday, if today has none yet)
+    pub streak: i64,
+    pub best_streak: i64,
+    pub read_today: bool,
+    /// days with some reading, ever
+    pub days: i64,
+    /// different chapters read at least once
+    pub chapters: i64,
+}
+
+pub fn reading_stats(conn: &Connection, today: &str) -> Result<ReadingStats, String> {
+    let mut s = conn.prepare("SELECT DISTINCT read_on FROM reading_log ORDER BY read_on").map_err(err)?;
+    let days: Vec<i64> = s
+        .query_map([], |r| r.get::<_, String>(0))
+        .map_err(err)?
+        .filter_map(Result::ok)
+        .filter_map(|d| day_number(&d))
+        .collect();
+    let today_n = day_number(today).ok_or("Not a date.")?;
+    let mut best = 0;
+    let mut run = 0;
+    let mut prev: Option<i64> = None;
+    for &d in &days {
+        run = if prev == Some(d - 1) { run + 1 } else { 1 };
+        best = best.max(run);
+        prev = Some(d);
+    }
+    let read_today = days.last() == Some(&today_n);
+    // the current run counts if it reaches today or yesterday
+    let streak = match days.last() {
+        Some(&last) if last == today_n || last == today_n - 1 => run,
+        _ => 0,
+    };
+    let chapters: i64 = conn.query_row("SELECT count(*) FROM (SELECT DISTINCT book, chapter FROM reading_log)", [], |r| r.get(0)).map_err(err)?;
+    Ok(ReadingStats { streak, best_streak: best, read_today, days: days.len() as i64, chapters })
+}
+
 #[derive(Serialize)]
 pub struct ImportResult {
     pub notes: usize,
@@ -1277,6 +1347,31 @@ mod tests {
 
     fn rand_suffix() -> u128 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+    }
+
+    #[test]
+    fn reading_streak_counts_days_in_a_row() {
+        let (c, dir) = temp_db();
+        assert_eq!(day_number("1970-01-01"), Some(0));
+        assert_eq!(day_number("2026-03-01").unwrap() - day_number("2026-02-28").unwrap(), 1); // not a leap year
+        assert_eq!(day_number("2028-03-01").unwrap() - day_number("2028-02-28").unwrap(), 2); // a leap year
+        assert_eq!(day_number("not a date"), None);
+        assert_eq!(reading_stats(&c, "2026-11-04").unwrap(), ReadingStats::default());
+        assert!(mark_read(&c, "John", 3, "yesterday").is_err());
+        // an old run of three days, then a gap, then yesterday and today
+        for d in ["2026-10-20", "2026-10-21", "2026-10-22", "2026-11-03", "2026-11-04"] {
+            mark_read(&c, "John", 3, d).unwrap();
+        }
+        mark_read(&c, "John", 3, "2026-11-04").unwrap(); // the same chapter twice in a day counts once
+        mark_read(&c, "Mark", 1, "2026-11-04").unwrap();
+        let s = reading_stats(&c, "2026-11-04").unwrap();
+        assert_eq!((s.streak, s.best_streak, s.read_today, s.days, s.chapters), (2, 3, true, 5, 2));
+        // tomorrow, with nothing read yet today: the run through today still shows
+        let s = reading_stats(&c, "2026-11-05").unwrap();
+        assert_eq!((s.streak, s.read_today), (2, false));
+        // a day later, the run is broken
+        assert_eq!(reading_stats(&c, "2026-11-06").unwrap().streak, 0);
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[test]

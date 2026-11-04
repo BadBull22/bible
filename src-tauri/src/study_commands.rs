@@ -275,8 +275,18 @@ pub fn set_plan_day(state: State<UserDataState>, plan_id: String, day: i64, done
 /// read back) into Documents\Bible Concordance, then shows the file in Explorer.
 #[tauri::command]
 pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbState>) -> Result<ExportResult, String> {
+    let (backup, stamp) = build_backup(&user, &db)?;
+    let dir = app.path().document_dir().map_err(|e| e.to_string())?.join("Bible Concordance");
+    let result = userdata::write_export(&dir, &stamp, &backup)?;
+    let _ = tauri_plugin_opener::reveal_item_in_dir(&result.markdown_path);
+    Ok(result)
+}
+
+/// Everything the backup holds as it stands now (what Export and the automatic backup write), and the
+/// date and time for the file's name.
+fn build_backup(user: &UserDataState, db: &DbState) -> Result<(Backup, String), String> {
     let (mut backup, stamp) = {
-        let u = user_conn(&user)?;
+        let u = user.0.lock().map_err(|e| e.to_string())?;
         let (now, stamp) = userdata::now_stamp(&u);
         let b = Backup {
             format: userdata::BACKUP_FORMAT.to_string(),
@@ -298,10 +308,112 @@ pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbStat
         fill_verse_text(&d, &mut backup.highlights);
         fill_verse_text(&d, &mut backup.notes);
     }
-    let dir = app.path().document_dir().map_err(|e| e.to_string())?.join("Bible Concordance");
-    let result = userdata::write_export(&dir, &stamp, &backup)?;
-    let _ = tauri_plugin_opener::reveal_item_in_dir(&result.markdown_path);
-    Ok(result)
+    Ok((backup, stamp))
+}
+
+// ---------------------------------------------------------------- the automatic weekly backup
+
+/// A new automatic backup is written when the newest one is at least this old.
+const AUTO_BACKUP_DAYS: u64 = 7;
+/// How many automatic backups are kept (the oldest are removed): about two months of weeks.
+const AUTO_BACKUPS_KEPT: usize = 8;
+const AUTO_BACKUP_PREFIX: &str = "Automatic backup ";
+
+#[derive(Serialize)]
+pub struct AutoBackupResult {
+    /// a backup was written just now
+    pub wrote: bool,
+    pub folder: String,
+    /// the backup written now, or the newest one that was already there
+    pub file: Option<String>,
+    /// how many automatic backups are in the folder now
+    pub kept: usize,
+}
+
+fn default_auto_backup_folder(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    Ok(app.path().document_dir().map_err(|e| e.to_string())?.join("Bible Concordance").join("Automatic backups"))
+}
+
+/// The automatic backups in a folder, newest first (their names carry the date and time).
+fn auto_backups_in(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut found: Vec<std::path::PathBuf> = std::fs::read_dir(dir)
+        .map(|rd| {
+            rd.filter_map(Result::ok)
+                .map(|e| e.path())
+                .filter(|p| p.is_file() && p.extension().map(|x| x == "json").unwrap_or(false))
+                .filter(|p| p.file_name().and_then(|n| n.to_str()).map(|n| n.starts_with(AUTO_BACKUP_PREFIX)).unwrap_or(false))
+                .collect()
+        })
+        .unwrap_or_default();
+    found.sort();
+    found.reverse();
+    found
+}
+
+/// Where automatic backups go unless the reader chose another folder.
+#[tauri::command]
+pub fn auto_backup_folder(app: AppHandle) -> Result<String, String> {
+    Ok(default_auto_backup_folder(&app)?.display().to_string())
+}
+
+/// Writes a JSON backup (the same as Export's, which Import reads back) into `folder`, or the default
+/// folder, unless one from the last week is already there; `force` writes one anyway ("Back up now").
+/// Nothing is written while there is nothing to back up. Only the app's own "Automatic backup ..." files
+/// are ever removed, so a folder shared with other files is safe.
+#[tauri::command(async)]
+pub fn auto_backup(app: AppHandle, user: State<UserDataState>, db: State<DbState>, folder: Option<String>, force: bool) -> Result<AutoBackupResult, String> {
+    let dir = match folder.as_deref().map(str::trim).filter(|f| !f.is_empty()) {
+        Some(f) => std::path::PathBuf::from(f),
+        None => default_auto_backup_folder(&app)?,
+    };
+    let shown = dir.display().to_string();
+    let existing = auto_backups_in(&dir);
+    if !force {
+        let recent = existing
+            .first()
+            .and_then(|p| std::fs::metadata(p).ok())
+            .and_then(|m| m.modified().ok())
+            .and_then(|t| t.elapsed().ok())
+            .map(|age| age < std::time::Duration::from_secs(AUTO_BACKUP_DAYS * 24 * 3600))
+            .unwrap_or(false);
+        if recent {
+            return Ok(AutoBackupResult { wrote: false, folder: shown, file: existing.first().map(|p| p.display().to_string()), kept: existing.len() });
+        }
+    }
+    let (backup, stamp) = build_backup(&user, &db)?;
+    let empty = backup.bookmarks.is_empty()
+        && backup.highlights.is_empty()
+        && backup.notes.is_empty()
+        && backup.plans.is_empty()
+        && backup.sermons.is_empty()
+        && backup.book_bookmarks.is_empty()
+        && backup.sermon_templates.is_empty()
+        && backup.sermon_preachings.is_empty();
+    if empty && !force {
+        return Ok(AutoBackupResult { wrote: false, folder: shown, file: existing.first().map(|p| p.display().to_string()), kept: existing.len() });
+    }
+    std::fs::create_dir_all(&dir).map_err(|e| format!("Can't create the folder {shown}: {e}"))?;
+    let path = dir.join(format!("{AUTO_BACKUP_PREFIX}{stamp}.json"));
+    let text = serde_json::to_string_pretty(&backup).map_err(|e| e.to_string())?;
+    std::fs::write(&path, text).map_err(|e| format!("Can't write the backup to {shown}: {e}"))?;
+    let all = auto_backups_in(&dir);
+    for old in all.iter().skip(AUTO_BACKUPS_KEPT) {
+        let _ = std::fs::remove_file(old);
+    }
+    Ok(AutoBackupResult { wrote: true, folder: shown, file: Some(path.display().to_string()), kept: all.len().min(AUTO_BACKUPS_KEPT) })
+}
+
+// ---------------------------------------------------------------- reading streak
+
+/// A chapter was read on a day (yyyy-mm-dd, the computer's date).
+#[tauri::command]
+pub fn mark_read(user: State<UserDataState>, book: String, chapter: i64, day: String) -> Result<(), String> {
+    userdata::mark_read(&*user_conn(&user)?, &book, chapter, &day)
+}
+
+#[tauri::command]
+pub fn reading_stats(user: State<UserDataState>, today: String) -> Result<userdata::ReadingStats, String> {
+    userdata::reading_stats(&*user_conn(&user)?, &today)
 }
 
 /// Verse text for a passage (one chapter, `verse_start..=verse_end`) in one translation,

@@ -44,7 +44,7 @@ const SECTIONS: Section[] = [
         </ul>
         <p>
           Below the box are your <strong>recent searches</strong>, some examples to try, the <strong>verse of the day</strong>,
-          <strong> today's reading</strong> (if you've started a reading plan) and the "Inside this Bible" figures. Click{" "}
+          <strong> today's reading</strong> (if you've started a reading plan) and the "Inside this Bible" figures: click a tile to see more, for example <strong>Authors</strong> lists the people who wrote the Bible and the books each wrote. Click{" "}
           <strong>Home</strong> in the top bar at any time to come back here.
         </p>
       </>

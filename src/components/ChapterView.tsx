@@ -108,7 +108,12 @@ interface Props {
   /** downloaded Bible pictures for this chapter (0 hides the button) */
   pictureCount: number;
   onShowPictures: () => void;
+  /** the chapter was read to its end (for the reading streak) */
+  onChapterRead?: (book: string, chapter: number) => void;
 }
+
+/** A chapter counts as read once its end has been on screen and it has been open this long (the phone's rule too). */
+const READ_AFTER_MS = 15_000;
 
 export function ChapterView({
   book,
@@ -137,8 +142,11 @@ export function ChapterView({
   readingTag = null,
   pictureCount,
   onShowPictures,
+  onChapterRead,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLElement>(null);
+  const readProgress = useRef({ key: "", openedAt: 0, endSeen: false, done: false });
   const stickyRef = useRef<HTMLDivElement>(null);
   const verseRefs = useRef<Record<number, HTMLElement | null>>({});
   const locationKey = `${book}/${chapter}`;
@@ -155,6 +163,36 @@ export function ChapterView({
   useEffect(() => {
     loadRedLetter().then(setRedData);
   }, []);
+
+  // Reading streak: the chapter is read when its end (the navigation under it) has come into view and
+  // it has been open for a while, so flicking past a chapter does not count.
+  useEffect(() => {
+    if (loading || error || verses.length === 0 || !onChapterRead) return;
+    const key = `${book}|${chapter}`;
+    if (readProgress.current.key !== key) readProgress.current = { key, openedAt: Date.now(), endSeen: false, done: false };
+    const tryMark = () => {
+      const r = readProgress.current;
+      if (r.done || !r.endSeen || Date.now() - r.openedAt < READ_AFTER_MS) return;
+      r.done = true;
+      onChapterRead(book, chapter);
+    };
+    const el = endRef.current;
+    const seen = el
+      ? new IntersectionObserver((entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            readProgress.current.endSeen = true;
+            tryMark();
+          }
+        })
+      : null;
+    if (el && seen) seen.observe(el);
+    const timer = window.setInterval(tryMark, 5000);
+    return () => {
+      seen?.disconnect();
+      window.clearInterval(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [book, chapter, verses, loading, error]);
   const redRanges = redData ? chapterRedLetter(redData, versionCode, book, chapter) : {};
 
   // ---- side by side: the translation being read, plus up to three more in columns
@@ -421,7 +459,7 @@ export function ChapterView({
   }
 
   const nav = (
-    <nav className="chapter-nav" aria-label="Chapter navigation" dir="ltr" lang="en">
+    <nav className="chapter-nav" aria-label="Chapter navigation" dir="ltr" lang="en" ref={endRef}>
       <button className="chapter-nav-btn" disabled={!prev} onClick={() => onNavigate(prev)} title="Previous chapter (←)">
         <ChevronLeftIcon size={16} />
         <span>{prev ? `${prev.book} ${prev.chapter}` : "Beginning"}</span>
