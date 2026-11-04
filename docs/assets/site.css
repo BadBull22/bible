@@ -449,3 +449,12 @@ main.legal li { margin-bottom: 6px; }
 main.legal strong { color: var(--text); }
 main.legal .free-note p { font-size: 0.93rem; }
 main.legal .other-device { margin-top: 36px; }
+
+/* ---------- credits page: the data tables (wide ones scroll sideways on a phone) ---------- */
+.credits .table-wrap { overflow-x: auto; margin: 12px 0 22px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+.credits table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: 0.85rem; background: var(--paper-raised); }
+.credits th, .credits td { padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.credits th { background: var(--chrome-bg); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+.credits tbody tr:last-child td { border-bottom: none; }
+.credits code { font-size: 0.8rem; word-break: break-word; }
+.credits h3 { margin: 1.4rem 0 0.4rem; font-size: 1.05rem; }
