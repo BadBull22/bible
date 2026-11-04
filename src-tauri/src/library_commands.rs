@@ -11,7 +11,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 use crate::library::{self, BookHit, CatalogItem, InstallReport, InstalledModule, LibraryState, Section, TocEntry};
 
 /// Identifies the app to CrossWire's server (a contact URL, never personal details).
-pub const USER_AGENT: &str = "BibleConcordance/2.2 (https://github.com/BadBull22/bible)";
+pub const USER_AGENT: &str = "BibleConcordance/2.9 (https://bible4me.org)";
 const CATALOG_MAX_AGE: Duration = Duration::from_secs(7 * 24 * 3600);
 
 fn lib_conn(state: &LibraryState) -> Result<std::sync::MutexGuard<'_, rusqlite::Connection>, String> {
