@@ -3,6 +3,13 @@ import { listen } from "@tauri-apps/api/event";
 import { api, UpdateInfo } from "../api";
 import { CloseIcon } from "./icons";
 
+/** asked once: the Microsoft Store build is updated by the Store, so it has no update screens */
+let storeBuild: Promise<boolean> | null = null;
+function isStoreBuild(): Promise<boolean> {
+  storeBuild ??= api.storeBuild().catch(() => false);
+  return storeBuild;
+}
+
 const AUTO_KEY = "updates:auto";
 const LAST_KEY = "updates:lastCheck";
 const DAY = 20 * 60 * 60 * 1000;
@@ -96,13 +103,16 @@ export function UpdateBanner() {
     if (!autoCheck() || !dueForCheck()) return;
     // not at start-up itself: let the app settle first
     const t = window.setTimeout(() => {
-      api
-        .updateCheck()
-        .then((u) => {
-          markChecked();
-          setInfo(u);
-        })
-        .catch(() => undefined); // offline: try again next time
+      isStoreBuild().then((store) => {
+        if (store) return;
+        api
+          .updateCheck()
+          .then((u) => {
+            markChecked();
+            setInfo(u);
+          })
+          .catch(() => undefined); // offline: try again next time
+      });
     }, 20_000);
     return () => window.clearTimeout(t);
   }, []);
@@ -128,6 +138,19 @@ export function UpdateSettings() {
   const [state, setState] = useState<"idle" | "checking" | "latest" | "error">("idle");
   const [info, setInfo] = useState<UpdateInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [store, setStore] = useState(false);
+  useEffect(() => {
+    isStoreBuild().then(setStore);
+  }, []);
+
+  if (store) {
+    return (
+      <>
+        <h4 className="section-label">Updates</h4>
+        <p className="muted">This version is kept up to date by the Microsoft Store. Your notes, highlights and Library are kept when it updates.</p>
+      </>
+    );
+  }
 
   return (
     <>

@@ -14,6 +14,7 @@
 //!
 //! Chats and the things the reader asks it to remember are kept in the study database
 //! (userdata.db), so they last across restarts.
+#![cfg_attr(feature = "store", allow(unused_imports, dead_code))] // the Store build compiles the download out
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -66,6 +67,7 @@ fn without_thinking(text: &str) -> String {
 }
 
 /// The runtime: Microsoft's packages on nuget.org (their win-x64 DLLs are what is needed).
+#[cfg(not(feature = "store"))]
 const RUNTIME: &[(&str, &str)] = &[
     ("microsoft.ai.foundry.local.runtime", "2.1.0"),
     ("microsoft.ml.onnxruntime", "1.30.0"),
@@ -178,6 +180,9 @@ pub fn init(conn: &Connection) -> Result<(), String> {
 /// What was typed in the search bar: the unlock code turns the beta on (returns true).
 #[tauri::command]
 pub fn ai_try_unlock(config_dir: State<ConfigDir>, state: State<SettingsState>, text: String) -> Result<bool, String> {
+    if cfg!(feature = "store") {
+        return Ok(false); // not part of the Microsoft Store build
+    }
     let sum = Sha256::digest(text.trim().as_bytes()).iter().map(|b| format!("{b:02x}")).collect::<String>();
     if sum != UNLOCK {
         return Ok(false);
@@ -209,7 +214,7 @@ pub struct AiStatus {
 
 #[tauri::command]
 pub async fn ai_status(app: AppHandle) -> Result<AiStatus, String> {
-    let enabled = app.state::<SettingsState>().0.lock().map_err(err)?.offline_ai;
+    let enabled = !cfg!(feature = "store") && app.state::<SettingsState>().0.lock().map_err(err)?.offline_ai;
     let dir = folder(&app)?;
     let runtime = runtime_ready(&dir.join("runtime"));
     let variant = std::fs::read_to_string(dir.join("variant.txt")).ok().map(|v| v.trim().to_string());
@@ -238,6 +243,12 @@ pub async fn ai_install(app: AppHandle) -> Result<(), String> {
     result
 }
 
+#[cfg(feature = "store")]
+async fn install(_app: &AppHandle) -> Result<(), String> {
+    Err("This is not part of this version.".into())
+}
+
+#[cfg(not(feature = "store"))]
 async fn install(app: &AppHandle) -> Result<(), String> {
     let dir = folder(app)?;
     let runtime = dir.join("runtime");
@@ -291,6 +302,12 @@ async fn install(app: &AppHandle) -> Result<(), String> {
 
 /// Foundry Local, with the graphics card when it can use one (WebGPU, any make; never CUDA,
 /// which needs NVIDIA's own toolkit), otherwise the processor. Returns whether a GPU is in use.
+#[cfg(feature = "store")]
+async fn manager(_app: &AppHandle, _show_progress: bool) -> Result<(Arc<foundry_local_sdk::FoundryLocalManager>, bool), String> {
+    Err("This is not part of this version.".into())
+}
+
+#[cfg(not(feature = "store"))]
 async fn manager(app: &AppHandle, show_progress: bool) -> Result<(Arc<foundry_local_sdk::FoundryLocalManager>, bool), String> {
     let dir = folder(app)?;
     let runtime = dir.join("runtime");

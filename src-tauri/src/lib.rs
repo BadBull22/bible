@@ -356,6 +356,7 @@ pub fn run() {
             voice::voice_cancel_download,
             voice::voice_remove,
             update::update_check,
+            update::store_build,
             update::update_install,
             apocrypha::apocrypha_xrefs,
             sermon::sermon_verses,
