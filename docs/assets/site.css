@@ -262,6 +262,13 @@ h2.section-title {
   color: var(--text-muted);
 }
 .note strong { color: var(--text); }
+/* a note about another website (not part of the apps): its logo, linked, beside the words */
+.note.third-party { display: flex; align-items: center; gap: 14px; }
+.note.third-party p { margin: 0; font-size: 0.85rem; }
+.third-party-logo { flex: none; line-height: 0; border-radius: 50%; }
+.third-party-logo img { display: block; width: 56px; height: 56px; }
+.third-party-logo:hover { opacity: 0.9; }
+.third-party-logo:focus-visible { outline: 2px solid var(--accent-500); outline-offset: 3px; }
 .note code { font-size: 0.72rem; word-break: break-all; }
 
 details.help {
