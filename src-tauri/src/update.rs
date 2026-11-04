@@ -24,8 +24,17 @@ pub struct UpdateInfo {
     pub date: Option<String>,
 }
 
+/// True in the Microsoft Store build, which the Store updates itself (`--features store`).
+#[tauri::command]
+pub fn store_build() -> bool {
+    cfg!(feature = "store")
+}
+
 #[tauri::command]
 pub async fn update_check(app: AppHandle, pending: State<'_, PendingUpdate>) -> Result<Option<UpdateInfo>, String> {
+    if cfg!(feature = "store") {
+        return Err("This version is updated by the Microsoft Store.".into());
+    }
     let updater = app.updater().map_err(|e| e.to_string())?;
     let found = updater.check().await.map_err(|e| format!("Couldn't check for updates ({e})."))?;
     let info = found.as_ref().map(|u| UpdateInfo {
@@ -50,6 +59,9 @@ struct Progress {
 /// (on Windows the installer closes the app itself and starts the new version).
 #[tauri::command]
 pub async fn update_install(app: AppHandle, pending: State<'_, PendingUpdate>) -> Result<(), String> {
+    if cfg!(feature = "store") {
+        return Err("This version is updated by the Microsoft Store.".into());
+    }
     let update = pending.0.lock().map_err(|e| e.to_string())?.take().ok_or("Check for updates first.")?;
     crate::logging::write("info", "update", &format!("installing {} (from {})", update.version, update.current_version));
     let (on_chunk, on_done) = (app.clone(), app.clone());

@@ -91,6 +91,9 @@ fn platform_key() -> String {
 }
 
 fn download_info(app: &AppHandle) -> Option<VoiceDownload> {
+    if cfg!(feature = "store") {
+        return None; // the Microsoft Store build downloads no program: it reads with the computer's own voices
+    }
     let path = app.path().resolve("resources/voice.json", tauri::path::BaseDirectory::Resource).ok()?;
     let manifest: VoiceManifest = serde_json::from_str(&std::fs::read_to_string(path).ok()?).ok()?;
     manifest.platforms.get(&platform_key()).cloned()

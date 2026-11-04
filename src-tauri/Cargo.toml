@@ -15,6 +15,11 @@ default-run = "bible-concordance"
 name = "bible_concordance_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+# The Microsoft Store build (tauri build --features store): no optional download-and-run extras, no natural-voice
+# program download, no in-app updater (the Store updates it). Nothing is downloaded and run.
+store = []
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

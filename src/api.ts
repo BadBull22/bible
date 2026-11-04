@@ -1134,6 +1134,8 @@ export const api = {
   voiceDownload: () => invoke<void>("voice_download"),
   voiceCancelDownload: () => invoke<void>("voice_cancel_download"),
   voiceRemove: () => invoke<void>("voice_remove"),
+  /** true in the Microsoft Store build, which the Store updates */
+  storeBuild: () => invoke<boolean>("store_build"),
   /** null when this is the latest version */
   updateCheck: () => invoke<UpdateInfo | null>("update_check"),
   /** progress arrives as "update-progress" events; the app restarts when done */
