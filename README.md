@@ -2,7 +2,7 @@
 
 **Free, offline Bible study for Windows and Android — [bible4me.org](https://bible4me.org)**
 
-[Download for Windows](https://bible4me.org/windows/) · [Download for Android](https://bible4me.org/android/) · [All releases](https://github.com/BadBull22/bible/releases)
+[Get it for Windows](https://bible4me.org/windows/) (Microsoft Store) · [Get it for Android](https://bible4me.org/android/) (Google Play) · [Credits](https://bible4me.org/credits/)
 
 Several translations (BSB, KJV, ASV, WEB, YLT and over a thousand more to download), Strong's Hebrew and Greek word
 study, seven commentaries, a sermon builder with slides and a presenter view, read aloud, a library of free books,
