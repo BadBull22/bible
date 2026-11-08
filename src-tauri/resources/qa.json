@@ -2460,7 +2460,11 @@
       "question": "When is divorce permitted for a Christian?",
       "alt_phrasings": [
         "does the bible allow divorce",
-        "is divorce a sin"
+        "is divorce a sin",
+        "what did jesus say about divorce",
+        "jesus teaching on divorce",
+        "what does the bible say about divorce",
+        "what does the bible say about divorce and remarriage"
       ],
       "confidence": "doctrinal_view",
       "answer": "Scripture: God's design is a lifelong union -- \"what God has joined together, let man not separate\" (Matthew 19:6) -- and \"I hate divorce,\" says the LORD (Malachi 2:16). Jesus allows one exception: \"whoever divorces his wife, except for sexual immorality, and marries another woman, commits adultery\" (Matthew 19:9). Paul adds that if an unbelieving spouse leaves, \"The believing brother or sister is not bound in such cases\" (1 Corinthians 7:15), and that a believer who does separate should remain unmarried or be reconciled (1 Corinthians 7:10-11).\n\nPentecostal understanding: marriage is meant to be permanent, and the church's first call is to repentance, forgiveness and restoration. Most Pentecostal churches recognize the two grounds scripture gives -- sexual unfaithfulness and desertion by an unbelieving spouse -- and counsel careful pastoral care in each case.\n\nOther views: the Catholic Church teaches that a valid sacramental marriage cannot be dissolved and deals with failed marriages through annulment; some Christians allow divorce on wider grounds, and others allow none.",
@@ -6464,6 +6468,343 @@
         }
       ],
       "note": "The app uses the Bible's terms (Passover and Resurrection Sunday); “Easter” is shown only as a modern reference."
+    },
+    {
+      "id": "who_wrote_hebrews",
+      "question": "Who wrote the book of Hebrews?",
+      "alt_phrasings": [
+        "who wrote hebrews",
+        "who is the author of hebrews",
+        "who is the author of the book of hebrews",
+        "did paul write hebrews",
+        "author of the letter to the hebrews"
+      ],
+      "confidence": "traditional",
+      "answer": "The letter to the Hebrews does not name its author. Unlike Paul's letters it opens with no greeting and no name. Its closing lines show that the writer belonged to Timothy's circle (Hebrews 13:23) and sent greetings from believers in Italy (Hebrews 13:24). Through the centuries the church has suggested Paul, Barnabas (a Levite, Acts 4:36), Apollos (a learned man who knew the Scriptures well, Acts 18:24) and Priscilla with Aquila. The early church was divided: the East came to receive it as Paul's, while the West for a time doubted that, and the scholar Origen is remembered for saying that only God truly knows who wrote it. Whoever the human writer was, the church has always received Hebrews as inspired Scripture.",
+      "citations": [
+        {
+          "reference": "Hebrews 13:23-24",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 18:24-28",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 4:36",
+          "role": "stated"
+        }
+      ],
+      "note": "Hebrews is anonymous in the text itself; every name given to its author is a tradition or a guess."
+    },
+    {
+      "id": "why_jesus_wept",
+      "question": "Why did Jesus weep at the tomb of Lazarus?",
+      "alt_phrasings": [
+        "why did jesus cry at lazarus tomb",
+        "why did jesus cry",
+        "why did jesus weep",
+        "jesus wept",
+        "why did jesus cry when lazarus died",
+        "why did jesus weep if he knew he would raise lazarus"
+      ],
+      "confidence": "traditional",
+      "answer": "John 11:35 is the shortest verse in many Bibles: “Jesus wept.” When Jesus saw Mary and those with her weeping, “He was deeply moved in spirit and troubled” (John 11:33). He wept although He knew what He was about to do: He had told His disciples that He was going to wake Lazarus (John 11:11) and had promised Martha that her brother would rise again (John 11:23). So His tears were not doubt. They show His love for Lazarus and for the grieving family (the onlookers said, “See how He loved him!”, John 11:36) and His sorrow over what death does to those He made. Scripture then shows that sorrow turn to power when He cries “Lazarus, come out!” (John 11:43). Hebrews 4:15 says that we have a High Priest who sympathizes with our weaknesses.",
+      "citations": [
+        {
+          "reference": "John 11:33-36",
+          "role": "stated"
+        },
+        {
+          "reference": "John 11:11",
+          "role": "stated"
+        },
+        {
+          "reference": "John 11:23",
+          "role": "stated"
+        },
+        {
+          "reference": "John 11:43-44",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 4:15",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "comfort_when_someone_dies",
+      "question": "What does the Bible say to comfort us when someone dies?",
+      "alt_phrasings": [
+        "verses for when someone dies",
+        "bible verses about death of a loved one",
+        "bible verses for a funeral",
+        "scriptures for grief",
+        "bible comfort after losing a loved one",
+        "what does the bible say about grief",
+        "how to cope with the death of someone you love bible"
+      ],
+      "confidence": "stated",
+      "answer": "The Bible does not tell the grieving to hide their tears. Jesus Himself wept at the grave of a friend (John 11:35), and He blesses those who mourn: “Blessed are those who mourn, for they will be comforted” (Matthew 5:4). “The LORD is near to the brokenhearted and saves those crushed in spirit” (Psalm 34:18); even in the darkest valley the believer need not fear, for God is with him (Psalm 23:4). The God of all comfort comforts us so that we can comfort others (2 Corinthians 1:3-4). For those who belong to Christ there is hope: Jesus said, “I am the resurrection and the life. He who believes in Me will live, even though he dies” (John 11:25). Paul writes so that we do not grieve “like the rest, who have no hope” (1 Thessalonians 4:13-18), because the dead in Christ will rise when the Lord returns, and we will be with Him forever. Jesus has gone to prepare a place and will come back for His own (John 14:1-3). At the end God “will wipe away every tear from their eyes, and there will be no more death or mourning or crying or pain” (Revelation 21:4).",
+      "citations": [
+        {
+          "reference": "Matthew 5:4",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 34:18",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 23:4",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Corinthians 1:3-4",
+          "role": "stated"
+        },
+        {
+          "reference": "John 11:25-26",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Thessalonians 4:13-18",
+          "role": "stated"
+        },
+        {
+          "reference": "John 14:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 21:4",
+          "role": "stated"
+        }
+      ],
+      "note": "The Browse area has a page of verses for grief and loss."
+    },
+    {
+      "id": "what_happens_when_believer_dies",
+      "question": "What happens to a believer when they die?",
+      "alt_phrasings": [
+        "what happens after we die",
+        "what happens when you die",
+        "what happens when a christian dies",
+        "where do we go when we die",
+        "do believers go to heaven when they die",
+        "what does the bible say about life after death",
+        "is there life after death"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Jesus told the thief on the cross, “today you will be with Me in Paradise” (Luke 23:43). Paul said that to die is gain and that he desired “to depart and be with Christ, which is far better” (Philippians 1:21-23), and that to be away from the body is to be at home with the Lord (2 Corinthians 5:8). Human beings die once, and after that comes judgment (Hebrews 9:27). The believer's body waits for the resurrection: at Christ's return “the dead in Christ will rise first” (1 Thessalonians 4:16), and the perishable is raised imperishable (1 Corinthians 15:51-54). The unbelieving dead face the judgment before the great white throne (Revelation 20:11-15).\n\nPentecostal understanding: the believer is at once in the conscious presence of the Lord, then is raised with a glorified body at the Rapture and the resurrection of the just; the unbeliever awaits final judgment (Luke 16:22-26; Revelation 20:11-15).\n\nOther views: some (Seventh-day Adventists, Jehovah's Witnesses) hold that the dead are unconscious, in “sleep”, until the resurrection; Roman Catholic teaching adds purgatory for those who still need cleansing before heaven; some Christians believe the lost are finally destroyed instead of suffering without end.",
+      "citations": [
+        {
+          "reference": "Luke 23:43",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 1:21-23",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Corinthians 5:8",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 9:27",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Thessalonians 4:13-18",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 15:51-54",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 16:19-31",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 20:11-15",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "why_god_hardened_pharaoh",
+      "question": "Why did God harden Pharaoh's heart?",
+      "alt_phrasings": [
+        "why did god harden pharaohs heart",
+        "did god harden pharaoh's heart",
+        "pharaoh's heart was hardened",
+        "who hardened pharaoh's heart",
+        "was pharaoh forced to say no",
+        "did pharaoh have free will"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: before the plagues God told Moses, “I will harden his heart so that he will not let the people go” (Exodus 4:21). The record then says both things. Pharaoh hardened his own heart: when he saw that there was relief, he hardened it (Exodus 8:15), and he did so again after the plague of hail (Exodus 9:34-35). Later “the LORD hardened Pharaoh's heart” (Exodus 9:12; 10:1, 20, 27). God's purpose was to show His power and make His name known in all the earth (Exodus 9:16), and Paul quotes that in Romans 9:17-18, “God has mercy on whom He wants to have mercy, and He hardens whom He wants to harden.”\n\nPentecostal understanding: God hardened a heart that had already refused Him again and again, confirming the choice Pharaoh had made (Exodus 8:15, 32; 9:34); it is judgment on persistent unbelief, not a denial of free will.\n\nOther views: Reformed teachers read Romans 9 as God's sovereign choice, in which He hardens some and shows mercy to others; many scholars note that the Hebrew is used of both Pharaoh and God, and that God's hardening came after Pharaoh's own.",
+      "citations": [
+        {
+          "reference": "Exodus 4:21",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 8:15",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 9:12",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 9:34-35",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 9:16",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 9:17-18",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "pauls_thorn_in_the_flesh",
+      "question": "What was Paul's thorn in the flesh?",
+      "alt_phrasings": [
+        "what did paul mean by thorn in the flesh",
+        "what was the thorn in pauls side",
+        "paul's thorn in the flesh",
+        "what is a thorn in the flesh",
+        "my grace is sufficient for you"
+      ],
+      "confidence": "unattested",
+      "answer": "Scripture: after being caught up to the third heaven, Paul says, “there was given me a thorn in the flesh, a messenger of Satan, to torment me” so that he would not become conceited (2 Corinthians 12:7). He pleaded with the Lord three times that it would leave him, and the Lord answered, “My grace is sufficient for you, for My power is perfected in weakness” (2 Corinthians 12:8-9). Paul therefore delights in weakness, for “when I am weak, then I am strong” (2 Corinthians 12:10). The Bible does not say what the thorn was.\n\nPentecostal understanding: many read it as a satanic affliction or opposition allowed by God to keep Paul humble, not as proof that God no longer heals; the same Paul saw many healed (Acts 19:11-12; Acts 28:8-9). In Scripture “thorns in your sides” is a picture of enemies and opponents (Numbers 33:55; Judges 2:3).\n\nOther views: a bodily illness (such as eye trouble, suggested by Galatians 4:13-15 and 6:11), or a temptation, or a persecutor of Paul's ministry; the church has never settled it.",
+      "citations": [
+        {
+          "reference": "2 Corinthians 12:7-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Galatians 4:13-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Numbers 33:55",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 19:11-12",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "faq_cremation",
+      "question": "Is cremation allowed for Christians?",
+      "alt_phrasings": [
+        "is cremation allowed in the bible",
+        "is cremation a sin",
+        "does the bible forbid cremation",
+        "burial or cremation bible",
+        "can christians be cremated",
+        "what does the bible say about cremation"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: the Bible gives no command about cremation. Burial is the usual practice in both Testaments (Genesis 23:19; Genesis 50:13; John 19:40-42; Acts 8:2), and the body returns to dust as God said in Genesis 3:19. Fire for the dead is mentioned without comment in 1 Samuel 31:12-13, where the men of Jabesh Gilead burned the bodies of Saul and his sons and then buried their bones, and David blessed them for their kindness (2 Samuel 2:4-6). Burning the bones of a king in contempt is condemned (Amos 2:1). The resurrection does not depend on the condition of the body: the sea and death give up their dead (Revelation 20:13), and the body is raised by God's power (1 Corinthians 15:35-44).\n\nPentecostal understanding: many Pentecostal and evangelical churches prefer burial because it follows the Bible's pattern and pictures the hope of resurrection, yet most leave cremation to the conscience of the family before God, since Scripture does not forbid it.\n\nOther views: the Catholic Church allows cremation if it is not chosen to deny the resurrection; the Orthodox churches generally require burial; Jewish and Muslim tradition forbids cremation.",
+      "citations": [
+        {
+          "reference": "Genesis 3:19",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 23:19",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 31:12-13",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Samuel 2:4-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Amos 2:1",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 15:35-44",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 20:13",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "bible_on_anger",
+      "question": "What does the Bible say about anger?",
+      "alt_phrasings": [
+        "verses about anger",
+        "bible verses on anger",
+        "how to control anger bible",
+        "is anger a sin",
+        "bible verses about being angry",
+        "what does the bible say about losing your temper",
+        "bible verses for anger management"
+      ],
+      "confidence": "stated",
+      "answer": "Anger itself is not always sin, but it must be controlled: “Be angry, and yet do not sin. Do not let the sun set upon your anger” (Ephesians 4:26-27). “Everyone should be quick to listen, slow to speak, and slow to anger, because man's anger does not bring about the righteous life that God desires” (James 1:19-20). “A gentle answer turns away wrath, but a harsh word stirs up anger” (Proverbs 15:1). A fool gives full vent to his anger, but a wise man holds it back (Proverbs 29:11), and one who is slow to anger has great understanding (Proverbs 14:29). “Refrain from anger and turn from wrath” (Psalm 37:8). Believers are told to put away anger, wrath, malice and filthy talk (Colossians 3:8). Jesus warned that anger toward a brother puts us in danger of judgment (Matthew 5:22) and Paul says not to take revenge, but leave room for God's wrath (Romans 12:19). God Himself is “compassionate and gracious, slow to anger, abounding in loving devotion” (Psalm 103:8).",
+      "citations": [
+        {
+          "reference": "Ephesians 4:26-27",
+          "role": "stated"
+        },
+        {
+          "reference": "James 1:19-20",
+          "role": "stated"
+        },
+        {
+          "reference": "Proverbs 15:1",
+          "role": "stated"
+        },
+        {
+          "reference": "Proverbs 29:11",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 37:8",
+          "role": "stated"
+        },
+        {
+          "reference": "Colossians 3:8",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 5:22",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 12:19",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 103:8",
+          "role": "stated"
+        }
+      ],
+      "note": null
     }
   ]
 }
