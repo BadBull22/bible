@@ -169,6 +169,11 @@ pub fn migrate(conn: &Connection, dir: &Path) -> Result<(), String> {
     if !has_column(conn, "lib_verses", "red") {
         conn.execute_batch("ALTER TABLE lib_verses ADD COLUMN red TEXT").map_err(err)?;
     }
+    // the Strong's-numbered words of a Bible's verse (a JSON list of [words, [numbers]]), kept when the
+    // module carries them, so the reader can make those words clickable (Word Study) as in the built-in Bibles
+    if !has_column(conn, "lib_verses", "words") {
+        conn.execute_batch("ALTER TABLE lib_verses ADD COLUMN words TEXT").map_err(err)?;
+    }
     if !has_column(conn, "lib_dict", "strongs") {
         conn.execute_batch("ALTER TABLE lib_dict ADD COLUMN strongs TEXT").map_err(err)?;
     }
@@ -628,9 +633,12 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: In
     let mut other_books: HashSet<String> = HashSet::new();
     // books of a Bible beyond the 66 (the Apocrypha) that are kept
     let mut apocrypha: HashSet<&'static str> = HashSet::new();
+    // a Bible whose words carry Strong's numbers (kept in lib_verses.words)
+    let mut strongs_kept = false;
     match kind {
         "bible" => {
-            let mut stmt = tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)").map_err(err)?;
+            let mut stmt =
+                tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text, words) VALUES (?1,?2,?3,?4,?5,?6)").map_err(err)?;
             for e in sword::read_verse_module(root, &conf)? {
                 let extra = refs::apocrypha_book(&e.osis_book);
                 let Some(book) = refs::osis_book(&e.osis_book).or(extra) else {
@@ -647,7 +655,9 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: In
                 if let Some(x) = extra {
                     apocrypha.insert(x);
                 }
-                stmt.execute(params![module, book, e.chapter, e.verse, text]).map_err(err)?;
+                let words = words_json(&markup::strongs_words(&e.text, &source));
+                strongs_kept |= words.is_some();
+                stmt.execute(params![module, book, e.chapter, e.verse, text, words]).map_err(err)?;
                 entries += 1;
             }
         }
@@ -764,7 +774,10 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: In
             .map_err(err)?;
     }
     let lang = conf.get("Lang").unwrap_or("").to_string();
-    let features = conf.fields.get("Feature").map(|v| v.join(",")).filter(|f| !f.is_empty()).unwrap_or_else(|| "-".into());
+    let mut features = conf.fields.get("Feature").map(|v| v.join(",")).filter(|f| !f.is_empty()).unwrap_or_else(|| "-".into());
+    if strongs_kept {
+        features = if features == "-" { STRONGS_WORDS.to_string() } else { format!("{features},{STRONGS_WORDS}") };
+    }
     tx.execute(
         "INSERT INTO modules(name, kind, title, lang, language, licence, about, version, versification, entries, features, source)
          VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12)",
@@ -802,6 +815,20 @@ pub fn install_unpacked(conn: &mut Connection, root: &Path, name: &str, opts: In
 
 /// Largest file "Add from file" accepts.
 pub const MAX_IMPORT_BYTES: usize = 400 * 1024 * 1024;
+
+/// The `modules.features` entry of a Bible whose verses keep their Strong's-numbered words
+/// (`lib_verses.words`). Not the same as the SWORD module's own `StrongsNumbers` feature, which
+/// says only what the module's author claims.
+pub const STRONGS_WORDS: &str = "StrongsWords";
+
+/// A verse's Strong's words as the JSON kept in `lib_verses.words` (None when it has none).
+pub fn words_json(words: &[(String, Vec<String>)]) -> Option<String> {
+    if words.is_empty() {
+        None
+    } else {
+        serde_json::to_string(words).ok()
+    }
+}
 
 /// The library name for an e-Sword or MySword module: a Bible's abbreviation (its version
 /// code in the translation list, e.g. "PWL"), or "own-<title>" for anything else.
@@ -844,13 +871,17 @@ pub fn install_esword(conn: &mut Connection, m: &esword::Module, file_name: Opti
     let replaces: Option<String> = tx.query_row("SELECT title FROM modules WHERE name = ?1", params![module], |r| r.get(0)).optional().map_err(err)?;
     delete_module_rows(&tx, &module)?;
     let mut entries: i64 = 0;
+    let mut strongs_kept = false;
     let (table, text_col) = match m.kind {
         "bible" => {
-            let mut s = tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text, red) VALUES (?1,?2,?3,?4,?5,?6)").map_err(err)?;
+            let mut s = tx.prepare("INSERT INTO lib_verses(module, book, chapter, verse, text, red, words) VALUES (?1,?2,?3,?4,?5,?6,?7)").map_err(err)?;
             let red: std::collections::HashMap<(&str, i64, i64), String> =
                 m.red.iter().filter_map(|(b, ch, v, ranges)| serde_json::to_string(ranges).ok().map(|j| ((*b, *ch, *v), j))).collect();
+            let words: std::collections::HashMap<(&str, i64, i64), String> =
+                m.words.iter().filter_map(|(b, ch, v, w)| words_json(w).map(|j| ((*b, *ch, *v), j))).collect();
+            strongs_kept = !words.is_empty();
             for (b, ch, v, text) in &m.verses {
-                s.execute(params![module, b, ch, v, text, red.get(&(*b, *ch, *v))]).map_err(err)?;
+                s.execute(params![module, b, ch, v, text, red.get(&(*b, *ch, *v)), words.get(&(*b, *ch, *v))]).map_err(err)?;
                 entries += 1;
             }
             ("lib_verses", "text")
@@ -940,7 +971,23 @@ pub fn install_esword(conn: &mut Connection, m: &esword::Module, file_name: Opti
     tx.execute(
         "INSERT INTO modules(name, kind, title, lang, language, licence, about, version, versification, entries, features, source)
          VALUES (?1,?2,?3,?4,?5,?6,?7,'','KJV',?8,?9,?10)",
-        params![module, m.kind, title, lang, language, licence, about, entries, if m.strongs { "StrongsNumbers" } else { "-" }, SOURCE_FILE],
+        params![
+            module,
+            m.kind,
+            title,
+            lang,
+            language,
+            licence,
+            about,
+            entries,
+            match (m.strongs, strongs_kept) {
+                (true, true) => format!("StrongsNumbers,{STRONGS_WORDS}"),
+                (true, false) => "StrongsNumbers".to_string(),
+                (false, true) => STRONGS_WORDS.to_string(),
+                (false, false) => "-".to_string(),
+            },
+            SOURCE_FILE
+        ],
     )
     .map_err(err)?;
     if commit {
@@ -1032,6 +1079,10 @@ pub struct InstalledModule {
     pub source: String,
     /// a book added from a PDF: how many printed pages it has (0 = it has no page numbers)
     pub pages: i64,
+    /// a Bible whose words carry Strong's numbers, kept when it was added (the reader makes them clickable)
+    pub strongs: bool,
+    /// a Bible that says it has Strong's numbers but was added before the app kept them: adding it again keeps them
+    pub strongs_missing: bool,
 }
 
 pub fn installed(conn: &Connection, kind: Option<&str>) -> Result<Vec<InstalledModule>, String> {
@@ -1043,6 +1094,7 @@ pub fn installed(conn: &Connection, kind: Option<&str>) -> Result<Vec<InstalledM
         .map_err(err)?;
     let rows = stmt
         .query_map(params![kind], |r| {
+            let features: String = r.get(10)?;
             Ok(InstalledModule {
                 name: r.get(0)?,
                 kind: r.get(1)?,
@@ -1054,7 +1106,9 @@ pub fn installed(conn: &Connection, kind: Option<&str>) -> Result<Vec<InstalledM
                 entries: r.get(7)?,
                 installed_at: r.get(8)?,
                 source: r.get(9)?,
-                pages: r.get::<_, String>(10)?.strip_prefix("pages=").and_then(|n| n.parse().ok()).unwrap_or(0),
+                pages: features.strip_prefix("pages=").and_then(|n| n.parse().ok()).unwrap_or(0),
+                strongs: features.split(',').any(|f| f == STRONGS_WORDS),
+                strongs_missing: r.get::<_, String>(1)? == "bible" && features.split(',').any(|f| f == "StrongsNumbers") && !features.split(',').any(|f| f == STRONGS_WORDS),
             })
         })
         .map_err(err)?;
@@ -1170,6 +1224,81 @@ mod tests {
         assert_eq!(language_name("eng"), "English");
         assert_eq!(language_name("afr"), "Afrikaans");
         assert_eq!(language_name("en-US"), "English");
+    }
+
+    #[test]
+    fn a_bible_added_from_a_file_keeps_its_strongs_words() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        migrate(&conn, Path::new("no-such-folder")).unwrap();
+        let mut m = esword::Module { kind: "bible", program: "MyBible", abbreviation: "TG".into(), title: "Tagged".into(), lang: "en".into(), ..Default::default() };
+        for v in 1..=25 {
+            m.verses.push(("Genesis", 1, v, format!("In the beginning God created {v}.")));
+        }
+        m.words.push(("Genesis", 1, 1, vec![("In the beginning".into(), vec!["H7225".into()]), ("God".into(), vec!["H430".into(), "H853".into()])]));
+        let r = install_esword(&mut conn, &m, Some("TG.SQLite3"), true, &[]).unwrap();
+        assert_eq!(r.name, "TG");
+        let words = |v: i64| -> Option<String> { conn.query_row("SELECT words FROM lib_verses WHERE module = 'TG' AND verse = ?1", params![v], |r| r.get(0)).unwrap() };
+        assert_eq!(words(1).as_deref(), Some(r#"[["In the beginning",["H7225"]],["God",["H430","H853"]]]"#));
+        assert_eq!(words(2), None, "a verse without tags keeps nothing");
+        let features: String = conn.query_row("SELECT features FROM modules WHERE name = 'TG'", [], |r| r.get(0)).unwrap();
+        assert!(features.split(',').any(|f| f == STRONGS_WORDS), "{features}");
+
+        // the same Bible without any tags is not marked
+        let mut plain = esword::Module { kind: "bible", program: "MyBible", abbreviation: "PL".into(), title: "Plain".into(), lang: "en".into(), ..Default::default() };
+        plain.verses = m.verses.clone();
+        install_esword(&mut conn, &plain, Some("PL.SQLite3"), true, &[]).unwrap();
+        let features: String = conn.query_row("SELECT features FROM modules WHERE name = 'PL'", [], |r| r.get(0)).unwrap();
+        assert_eq!(features, "-");
+        assert_eq!(words_json(&[]), None);
+    }
+
+    /// A real SWORD Bible that carries Strong's numbers, unpacked (a folder holding `mods.d` and `modules`):
+    /// `SWORD_MODULE=<folder> SWORD_NAME=KJV cargo test --lib real_tagged -- --ignored --nocapture` (a development aid).
+    #[test]
+    #[ignore]
+    fn real_tagged_sword_module() {
+        let (Ok(dir), Ok(name)) = (std::env::var("SWORD_MODULE"), std::env::var("SWORD_NAME")) else { return };
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        migrate(&conn, Path::new("no-such-folder")).unwrap();
+        let opts = InstallOptions { source: "crosswire", strict: false, commit: true, built_in: &[] };
+        let r = install_unpacked(&mut conn, Path::new(&dir), &name, opts, &|_| {}).unwrap();
+        println!("{}: {} verses, {} books", r.name, r.entries, r.books);
+        let rows: Vec<(String, i64, i64, String, Option<String>)> = conn
+            .prepare("SELECT book, chapter, verse, text, words FROM lib_verses WHERE module = ?1 ORDER BY id")
+            .unwrap()
+            .query_map(params![r.name], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)))
+            .unwrap()
+            .map(|x| x.unwrap())
+            .collect();
+        let (mut tagged, mut words, mut lost) = (0, 0, 0);
+        let mut shown = 0;
+        for (book, ch, v, text, json) in &rows {
+            let Some(json) = json else { continue };
+            tagged += 1;
+            let list: Vec<(String, Vec<String>)> = serde_json::from_str(json).unwrap();
+            for (surface, nums) in &list {
+                words += 1;
+                assert!(!nums.is_empty() && nums.iter().all(|n| markup::strongs_number(n).as_deref() == Some(n.as_str())), "{book} {ch}:{v} {nums:?}");
+                // the reader finds each word in the text ignoring the punctuation between its parts
+                let parts: Vec<&str> = surface.split_whitespace().collect();
+                if !parts.iter().all(|p| text.contains(p)) {
+                    lost += 1;
+                    if lost <= 8 {
+                        println!("  not in the text: {book} {ch}:{v} {surface:?}  <-  {text}");
+                    }
+                }
+            }
+            if shown < 3 && (book == "Genesis" && *ch == 1 && *v <= 2 || book == "John" && *ch == 3 && *v == 16) {
+                shown += 1;
+                println!("  {book} {ch}:{v}  {text}\n    {list:?}");
+            }
+        }
+        let features: String = conn.query_row("SELECT features FROM modules WHERE name = ?1", params![r.name], |r| r.get(0)).unwrap();
+        let bytes: i64 = conn.query_row("SELECT sum(length(words)) FROM lib_verses WHERE module = ?1", params![r.name], |r| r.get::<_, Option<i64>>(0)).unwrap().unwrap_or(0);
+        println!("  {tagged} of {} verses carry tagged words: {words} words, {lost} not found in their text; {} KB of words kept; features {features}", rows.len(), bytes / 1024);
+        assert!(tagged > 0 && features.contains(STRONGS_WORDS));
     }
 
     #[test]

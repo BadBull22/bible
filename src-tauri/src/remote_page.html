@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="robots" content="noindex">
+<title>Slide remote</title>
+<style>
+  :root { color-scheme: dark; --bg: #0d1220; --card: #18203a; --fg: #eef1fa; --muted: #9aa6c7; --accent: #4f86cf; --warn: #c0562f; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--fg); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { display: flex; flex-direction: column; gap: 10px; padding: 10px; max-width: 640px; margin: 0 auto; min-height: 100vh; }
+  header { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; color: var(--muted); font-size: 0.9rem; }
+  #part { font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card { background: var(--card); border-radius: 12px; padding: 12px 14px; }
+  #now { max-height: 34vh; overflow-y: auto; }
+  #now-title { font-size: 1.25rem; font-weight: 700; margin: 0 0 4px; }
+  #now-body { white-space: pre-wrap; margin: 0; }
+  .label { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+  #next { margin: 0; }
+  #notes-card { border-left: 4px solid var(--accent); }
+  #notes { white-space: pre-wrap; margin: 0; }
+  .pad { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  button { font: inherit; color: var(--fg); background: #26325a; border: 0; border-radius: 14px; padding: 14px 10px; min-height: 56px; touch-action: manipulation; }
+  button:active { filter: brightness(1.3); }
+  button.big { min-height: 22vh; font-size: 1.6rem; font-weight: 700; }
+  button.go { background: var(--accent); }
+  button.on { background: var(--warn); }
+  #parts { display: flex; gap: 8px; flex-wrap: wrap; }
+  #parts button { flex: 1 1 30%; min-height: 44px; font-size: 0.9rem; }
+  #parts button.on { background: var(--accent); }
+  #lost { background: var(--warn); border-radius: 10px; padding: 8px 12px; text-align: center; }
+  footer { color: var(--muted); font-size: 0.8rem; text-align: center; margin-top: auto; }
+</style>
+</head>
+<body>
+<header><span id="part">Slide remote</span><span id="count"></span></header>
+<div id="lost" hidden>Lost the connection to the computer. Check you are on the same Wi-Fi.</div>
+<div class="card" id="now"><div class="label">On the screen</div><p id="now-title">Waiting for the show to start…</p><p id="now-body"></p></div>
+<div class="card"><div class="label">Next</div><p id="next"></p></div>
+<div class="card" id="notes-card" hidden><div class="label">Your notes</div><p id="notes"></p></div>
+<div class="pad">
+  <button class="big" data-k="back" id="back">&larr; Back</button>
+  <button class="big go" data-k="next" id="forward">Next &rarr;</button>
+</div>
+<div class="pad">
+  <button data-k="black" id="black">Black</button>
+  <button data-k="clear" id="clear">Hide the words</button>
+</div>
+<div id="parts"></div>
+<footer>Works only while the show is running on the computer.</footer>
+<script>
+(function () {
+  var base = location.pathname.replace(/\/+$/, "");
+  var $ = function (id) { return document.getElementById(id); };
+  var partsKey = "";
+  function lost(on) { $("lost").hidden = !on; }
+  function send(k) {
+    fetch(base + "/key", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ k: k }) })
+      .then(function (r) { if (!r.ok) throw new Error(); if (navigator.vibrate) navigator.vibrate(25); poll(); })
+      .catch(function () { lost(true); });
+  }
+  function render(s) {
+    if (s.idle) { $("now-title").textContent = "Waiting for the show to start…"; $("now-body").textContent = ""; $("next").textContent = ""; $("count").textContent = ""; return; }
+    $("part").textContent = s.part || "Slide remote";
+    $("count").textContent = (s.index + 1) + " / " + s.total;
+    $("now-title").textContent = s.now && s.now.title ? s.now.title : (s.black ? "Black" : "");
+    $("now-body").textContent = s.now && s.now.body ? s.now.body : "";
+    $("next").textContent = s.next ? (s.next.title || s.next.body || "(next slide)") : "That is the last slide";
+    var n = s.notes || "";
+    $("notes").textContent = n; $("notes-card").hidden = !n;
+    $("black").className = s.black ? "on" : ""; $("clear").className = s.clear ? "on" : "";
+    var key = JSON.stringify([s.parts, s.active]);
+    if (key !== partsKey) {
+      partsKey = key;
+      var box = $("parts"); box.textContent = "";
+      if (s.parts && s.parts.length > 1) {
+        s.parts.forEach(function (p, i) {
+          var b = document.createElement("button");
+          b.textContent = p; if (i === s.active) b.className = "on";
+          b.onclick = function () { send(String(i + 1)); };
+          box.appendChild(b);
+        });
+      }
+    }
+  }
+  function poll() {
+    fetch(base + "/state", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (s) { lost(false); render(s); })
+      .catch(function () { lost(true); });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("button[data-k]"), function (b) { b.onclick = function () { send(b.getAttribute("data-k")); }; });
+  setInterval(poll, 700); poll();
+})();
+</script>
+</body>
+</html>

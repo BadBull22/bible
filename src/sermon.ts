@@ -6,6 +6,9 @@
 // Gathering uses what the app already has -- search by meaning (sentences work), word
 // search, the topical Bibles (Nave's, Torrey's), cross-references, commentaries -- plus a
 // short table of passages known by name ("Sermon on the Mount").
+import { findBrowse, story as browseStory, topic as browseTopic } from "./browse/data";
+import { parseRef as parseBrowseRef } from "./browse/browseLogic";
+import type { BrowseKind } from "./browse/types";
 import { api, BookInfo, Discourse, IllustrationItem, LibraryMention, SheetBlock, SpurgeonSermon, SheetRun, Version } from "./api";
 import { plainText } from "./components/RichText";
 import type { Role } from "./sermonTemplates";
@@ -27,6 +30,7 @@ export type MaterialKind =
   | "word"
   | "note"
   | "illustration"
+  | "browse"
   | "quote"
   | "outline"
   | "sermon"
@@ -79,6 +83,7 @@ export const GROUPS: { kind: MaterialKind; label: string; about: string }[] = [
   { kind: "word", label: "Word studies", about: "The Hebrew and Greek words behind the subject." },
   { kind: "note", label: "Your own notes", about: "Notes you've written that touch the subject." },
   { kind: "assistant", label: "From the Offline Assistant", about: "What the Offline Assistant brought for you: word notes, threads, stories, outline ideas and answers, each with where it comes from. Check each before you use it." },
+  { kind: "browse", label: "Stories and topics", about: "Bible stories and “Verses for…” pages from Browse on the subject, each with the passages to read. Short retellings in this app's own words." },
   { kind: "illustration", label: "Illustrations", about: "Stories from D. L. Moody's books, each with its source." },
   { kind: "quote", label: "Quotations", about: "Sayings of Moody and Spurgeon, with their source." },
   { kind: "outline", label: "How others outlined it", about: "Historic sermon outlines on the passage — to learn from, not to copy." },
@@ -390,6 +395,12 @@ async function gatherTopic(topic: string, version: string, books: BookInfo[], on
   // --- 7b. stories and sayings on the subject
   for (const i of await api.sermonIllustrations(topic, 14).catch(() => [])) add(illustrationMaterial(i, topic));
 
+  // --- 7b2. the Bible stories and "Verses for..." pages on the subject (Browse)
+  for (const e of findBrowse(topic, 4)) {
+    const m = browseMaterial(e.kind, e.id, topic);
+    if (m) add(m);
+  }
+
   // --- 7c. Spurgeon's sermons: titled with the subject, and on the key passages
   for (const s of await api.spurgeonSermonsTitled(topic, 6).catch(() => [])) add(spurgeonMaterial(s));
   for (const p of out.filter((m) => m.kind === "passage" && m.ref).slice(0, 4)) {
@@ -495,6 +506,26 @@ export function illustrationMaterial(i: IllustrationItem, topic: string): Materi
     title: i.title ? `${i.title} — ${book}` : `${i.subject ? `${i.subject}: ` : ""}${book}`,
     text: i.text,
     source: i.source,
+    topic,
+  };
+}
+
+/** A Browse page (a Bible story or a "Verses for..." page) as material: its words and the passages it points to. */
+export function browseMaterial(kind: BrowseKind, id: string, topic: string): Material | null {
+  const page = kind === "stories" ? browseStory(id) : kind === "topics" ? browseTopic(id) : undefined;
+  if (!page) return null;
+  const isStory = "summary" in page;
+  const refs = isStory ? page.passages.map((p) => p.ref) : page.items.map((i) => i.ref);
+  const first = parseBrowseRef(refs[0] ?? "");
+  return {
+    key: `br:${kind}:${id}`,
+    kind: "browse",
+    title: page.title,
+    text: `${isStory ? page.summary : page.intro}
+
+Passages: ${refs.join("; ")}`,
+    source: "Browse (this app's own words)",
+    ref: first ? { book: first.book, chapter: first.chapter, verse: first.verse, verseEnd: first.verseEnd } : undefined,
     topic,
   };
 }

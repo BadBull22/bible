@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
 import { api, HIGHLIGHT_COLOR_NAMES, HIGHLIGHT_COLORS, HighlightColor } from "../api";
 import { CloseIcon } from "./icons";
-import { DEFAULT_PREFS, ReadingPrefs, TextColor, Theme } from "../readingPrefs";
+import { DEFAULT_PREFS, READING_FONTS, ReadingPrefs, TextColor, Theme, UI_FONTS } from "../readingPrefs";
+import { ThemeSettings } from "../themes/ThemeSettings";
 import { NATURAL_VOICES, ReadAloudPrefs } from "../readAloud";
 import { invoke } from "@tauri-apps/api/core";
 import { copyText } from "../clipboard";
@@ -84,12 +85,14 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
 ];
 
 /** Which groups are open, kept between visits. */
-const OPEN_KEY = "bc-settings-open";
+const OPEN_KEY = "bc-settings-open-v2";
 function loadOpen(): Set<string> {
   try {
-    return new Set(JSON.parse(localStorage.getItem(OPEN_KEY) ?? "[]") as string[]);
+    const raw = localStorage.getItem(OPEN_KEY);
+    // the first time, Appearance is open so the adjustments are in view
+    return new Set(raw === null ? ["appearance"] : (JSON.parse(raw) as string[]));
   } catch {
-    return new Set();
+    return new Set(["appearance"]);
   }
 }
 
@@ -137,7 +140,7 @@ interface Props {
   /** open the "What's new in this version" window */
   onOpenWhatsNew: () => void;
   /** open scrolled to this section (used by Getting started's "Show me") */
-  focus?: "online";
+  focus?: "online" | "appearance";
   onClose: () => void;
 }
 
@@ -293,6 +296,7 @@ export function SettingsPanel({
     const s = loadOpen();
     // opened from Getting started's "Show me": the keys group is open
     if (focus === "online") s.add("online");
+    if (focus === "appearance") s.add("appearance");
     return s;
   });
   const toggle = (id: string, open: boolean) =>
@@ -309,8 +313,10 @@ export function SettingsPanel({
       return next;
     });
   const onlineBox = useRef<HTMLDetailsElement>(null);
+  const appearanceBox = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     if (focus === "online") onlineBox.current?.scrollIntoView({ block: "start" });
+    if (focus === "appearance") appearanceBox.current?.scrollIntoView({ block: "start" });
   }, [focus]);
   const g = (id: string) => ({ id, open: openSet.has(id), onToggle: toggle });
 
@@ -323,61 +329,14 @@ export function SettingsPanel({
         </button>
       </div>
       {loadError && <p className="status-error">{loadError}</p>}
+      <p className="set-intro">Everything you can change is listed below, most-used first. Click a heading to open it. Help, troubleshooting and credits are at the bottom.</p>
 
-      <Group {...g("help")} title="Help &amp; guides" hints={false}>
-        <div className="set-row">
-          <button className="pill-btn" onClick={onOpenHelp}>
-            User guide
-          </button>
-          <button className="outline-btn" onClick={onOpenWelcome}>
-            Getting started
-          </button>
-        </div>
-        <details className="set-tip">
-          <summary>Keyboard shortcuts</summary>
-          <ul className="shortcut-list">
-            <li>
-              <kbd>←</kbd> <kbd>→</kbd> previous / next chapter
-            </li>
-            <li>
-              <kbd>Ctrl</kbd> <kbd>K</kbd> focus the search box
-            </li>
-            <li>
-              <kbd>Esc</kbd> close the side panel / leave focus mode
-            </li>
-            <li>
-              <kbd>F11</kbd> focus mode (full screen, just the text)
-            </li>
-          </ul>
-        </details>
-        <details className="set-tip">
-          <summary>Going straight to a passage</summary>
-          <p>
-            Type a reference such as <em>John 3:16</em>, <em>gen 1</em> or <em>1 sam 17</em> into the search box to go straight there.
-          </p>
-        </details>
-        <details className="set-tip">
-          <summary>If the text is hard to read</summary>
-          <p>
-            Open <strong>Look &amp; reading</strong> and try <strong>Contrast: High</strong>, a stronger text colour, or a larger text size. Focus mode (the Focus button, or <kbd>F11</kbd>) shows just the text, full screen.
-          </p>
-        </details>
-        <details className="set-tip">
-          <summary>Hearing a chapter read</summary>
-          <p>
-            Press <strong>Listen</strong> beside a chapter's title (or ⋯ → <em>Listen from here</em> on a verse). It is fully offline once the natural voice is downloaded (Read aloud, below); the first time after starting the app takes a few seconds.
-          </p>
-        </details>
-        <details className="set-tip">
-          <summary>Where the app keeps your keys</summary>
-          <p>Keys for the online translations are stored only on this computer, in the app's settings file. They are never bundled into the app or sent anywhere except the provider they belong to.</p>
-        </details>
-      </Group>
-
-      <Group {...g("look")} title="Look &amp; reading">
+      <p className="set-section">Adjust the app</p>
+      <Group {...g("appearance")} title="Appearance: theme, fonts and colours" boxRef={appearanceBox}>
+        <ThemeSettings />
         <div className="reading-prefs">
           <label>
-            <span>Theme</span>
+            <span>Light or dark</span>
             <select value={prefs.theme} onChange={(e) => onPrefsChange({ ...prefs, theme: e.target.value as Theme })} aria-label="Theme">
               <option value="system">Match Windows</option>
               <option value="light">Light</option>
@@ -400,6 +359,39 @@ export function SettingsPanel({
               <option value="high">High</option>
             </select>
           </label>
+          <label>
+            <span>Interface font</span>
+            <select value={prefs.uiFont} onChange={(e) => onPrefsChange({ ...prefs, uiFont: e.target.value })} aria-label="Interface font">
+              {UI_FONTS.map((f) => (
+                <option key={f.key} value={f.key}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Bible reading font</span>
+            <select value={prefs.readingFont} onChange={(e) => onPrefsChange({ ...prefs, readingFont: e.target.value })} aria-label="Bible reading font">
+              {READING_FONTS.map((f) => (
+                <option key={f.key} value={f.key}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="set-row">
+            <button className="text-btn" onClick={() => onPrefsChange({ ...prefs, theme: DEFAULT_PREFS.theme, textColor: DEFAULT_PREFS.textColor, contrast: DEFAULT_PREFS.contrast, uiFont: DEFAULT_PREFS.uiFont })}>
+              Standard appearance
+            </button>
+          </div>
+        </div>
+        <p className="search-hint">
+          Contrast: High makes headings, labels and hints darker. The Bible reading font is your own choice: no theme ever changes it.
+        </p>
+      </Group>
+
+      <Group {...g("reading")} title="Reading: text size, spacing and page width">
+        <div className="reading-prefs">
           <label>
             <span>Text size</span>
             <input type="range" min={0.85} max={1.6} step={0.05} value={prefs.fontScale} onChange={(e) => onPrefsChange({ ...prefs, fontScale: Number(e.target.value) })} aria-label="Reading text size" />
@@ -425,20 +417,17 @@ export function SettingsPanel({
             </select>
           </label>
           <div className="set-row">
-            <button className="text-btn" onClick={() => onPrefsChange({ ...prefs, theme: DEFAULT_PREFS.theme, textColor: DEFAULT_PREFS.textColor, contrast: DEFAULT_PREFS.contrast })}>
-              Standard look
-            </button>
-            <button className="text-btn" onClick={() => onPrefsChange({ ...DEFAULT_PREFS, theme: prefs.theme, textColor: prefs.textColor, contrast: prefs.contrast })}>
+            <button className="text-btn" onClick={() => onPrefsChange({ ...DEFAULT_PREFS, theme: prefs.theme, textColor: prefs.textColor, contrast: prefs.contrast, uiFont: prefs.uiFont })}>
               Reset reading
             </button>
           </div>
         </div>
         <p className="search-hint">
-          Contrast: High makes headings, labels and hints darker. Words of Jesus in red is the red-letter edition. Focus mode (the Focus button, or <kbd>F11</kbd>) shows just the text, full screen; <kbd>Esc</kbd> leaves it.
+          Words of Jesus in red is the red-letter edition. Focus mode (the Focus button, or <kbd>F11</kbd>) shows just the text, full screen; <kbd>Esc</kbd> leaves it.
         </p>
       </Group>
 
-      <Group {...g("voice")} title="Read aloud">
+      <Group {...g("voice")} title="Read aloud (voice)">
         <div className="reading-prefs">
           <label>
             <span>Voice</span>
@@ -468,7 +457,7 @@ export function SettingsPanel({
         </p>
       </Group>
 
-      <Group {...g("highlights")} title="Name your highlights">
+      <Group {...g("highlights")} title="Highlight colours (name them)">
         <p className="search-hint">
           Give each highlight colour its own meaning (Love, Family, Prophecy, Prayer…). Leave a name blank to use the colour's own name. Your names show next to the colour in My Study → Highlights.
         </p>
@@ -479,7 +468,7 @@ export function SettingsPanel({
         </div>
       </Group>
 
-      <Group {...g("online")} title="Online translations (NIV, NKJV, ESV)" boxRef={onlineBox}>
+      <Group {...g("online")} title="Online translations: NIV, NKJV, ESV (your keys)" boxRef={onlineBox}>
         <p className="search-hint">
           Everything in this app works offline. These options add online-only, copyrighted translations to the Compare view. Each needs your own key from that provider and an internet connection, and is fetched on demand rather than stored. NIV and NKJV use an
           api.bible key (scripture.api.bible; ESV is not offered there). ESV uses a free Crossway key from api.esv.org (non-commercial use, shown with its "(ESV)" attribution).
@@ -518,7 +507,7 @@ export function SettingsPanel({
         />
       </Group>
 
-      <Group {...g("sync")} title="Keep in step with your other devices">
+      <Group {...g("sync")} title="Sync with your phone and other devices">
         <SyncSettings />
       </Group>
 
@@ -530,11 +519,62 @@ export function SettingsPanel({
         <UpdateSettings />
       </Group>
 
-      <Group {...g("diagnostics")} title="If something goes wrong">
+      <p className="set-section">Help, troubleshooting and credits</p>
+      <Group {...g("diagnostics")} title="Troubleshooting: if something goes wrong">
         <Diagnostics />
       </Group>
 
-      <Group {...g("about")} title="About" hints={false}>
+      <Group {...g("help")} title="Help &amp; guides" hints={false}>
+        <div className="set-row">
+          <button className="pill-btn" onClick={onOpenHelp}>
+            User guide
+          </button>
+          <button className="outline-btn" onClick={onOpenWelcome}>
+            Getting started
+          </button>
+        </div>
+        <details className="set-tip">
+          <summary>Keyboard shortcuts</summary>
+          <ul className="shortcut-list">
+            <li>
+              <kbd>←</kbd> <kbd>→</kbd> previous / next chapter
+            </li>
+            <li>
+              <kbd>Ctrl</kbd> <kbd>K</kbd> focus the search box
+            </li>
+            <li>
+              <kbd>Esc</kbd> close the side panel / leave focus mode
+            </li>
+            <li>
+              <kbd>F11</kbd> focus mode (full screen, just the text)
+            </li>
+          </ul>
+        </details>
+        <details className="set-tip">
+          <summary>Going straight to a passage</summary>
+          <p>
+            Type a reference such as <em>John 3:16</em>, <em>gen 1</em> or <em>1 sam 17</em> into the search box to go straight there.
+          </p>
+        </details>
+        <details className="set-tip">
+          <summary>If the text is hard to read</summary>
+          <p>
+            Open <strong>Appearance</strong> and try <strong>Contrast: High</strong>, a stronger text colour, or a larger text size. Focus mode (the Focus button, or <kbd>F11</kbd>) shows just the text, full screen.
+          </p>
+        </details>
+        <details className="set-tip">
+          <summary>Hearing a chapter read</summary>
+          <p>
+            Press <strong>Listen</strong> beside a chapter's title (or ⋯ → <em>Listen from here</em> on a verse). It is fully offline once the natural voice is downloaded (Read aloud, below); the first time after starting the app takes a few seconds.
+          </p>
+        </details>
+        <details className="set-tip">
+          <summary>Where the app keeps your keys</summary>
+          <p>Keys for the online translations are stored only on this computer, in the app's settings file. They are never bundled into the app or sent anywhere except the provider they belong to.</p>
+        </details>
+      </Group>
+
+      <Group {...g("about")} title="About, credits &amp; licences" hints={false}>
         <div className="about">
           <p>
             <strong>Bible Concordance</strong>

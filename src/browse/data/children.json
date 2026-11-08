@@ -1,0 +1,596 @@
+{
+  "format": 1,
+  "pages": [
+    {
+      "id": "jesus-calms-the-storm",
+      "title": "Jesus Calms the Storm",
+      "age": "3-5",
+      "story": "jesus-calms-the-storm",
+      "read_from": "Mark 4:35-41",
+      "retelling": ["One evening Jesus and his friends got into a boat to cross the lake. Jesus lay down at the back of the boat, on a cushion, and fell asleep.", "Then a big storm came. The wind blew hard and the waves splashed into the boat. His friends were frightened.", "“Teacher, help!” they cried. “The boat is filling with water!”", "Jesus woke up. He spoke to the wind and the waves. “Quiet!” he said. “Be still!”", "At once the wind stopped, and the lake was calm.", "Jesus asked his friends, “Why are you so afraid?” They looked at one another. “Who is this?” they asked. “Even the wind and the waves do what he says!”"],
+      "message": "Jesus is with us in every storm. Even the wind and the waves listen to him.",
+      "memory": {
+        "ref": "Psalms 107:29",
+        "blanks_hint": ["storm", "waves"]
+      },
+      "questions": [
+        { "q": "Where was Jesus when the storm came?", "a": "Asleep at the back of the boat." },
+        {
+          "q": "What did Jesus say to the wind and the waves?",
+          "a": "He told them to be quiet and still."
+        },
+        {
+          "q": "When you feel scared, what can you remember about Jesus?",
+          "a": "He is with us, and even the wind and the waves obey him. Let the child say it in their own words."
+        }
+      ],
+      "try_this": "Make a rain sound with your fingers on the table, getting louder. Then say “Be still!” together and stop. Notice how quiet it gets.",
+      "words": ["BOAT", "LAKE", "STORM", "WIND", "WAVES", "JESUS"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 2 }
+    },
+    {
+      "id": "david-and-the-giant",
+      "title": "David and the Giant",
+      "age": "6-8",
+      "story": "david-and-goliath",
+      "read_from": "1 Samuel 17:1-58",
+      "retelling": ["David was a shepherd boy. He looked after his father's sheep, and he trusted God to keep him safe.", "One day David took some food to his big brothers, who were soldiers. The soldiers were scared. A giant called Goliath shouted at them every day, and nobody dared to fight him.", "“I will fight him,” said David. “God helped me when a lion and a bear came after my sheep. God will help me now.”", "The king let David try on his armour. But David was not used to it, so he took it off. He picked up his stick and his sling, and he chose five smooth stones from the stream.", "“You have a sword and a spear,” David called to Goliath. “But I come in the name of the LORD.”", "David swung his sling. The stone flew through the air, and Goliath fell down. The soldiers of Israel gave a great shout. Everyone could see that God had helped David."],
+      "message": "God is bigger than any giant. When we trust God, we do not have to be afraid.",
+      "memory": {
+        "ref": "Psalms 56:3",
+        "blanks_hint": ["afraid", "trust"]
+      },
+      "questions": [
+        { "q": "Who helped David when the lion and the bear came?", "a": "God did. David said so." },
+        { "q": "What did David take to meet Goliath?", "a": "A stick, a sling and five smooth stones. He left the armour behind." },
+        { "q": "What makes you feel afraid? What could you say to God about it?", "a": "There is no wrong answer. Let the child talk, then pray together." }
+      ],
+      "try_this": "Find five smooth stones or draw five on paper. Say the memory verse each time you pick one up.",
+      "words": ["DAVID", "GOLIATH", "SHEEP", "SLING", "STONE", "TRUST", "GIANT", "LION"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 2 }
+    },
+    {
+      "id": "noah-and-the-big-boat",
+      "title": "Noah and the Big Boat",
+      "age": "3-5",
+      "story": "noah-and-the-flood",
+      "read_from": "Genesis 8:1-22",
+      "retelling": ["God told Noah to build a big boat. The boat was called an ark. Noah did just what God said.", "Noah and his family went into the ark. The animals came too, two by two. Then God himself shut the door.", "The rain fell for forty days. Water covered the whole earth. But the ark floated on top, and God kept everyone inside safe.", "God remembered Noah. He sent a wind, and the water went down. The ark stopped on top of a mountain. But Noah still had to wait.", "Noah let a dove fly out of the ark. The dove came back. A week later, Noah sent it out again. This time it came back with a fresh leaf from an olive tree. A week later, Noah sent it out once more. The dove did not come back.", "Even then, Noah did not rush out. He waited for God to say it was time. They had been in the ark for about a year.", "At last the ground was dry. “Come out of the ark!” said God. Out came Noah, his family and all the animals.", "Then God made a promise. He would never flood the whole earth again. He put a rainbow in the clouds to show it."],
+      "message": "God keeps us safe, and God keeps his promises. When we wait for God, he knows the right time.",
+      "memory": {
+        "ref": "Psalms 4:8",
+        "blanks_hint": ["peace", "safety"]
+      },
+      "questions": [
+        {
+          "q": "What did the dove bring back to Noah?",
+          "a": "A leaf from an olive tree. It showed that the water was going down."
+        },
+        {
+          "q": "What did God promise after the flood?",
+          "a": "That he would never flood the whole earth again. The rainbow is the sign of his promise."
+        },
+        {
+          "q": "Who looks after you and keeps you safe? How can you say thank you?",
+          "a": "There is no wrong answer. Let the child name the people who care for them, then thank God together for looking after us."
+        }
+      ],
+      "try_this": "Draw a rainbow with as many colours as you can. Line up some toy animals two by two, and say together, “God keeps his promises.”",
+      "words": ["NOAH", "BOAT", "RAIN", "DOVE", "LEAF", "WATER"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 3 }
+    },
+    {
+      "id": "baby-moses-in-the-basket",
+      "title": "Baby Moses in the Basket",
+      "age": "3-5",
+      "story": "moses-in-the-basket",
+      "read_from": "Exodus 2:1-25",
+      "retelling": ["A baby boy was born. His mother loved him very much. She kept him hidden for three months, so that he would be safe.", "Soon she could not hide him any longer. So she made a basket and covered it with tar. She put the baby inside and set the basket in the reeds by the river.", "The baby's sister waited nearby and kept watch.", "Then a princess came down to the river. She was the king's daughter. She noticed the basket and told her maid to bring it.", "The princess opened the basket. The baby was crying! She felt sorry for him.", "His sister came over. “Shall I find a nurse for the baby?” she asked. “Yes, go,” said the princess.", "The girl hurried off and came back with her own mother! “Please take care of this baby for me,” said the princess. “I will pay you.” So the mother looked after her own baby.", "When the boy was older, he became the princess's son. She called him Moses, because she had pulled him from the river."],
+      "message": "God looks after us, even when things feel scary. He has a plan for every child.",
+      "memory": {
+        "ref": "Psalms 46:1",
+        "blanks_hint": ["strength", "help"]
+      },
+      "questions": [
+        { "q": "Who kept watch over the basket?", "a": "His sister." },
+        {
+          "q": "Who found the basket and felt sorry for the baby?",
+          "a": "The king's daughter, a princess."
+        },
+        {
+          "q": "Who helps you when you need help? How could you thank them?",
+          "a": "There is no wrong answer. Let the child name some helpers, then remind them that God is our help too, and pray together."
+        }
+      ],
+      "try_this": "Make a little basket from paper or a small box. Put a toy baby inside, hide it, and let your child find it and say, “Safe!”",
+      "words": ["MOSES", "BABY", "BASKET", "RIVER", "REEDS", "SISTER"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 2 }
+    },
+    {
+      "id": "the-birth-of-jesus",
+      "title": "The Birth of Jesus",
+      "age": "6-8",
+      "story": "the-birth-of-jesus",
+      "read_from": "Luke 2:1-20",
+      "retelling": ["Mary and Joseph lived in Nazareth. An angel came to Mary. “You will have a baby,” he said. “He will be the Son of God.” Mary said, “I am the Lord's servant.” An angel also told Joseph, in a dream, to call the baby Jesus.", "Then the Roman ruler, Caesar Augustus, ordered everyone to be counted in their family's own town. So Joseph and Mary travelled to Bethlehem, where Joseph's family came from.", "While they were there, Mary's baby was born. She wrapped him in cloths and put him down in a manger, a feeding box for animals.", "That night, shepherds were out in the fields, watching their sheep. Suddenly an angel appeared, and a bright light shone around them. The shepherds were frightened.", "“Don't be afraid!” said the angel. “I have wonderful news for everyone. Today your Savior is born in Bethlehem. He is Christ the Lord. You will find the baby in cloths, in a manger.”", "Then a huge crowd of angels appeared. They praised God and spoke of peace on earth.", "When the angels had gone, the shepherds said, “Let's go to Bethlehem!” They rushed there and found the baby with Mary and Joseph, just as the angel had said.", "The shepherds told everyone the good news. Mary kept all these things safe in her heart."],
+      "message": "Jesus is God's gift to the whole world. God loves us so much that he sent his Son to save us.",
+      "memory": {
+        "ref": "Luke 2:11",
+        "blanks_hint": ["born", "Christ", "Lord"]
+      },
+      "questions": [
+        {
+          "q": "Why did Joseph and Mary go to Bethlehem?",
+          "a": "The ruler, Caesar Augustus, ordered everyone to be counted in their own family's town, and Joseph's family came from Bethlehem."
+        },
+        {
+          "q": "What sign did the angel give the shepherds?",
+          "a": "They would find a baby in cloths, in a manger."
+        },
+        {
+          "q": "The shepherds told everyone the good news. What good news about Jesus could you tell someone this week?",
+          "a": "There is no wrong answer. Let the child think of one person, and a grown-up can help them say it, write it or draw it."
+        }
+      ],
+      "try_this": "Use a small box as a manger and a doll or toy as the baby. Let the shepherds hurry over to find him, then tell the good news.",
+      "words": ["JESUS", "MARY", "JOSEPH", "MANGER", "ANGEL", "SHEPHERD", "SAVIOR", "BABY"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 3 }
+    },
+    {
+      "id": "the-boy-with-the-lunch",
+      "title": "The Boy with the Lunch",
+      "age": "6-8",
+      "story": "jesus-feeds-the-five-thousand",
+      "read_from": "John 6:1-15",
+      "retelling": ["One day a huge crowd followed Jesus across the Sea of Galilee. They had seen him make sick people well.", "Jesus looked at all the people and asked his friend Philip where they could buy enough bread. Jesus already knew what he was going to do. He was testing Philip.", "Philip said that two hundred coins would not be enough. Not even a small piece for each person!", "Then Andrew, another friend of Jesus, spoke up. He had found a boy. The boy had just five small loaves of barley bread and two fish. “But how far will that go among so many people?” Andrew asked.", "“Tell everyone to sit down,” said Jesus. There was lots of grass there, and about five thousand men sat down.", "Jesus took the bread and the fish. He thanked God for them, and he shared them out. Everyone ate as much as they liked!", "When they were all full, Jesus told his friends to collect what was left, so that none of it would go to waste. They filled twelve baskets.", "The people saw what Jesus had done. They said he must be the Prophet who was coming."],
+      "message": "Jesus can do big things with the little we share. When we give what we have, God can make it enough.",
+      "memory": {
+        "ref": "Philippians 4:19",
+        "blanks_hint": ["supply", "riches"]
+      },
+      "questions": [
+        { "q": "What food did the boy have?", "a": "Five small loaves of barley bread and two fish." },
+        {
+          "q": "How much food was left over at the end?",
+          "a": "Twelve baskets full of pieces. Jesus told his friends to gather them so that nothing was wasted."
+        },
+        {
+          "q": "The boy had only a little, and Jesus used it for everyone. What small thing could you share with others?",
+          "a": "There is no wrong answer. It might be a toy, a snack, a kind word or some time. Help the child pick one thing to share this week."
+        }
+      ],
+      "try_this": "Share a snack. Cut a little fruit or bread into small pieces, thank God for it together, then hand the pieces round.",
+      "words": ["JESUS", "BOY", "LOAVES", "FISH", "BASKETS", "CROWD", "BARLEY", "ANDREW"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 2 }
+    },
+    {
+      "id": "zacchaeus-in-the-tree",
+      "title": "Zacchaeus in the Tree",
+      "age": "9-12",
+      "story": "zacchaeus-meets-jesus",
+      "read_from": "Luke 19:1-10",
+      "retelling": ["Jesus was walking through Jericho, and a big crowd had gathered. A wealthy man called Zacchaeus lived there. He was in charge of the tax collectors.", "Zacchaeus wanted to see Jesus. But he was short, and he could not see past the crowd. So he ran ahead of everyone and scrambled up a sycamore tree.", "When Jesus reached the tree, he looked up. “Zacchaeus!” he said. “Come down quickly. I must be your guest today.”", "Zacchaeus came down at once and welcomed him gladly. But everyone who saw it began to complain. Jesus was staying with a sinner, they said.", "Then Zacchaeus stood up and spoke to the Lord. He would give half of everything he owned to the poor. If he had cheated anyone, he would repay four times as much.", "Jesus said that salvation had come to that house, because Zacchaeus was a son of Abraham too. Jesus had come, he said, to look for lost people and to save them."],
+      "message": "Jesus loves everyone, even people that others leave out. When we meet Jesus, we want to put right what we did wrong.",
+      "memory": {
+        "ref": "Luke 19:10",
+        "blanks_hint": ["seek", "save", "lost"]
+      },
+      "questions": [
+        {
+          "q": "Why did Zacchaeus climb a tree?",
+          "a": "He was too short to see past the crowd, and he wanted to see Jesus."
+        },
+        {
+          "q": "What did Zacchaeus promise to do?",
+          "a": "Give half of what he owned to the poor, and pay back four times as much to anyone he had cheated."
+        },
+        {
+          "q": "Jesus chose to visit Zacchaeus, even though the crowd grumbled. Is there someone who is often left out at school or near your home? What could you do?",
+          "a": "There is no wrong answer. Help the young person think of one small, safe step, such as saying hello or sitting with that person, and pray for them together."
+        }
+      ],
+      "try_this": "Draw what Zacchaeus saw from the branch. Then write one thing you could give away or put right this week, and tell someone.",
+      "words": ["ZACCHAEUS", "JESUS", "JERICHO", "SYCAMORE", "CROWD", "POOR", "HOUSE", "LOST", "COLLECTOR"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 2 }
+    },
+    {
+      "id": "god-makes-the-world",
+      "title": "God Makes the World",
+      "age": "3-5",
+      "story": "the-creation",
+      "read_from": "Genesis 1:1-31",
+      "retelling": ["In the beginning, the world was dark and empty. Then God spoke. “Let there be light!” said God. And the light shone.", "God looked at the light. It was good! He named the light Day, and he named the dark Night. That was the first day.", "God made everything just by speaking. On the second day, he made the big blue sky. On the third day, he made dry land and seas. Then he made plants and fruit trees.", "On the fourth day, God made the sun, the moon and the stars. They shine in the sky.", "On the fifth day, God made fish for the sea and birds for the sky. God blessed them.", "On the sixth day, God made animals to live on the land. Last of all, God made people. He made a man and a woman, and he made them like himself.", "God looked at everything he had made. It was very good!", "On the seventh day, God rested. God blessed that day and made it special."],
+      "message": "God made the whole world, and he made you. Everything God makes is good.",
+      "memory": {
+        "ref": "Genesis 1:1",
+        "blanks_hint": ["beginning", "created", "earth"]
+      },
+      "questions": [
+        { "q": "How did God make the world?", "a": "He made everything just by speaking." },
+        {
+          "q": "What did God do on the seventh day?",
+          "a": "He rested, and he made that day special."
+        },
+        {
+          "q": "What is your favourite thing that God made? Can you say thank you to God for it?",
+          "a": "There is no wrong answer. Let the child choose, then thank God together for that one thing."
+        }
+      ],
+      "try_this": "Go outside and find something God made: a leaf, a stone or a feather. Look at it closely, then say together, “Thank you, God, for making this!”",
+      "words": ["LIGHT", "SKY", "STARS", "FISH", "BIRDS", "PEOPLE"],
+      "doctrine": "needs_review",
+      "doctrine_note": "Christians read the six days of Genesis 1 in different ways, so this page tells only what the text says and takes no side.",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "jonah-and-the-big-fish",
+      "title": "Jonah and the Big Fish",
+      "age": "3-5",
+      "story": "jonah-and-the-great-fish",
+      "read_from": "Jonah 1:1-17",
+      "retelling": ["God told Jonah to go to Nineveh, a big city. The people there were doing bad things, and God wanted Jonah to warn them.", "But Jonah did not want to go. He ran away from God! He got on a ship that sailed the other way.", "Then God sent a big wind. The waves rose high, and the ship shook. The sailors were scared. But Jonah was fast asleep.", "The sailors found out that Jonah was running from God. “It is my fault,” said Jonah. “Put me in the sea, and the storm will stop.”", "The sailors rowed and rowed, but the storm got worse. At last they put Jonah into the sea. At once the sea was calm.", "Then God sent a big fish. The fish swallowed Jonah! Jonah was inside the fish for three days and three nights.", "Jonah prayed to God from inside the fish. He said thank you for hearing him. Then God told the fish to put Jonah on dry land.", "God spoke to Jonah again. “Go to Nineveh,” he said. This time Jonah went. The people there listened. They were sorry, and God was kind to them."],
+      "message": "We cannot run away from God. He is with us everywhere, and he gives us another chance.",
+      "memory": {
+        "ref": "Psalms 139:7",
+        "blanks_hint": ["Spirit", "flee", "presence"]
+      },
+      "questions": [
+        {
+          "q": "What did Jonah do when God told him to go to Nineveh?",
+          "a": "He ran away. He got on a ship that sailed the other way."
+        },
+        {
+          "q": "What did Jonah do inside the big fish?",
+          "a": "He prayed, and God heard him. Then the fish put him on dry land."
+        },
+        {
+          "q": "Is there something you do not want to do? What could you tell God about it?",
+          "a": "There is no wrong answer. Let the child say it in their own words. A grown-up can remind them that God still loves us and gives us another chance."
+        }
+      ],
+      "try_this": "Make a big fish from paper, with a wide mouth. Put a small paper Jonah inside, then take him out and say, “God gives second chances!”",
+      "words": ["JONAH", "FISH", "SHIP", "STORM", "WIND", "PRAYED"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "daniel-and-the-lions",
+      "title": "Daniel and the Lions",
+      "age": "3-5",
+      "story": "daniel-in-the-lions-den",
+      "read_from": "Daniel 6:1-28",
+      "retelling": ["Daniel loved God. Three times every day, he knelt by his window and prayed. He said thank you to God.", "Daniel worked for the king, and he did his work well. The king liked Daniel very much. But some other men were jealous.", "These men tricked the king. For thirty days, no one could pray to anyone but the king. If they did, they would be put in a den of lions.", "Daniel heard about the new rule. But he still prayed to God, just as before.", "The king was sad, but the rule could not be changed. So Daniel was put in the den with the lions. A big stone covered the door. “May your God keep you safe,” said the king.", "All night, the king could not sleep. At first light he hurried to the den. “Daniel!” he called. “Did your God keep you safe?”", "“Yes!” said Daniel. “God sent his angel. He shut the lions’ mouths, so they could not hurt me.”", "The king was so happy! Daniel came out of the den. He did not have one scratch, because he trusted God.", "Then the king wrote to everyone in his land. He said that Daniel’s God is the living God."],
+      "message": "Daniel kept praying to God, even when it was hard. God was with him and took care of him.",
+      "memory": {
+        "ref": "Psalms 34:7",
+        "blanks_hint": ["angel", "LORD", "delivers"]
+      },
+      "questions": [
+        { "q": "What did Daniel do three times every day?", "a": "He prayed to God and thanked him." },
+        { "q": "Who shut the lions’ mouths?", "a": "God did. He sent his angel to keep Daniel safe." },
+        {
+          "q": "Can you talk to God at any time? What would you like to say to him today?",
+          "a": "There is no wrong answer. We can pray anywhere, and God hears us. Let the child say a short prayer, or say one together."
+        }
+      ],
+      "try_this": "Sit by a window and say a short prayer, just like Daniel. Say thank you to God for three things, and count them on your fingers.",
+      "words": ["DANIEL", "LIONS", "PRAYED", "KING", "ANGEL", "WINDOW"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "samuel-hears-god",
+      "title": "Samuel Hears God",
+      "age": "6-8",
+      "story": "samuel-hears-god",
+      "read_from": "1 Samuel 3:1-21",
+      "retelling": ["Samuel was a boy who helped Eli, an old priest, in God’s house. In those days, people did not often hear from God.", "One night Samuel was lying down when a voice called his name. “Here I am!” he said. He ran to Eli. “You called me,” he said.", "“I did not call you,” said Eli. “Go back to bed.” So Samuel lay down again. Then it happened a second time, and a third time.", "Samuel had never heard God speak before, so he did not know who was calling. But now Eli understood. He told Samuel what to say if the voice came again: “Speak, LORD. I am listening.”", "This time, the LORD himself was there. “Samuel! Samuel!” he called. “Speak, LORD,” said Samuel. “I am listening.”", "Then God gave Samuel his message. It was a sad message about Eli’s family. Eli’s sons had done wrong, and Eli had not stopped them.", "In the morning, Samuel was scared to tell Eli. But Eli asked him to say everything, and Samuel hid nothing. Eli said that the LORD must do what is best.", "God was with Samuel as he grew up. Everything Samuel said came true. All Israel knew that Samuel spoke for God. He was a prophet, someone who tells people what God says."],
+      "message": "Hearing God call is not the same as hearing his message. The message came when Samuel said, “I am listening.” God speaks to us when we listen.",
+      "memory": {
+        "ref": "Psalms 46:10",
+        "blanks_hint": ["still", "know", "God"]
+      },
+      "questions": [
+        {
+          "q": "Who did Samuel think was calling him, and who helped him understand?",
+          "a": "He thought it was Eli. Eli worked out that God was calling, and he told Samuel what to say."
+        },
+        {
+          "q": "What did Samuel say when the LORD called again, and what happened then?",
+          "a": "He said that he was listening. Then God gave him the message."
+        },
+        {
+          "q": "Is there a quiet time in your day when you could stop and listen to God?",
+          "a": "There is no wrong answer. It could be bedtime, or a walk. A grown-up can help the child choose a time, then pray together, “Speak, LORD, I am listening.”"
+        }
+      ],
+      "try_this": "Sit quietly for one whole minute. Listen to every sound around you. Then say together, “Speak, LORD, I am listening,” and be still for a moment.",
+      "words": ["SAMUEL", "ELI", "VOICE", "NIGHT", "LISTEN", "PROPHET"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "moses-and-the-burning-bush",
+      "title": "Moses and the Burning Bush",
+      "age": "6-8",
+      "story": "the-burning-bush",
+      "read_from": "Exodus 3:1-22",
+      "retelling": ["Moses looked after sheep for his father-in-law. One day he led them far into the desert, to Horeb, the mountain of God.", "There he saw a strange sight. A bush was on fire, but it did not burn up! “I must go and look,” said Moses.", "God called to him from the bush. “Moses! Moses!” “Here I am,” said Moses.", "“Come no closer,” said God. “Take off your sandals. This ground is holy.” Moses covered his face. He did not dare to look at God.", "God said that he was the God of Abraham, Isaac and Jacob. He had seen how his people suffered as slaves in Egypt, and he had heard them cry out. Now he was coming to rescue them.", "God was sending Moses to Pharaoh, the king of Egypt, to lead his people out.", "But Moses was worried. “Who am I to do this?” he asked. He said that he was slow of speech and not good with words.", "God did not choose someone else. He said, “I will be with you.” He promised to help Moses speak, and to teach him what to say.", "God warned Moses that Pharaoh would not let the people go at first. But God would show his great power, and then they would be free."],
+      "message": "God can use anyone, even someone who feels small or weak. He does not need us to be perfect. He goes with us.",
+      "memory": {
+        "ref": "Joshua 1:9",
+        "blanks_hint": ["strong", "LORD", "with"]
+      },
+      "questions": [
+        { "q": "What was strange about the bush?", "a": "It was on fire, but it did not burn up." },
+        {
+          "q": "Moses said he was slow of speech. What did God promise him?",
+          "a": "God promised to be with him, to help him speak and to teach him what to say."
+        },
+        {
+          "q": "Is there something you feel too small or too shy to do? What do you think God would say to you?",
+          "a": "There is no wrong answer. Let the child talk. A grown-up can remind them that God was with Moses and is with us too, then pray together."
+        }
+      ],
+      "try_this": "Take off your shoes for a moment and stand quietly. Think about how great God is. Then draw a bush with flames of red, orange and yellow.",
+      "words": ["MOSES", "BUSH", "FIRE", "SANDALS", "HOLY", "EGYPT", "PHARAOH", "SHEEP"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "crossing-the-red-sea",
+      "title": "Crossing the Red Sea",
+      "age": "6-8",
+      "story": "crossing-the-red-sea",
+      "read_from": "Exodus 14:1-31",
+      "retelling": ["God’s people, the Israelites, had left Egypt. Moses led them, and God went with them. But then Pharaoh changed his mind.", "Pharaoh sent his army after them, with hundreds of chariots. The Israelites were camping beside the sea when they saw the army coming.", "The sea was in front of them, and the army was behind them. They were terrified! They cried out to God for help.", "“Do not be afraid,” Moses told the people. “Watch and see what God does today. He will fight for you.”", "God told Moses to hold out his hand over the sea. The cloud that led the people moved behind them, between them and the army. It kept the two camps apart all night.", "All night a strong wind blew, and the sea was pushed back. A path of dry ground appeared, with a wall of water on each side!", "The Israelites walked across. The ground under their feet was dry. God had made a way when there was no way.", "When all the Israelites were across, God told Moses to stretch out his hand again. The water came back, and Israel was safe.", "The people saw God’s great power. They trusted God, and they trusted his servant Moses."],
+      "message": "God can make a way when there seems to be no way. We do not need to be afraid. We can trust him.",
+      "memory": {
+        "ref": "Exodus 14:14",
+        "blanks_hint": ["LORD", "fight", "still"]
+      },
+      "questions": [
+        {
+          "q": "Why were the Israelites so afraid?",
+          "a": "The sea was in front of them, and Pharaoh’s army was coming up behind them."
+        },
+        {
+          "q": "How did God open a way through the sea?",
+          "a": "Moses held out his hand, and God sent a strong wind all night. It pushed the water back, and the people walked across on dry ground."
+        },
+        {
+          "q": "Has there been a time when you could not see a way out? Who could pray with you about it?",
+          "a": "There is no wrong answer. Let the child tell what they remember. A grown-up can remind them that God made a way for Israel and still helps us today."
+        }
+      ],
+      "try_this": "Lay two long blue cloths on the floor with a path between them. Walk down the path together, saying, “God makes a way!”",
+      "words": ["MOSES", "SEA", "WIND", "CLOUD", "CHARIOTS", "ISRAEL", "WATER", "PHARAOH"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "the-walls-of-jericho",
+      "title": "The Walls of Jericho",
+      "age": "6-8",
+      "story": "the-fall-of-jericho",
+      "read_from": "Joshua 6:1-27",
+      "retelling": ["Jericho was a city with high walls. Its gates were shut tight, because the Israelites were near.", "God spoke to Joshua, the leader of Israel. He said that he had already given Jericho to Joshua. Then he told Joshua a very strange plan.", "Every day for six days, the soldiers were to march around the city once. Seven priests would walk in front, blowing trumpets made of rams’ horns. The ark, God’s special box, came behind them.", "The people had to stay silent. Joshua told them not to say one word until it was time to shout.", "So the soldiers marched around Jericho once, with the horns sounding. Then they went back to camp. This went on for six days.", "On day seven, the army was up early. This time, they marched around the city seven times.", "Then the priests blew one long blast. “Shout!” said Joshua. “God has given you this city!”", "The people shouted as loudly as they could. The wall came tumbling down! The Israelites went into Jericho.", "Rahab, a woman in Jericho, had once hidden two of Joshua’s spies. Joshua kept the promise made to her. His men brought Rahab and her family out safely, and they lived among God’s people."],
+      "message": "God’s plans may look strange, but they work. We trust God and do what he says. Then he does what we cannot do.",
+      "memory": {
+        "ref": "Hebrews 11:30",
+        "blanks_hint": ["faith", "walls", "Jericho"]
+      },
+      "questions": [
+        {
+          "q": "What did the people have to do while they marched?",
+          "a": "They had to stay completely silent. Only the priests’ horns made a sound."
+        },
+        {
+          "q": "What happened on the seventh day?",
+          "a": "They marched around the city seven times. Then the priests blew a long blast, the people shouted and the wall fell down."
+        },
+        {
+          "q": "Is there something you find hard to do because you cannot see how it will work out? How could you trust God with it?",
+          "a": "There is no wrong answer. Let the child share. A grown-up can help them think of one way to trust God this week, then pray together."
+        }
+      ],
+      "try_this": "March around a table together, once a day for six days, in silence. On day seven, march seven times, then shout and knock down a tower of blocks.",
+      "words": ["JERICHO", "JOSHUA", "MARCH", "HORNS", "WALL", "SHOUT", "RAHAB", "PRIESTS"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "the-son-who-came-home",
+      "title": "The Son Who Came Home",
+      "age": "6-8",
+      "story": "the-prodigal-son",
+      "read_from": "Luke 15:11-32",
+      "retelling": ["There was a man with two sons. The younger son asked for his share of the money. Then he went far away.", "He wasted everything he had. A famine came, and he took a job feeding pigs. He was so hungry that he wanted the pigs' food.", "At last he decided to go home and say sorry.", "The son was still far from home when his father saw him coming. The father ran to him, hugged him and kissed him. “Father, I did wrong to God and to you,” said the son.", "He called to his servants. “Bring the best robe and a ring! Let's have a feast! My son was lost, and now he is found!”", "The older son was out in the field. When he heard about the party, he got angry and stayed outside. His father went out and begged him. “I worked for you,” he said, “but I never got a party!”", "“Son, you are with me every day,” said the father. “All I have is yours. But we had to celebrate! Your brother was lost, and now he is found!”", "Jesus does not say if the older son went in. Jesus also told about a lost sheep and a lost coin. Heaven is full of joy when one lost person is found."],
+      "message": "God is like the father who ran to welcome his son home. Heaven is full of joy when one lost person is found. There is a place at the party for everyone.",
+      "memory": {
+        "ref": "Luke 15:10",
+        "blanks_hint": ["joy", "angels", "sinner"]
+      },
+      "questions": [
+        {
+          "q": "What job did the younger son take when his money was gone?",
+          "a": "He fed pigs, and he was so hungry that he wanted to eat their food."
+        },
+        {
+          "q": "What did the father do when he saw his son far away?",
+          "a": "He ran to his son, hugged him and kissed him. Then he gave him a robe and a ring, and held a feast."
+        },
+        {
+          "q": "Have you ever done something wrong and then said sorry? How did it feel to be forgiven?",
+          "a": "There is no wrong answer. Let the child talk. A grown-up can share a time they were forgiven, and remind the child that God is always ready to welcome us home."
+        }
+      ],
+      "try_this": "Act out the story. One person comes home from far away, and the others run to hug them. Then share a special snack and say together, “Lost and found!”",
+      "words": ["FATHER", "PIGS", "ROBE", "RING", "FEAST", "LOST", "FOUND", "SORRY"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "jesus-walks-on-the-water",
+      "title": "Jesus Walks on the Water",
+      "age": "6-8",
+      "story": "jesus-walks-on-water",
+      "read_from": "Matthew 14:22-33",
+      "retelling": ["Jesus sent his friends ahead of him in a boat. Then he went up a mountain to pray alone.", "That night the boat was far from land. The wind was blowing hard against it, and the waves tossed it about.", "Very late, Jesus came toward the boat. He was walking on the lake! His friends were terrified and thought he was a ghost.", "At once Jesus called to them. “Don't be afraid! It is me.”", "“Lord, if it really is you,” called Peter, “let me walk to you on the water!”", "“Come,” said Jesus. Peter climbed out of the boat. He walked on the water toward Jesus!", "But then Peter noticed how strong the wind was. He took his eyes off Jesus and looked at the waves. He was frightened, and he began to sink. “Lord, save me!” he cried.", "At once Jesus reached out and caught him. “Why did you doubt?” he asked. The wind stopped as soon as they were in the boat.", "His friends worshipped Jesus. “You are truly God's Son!” they said."],
+      "message": "Keep your eyes on Jesus, not on the wind and waves. If you start to sink, cry out to him. He will catch you!",
+      "memory": {
+        "ref": "Matthew 14:27",
+        "blanks_hint": ["courage", "afraid"]
+      },
+      "questions": [
+        {
+          "q": "What did Peter do when Jesus said, “Come”?",
+          "a": "He climbed out of the boat and walked toward Jesus on the water."
+        },
+        {
+          "q": "What happened when Peter looked at the wind and the waves?",
+          "a": "He was frightened and began to sink. Then he cried out, and Jesus caught him."
+        },
+        {
+          "q": "Peter called out to Jesus when he began to sink. What could you say to Jesus when you feel worried or scared?",
+          "a": "There is no wrong answer. Let the child say it in their own words. A grown-up can pray a short prayer together, such as “Jesus, help me!”"
+        }
+      ],
+      "try_this": "Stand on one foot and look at one spot on the wall. Then look all around and see what happens. Say, “Keep your eyes on Jesus!”",
+      "words": ["JESUS", "PETER", "BOAT", "WAVES", "WIND", "WATER", "SINK", "FRIENDS"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "jesus-is-alive",
+      "title": "Jesus Is Alive!",
+      "age": "9-12",
+      "story": "the-empty-tomb",
+      "read_from": "John 20:1-18",
+      "retelling": ["Early on Sunday morning, Mary Magdalene walked to the tomb where Jesus was buried. The stone had been moved away. She ran to tell Peter and another friend of Jesus. “Someone has taken the Lord away!” she said.", "The two men ran to the tomb. The other man got there first and looked in. Peter went inside and saw the linen cloths. The other man went in too, and he believed. They did not yet understand that the Scriptures said Jesus must rise again.", "Mary stayed outside, crying. She looked in and saw two angels dressed in white. “Why are you crying?” they asked. “My Lord is gone,” she answered, “and I cannot find him.”", "Then she turned around and saw someone there. She thought he was the gardener. “Sir, if you have moved him, tell me where he is,” she said.", "“Mary,” said the man. At once she knew his voice. It was Jesus, alive! “Teacher!” she cried.", "Jesus sent her to tell his followers. Mary went to them. “I have seen the Lord!” she announced.", "Jesus did not leave right away. For forty days he appeared to his followers again and again, showing them in many ways that he was alive. Then, as they watched, he was lifted up to heaven."],
+      "message": "Jesus rose from the dead, and he is alive! For forty days he showed his friends that it was true. Then he went up to heaven.",
+      "memory": {
+        "ref": "Matthew 28:6",
+        "blanks_hint": ["risen", "said"]
+      },
+      "questions": [
+        {
+          "q": "Who went to the tomb early on Sunday morning, and what did she find?",
+          "a": "Mary Magdalene. She found the stone moved away from the entrance."
+        },
+        {
+          "q": "Mary thought the man was the gardener. How did she know it was Jesus?",
+          "a": "He said her name, “Mary.” Then she turned to him and knew who he was."
+        },
+        {
+          "q": "Mary was full of joy when she saw Jesus alive. Who could you tell this good news to, and how?",
+          "a": "There is no wrong answer. Let the young person choose one person. A grown-up can help them write a note, plan what to say, and pray for that person together."
+        }
+      ],
+      "try_this": "Make a card that says “Jesus is alive!” and decorate it. Give it to someone this week, and tell them what Mary told his followers.",
+      "words": ["JESUS", "MARY", "TOMB", "STONE", "ANGELS", "GARDENER", "TEACHER", "ALIVE", "HEAVEN", "PETER"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "the-good-samaritan",
+      "title": "The Good Samaritan",
+      "age": "9-12",
+      "story": "the-good-samaritan",
+      "read_from": "Luke 10:25-37",
+      "retelling": ["An expert in God's law asked Jesus what to do to have eternal life. He said the law tells us to love God and to love our neighbor. But then he asked, “Who is my neighbor?”", "Jesus answered with a story. A man was walking down the road from Jerusalem to Jericho. Robbers attacked him, beat him and left him half dead.", "A priest came along the road. He saw the man and crossed to the far side. Later a Levite, who helped in God's house, did the same.", "Then a Samaritan came by. In those days, many Jews and Samaritans did not get along. But when the Samaritan saw the hurt man, his heart went out to him.", "He bandaged the man's wounds and poured oil and wine on them. He lifted him onto his own animal and took him to an inn. There he took care of him.", "The next day the Samaritan gave the innkeeper two silver coins. “Look after him,” he said. “If it costs more, I will pay you when I come back.”", "Jesus asked, “Which of the three men acted like a neighbor to the one who was hurt?” “The one who showed mercy,” the expert answered. “Go and do the same,” said Jesus."],
+      "message": "Our neighbor is anyone who needs our help, not only our friends. Jesus tells us to show mercy, just as the Samaritan did.",
+      "memory": {
+        "ref": "Mark 12:31",
+        "blanks_hint": ["Love", "neighbor", "yourself"]
+      },
+      "questions": [
+        {
+          "q": "Who walked away from the hurt man, and who stopped to help him?",
+          "a": "A priest and a Levite crossed to the far side of the road. A Samaritan stopped and bandaged the man. He took him to an inn and paid for his care."
+        },
+        {
+          "q": "What did Jesus ask the expert at the end, and what did the expert answer?",
+          "a": "Jesus asked which of the three men acted like a neighbor to the one who was hurt. The expert answered, “The one who showed mercy.”"
+        },
+        {
+          "q": "Is there someone near you, at school or at home, who needs help or a kind word? What could you do?",
+          "a": "There is no wrong answer. Help the young person think of one small, safe act of kindness for this week, and pray together that God will give them a caring heart."
+        }
+      ],
+      "try_this": "Do one kind thing for someone this week without being asked, such as helping at home or sharing something. Write it down afterwards and thank God.",
+      "words": ["SAMARITAN", "JERICHO", "PRIEST", "LEVITE", "ROBBERS", "NEIGHBOR", "MERCY", "INN", "JERUSALEM"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "ruth-stays-with-naomi",
+      "title": "Ruth Stays with Naomi",
+      "age": "9-12",
+      "story": "ruth-and-naomi",
+      "read_from": "Ruth 1:1-22",
+      "retelling": ["Long ago there was a famine in Bethlehem. A man named Elimelech took his wife Naomi and their two sons to live in Moab, a foreign land.", "Elimelech died. The sons married two Moabite women, Orpah and Ruth. After about ten years, both sons died too, and Naomi was left alone.", "Then Naomi heard that God had given his people food in Judah. She decided to go home, and Ruth and Orpah set out with her.", "On the road, Naomi told the young women to go back to their own mothers' homes. They wept and wept. Orpah kissed Naomi goodbye and went back, but Ruth held on to her.", "“I will go where you go,” Ruth said. She promised to live where Naomi lived. Naomi's people would be her family now, and she would follow Naomi's God. She would stay until death.", "So the two women came to Bethlehem. The whole town was stirred, and Naomi said she had left full but had come home empty. It was the start of the barley harvest.", "But God had not forgotten them. Later, Ruth married a kind man named Boaz. Their son Obed became the grandfather of King David. So Ruth, the foreigner from Moab, became David's great-grandmother."],
+      "message": "No matter who you are or where you come from, God chooses you and has a plan for you. You are valuable, important and loved.",
+      "memory": {
+        "ref": "Jeremiah 29:11",
+        "blanks_hint": ["plans", "future", "hope"]
+      },
+      "questions": [
+        {
+          "q": "Which of the two young women went back home, and which one stayed with Naomi?",
+          "a": "Orpah went back to her own people. Ruth held on to Naomi and stayed with her."
+        },
+        {
+          "q": "What promise did Ruth make to Naomi?",
+          "a": "She would go where Naomi went and live where Naomi lived. She would join Naomi's people, follow Naomi's God, and stay with her until death."
+        },
+        {
+          "q": "Ruth was a stranger in Bethlehem, but God had a plan for her. When have you felt like an outsider? What do you want to remember about how God sees you?",
+          "a": "There is no wrong answer. Let the young person talk, and listen. A grown-up can say that God sees each of us as valuable and loved, and pray together."
+        }
+      ],
+      "try_this": "Draw a little family tree: Ruth, Obed, Jesse and King David. Then add one more leaf with your own name and the words “Loved by God.”",
+      "words": ["NAOMI", "RUTH", "MOAB", "ORPAH", "BETHLEHEM", "FAMINE", "BARLEY", "DAVID", "BOAZ"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    },
+    {
+      "id": "joseph-the-dreamer",
+      "title": "Joseph the Dreamer",
+      "age": "9-12",
+      "story": "joseph-and-his-brothers",
+      "read_from": "Genesis 45:1-28",
+      "retelling": ["Joseph was one of twelve brothers, and their father Jacob loved him most. His brothers were jealous. Joseph told them his dreams, which seemed to say they would bow down to him. They became angry.", "One day they put Joseph in an empty pit and sold him to traders on their way to Egypt. Their father Jacob cried for many days, thinking Joseph was dead.", "In Egypt, God was with Joseph. But someone told lies about him, and he ended up in prison. God was with him there too.", "Years later, Pharaoh, the king of Egypt, had dreams nobody could explain. Joseph was brought out of prison, and he said that only God could give the answer. God showed that seven good years would come, then seven years of famine.", "Pharaoh made Joseph ruler over all Egypt. Joseph stored up grain. When the hunger came, Joseph's brothers traveled to Egypt to buy food. They bowed low before him, just as in the dreams. They did not know who he was.", "At last Joseph could not hold back his tears. “I am Joseph!” he said. His brothers were terrified. But Joseph told them not to blame themselves. God had sent him ahead to save lives. Joseph forgave them. He kissed each of his brothers and cried."],
+      "message": "God's plan is bigger than ours, even when we do not understand. He uses hard times to get us ready. Joseph forgave his brothers, and we can forgive too.",
+      "memory": {
+        "ref": "Genesis 50:20",
+        "blanks_hint": ["evil", "good", "preserve"]
+      },
+      "questions": [
+        {
+          "q": "Why were Joseph's brothers so angry with him?",
+          "a": "Their father loved Joseph most, and Joseph told them dreams that seemed to say they would bow down to him."
+        },
+        {
+          "q": "What did Joseph tell his brothers when he showed them who he was?",
+          "a": "He told them not to blame themselves, because God had sent him ahead to save lives. Then he forgave them and kissed each one."
+        },
+        {
+          "q": "Joseph went through hard times before God used him. Is something hard happening in your life? What could you say to God about it, and is there someone you need to forgive?",
+          "a": "There is no wrong answer. Let the young person talk, and listen. A grown-up can share a hard time that God used in their own life, and pray together."
+        }
+      ],
+      "try_this": "Draw four boxes showing where Joseph lived: the pit, a house in Egypt, the prison and Pharaoh's palace. Write across the top, “God had a plan.”",
+      "words": ["JOSEPH", "JACOB", "BROTHERS", "EGYPT", "PHARAOH", "DREAMS", "PRISON", "GRAIN", "FORGAVE", "FAMINE"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1 }
+    }
+  ]
+}

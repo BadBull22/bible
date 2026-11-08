@@ -4,6 +4,7 @@
 // which day of the church year a date is.
 
 import DAYS from "./lectionary.json";
+import { plainTerm } from "./plainTerms";
 
 export interface LectionaryDay {
   key: string;
@@ -164,7 +165,8 @@ export function upcoming(from: Date, count: number): Appointed[] {
 /** A day's name for a list: "Proper 19: Sunday Closest to September 14" -> "Proper 19". */
 export function dayName(day: LectionaryDay): string {
   const t = day.title.replace(/\s*:\s*/, ": ");
-  return /^Proper \d+/.test(t) ? t.replace(/:.*$/, "") : t;
+  // where the old list says "Easter" the reader sees the Bible's term first, with the modern reference after it (plainTerms.ts)
+  return plainTerm(/^Proper \d+/.test(t) ? t.replace(/:.*$/, "") : t);
 }
 
 /** A citation as Gather takes it: the first part of "Galatians 3:23-25; 4:4-7", without the

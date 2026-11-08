@@ -1,0 +1,90 @@
+{
+ "christmas": {
+  "ref": "Luke 2:11",
+  "text": "Today in the city of David a Savior has been born to you. He is Christ the Lord!"
+ },
+ "easter": {
+  "ref": "Matthew 28:6",
+  "text": "He is not here; He has risen, just as He said!"
+ },
+ "pentecost": {
+  "ref": "Acts 2:4",
+  "text": "And they were all filled with the Holy Spirit and began to speak in other tongues as the Spirit enabled them."
+ },
+ "passover": {
+  "ref": "Exodus 12:14",
+  "text": "And this day will be a memorial for you, and you are to celebrate it as a feast to the LORD,"
+ },
+ "communion": {
+  "ref": "1 Corinthians 11:26",
+  "text": "For as often as you eat this bread and drink this cup, you proclaim the Lord’s death until He comes."
+ },
+ "healing": {
+  "ref": "Psalm 103:3",
+  "text": "He who forgives all your iniquities and heals all your diseases,"
+ },
+ "miracles": {
+  "ref": "Psalm 77:14",
+  "text": "You are the God who works wonders; You display Your strength among the peoples."
+ },
+ "sea-of-galilee": {
+  "ref": "Psalm 107:29",
+  "text": "He calmed the storm to a whisper, and the waves of the sea were hushed."
+ },
+ "advent": {
+  "ref": "Isaiah 9:2",
+  "text": "The people walking in darkness have seen a great light; on those living in the land of the shadow of death, a light has dawned."
+ },
+ "palm-sunday": {
+  "ref": "Matthew 21:9",
+  "text": "Blessed is He who comes in the name of the Lord!"
+ },
+ "good-friday": {
+  "ref": "Isaiah 53:5",
+  "text": "But He was pierced for our transgressions, He was crushed for our iniquities; the punishment that brought us peace was upon Him, and by His stripes we are healed."
+ },
+ "lent": {
+  "ref": "Psalm 51:10",
+  "text": "Create in me a clean heart, O God, and renew a right spirit within me."
+ },
+ "ascension": {
+  "ref": "Acts 1:9",
+  "text": "After He had said this, they watched as He was taken up, and a cloud hid Him from their sight."
+ },
+ "epiphany": {
+  "ref": "Matthew 2:2",
+  "text": "Where is the One who has been born King of the Jews? We saw His star in the east and have come to worship Him."
+ },
+ "harvest": {
+  "ref": "Psalm 65:11",
+  "text": "You crown the year with Your bounty, and Your paths overflow with plenty."
+ },
+ "new-year": {
+  "ref": "Lamentations 3:22-23",
+  "text": "Because of the loving devotion of the LORD we are not consumed, for His mercies never fail. They are new every morning; great is Your faithfulness!"
+ },
+ "reformation": {
+  "ref": "Romans 1:17",
+  "text": "The righteous will live by faith."
+ },
+ "mothers-day": {
+  "ref": "Proverbs 31:28",
+  "text": "Her children rise up and call her blessed"
+ },
+ "fathers-day": {
+  "ref": "Psalm 103:13",
+  "text": "As a father has compassion on his children, so the LORD has compassion on those who fear Him."
+ },
+ "trinity": {
+  "ref": "2 Corinthians 13:14",
+  "text": "The grace of the Lord Jesus Christ, and the love of God, and the fellowship of the Holy Spirit be with all of you."
+ },
+ "bible-sunday": {
+  "ref": "Psalm 119:105",
+  "text": "Your word is a lamp to my feet and a light to my path."
+ },
+ "childrens-day": {
+  "ref": "Mark 10:14",
+  "text": "Let the little children come to Me, and do not hinder them! For the kingdom of God belongs to such as these."
+ }
+}

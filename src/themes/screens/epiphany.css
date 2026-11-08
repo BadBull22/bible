@@ -1,0 +1,60 @@
+/* Epiphany: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Matthew 2:2 (part) (BSB): “Where is the One who has been born King of the Jews? We saw His star in the east and have come to worship Him.” */
+.home-screen[data-occasion="epiphany"], .pv[data-occasion="epiphany"], .wordmark-art[data-wm="epiphany"], .main-frame[data-reading-theme][data-occasion="epiphany"] {
+  --wm-c1: #213a7a;
+  --wm-c2: #c28a0e;
+  --wm-c3: #3d62b8;
+  --wm-c4: #4f78c8;
+  --wm-ink: #5b5f78;
+  --wm-hi: #fffaf0;
+  --wm-deep: #14224f;
+  --wm-warm: #9a6a12;
+  --wm-loaf: #f0d89a;
+  --occ-bg: linear-gradient(180deg,#e3e9f7 0%,#f0eff2 55%,#faf2dc 100%);
+  --occ-accent: #213a7a;
+  --occ-ring: rgba(33,58,122,.18);
+  --occ-line: #cbd4ea;
+  --occ-hint: #2c4a93;
+  --occ-verse: #1c2f66;
+  --occ-fx: rgba(214,160,30,.55);
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, following the light:";
+  --occ-verse-text: "“Where is the One who has been born King of the Jews? We saw His star in the east and have come to worship Him.”";
+  --occ-verse-ref: "Matthew 2:2 (part) (BSB)";
+}
+.home-screen[data-occasion="epiphany"][data-scheme="dark"], .pv[data-occasion="epiphany"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="epiphany"],
+:root[data-theme="dark"] .wordmark-art[data-wm="epiphany"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="epiphany"] {
+  --wm-c1: #7f9be8;
+  --wm-c2: #f0bf3c;
+  --wm-c3: #5f86d8;
+  --wm-c4: #8fb0f0;
+  --wm-ink: #cfd3e6;
+  --wm-hi: #f4efe2;
+  --wm-deep: #14224f;
+  --wm-warm: #d99a28;
+  --wm-loaf: #f0d89a;
+  --occ-bg: linear-gradient(180deg,#0e1738 0%,#131830 55%,#17181c 100%);
+  --occ-accent: #f0bf3c;
+  --occ-ring: rgba(240,191,60,.26);
+  --occ-line: #252f5a;
+  --occ-hint: #a8bbf0;
+  --occ-verse: #d9e2fb;
+  --occ-fx: rgba(240,191,60,.5);
+}
+
+.home-screen[data-occasion="epiphany"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="epiphany"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Ccircle cx='50' cy='44' r='36' fill='none' stroke='%23e0a928' stroke-width='1' opacity='.4'/%3E%3Cpath d='M50 19L53.4 35.7L67.7 26.3L58.3 40.6L75 44L58.3 47.4L67.7 61.7L53.4 52.3L50 69L46.6 52.3L32.3 61.7L41.7 47.4L25 44L41.7 40.6L32.3 26.3L46.6 35.7Z' fill='%23e0a928'/%3E%3Cpath d='M50 29L53.5 40.5L65 44L53.5 47.5L50 59L46.5 47.5L35 44L46.5 40.5Z' fill='%23fff3cf' opacity='.9'/%3E%3Cpath d='M112 19Q113.1 22.9 117 24Q113.1 25.1 112 29Q110.9 25.1 107 24Q110.9 22.9 112 19Z' fill='%23e0a928'/%3E%3Cpath d='M24 100Q24.9 103.1 28 104Q24.9 104.9 24 108Q23.1 104.9 20 104Q23.1 103.1 24 100Z' fill='%238fb0f0'/%3E%3Cpath d='M100 90.4Q100.8 93.2 103.6 94Q100.8 94.8 100 97.6Q99.2 94.8 96.4 94Q99.2 93.2 100 90.4Z' fill='%23e0a928'/%3E%3Cpath d='M146 59Q146.7 61.3 149 62Q146.7 62.7 146 65Q145.3 62.7 143 62Q145.3 61.3 146 59Z' fill='%238fb0f0'/%3E%3Cpath d='M150 15Q150.7 17.3 153 18Q150.7 18.7 150 21Q149.3 18.7 147 18Q149.3 17.3 150 15Z' fill='%238fb0f0'/%3E%3Cpath d='M62 76C84 96 110 104 130 130' fill='none' stroke='%23c9a14a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='1 6' opacity='.7'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Ccircle cx='50' cy='44' r='36' fill='none' stroke='%23e0a928' stroke-width='1' opacity='.4'/%3E%3Cpath d='M50 19L53.4 35.7L67.7 26.3L58.3 40.6L75 44L58.3 47.4L67.7 61.7L53.4 52.3L50 69L46.6 52.3L32.3 61.7L41.7 47.4L25 44L41.7 40.6L32.3 26.3L46.6 35.7Z' fill='%23e0a928'/%3E%3Cpath d='M50 29L53.5 40.5L65 44L53.5 47.5L50 59L46.5 47.5L35 44L46.5 40.5Z' fill='%23fff3cf' opacity='.9'/%3E%3Cpath d='M112 19Q113.1 22.9 117 24Q113.1 25.1 112 29Q110.9 25.1 107 24Q110.9 22.9 112 19Z' fill='%23e0a928'/%3E%3Cpath d='M24 100Q24.9 103.1 28 104Q24.9 104.9 24 108Q23.1 104.9 20 104Q23.1 103.1 24 100Z' fill='%238fb0f0'/%3E%3Cpath d='M100 90.4Q100.8 93.2 103.6 94Q100.8 94.8 100 97.6Q99.2 94.8 96.4 94Q99.2 93.2 100 90.4Z' fill='%23e0a928'/%3E%3Cpath d='M146 59Q146.7 61.3 149 62Q146.7 62.7 146 65Q145.3 62.7 143 62Q145.3 61.3 146 59Z' fill='%238fb0f0'/%3E%3Cpath d='M150 15Q150.7 17.3 153 18Q150.7 18.7 150 21Q149.3 18.7 147 18Q149.3 17.3 150 15Z' fill='%238fb0f0'/%3E%3Cpath d='M62 76C84 96 110 104 130 130' fill='none' stroke='%23c9a14a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='1 6' opacity='.7'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* the star glow over the top edge breathes slowly; fixed when motion is reduced */
+.home-screen[data-occasion="epiphany"][data-screen="on"]::after {
+  background: radial-gradient(ellipse 34% 30% at 50% -4%, var(--occ-fx) 0%, transparent 70%);
+  opacity: .75;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="epiphany"][data-screen="on"]::after { animation: occ-star 8s ease-in-out infinite alternate; }
+}
+@keyframes occ-star { from { opacity: .4; } to { opacity: 1; } }

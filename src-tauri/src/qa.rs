@@ -57,6 +57,20 @@ pub enum QaConfidence {
     Unattested,
 }
 
+/// One viewpoint on a subject that has more than one: shown after the answer under its own label (for example "The
+/// Pentecostal reading" and "Other views"). The owner decides per view whether it is published: `publish: false` hides it.
+#[derive(Deserialize, Serialize, Clone)]
+pub struct QaView {
+    pub label: String,
+    pub text: String,
+    #[serde(default = "yes")]
+    pub publish: bool,
+}
+
+fn yes() -> bool {
+    true
+}
+
 #[derive(Deserialize, Serialize, Clone)]
 pub struct QaEntry {
     pub id: String,
@@ -76,6 +90,9 @@ pub struct QaEntry {
     /// `None` for static-text entries. Resolved in `commands.rs::resolve_computed`.
     #[serde(default)]
     pub computed_from: Option<String>,
+    /// More than one viewpoint on the subject, each under its own label; the answer itself says what Scripture says.
+    #[serde(default)]
+    pub views: Vec<QaView>,
 }
 
 #[derive(Deserialize)]
@@ -149,6 +166,23 @@ impl QaRuntime {
     /// already L2-normalized by `Embedder::embed`, so cosine similarity is a plain dot
     /// product -- no norm division needed at match time. Returns `None` only if the index
     /// is empty (never happens once resources/qa_index.json is bundled correctly).
+    /// The best match of each different stored answer, best first (an answer can have several phrasings: only its closest one
+    /// counts), at most `k`. The pipeline tries them in turn until one passes the gate.
+    pub fn best_matches(&self, query_vec: &[f32], k: usize) -> Vec<(String, String, f32)> {
+        let mut best: std::collections::HashMap<(String, String), f32> = std::collections::HashMap::new();
+        for row in &self.index {
+            let dot: f32 = row.vector.iter().zip(query_vec).map(|(a, b)| a * b).sum();
+            let e = best.entry((row.source.clone(), row.id.clone())).or_insert(f32::MIN);
+            if dot > *e {
+                *e = dot;
+            }
+        }
+        let mut v: Vec<(String, String, f32)> = best.into_iter().map(|((s, i), d)| (s, i, d)).collect();
+        v.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
+        v.truncate(k);
+        v
+    }
+
     pub fn best_match(&self, query_vec: &[f32]) -> Option<(String, String, f32)> {
         self.index
             .iter()

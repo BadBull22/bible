@@ -18,7 +18,40 @@ export interface ReadingPrefs {
   textColor: TextColor;
   /** "high" darkens (or, in dark mode, lightens) the greys used for labels and headings. */
   contrast: "standard" | "high";
+  /** The font of the app's interface ("default" keeps the standard one). Chosen by hand; no theme changes it. */
+  uiFont: string;
+  /** The font of the Bible text and other reading text ("default" keeps the standard one). Chosen by hand; no theme or look ever changes it. */
+  readingFont: string;
 }
+
+export interface FontChoice {
+  key: string;
+  label: string;
+  /** the CSS font stack (null: the app's standard font) */
+  stack: string | null;
+}
+
+/** Fonts that come with Windows (and most systems): a short list rather than every installed font. */
+export const UI_FONTS: FontChoice[] = [
+  { key: "default", label: "Standard", stack: null },
+  { key: "segoe", label: "Segoe UI", stack: '"Segoe UI", system-ui, sans-serif' },
+  { key: "calibri", label: "Calibri", stack: 'Calibri, "Segoe UI", sans-serif' },
+  { key: "verdana", label: "Verdana (wide, easy to read)", stack: 'Verdana, "Segoe UI", sans-serif' },
+  { key: "tahoma", label: "Tahoma", stack: 'Tahoma, "Segoe UI", sans-serif' },
+  { key: "arial", label: "Arial", stack: "Arial, Helvetica, sans-serif" },
+];
+export const READING_FONTS: FontChoice[] = [
+  { key: "default", label: "Standard (Iowan Old Style / Palatino)", stack: null },
+  { key: "georgia", label: "Georgia", stack: 'Georgia, "Times New Roman", serif' },
+  { key: "cambria", label: "Cambria", stack: "Cambria, Georgia, serif" },
+  { key: "palatino", label: "Palatino", stack: '"Palatino Linotype", Palatino, Georgia, serif' },
+  { key: "times", label: "Times New Roman", stack: '"Times New Roman", Times, serif' },
+  { key: "constantia", label: "Constantia", stack: "Constantia, Georgia, serif" },
+  { key: "segoe", label: "Segoe UI (sans-serif)", stack: '"Segoe UI", system-ui, sans-serif' },
+  { key: "calibri", label: "Calibri (sans-serif)", stack: 'Calibri, "Segoe UI", sans-serif' },
+  { key: "verdana", label: "Verdana (sans-serif, wide, easy to read)", stack: 'Verdana, "Segoe UI", sans-serif' },
+];
+const fontKey = (list: FontChoice[], v: unknown) => (typeof v === "string" && list.some((f) => f.key === v) ? v : "default");
 
 export type Theme = "system" | "light" | "dark";
 export type TextColor = "default" | "strong" | "sepia" | "blue";
@@ -33,6 +66,8 @@ export const DEFAULT_PREFS: ReadingPrefs = {
   theme: "system",
   textColor: "default",
   contrast: "standard",
+  uiFont: "default",
+  readingFont: "default",
 };
 
 export function loadPrefs(): ReadingPrefs {
@@ -48,6 +83,8 @@ export function loadPrefs(): ReadingPrefs {
         theme: p.theme === "light" || p.theme === "dark" ? p.theme : "system",
         textColor: TEXT_COLORS.includes(p.textColor as TextColor) ? (p.textColor as TextColor) : "default",
         contrast: p.contrast === "high" ? "high" : "standard",
+        uiFont: fontKey(UI_FONTS, p.uiFont),
+        readingFont: fontKey(READING_FONTS, p.readingFont),
       };
     }
   } catch {
@@ -73,6 +110,13 @@ export function applyPrefs(p: ReadingPrefs) {
   root.dataset.theme = resolveTheme(p.theme);
   root.dataset.text = p.textColor;
   root.dataset.contrast = p.contrast;
+  // the fonts are the reader's own choice: "default" removes the override and the standard fonts return
+  const ui = UI_FONTS.find((f) => f.key === p.uiFont)?.stack;
+  const reading = READING_FONTS.find((f) => f.key === p.readingFont)?.stack;
+  if (ui) root.style.setProperty("--sans", ui);
+  else root.style.removeProperty("--sans");
+  if (reading) root.style.setProperty("--serif", reading);
+  else root.style.removeProperty("--serif");
 }
 
 const systemDark = () => typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches;

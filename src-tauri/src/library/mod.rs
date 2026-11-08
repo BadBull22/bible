@@ -24,7 +24,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 
 use crate::commentaries::{CommentaryChapter, CommentaryHit, CommentaryInfo, CommentarySection};
-use crate::models::{SearchHit, Verse, Version};
+use crate::models::{SearchHit, StrongsWord, Verse, Version};
 use crate::study::{DictionaryEntry, DictionaryHit, DictionaryInfo};
 
 
@@ -319,10 +319,41 @@ pub fn versions(conn: &Connection) -> Result<Vec<Version>, String> {
     Ok(installed(conn, Some("bible"))?
         .into_iter()
         .map(|m| {
-            let lang = conn.query_row("SELECT lang FROM modules WHERE name = ?1", params![m.name], |r| r.get::<_, String>(0)).unwrap_or_default();
-            Version { code: m.name, name: m.title, language: m.language, is_original_language: matches!(lang.as_str(), "grc" | "hbo" | "he") }
+            let (lang, features) = conn
+                .query_row("SELECT lang, features FROM modules WHERE name = ?1", params![m.name], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
+                .unwrap_or_default();
+            Version {
+                code: m.name,
+                name: m.title,
+                language: m.language,
+                is_original_language: matches!(lang.as_str(), "grc" | "hbo" | "he"),
+                has_strongs: features.split(',').any(|f| f == STRONGS_WORDS),
+            }
         })
         .collect())
+}
+
+/// The Strong's-numbered words of each verse of a Library Bible's chapter, by verse number
+/// (empty for a Bible that was added without them: nothing is guessed).
+pub fn chapter_words(conn: &Connection, code: &str, book: &str, chapter: i64) -> Result<HashMap<i64, Vec<StrongsWord>>, String> {
+    let mut stmt = conn
+        .prepare("SELECT verse, words FROM lib_verses WHERE module = ?1 AND book = ?2 AND chapter = ?3 AND words IS NOT NULL")
+        .map_err(err)?;
+    let rows = stmt
+        .query_map(params![code, book, chapter], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?)))
+        .map_err(err)?;
+    let mut out = HashMap::new();
+    for row in rows {
+        let (verse, json) = row.map_err(err)?;
+        let Ok(list) = serde_json::from_str::<Vec<(String, Vec<String>)>>(&json) else { continue };
+        let words = list
+            .into_iter()
+            .enumerate()
+            .map(|(i, (surface_text, strongs_numbers))| StrongsWord { word_order: i as i64, surface_text, strongs_numbers })
+            .collect();
+        out.insert(verse, words);
+    }
+    Ok(out)
 }
 
 pub fn is_bible(conn: &Connection, code: &str) -> bool {

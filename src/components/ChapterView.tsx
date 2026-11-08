@@ -784,6 +784,7 @@ export function ChapterView({
                   {columnChoices(code).map((ver) => (
                     <option key={ver.code} value={ver.code}>
                       {ver.code} — {ver.name}
+                      {ver.has_strongs ? " · Strong's" : ""}
                     </option>
                   ))}
                 </select>

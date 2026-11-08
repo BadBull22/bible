@@ -1,11 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { api, AskAnswer, BookInfo, HomeStats, PlanProgress, ReadingStats, resolveReference, SearchHit } from "../api";
 import { addSearchHistory, getSearchHistory } from "../searchHistory";
 import { AskAnswerView } from "./AskAnswerView";
+import { BrowseMatches } from "./BrowseMatches";
+import type { BrowseKind } from "../browse/types";
 import { verseOfTheDay } from "../dailyVerse";
 import { buildPlan, currentDay, PLANS, todayIso } from "../readingPlans";
 import { copyText, formatVerseForCopy } from "../clipboard";
 import { SearchIcon } from "./icons";
+import "../themes/themes.css";
+import { effectiveLook, refreshSeason, useThemeState } from "../themes/themeStore";
+import { SeasonPrompt } from "../themes/SeasonPrompt";
+import { MAX_SHORTCUTS, resolveShortcuts, ShortcutTarget } from "../shortcuts";
+import { backToDefaultTiles, moveShortcutTo, placeShortcut, unplaceShortcut, useShortcuts } from "../shortcutsStore";
+import { ShortcutGrid } from "./ShortcutGrid";
+import { ShortcutPicker } from "./ShortcutPicker";
+import { closeHighlight, useClosedHighlights } from "../highlights";
+
+/** the id of the closable "New" note about the Browse area */
+const BROWSE_NOTE = "browse-1";
 
 interface Props {
   books: BookInfo[];
@@ -21,6 +34,12 @@ interface Props {
   onOpenDictionary: (query: string) => void;
   /** Opens the page listing the Bible's authors -- used by the "Authors" tile. */
   onOpenAuthors: () => void;
+  /** Opens Settings at Appearance, where the opening-screen look is chosen. */
+  onOpenLook: () => void;
+  /** the "New" note about the Browse area opens this */
+  onOpenBrowse: (tab: BrowseKind, page?: string) => void;
+  /** Everything a menu opens: what the reader can place as a shortcut on this screen (up to six, replacing the default tiles). */
+  shortcutTargets: ShortcutTarget[];
   /** The chapter the reader was last at, for the "Continue reading" button (null: nowhere yet). */
   resume: { book: string; chapter: number } | null;
   /** The Bible the reader is using: the verse of the day is shown in it. */
@@ -121,7 +140,7 @@ function streakLine(s: ReadingStats): string {
   return parts.join(" · ");
 }
 
-export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpenParallel, studyVersion, onOpenPlans, onOpenDictionary, onOpenAuthors, resume, versionCode }: Props) {
+export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpenParallel, studyVersion, onOpenPlans, onOpenDictionary, onOpenAuthors, onOpenLook, onOpenBrowse, shortcutTargets, resume, versionCode }: Props) {
   const [dailyText, setDailyText] = useState<string | null>(null);
   const [dailyVersion, setDailyVersion] = useState("BSB");
   const [readStats, setReadStats] = useState<ReadingStats | null>(null);
@@ -134,6 +153,15 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<HomeStats | null>(null);
+  const [picking, setPicking] = useState(false);
+  // The recent searches and the suggestions share two lines (owner, 2026-11-07): the recent searches take what they need, up to two
+  // lines, and the suggestions get what is left (none when the recent searches already fill two lines). Measured on screen, so it
+  // follows the window's width.
+  const chipsRef = useRef<HTMLDivElement>(null);
+  const [tryLines, setTryLines] = useState(2);
+  const [chipRow, setChipRow] = useState(34);
+  const shortcuts = useShortcuts();
+  const closedNotes = useClosedHighlights();
   // Lazy init: reads localStorage once, synchronously, on first render -- so "Recent"
   // is already there on the very first paint rather than popping in after an effect.
   const [history, setHistory] = useState<string[]>(() => getSearchHistory());
@@ -175,6 +203,40 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
   }, []);
 
   const reference = query.trim() ? resolveReference(query, books, chapterCounts) : null;
+
+  useLayoutEffect(() => {
+    const box = chipsRef.current;
+    if (!box) return;
+    const measure = () => {
+      const chips = [...box.querySelectorAll<HTMLElement>(".home-recent button")];
+      const lines = new Set(chips.map((b) => b.offsetTop)).size;
+      setTryLines(Math.max(0, 2 - Math.min(2, lines)));
+      const first = box.querySelector<HTMLElement>("button");
+      if (first && first.offsetHeight > 0) setChipRow(first.offsetHeight);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(box);
+    return () => ro.disconnect();
+  }, [history.length, query]);
+
+  // what a shortcut can open: every menu item, and the default tiles that go somewhere
+  const statTiles = stats ? buildStatTiles(stats, onGo, onOpenCrossRefs, onOpenParallel, onOpenAuthors) : [];
+  const allTargets: ShortcutTarget[] = [
+    ...shortcutTargets,
+    ...statTiles
+      .filter((t) => t.action)
+      .map((t) => ({ id: `stat-${t.key}`, group: "Inside this Bible", label: t.label, sub: t.sub, value: t.value, onOpen: t.action! })),
+  ];
+
+  // the theme of the opening screen (an occasion theme, or the plain wordmark); today's date may start or end a season
+  const themeState = useThemeState();
+  const look = effectiveLook(themeState);
+  // the default theme has a slight glow too, unless the reader chose a plain background
+  const defaultGlow = look.defaultGlow;
+  useEffect(() => {
+    refreshSeason();
+  }, []);
 
   useEffect(() => {
     const q = query.trim();
@@ -224,14 +286,19 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
   }
 
   return (
-    <div className="home-screen">
+    <div className="home-screen" data-occasion={look.screenLook?.slug} data-screen={look.screenOn ? "on" : undefined} data-glow={defaultGlow ? "default" : undefined}>
       <div className="home-box">
-        <h1 className="gospel-wordmark" aria-label="Gospel">
-          {["G", "o", "s", "p", "e", "l"].map((letter, i) => (
-            <span key={i} aria-hidden="true">
-              {letter}
-            </span>
-          ))}
+        <h1 className={look.art ? "gospel-wordmark has-art" : "gospel-wordmark"} aria-label="Gospel">
+          {look.art ? (
+            // the look's own wordmark (a trusted SVG that ships with the app); the real text "Gospel" stays in the label above
+            <span className="wordmark-art" data-wm={look.wordmarkLook?.slug} aria-hidden="true" dangerouslySetInnerHTML={{ __html: look.art }} />
+          ) : (
+            ["G", "o", "s", "p", "e", "l"].map((letter, i) => (
+              <span key={i} aria-hidden="true">
+                {letter}
+              </span>
+            ))
+          )}
         </h1>
         <form
           className="home-search-box"
@@ -249,6 +316,38 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
             aria-label="Find a passage to begin reading"
           />
         </form>
+        <SeasonPrompt />
+        {!query.trim() && (
+          <p className="home-look-line">
+            Theme: {look.mixed ? "Your own mix" : look.look ? look.look.name : "Default"}
+            {" · "}
+            <button className="link-btn" onClick={onOpenLook}>
+              Change the theme
+            </button>
+          </p>
+        )}
+        {!query.trim() && !closedNotes.includes(BROWSE_NOTE) && (
+          <p className="home-highlight" role="note">
+            <span className="home-highlight-new">New</span>
+            <button className="link-btn" onClick={() => onOpenBrowse("stories")}>
+              Bible stories
+            </button>
+            <button className="link-btn" onClick={() => onOpenBrowse("topics")}>
+              Verses for…
+            </button>
+            <button className="link-btn" onClick={() => onOpenBrowse("children")}>
+              For children
+            </button>
+            <button className="home-highlight-close" aria-label="Hide this note" title="Hide this note (Settings can show it again)" onClick={() => closeHighlight(BROWSE_NOTE)}>
+              ×
+            </button>
+          </p>
+        )}
+        {look.screenOn && look.screenLook?.verse && !query.trim() && (
+          <p className="occ-verse">
+            “{look.screenLook.verse.text}”<cite>{look.screenLook.verse.ref} (BSB)</cite>
+          </p>
+        )}
         {!query.trim() && resume && books.some((b) => b.name === resume.book) && resume.chapter <= (chapterCounts[resume.book] ?? 0) && (
           <div className="home-examples">
             <button className="pill-btn" onClick={() => onGo(resume.book, resume.chapter, null)}>
@@ -256,24 +355,28 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
             </button>
           </div>
         )}
-        {!query.trim() && history.length > 0 && (
-          <div className="home-examples">
-            <span className="muted">Recent:</span>
-            {history.map((term) => (
-              <button key={term} className="outline-btn" onClick={() => setQuery(term)}>
-                {term}
-              </button>
-            ))}
-          </div>
-        )}
         {!query.trim() && (
-          <div className="home-examples">
-            <span className="muted">Try:</span>
-            {EXAMPLES.map((ex) => (
-              <button key={ex} className="outline-btn" onClick={() => setQuery(ex)}>
-                {ex}
-              </button>
-            ))}
+          <div className="home-chips" ref={chipsRef} style={{ "--row": `${chipRow}px` } as React.CSSProperties}>
+            {history.length > 0 && (
+              <div className="home-examples home-recent" style={{ "--lines": 2 } as React.CSSProperties}>
+                <span className="muted">Recent:</span>
+                {history.map((term) => (
+                  <button key={term} className="outline-btn" onClick={() => setQuery(term)}>
+                    {term}
+                  </button>
+                ))}
+              </div>
+            )}
+            {tryLines > 0 && (
+              <div className="home-examples home-try" style={{ "--lines": tryLines } as React.CSSProperties}>
+                <span className="muted">Try:</span>
+                {EXAMPLES.map((ex) => (
+                  <button key={ex} className="outline-btn" onClick={() => setQuery(ex)}>
+                    {ex}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {reference && (
@@ -284,6 +387,7 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
         )}
         {loading && <p className="muted">Searching…</p>}
         {error && <p className="status-error">{error}</p>}
+        {!reference && <BrowseMatches query={query} onOpen={(kind, id) => onOpenBrowse(kind, id)} onJump={(book, chapter, verse) => goAndRemember(book, chapter, verse)} />}
         {!loading && !reference && askAnswer && (
           <AskAnswerView answer={askAnswer} hitCount={results.length} onJump={(book, chapter, verse) => goAndRemember(book, chapter, verse)} onOpenDictionaryEntry={onOpenDictionary} />
         )}
@@ -354,29 +458,61 @@ export function HomeScreen({ books, chapterCounts, onGo, onOpenCrossRefs, onOpen
       {!query.trim() && readStats && (readStats.chapters > 0 || readStats.streak > 0) && <p className="home-streak">{streakLine(readStats)}</p>}
       {/* Hidden while actively searching, same reasoning as the example chips above:
           keep the screen focused on results rather than competing for attention. */}
-      {!query.trim() && stats && (
+      {!query.trim() && (stats || shortcuts.custom) && (
         <div className="home-stats">
-          <p className="home-stats-heading">Inside this Bible</p>
-          <div className="home-stats-grid">
-            {buildStatTiles(stats, onGo, onOpenCrossRefs, onOpenParallel, onOpenAuthors).map((tile) => {
-              const content = (
-                <>
-                  <div className="home-stat-number">{tile.value}</div>
-                  <div className="home-stat-label">{tile.label}</div>
-                  <div className="home-stat-sub">{tile.sub}</div>
-                </>
-              );
-              return tile.action ? (
-                <button key={tile.key} className="home-stat-tile is-active" onClick={tile.action}>
-                  {content}
-                </button>
-              ) : (
-                <div key={tile.key} className="home-stat-tile">
-                  {content}
-                </div>
-              );
-            })}
-          </div>
+          <p className="home-stats-heading">{shortcuts.custom ? "Your shortcuts" : "Inside this Bible"}</p>
+          {shortcuts.custom ? (
+            <ShortcutGrid
+              items={resolveShortcuts(shortcuts, allTargets)}
+              canAdd={shortcuts.ids.length < MAX_SHORTCUTS}
+              onAdd={() => setPicking(true)}
+              onRemove={unplaceShortcut}
+              onMove={moveShortcutTo}
+            />
+          ) : (
+            <div className="home-stats-grid">
+              {statTiles.map((tile) => {
+                const content = (
+                  <>
+                    <div className="home-stat-number">{tile.value}</div>
+                    <div className="home-stat-label">{tile.label}</div>
+                    <div className="home-stat-sub">{tile.sub}</div>
+                  </>
+                );
+                return tile.action ? (
+                  <button key={tile.key} className="home-stat-tile is-active" onClick={tile.action}>
+                    {content}
+                  </button>
+                ) : (
+                  <div key={tile.key} className="home-stat-tile">
+                    {content}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <p className="home-shortcut-line">
+            {shortcuts.custom ? (
+              <button className="link-btn" onClick={backToDefaultTiles}>
+                Back to the default tiles
+              </button>
+            ) : (
+              <button className="link-btn" onClick={() => setPicking(true)}>
+                Make these your own: add up to six shortcuts
+              </button>
+            )}
+          </p>
+          {picking && (
+            <ShortcutPicker
+              targets={allTargets}
+              placed={shortcuts.ids}
+              onPick={(id) => {
+                placeShortcut(id);
+                setPicking(false);
+              }}
+              onClose={() => setPicking(false)}
+            />
+          )}
         </div>
       )}
     </div>

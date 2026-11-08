@@ -54,6 +54,8 @@ tauri-plugin-updater = "2"
 sha2 = "0.10"
 roxmltree = "0.21.1"
 pdf-extract = "0.12.1"
+# the QR code that opens the phone remote (pure Rust, SVG output only)
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

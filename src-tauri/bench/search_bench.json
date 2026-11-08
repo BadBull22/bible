@@ -1,0 +1,1480 @@
+{
+  "about": "The search test bench. Each question has what a correct answer MUST contain, written from Scripture and the Bible's own text, never copied from what the engine answers. must_all: every one of these (case-insensitive) is in the answer text or its citations. must_any: at least one. refs_any: at least one of these passages is among the answer's citations or the best-effort verses. abstain: the honest answer is 'not stated' or no confident answer; a confident answer is wrong. Run: cd src-tauri; cargo test --lib search_bench -- --ignored --nocapture top: the passage must be among the first N results shown (3 for topic and short searches).",
+  "questions": [
+    {
+      "q": "who were the parents of John the Baptist",
+      "cat": "people",
+      "must_all": [
+        "Zacharias",
+        "Elisabeth"
+      ]
+    },
+    {
+      "q": "who was the mother of Samuel",
+      "cat": "people",
+      "must_any": [
+        "Hannah"
+      ]
+    },
+    {
+      "q": "who was the father of Solomon",
+      "cat": "people",
+      "must_any": [
+        "David"
+      ]
+    },
+    {
+      "q": "who were the sons of Jacob",
+      "cat": "people",
+      "must_all": [
+        "Reuben",
+        "Benjamin"
+      ]
+    },
+    {
+      "q": "who was Moses' father",
+      "cat": "people",
+      "must_any": [
+        "Amram"
+      ]
+    },
+    {
+      "q": "who was Isaac's mother",
+      "cat": "people",
+      "must_any": [
+        "Sarah"
+      ]
+    },
+    {
+      "q": "who was the husband of Elizabeth",
+      "cat": "people",
+      "must_any": [
+        "Zacharias",
+        "Zechariah"
+      ]
+    },
+    {
+      "q": "who was Abraham's wife",
+      "cat": "people",
+      "must_any": [
+        "Sarah"
+      ]
+    },
+    {
+      "q": "who was the oldest person in the bible",
+      "cat": "facts",
+      "must_any": [
+        "Methuselah"
+      ]
+    },
+    {
+      "q": "how old was Methuselah when he died",
+      "cat": "facts",
+      "must_any": [
+        "969"
+      ]
+    },
+    {
+      "q": "how old was Adam when he died",
+      "cat": "facts",
+      "must_any": [
+        "930"
+      ]
+    },
+    {
+      "q": "how long did Noah live",
+      "cat": "facts",
+      "must_any": [
+        "950"
+      ]
+    },
+    {
+      "q": "how many books are in the Bible",
+      "cat": "facts",
+      "must_any": [
+        "66"
+      ]
+    },
+    {
+      "q": "how many books are in the New Testament",
+      "cat": "facts",
+      "must_any": [
+        "27"
+      ]
+    },
+    {
+      "q": "how many books are in the Old Testament",
+      "cat": "facts",
+      "must_any": [
+        "39"
+      ]
+    },
+    {
+      "q": "how many years did Israel wander in the wilderness",
+      "cat": "facts",
+      "must_any": [
+        "40",
+        "forty"
+      ]
+    },
+    {
+      "q": "how many days was Jesus tempted in the wilderness",
+      "cat": "facts",
+      "must_any": [
+        "40",
+        "forty"
+      ]
+    },
+    {
+      "q": "how many days was Jonah in the fish",
+      "cat": "facts",
+      "must_any": [
+        "three days",
+        "3 days",
+        "three nights"
+      ]
+    },
+    {
+      "q": "how many disciples did Jesus have",
+      "cat": "facts",
+      "must_any": [
+        "12",
+        "twelve"
+      ]
+    },
+    {
+      "q": "how tall was Goliath",
+      "cat": "facts",
+      "must_any": [
+        "cubit"
+      ]
+    },
+    {
+      "q": "who betrayed Jesus",
+      "cat": "who",
+      "must_any": [
+        "Judas"
+      ]
+    },
+    {
+      "q": "who baptized Jesus",
+      "cat": "who",
+      "must_any": [
+        "John"
+      ]
+    },
+    {
+      "q": "who wrote the book of Romans",
+      "cat": "who",
+      "must_any": [
+        "Paul"
+      ]
+    },
+    {
+      "q": "who was the first king of Israel",
+      "cat": "who",
+      "must_any": [
+        "Saul"
+      ]
+    },
+    {
+      "q": "who built the ark",
+      "cat": "who",
+      "must_any": [
+        "Noah"
+      ]
+    },
+    {
+      "q": "who killed Goliath",
+      "cat": "who",
+      "must_any": [
+        "David"
+      ]
+    },
+    {
+      "q": "who was swallowed by a great fish",
+      "cat": "who",
+      "must_any": [
+        "Jonah"
+      ]
+    },
+    {
+      "q": "who was the mother of Jesus",
+      "cat": "who",
+      "must_any": [
+        "Mary"
+      ]
+    },
+    {
+      "q": "where was Jesus born",
+      "cat": "where",
+      "must_any": [
+        "Bethlehem"
+      ]
+    },
+    {
+      "q": "What is the Rapture?",
+      "cat": "doctrine",
+      "must_any": [
+        "Thessalonians"
+      ]
+    },
+    {
+      "q": "How do you become saved?",
+      "cat": "doctrine",
+      "must_any": [
+        "Romans 10",
+        "Ephesians 2",
+        "believe"
+      ]
+    },
+    {
+      "q": "What are the ten commandments?",
+      "cat": "doctrine",
+      "must_any": [
+        "Exodus 20",
+        "Deuteronomy 5"
+      ]
+    },
+    {
+      "q": "Can a Christian lose their salvation?",
+      "cat": "doctrine",
+      "must_any": [
+        "John 10",
+        "Hebrews 6",
+        "Hebrews 10",
+        "salvation"
+      ]
+    },
+    {
+      "q": "What is the Trinity?",
+      "cat": "doctrine",
+      "must_all": [
+        "Father",
+        "Son"
+      ]
+    },
+    {
+      "q": "what is baptism",
+      "cat": "doctrine",
+      "must_any": [
+        "Romans 6",
+        "Matthew 28",
+        "Acts 2",
+        "immersion",
+        "water"
+      ]
+    },
+    {
+      "q": "the prodigal son",
+      "cat": "topic",
+      "refs_any": [
+        "Luke 15"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the parting of the Red Sea",
+      "cat": "topic",
+      "refs_any": [
+        "Exodus 14"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the creation of light",
+      "cat": "topic",
+      "refs_any": [
+        "Genesis 1"
+      ],
+      "top": 3
+    },
+    {
+      "q": "love is patient",
+      "cat": "topic",
+      "refs_any": [
+        "1 Corinthians 13"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the good shepherd",
+      "cat": "topic",
+      "refs_any": [
+        "John 10"
+      ],
+      "top": 3
+    },
+    {
+      "q": "i can do all things through christ who strengthens me",
+      "cat": "topic",
+      "refs_any": [
+        "Philippians 4"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the lord is my shepherd",
+      "cat": "topic",
+      "refs_any": [
+        "Psalms 23"
+      ],
+      "top": 3
+    },
+    {
+      "q": "armour of god",
+      "cat": "topic",
+      "refs_any": [
+        "Ephesians 6"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the great commission",
+      "cat": "topic",
+      "refs_any": [
+        "Matthew 28"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the fruit of the spirit",
+      "cat": "topic",
+      "refs_any": [
+        "Galatians 5"
+      ],
+      "top": 3
+    },
+    {
+      "q": "how old was Joseph the father of Jesus when he died",
+      "cat": "honest",
+      "abstain": true
+    },
+    {
+      "q": "what was Jesus favourite food",
+      "cat": "honest",
+      "abstain": true
+    },
+    {
+      "q": "what was the name of Noah's wife",
+      "cat": "honest",
+      "abstain": true
+    },
+    {
+      "q": "how long did methuselah live",
+      "cat": "facts",
+      "must_any": [
+        "969"
+      ]
+    },
+    {
+      "q": "what age did adam die",
+      "cat": "facts",
+      "must_any": [
+        "930"
+      ]
+    },
+    {
+      "q": "how old was noah when he died",
+      "cat": "facts",
+      "must_any": [
+        "950"
+      ]
+    },
+    {
+      "q": "how many days did jesus fast in the desert",
+      "cat": "facts",
+      "must_any": [
+        "forty",
+        "40"
+      ]
+    },
+    {
+      "q": "how big was goliath",
+      "cat": "facts",
+      "must_any": [
+        "cubit"
+      ]
+    },
+    {
+      "q": "which disciple betrayed jesus",
+      "cat": "who",
+      "must_any": [
+        "Judas"
+      ]
+    },
+    {
+      "q": "who baptised jesus",
+      "cat": "who",
+      "must_any": [
+        "John"
+      ]
+    },
+    {
+      "q": "who is the author of romans",
+      "cat": "who",
+      "must_any": [
+        "Paul"
+      ]
+    },
+    {
+      "q": "who built noahs ark",
+      "cat": "who",
+      "must_any": [
+        "Noah"
+      ]
+    },
+    {
+      "q": "who defeated goliath",
+      "cat": "who",
+      "must_any": [
+        "David"
+      ]
+    },
+    {
+      "q": "which prophet was swallowed by a whale",
+      "cat": "who",
+      "must_any": [
+        "Jonah"
+      ]
+    },
+    {
+      "q": "who gave birth to jesus",
+      "cat": "who",
+      "must_any": [
+        "Mary"
+      ]
+    },
+    {
+      "q": "what town was jesus born in",
+      "cat": "where",
+      "must_any": [
+        "Bethlehem"
+      ]
+    },
+    {
+      "q": "who was the first man created",
+      "cat": "who",
+      "must_any": [
+        "Adam"
+      ]
+    },
+    {
+      "q": "who killed his brother abel",
+      "cat": "who",
+      "must_any": [
+        "Cain"
+      ]
+    },
+    {
+      "q": "what is the shortest verse in the bible",
+      "cat": "facts",
+      "must_any": [
+        "Jesus wept"
+      ]
+    },
+    {
+      "q": "who was thrown to the lions",
+      "cat": "who",
+      "must_any": [
+        "Daniel"
+      ]
+    },
+    {
+      "q": "who denied jesus three times",
+      "cat": "who",
+      "must_any": [
+        "Peter"
+      ]
+    },
+    {
+      "q": "who was the first christian martyr",
+      "cat": "who",
+      "must_any": [
+        "Stephen"
+      ]
+    },
+    {
+      "q": "how many commandments are there",
+      "cat": "facts",
+      "must_any": [
+        "ten",
+        "10"
+      ]
+    },
+    {
+      "q": "who were the twelve disciples",
+      "cat": "who",
+      "must_all": [
+        "Peter",
+        "Andrew"
+      ]
+    },
+    {
+      "q": "how old was methusela",
+      "cat": "typo",
+      "must_any": [
+        "969"
+      ]
+    },
+    {
+      "q": "who betryed jesus",
+      "cat": "typo",
+      "must_any": [
+        "Judas"
+      ]
+    },
+    {
+      "q": "how many days was jesus in the wildernes",
+      "cat": "typo",
+      "must_any": [
+        "forty",
+        "40"
+      ]
+    },
+    {
+      "q": "who wrote the book of revalation",
+      "cat": "typo",
+      "must_any": [
+        "John"
+      ]
+    },
+    {
+      "q": "who was moses brother",
+      "cat": "typo",
+      "must_any": [
+        "Aaron"
+      ]
+    },
+    {
+      "q": "who wrote the book of revelation",
+      "cat": "who",
+      "must_any": [
+        "John"
+      ]
+    },
+    {
+      "q": "who was paul before he was an apostle",
+      "cat": "who",
+      "must_any": [
+        "Saul"
+      ]
+    },
+    {
+      "q": "how old was abraham when isaac was born",
+      "cat": "facts",
+      "must_any": [
+        "100",
+        "hundred"
+      ]
+    },
+    {
+      "q": "what is the greatest commandment",
+      "cat": "doctrine",
+      "must_any": [
+        "Matthew 22",
+        "Mark 12",
+        "love the lord"
+      ]
+    },
+    {
+      "q": "what is the golden rule",
+      "cat": "doctrine",
+      "must_any": [
+        "Matthew 7",
+        "Luke 6",
+        "do to others"
+      ]
+    },
+    {
+      "q": "who was Jacob's wife",
+      "cat": "people",
+      "must_any": [
+        "Rachel",
+        "Leah"
+      ]
+    },
+    {
+      "q": "who was the father of Jacob",
+      "cat": "people",
+      "must_any": [
+        "Isaac"
+      ]
+    },
+    {
+      "q": "who were the parents of Moses",
+      "cat": "people",
+      "must_any": [
+        "Amram",
+        "Jochebed"
+      ]
+    },
+    {
+      "q": "who was David's wife",
+      "cat": "people",
+      "must_any": [
+        "Bathsheba",
+        "Michal",
+        "Abigail"
+      ]
+    },
+    {
+      "q": "the road to emmaus",
+      "cat": "topic",
+      "refs_any": [
+        "Luke 24"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the tower of babel",
+      "cat": "topic",
+      "refs_any": [
+        "Genesis 11"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the sermon on the mount",
+      "cat": "topic",
+      "refs_any": [
+        "Matthew 5"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the lords prayer",
+      "cat": "topic",
+      "refs_any": [
+        "Matthew 6",
+        "Luke 11"
+      ],
+      "top": 3
+    },
+    {
+      "q": "faith without works is dead",
+      "cat": "topic",
+      "refs_any": [
+        "James 2"
+      ],
+      "top": 3
+    },
+    {
+      "q": "for god so loved the world",
+      "cat": "topic",
+      "refs_any": [
+        "John 3"
+      ],
+      "top": 3
+    },
+    {
+      "q": "be still and know that i am god",
+      "cat": "topic",
+      "refs_any": [
+        "Psalms 46"
+      ],
+      "top": 3
+    },
+    {
+      "q": "ask and it will be given to you",
+      "cat": "topic",
+      "refs_any": [
+        "Matthew 7",
+        "Luke 11"
+      ],
+      "top": 3
+    },
+    {
+      "q": "a time for everything under heaven",
+      "cat": "topic",
+      "refs_any": [
+        "Ecclesiastes 3"
+      ],
+      "top": 3
+    },
+    {
+      "q": "valley of dry bones",
+      "cat": "topic",
+      "refs_any": [
+        "Ezekiel 37"
+      ],
+      "top": 3
+    },
+    {
+      "q": "who was cain's wife",
+      "cat": "honest",
+      "abstain": true
+    },
+    {
+      "q": "what did Jesus look like",
+      "cat": "honest",
+      "abstain": true
+    },
+    {
+      "q": "what was the name of the fish that swallowed jonah",
+      "cat": "honest",
+      "abstain": true
+    },
+    {
+      "q": "what was the forbidden fruit in the garden of eden",
+      "cat": "honest",
+      "abstain": true
+    },
+    {
+      "q": "who was the wife of Isaac",
+      "cat": "held",
+      "must_any": [
+        "Rebekah"
+      ]
+    },
+    {
+      "q": "who was the mother of Solomon",
+      "cat": "held",
+      "must_any": [
+        "Bathsheba"
+      ]
+    },
+    {
+      "q": "who were Joseph's brothers",
+      "cat": "held",
+      "must_any": [
+        "Reuben",
+        "Judah"
+      ]
+    },
+    {
+      "q": "how many sons did Jacob have",
+      "cat": "held",
+      "must_any": [
+        "12",
+        "twelve"
+      ]
+    },
+    {
+      "q": "how many plagues were there in Egypt",
+      "cat": "held",
+      "must_any": [
+        "ten",
+        "10"
+      ]
+    },
+    {
+      "q": "who was the strongest man in the bible",
+      "cat": "held",
+      "must_any": [
+        "Samson"
+      ]
+    },
+    {
+      "q": "who was the wisest man in the bible",
+      "cat": "held",
+      "must_any": [
+        "Solomon"
+      ]
+    },
+    {
+      "q": "who was the tax collector who climbed a tree",
+      "cat": "held",
+      "must_any": [
+        "Zacchaeus"
+      ]
+    },
+    {
+      "q": "who was the first woman",
+      "cat": "held",
+      "must_any": [
+        "Eve"
+      ]
+    },
+    {
+      "q": "who were the first disciples jesus called",
+      "cat": "held",
+      "must_any": [
+        "Peter",
+        "Andrew"
+      ]
+    },
+    {
+      "q": "who walked on water",
+      "cat": "held",
+      "must_any": [
+        "Jesus"
+      ]
+    },
+    {
+      "q": "how did judas die",
+      "cat": "held",
+      "must_any": [
+        "hanged",
+        "hang"
+      ]
+    },
+    {
+      "q": "where did jesus die",
+      "cat": "held",
+      "must_any": [
+        "Golgotha",
+        "Calvary",
+        "Jerusalem"
+      ]
+    },
+    {
+      "q": "how many people did jesus feed with five loaves and two fish",
+      "cat": "held",
+      "must_any": [
+        "5,000",
+        "5000",
+        "five thousand"
+      ]
+    },
+    {
+      "q": "what was the first miracle of jesus",
+      "cat": "held",
+      "must_any": [
+        "wine",
+        "Cana"
+      ]
+    },
+    {
+      "q": "what are the fruits of the spirit",
+      "cat": "held",
+      "must_any": [
+        "love",
+        "joy",
+        "peace"
+      ]
+    },
+    {
+      "q": "what is the lords prayer",
+      "cat": "held",
+      "must_any": [
+        "Our Father",
+        "Matthew 6"
+      ]
+    },
+    {
+      "q": "what does amen mean",
+      "cat": "held",
+      "must_any": [
+        "truly",
+        "so be it",
+        "verily",
+        "so let it be"
+      ]
+    },
+    {
+      "q": "what is a cubit",
+      "cat": "held",
+      "must_any": [
+        "forearm",
+        "elbow",
+        "18 inches",
+        "length"
+      ]
+    },
+    {
+      "q": "who was melchizedek",
+      "cat": "held",
+      "must_any": [
+        "Salem",
+        "priest",
+        "Abraham"
+      ]
+    },
+    {
+      "q": "where was moses buried",
+      "cat": "held",
+      "must_any": [
+        "Moab",
+        "valley"
+      ]
+    },
+    {
+      "q": "what happened at pentecost",
+      "cat": "held",
+      "must_any": [
+        "Acts 2",
+        "Holy Spirit",
+        "tongues"
+      ]
+    },
+    {
+      "q": "how many days was lazarus dead",
+      "cat": "held",
+      "must_any": [
+        "four",
+        "4 days"
+      ]
+    },
+    {
+      "q": "what did jesus say on the cross",
+      "cat": "held",
+      "must_any": [
+        "It is finished",
+        "forgive",
+        "Father"
+      ]
+    },
+    {
+      "q": "how many times should we forgive",
+      "cat": "held",
+      "must_any": [
+        "seventy",
+        "77",
+        "seven"
+      ]
+    },
+    {
+      "q": "what is the unforgivable sin",
+      "cat": "held",
+      "must_any": [
+        "blasphemy",
+        "Holy Spirit"
+      ]
+    },
+    {
+      "q": "what does the bible say about fear",
+      "cat": "held",
+      "refs_any": [
+        "Isaiah 41",
+        "Psalms 23",
+        "Psalms 27",
+        "2 Timothy 1",
+        "Joshua 1",
+        "Isaiah 43"
+      ]
+    },
+    {
+      "q": "what does the bible say about forgiveness",
+      "cat": "held",
+      "refs_any": [
+        "Matthew 6",
+        "Matthew 18",
+        "Colossians 3",
+        "Ephesians 4",
+        "1 John 1",
+        "Luke 17"
+      ]
+    },
+    {
+      "q": "what does the bible say about money",
+      "cat": "held",
+      "refs_any": [
+        "Matthew 6",
+        "1 Timothy 6",
+        "Proverbs",
+        "Luke 12",
+        "Hebrews 13",
+        "Matthew 19"
+      ]
+    },
+    {
+      "q": "verses about hope",
+      "cat": "held",
+      "refs_any": [
+        "Romans 15",
+        "Jeremiah 29",
+        "Romans 8",
+        "Psalms 42",
+        "Hebrews 6",
+        "1 Peter 1",
+        "Lamentations 3",
+        "Romans 5"
+      ]
+    },
+    {
+      "q": "bible verses for healing",
+      "cat": "held",
+      "refs_any": [
+        "Psalms 103",
+        "Isaiah 53",
+        "James 5",
+        "Exodus 15",
+        "Jeremiah 17",
+        "Matthew 8",
+        "Psalms 147",
+        "1 Peter 2"
+      ]
+    },
+    {
+      "q": "what year was the earth created",
+      "cat": "held-honest",
+      "abstain": true
+    },
+    {
+      "q": "what is the exact date of the rapture",
+      "cat": "held-honest",
+      "abstain": true
+    },
+    {
+      "q": "what was jesus's middle name",
+      "cat": "held-honest",
+      "abstain": true
+    },
+    {
+      "q": "how many angels are there",
+      "cat": "held-honest",
+      "abstain": true
+    },
+    {
+      "q": "how many plagues did god send on egypt",
+      "cat": "held2",
+      "must_any": [
+        "ten",
+        "10"
+      ]
+    },
+    {
+      "q": "what are the ten commandments",
+      "cat": "held2",
+      "must_all": [
+        "murder",
+        "steal"
+      ]
+    },
+    {
+      "q": "who killed abel",
+      "cat": "held2",
+      "must_any": [
+        "Cain"
+      ]
+    },
+    {
+      "q": "how long did it rain during the flood",
+      "cat": "held2",
+      "must_any": [
+        "forty"
+      ]
+    },
+    {
+      "q": "who was the oldest man in the bible",
+      "cat": "held2",
+      "must_any": [
+        "Methuselah"
+      ]
+    },
+    {
+      "q": "what is the armor of god",
+      "cat": "held2",
+      "must_all": [
+        "faith",
+        "salvation"
+      ]
+    },
+    {
+      "q": "who was thrown into the lions den",
+      "cat": "held2",
+      "must_any": [
+        "Daniel"
+      ]
+    },
+    {
+      "q": "who were the three men in the fiery furnace",
+      "cat": "held2",
+      "must_all": [
+        "Shadrach",
+        "Meshach",
+        "Abednego"
+      ]
+    },
+    {
+      "q": "who replaced judas as an apostle",
+      "cat": "held2",
+      "must_any": [
+        "Matthias"
+      ]
+    },
+    {
+      "q": "who taught the apostle paul",
+      "cat": "held2",
+      "must_any": [
+        "Gamaliel"
+      ]
+    },
+    {
+      "q": "how many people were on noahs ark",
+      "cat": "held2",
+      "must_any": [
+        "eight"
+      ]
+    },
+    {
+      "q": "how many days did jesus fast in the wilderness",
+      "cat": "held2",
+      "must_any": [
+        "forty"
+      ]
+    },
+    {
+      "q": "what is the longest chapter in the bible",
+      "cat": "held2",
+      "must_any": [
+        "Psalm 119"
+      ]
+    },
+    {
+      "q": "who was the disciple that doubted",
+      "cat": "held2",
+      "must_any": [
+        "Thomas"
+      ]
+    },
+    {
+      "q": "what is the great commission",
+      "cat": "held2",
+      "must_any": [
+        "make disciples"
+      ]
+    },
+    {
+      "q": "where was jesus baptized",
+      "cat": "held2",
+      "must_any": [
+        "Jordan"
+      ]
+    },
+    {
+      "q": "what does the bible say about prayer",
+      "cat": "topic2",
+      "refs_any": [
+        "Matthew 6:5-15",
+        "Matthew 6:9-13",
+        "Philippians 4:6",
+        "Luke 11:1-4",
+        "1 Thessalonians 5:17"
+      ],
+      "top": 3
+    },
+    {
+      "q": "what does the bible say about anxiety",
+      "cat": "topic2",
+      "refs_any": [
+        "Philippians 4:6-7",
+        "Matthew 6:25-34",
+        "1 Peter 5:7"
+      ],
+      "top": 3
+    },
+    {
+      "q": "what does the bible say about marriage",
+      "cat": "topic2",
+      "refs_any": [
+        "Genesis 2:24",
+        "Ephesians 5:22-33",
+        "Matthew 19:4-6",
+        "Hebrews 13:4"
+      ],
+      "top": 3
+    },
+    {
+      "q": "what does the bible say about divorce",
+      "cat": "topic2",
+      "refs_any": [
+        "Matthew 19:3-9",
+        "Malachi 2:16",
+        "1 Corinthians 7:10-16",
+        "Mark 10:2-12"
+      ],
+      "top": 3
+    },
+    {
+      "q": "what does the bible say about tattoos",
+      "cat": "topic2",
+      "refs_any": [
+        "Leviticus 19:28"
+      ],
+      "top": 3
+    },
+    {
+      "q": "is it a sin to drink alcohol",
+      "cat": "topic2",
+      "refs_any": [
+        "Ephesians 5:18",
+        "Proverbs 20:1",
+        "1 Timothy 5:23",
+        "Proverbs 23:29-35"
+      ],
+      "top": 3
+    },
+    {
+      "q": "what does the bible say about speaking in tongues",
+      "cat": "topic2",
+      "refs_any": [
+        "Acts 2:4",
+        "1 Corinthians 14",
+        "Acts 10:46",
+        "Acts 19:6"
+      ],
+      "top": 3
+    },
+    {
+      "q": "what is the fear of the lord",
+      "cat": "held2",
+      "must_any": [
+        "Proverbs 9:10",
+        "Proverbs 1:7",
+        "beginning of wisdom",
+        "beginning of knowledge"
+      ]
+    },
+    {
+      "q": "who was moeses mother",
+      "cat": "typo2",
+      "must_any": [
+        "Jochebed"
+      ]
+    },
+    {
+      "q": "how meny disiples did jesus have",
+      "cat": "typo2",
+      "must_any": [
+        "twelve",
+        "12"
+      ]
+    },
+    {
+      "q": "what was the name of cains wife",
+      "cat": "held2-honest",
+      "abstain": true
+    },
+    {
+      "q": "what was paul's thorn in the flesh",
+      "cat": "held2-honest",
+      "abstain": true
+    },
+    {
+      "q": "what year was jesus born",
+      "cat": "held2-honest",
+      "abstain": true
+    },
+    {
+      "q": "how many wise men visited jesus",
+      "cat": "held2-honest",
+      "abstain": true
+    },
+    {
+      "q": "what kind of fruit did eve eat",
+      "cat": "held2-honest",
+      "abstain": true
+    },
+    {
+      "q": "prodigal son",
+      "cat": "short",
+      "refs_any": [
+        "Luke 15"
+      ],
+      "top": 3
+    },
+    {
+      "q": "parable of the prodigal son",
+      "cat": "short",
+      "refs_any": [
+        "Luke 15"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the lost son",
+      "cat": "short",
+      "refs_any": [
+        "Luke 15"
+      ],
+      "top": 3
+    },
+    {
+      "q": "good samaritan",
+      "cat": "short",
+      "refs_any": [
+        "Luke 10"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the good samaritan",
+      "cat": "short",
+      "refs_any": [
+        "Luke 10"
+      ],
+      "top": 3
+    },
+    {
+      "q": "ten virgins",
+      "cat": "short",
+      "refs_any": [
+        "Matthew 25"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the lost sheep",
+      "cat": "short",
+      "refs_any": [
+        "Luke 15",
+        "Matthew 18"
+      ],
+      "top": 3
+    },
+    {
+      "q": "david and goliath",
+      "cat": "short",
+      "refs_any": [
+        "1 Samuel 17"
+      ],
+      "top": 3
+    },
+    {
+      "q": "daniel in the lions den",
+      "cat": "short",
+      "refs_any": [
+        "Daniel 6"
+      ],
+      "top": 3
+    },
+    {
+      "q": "jonah and the whale",
+      "cat": "short",
+      "refs_any": [
+        "Jonah 1",
+        "Jonah 2"
+      ],
+      "top": 3
+    },
+    {
+      "q": "noahs ark",
+      "cat": "short",
+      "refs_any": [
+        "Genesis 6",
+        "Genesis 7",
+        "Genesis 8"
+      ],
+      "top": 3
+    },
+    {
+      "q": "tower of babel",
+      "cat": "short",
+      "refs_any": [
+        "Genesis 11"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the burning bush",
+      "cat": "short",
+      "refs_any": [
+        "Exodus 3"
+      ],
+      "top": 3
+    },
+    {
+      "q": "road to emmaus",
+      "cat": "short",
+      "refs_any": [
+        "Luke 24"
+      ],
+      "top": 3
+    },
+    {
+      "q": "woman at the well",
+      "cat": "short",
+      "refs_any": [
+        "John 4"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the beatitudes",
+      "cat": "short",
+      "refs_any": [
+        "Matthew 5"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the love chapter",
+      "cat": "short",
+      "refs_any": [
+        "1 Corinthians 13"
+      ],
+      "top": 3
+    },
+    {
+      "q": "rich young ruler",
+      "cat": "short",
+      "refs_any": [
+        "Matthew 19",
+        "Mark 10",
+        "Luke 18"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the sower and the seed",
+      "cat": "short",
+      "refs_any": [
+        "Matthew 13",
+        "Mark 4",
+        "Luke 8"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the talents",
+      "cat": "short",
+      "refs_any": [
+        "Matthew 25"
+      ],
+      "top": 3
+    },
+    {
+      "q": "walls of jericho",
+      "cat": "short",
+      "refs_any": [
+        "Joshua 6"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the widows mite",
+      "cat": "short",
+      "refs_any": [
+        "Mark 12",
+        "Luke 21"
+      ],
+      "top": 3
+    },
+    {
+      "q": "the transfiguration",
+      "cat": "short",
+      "refs_any": [
+        "Matthew 17",
+        "Mark 9",
+        "Luke 9"
+      ],
+      "top": 3
+    },
+    {
+      "q": "easter",
+      "cat": "facts",
+      "must_any": [
+        "Passover"
+      ]
+    },
+    {
+      "q": "what is easter",
+      "cat": "facts",
+      "must_all": [
+        "modern reference"
+      ],
+      "must_any": [
+        "Resurrection Sunday"
+      ]
+    },
+    {
+      "q": "is easter in the bible",
+      "cat": "facts",
+      "must_any": [
+        "Acts 12:4"
+      ]
+    }
+  ]
+}

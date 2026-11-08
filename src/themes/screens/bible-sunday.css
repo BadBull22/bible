@@ -1,0 +1,60 @@
+/* Bible Sunday: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Psalm 119:105 (BSB): “Your word is a lamp to my feet and a light to my path.” */
+.home-screen[data-occasion="bible-sunday"], .pv[data-occasion="bible-sunday"], .wordmark-art[data-wm="bible-sunday"], .main-frame[data-reading-theme][data-occasion="bible-sunday"] {
+  --wm-c1: #8a5a1e;
+  --wm-c2: #c28a14;
+  --wm-c3: #b5701c;
+  --wm-c4: #6b3f1a;
+  --wm-ink: #6b5a45;
+  --wm-hi: #fff6df;
+  --wm-deep: #3f2a14;
+  --wm-warm: #9a6a2a;
+  --wm-loaf: #ecd7a2;
+  --occ-bg: radial-gradient(ellipse 90% 70% at 50% 35%,#fbf0d4 0%,#f0e0b6 100%);
+  --occ-accent: #8a5a1e;
+  --occ-ring: rgba(138,90,30,.18);
+  --occ-line: #e2d1a6;
+  --occ-hint: #7a5218;
+  --occ-verse: #5a3a14;
+  --occ-fx: rgba(255,206,100,.55);
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, a lamp to your path:";
+  --occ-verse-text: "“Your word is a lamp to my feet and a light to my path.”";
+  --occ-verse-ref: "Psalm 119:105 (BSB)";
+}
+.home-screen[data-occasion="bible-sunday"][data-scheme="dark"], .pv[data-occasion="bible-sunday"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="bible-sunday"],
+:root[data-theme="dark"] .wordmark-art[data-wm="bible-sunday"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="bible-sunday"] {
+  --wm-c1: #d9a35a;
+  --wm-c2: #eebb3a;
+  --wm-c3: #e09a40;
+  --wm-c4: #c48a5a;
+  --wm-ink: #d6c8b0;
+  --wm-hi: #f4ead2;
+  --wm-deep: #3f2a14;
+  --wm-warm: #c98a3a;
+  --wm-loaf: #ecd7a2;
+  --occ-bg: radial-gradient(ellipse 90% 70% at 50% 35%,#2a2012 0%,#171512 100%);
+  --occ-accent: #d9a35a;
+  --occ-ring: rgba(217,163,90,.26);
+  --occ-line: #4a3a20;
+  --occ-hint: #ebcb9a;
+  --occ-verse: #f5e3c0;
+  --occ-fx: rgba(255,190,80,.3);
+}
+
+.home-screen[data-occasion="bible-sunday"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="bible-sunday"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg%3E%3Crect x='12' y='118' width='66' height='14' rx='1.6' fill='%238a5a1e'/%3E%3Crect x='12' y='123' width='66' height='2.6' fill='%23d9a43a'/%3E%3Crect x='70' y='118' width='3' height='14' fill='%23d9a43a'/%3E%3Crect x='18' y='104' width='54' height='14' rx='1.6' fill='%236b3f1a'/%3E%3Crect x='18' y='109' width='54' height='2.6' fill='%23d9a43a'/%3E%3Crect x='24' y='90' width='44' height='14' rx='1.6' fill='%23a8651e'/%3E%3Crect x='24' y='95' width='44' height='2.6' fill='%23d9a43a'/%3E%3Cpath d='M62 104V120L64.6 117L67.2 120V104Z' fill='%239a2a2a'/%3E%3Cpath d='M26.4 78.4C26.4 84.8 32 88 38.4 88C43.2 88 46.4 85.6 47.2 81.6L52.8 79.6C53.6 77.6 50.4 76.8 47.2 76.8H28Z' fill='%23b5701c'/%3E%3Cpath d='M26.4 80.8C20.8 78.4 20.8 87.2 28.8 86.4' fill='none' stroke='%23b5701c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='31.2' y='74.9' width='9.6' height='2.4' rx='1' fill='%23b5701c'/%3E%3Ccircle cx='52.4' cy='72' r='6.4' fill='%23e8a62a' opacity='.25'/%3E%3Cpath d='M52.4 76.8C49.4 76.8 49.4 72.5 52.4 67.2C55.4 72.5 55.4 76.8 52.4 76.8Z' fill='%23e8a62a'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Cg%3E%3Crect x='12' y='118' width='66' height='14' rx='1.6' fill='%238a5a1e'/%3E%3Crect x='12' y='123' width='66' height='2.6' fill='%23d9a43a'/%3E%3Crect x='70' y='118' width='3' height='14' fill='%23d9a43a'/%3E%3Crect x='18' y='104' width='54' height='14' rx='1.6' fill='%236b3f1a'/%3E%3Crect x='18' y='109' width='54' height='2.6' fill='%23d9a43a'/%3E%3Crect x='24' y='90' width='44' height='14' rx='1.6' fill='%23a8651e'/%3E%3Crect x='24' y='95' width='44' height='2.6' fill='%23d9a43a'/%3E%3Cpath d='M62 104V120L64.6 117L67.2 120V104Z' fill='%239a2a2a'/%3E%3Cpath d='M26.4 78.4C26.4 84.8 32 88 38.4 88C43.2 88 46.4 85.6 47.2 81.6L52.8 79.6C53.6 77.6 50.4 76.8 47.2 76.8H28Z' fill='%23b5701c'/%3E%3Cpath d='M26.4 80.8C20.8 78.4 20.8 87.2 28.8 86.4' fill='none' stroke='%23b5701c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Crect x='31.2' y='74.9' width='9.6' height='2.4' rx='1' fill='%23b5701c'/%3E%3Ccircle cx='52.4' cy='72' r='6.4' fill='%23e8a62a' opacity='.25'/%3E%3Cpath d='M52.4 76.8C49.4 76.8 49.4 72.5 52.4 67.2C55.4 72.5 55.4 76.8 52.4 76.8Z' fill='%23e8a62a'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-position: left bottom, right bottom; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* a lamp glow at the top, like a flame, brightens and fades slowly; fixed when motion is reduced */
+.home-screen[data-occasion="bible-sunday"][data-screen="on"]::after {
+  background: radial-gradient(ellipse 45% 30% at 50% 6%, var(--occ-fx) 0%, transparent 72%);
+  opacity: .7;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="bible-sunday"][data-screen="on"]::after { animation: occ-flame 7s ease-in-out infinite alternate; }
+}
+@keyframes occ-flame { from { opacity: .4; } to { opacity: .9; } }

@@ -15,6 +15,15 @@ export interface Version {
   name: string;
   language: string;
   is_original_language: boolean;
+  /** a Bible added to the Library whose words carry Strong's numbers (they are clickable in the reader) */
+  has_strongs?: boolean;
+}
+
+/** The phone remote while it is on: the address a phone opens (and the QR code that holds it). */
+export interface RemoteInfo {
+  on: boolean;
+  url: string;
+  qr_svg: string;
 }
 
 export interface BookInfo {
@@ -332,11 +341,12 @@ export interface AskCuratedEntry {
  * computed count, a curated hand-verified answer, or (when neither hits) a labeled
  * best-effort fallback -- kept distinguishable so the UI never lets a guess look as
  * certain as a verified answer. */
-export type AskAnswer =
+export type AskAnswer = { corrected_to?: string | null } & (
   | { kind: "computed"; word: string; result: WordFrequencyResult }
   | { kind: "curated"; entry: AskCuratedEntry; matched_by: "exact" | "semantic"; similarity: number | null }
   | { kind: "dictionary"; entry: DictionaryEntry; term: string }
-  | { kind: "fallback"; hits: SearchHit[]; commentary_hits: CommentaryHit[] };
+  | { kind: "fallback"; hits: SearchHit[]; commentary_hits: CommentaryHit[]; related?: AskCuratedEntry | null }
+);
 
 // ---------------------------------------------------------------- study data (v2.2)
 
@@ -731,7 +741,7 @@ export type SheetBlock =
   | { kind: "quote"; runs: SheetRun[] }
   | { kind: "lines"; count: number }
   /** a picture: PNG data URL + its pixel size, and a caption line under it */
-  | { kind: "image"; src: string; width: number; height: number; caption: string };
+  | { kind: "image"; src: string; width: number; height: number; caption: string; /** "page": on a landscape page of its own when printed (the Word document ignores it) */ layout?: "page" };
 
 export type BasketKind = "verse" | "note" | "commentary" | "dictionary" | "answer" | "text" | "picture";
 
@@ -802,6 +812,10 @@ export interface InstalledModule {
   source: string;
   /** a book added from a PDF: its number of printed pages (0 = no page numbers) */
   pages: number;
+  /** a Bible whose words carry Strong's numbers (clickable in the reader) */
+  strongs?: boolean;
+  /** a Bible with Strong's numbers that was added before the app kept them: adding it again makes them clickable */
+  strongs_missing?: boolean;
 }
 
 export interface InstallReport {
@@ -1103,6 +1117,9 @@ export const api = {
   chartTopSongs: (year: number) => invoke<{ year: number; updated: string; songs: { title: string; artists: string[] }[] }>("chart_top_songs", { year }),
   songDelete: (id: number) => invoke<void>("song_delete_cmd", { id }),
   sermonList: () => invoke<SavedSermon[]>("sermon_list"),
+  remoteStart: () => invoke<RemoteInfo>("remote_start"),
+  remoteStop: () => invoke<void>("remote_stop"),
+  remoteState: (json: string) => invoke<void>("remote_state", { json }),
   sermonGet: (id: number) => invoke<SavedSermon | null>("sermon_get", { id }),
   /** saves a new sermon (id 0) or changes to an existing one; returns its id */
   sermonSave: (sermon: SavedSermon) => invoke<number>("sermon_save", { sermon }),
@@ -1171,6 +1188,9 @@ export const api = {
   updateCheck: () => invoke<UpdateInfo | null>("update_check"),
   /** progress arrives as "update-progress" events; the app restarts when done */
   updateInstall: () => invoke<void>("update_install"),
+  /** Browse review mode (development app only): the owner's marks, kept in Documents\Bible Concordance\Browse review. */
+  browseReviewLoad: () => invoke<string>("browse_review_load"),
+  browseReviewSave: (text: string) => invoke<void>("browse_review_save", { text }),
   passageText: (version_code: string, book: string, chapter: number, verse_start: number, verse_end: number) =>
     invoke<string>("passage_text", { versionCode: version_code, book, chapter, verseStart: verse_start, verseEnd: verse_end }),
   /** Writes the sheet as a .docx in Documents\Bible Concordance; returns the path. */

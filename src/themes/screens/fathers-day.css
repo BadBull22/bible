@@ -1,0 +1,61 @@
+/* Father's Day: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Psalm 103:13 (BSB): “As a father has compassion on his children, so the LORD has compassion on those who fear Him.” */
+.home-screen[data-occasion="fathers-day"], .pv[data-occasion="fathers-day"], .wordmark-art[data-wm="fathers-day"], .main-frame[data-reading-theme][data-occasion="fathers-day"] {
+  --wm-c1: #2f5f9a;
+  --wm-c2: #3f7a4f;
+  --wm-c3: #8a5a32;
+  --wm-c4: #5b8fc0;
+  --wm-ink: #5b6a7a;
+  --wm-hi: #fffaf0;
+  --wm-deep: #1f3f66;
+  --wm-warm: #6b4526;
+  --wm-loaf: #d9c29a;
+  --occ-bg: linear-gradient(180deg,#e2edf8 0%,#edf2ec 55%,#f0eee4 100%);
+  --occ-accent: #2f5f9a;
+  --occ-ring: rgba(47,95,154,.18);
+  --occ-line: #c9d9ea;
+  --occ-hint: #2f5a8c;
+  --occ-verse: #1f3f66;
+  --occ-fx: rgba(255,244,200,.7);
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, with a steady hand:";
+  --occ-verse-text: "“As a father has compassion on his children, so the LORD has compassion on those who fear Him.”";
+  --occ-verse-ref: "Psalm 103:13 (BSB)";
+}
+.home-screen[data-occasion="fathers-day"][data-scheme="dark"], .pv[data-occasion="fathers-day"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="fathers-day"],
+:root[data-theme="dark"] .wordmark-art[data-wm="fathers-day"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="fathers-day"] {
+  --wm-c1: #6fa2e0;
+  --wm-c2: #66b07a;
+  --wm-c3: #c08a5a;
+  --wm-c4: #8ab8e6;
+  --wm-ink: #cdd5df;
+  --wm-hi: #f4efe2;
+  --wm-deep: #1f3f66;
+  --wm-warm: #b07a4a;
+  --wm-loaf: #d9c29a;
+  --occ-bg: linear-gradient(180deg,#14212f 0%,#171d1b 55%,#17181a 100%);
+  --occ-accent: #6fa2e0;
+  --occ-ring: rgba(111,162,224,.28);
+  --occ-line: #2b3e52;
+  --occ-hint: #b0cdf0;
+  --occ-verse: #d6e5f8;
+  --occ-fx: rgba(200,220,160,.1);
+}
+
+.home-screen[data-occasion="fathers-day"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="fathers-day"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Ccircle cx='12' cy='8' r='34' fill='%233f7a4f'/%3E%3Ccircle cx='58' cy='-2' r='28' fill='%234f8f5f'/%3E%3Ccircle cx='100' cy='14' r='21' fill='%233f7a4f'/%3E%3Ccircle cx='30' cy='46' r='17' fill='%234f8f5f'/%3E%3Ccircle cx='136' cy='4' r='14' fill='%234f8f5f'/%3E%3Ccircle cx='78' cy='36' r='12' fill='%233f7a4f'/%3E%3Ccircle cx='28' cy='14' r='9' fill='%23ffffff' opacity='.12'/%3E%3Ccircle cx='74' cy='8' r='7' fill='%23ffffff' opacity='.12'/%3E%3Cpath d='M-4 56C26 50 56 44 92 50' fill='none' stroke='%236b4526' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' opacity='.9'/%3E%3Cpath d='M60 52Q56.7 60.7 62.8 67.8Q66.1 59 60 52ZM86 52Q80.1 58.1 83.6 65.8Q89.5 59.7 86 52ZM40 56Q38.3 64.1 44.8 69.2Q46.5 61.1 40 56Z' fill='%234f8f5f'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Ccircle cx='12' cy='8' r='34' fill='%233f7a4f'/%3E%3Ccircle cx='58' cy='-2' r='28' fill='%234f8f5f'/%3E%3Ccircle cx='100' cy='14' r='21' fill='%233f7a4f'/%3E%3Ccircle cx='30' cy='46' r='17' fill='%234f8f5f'/%3E%3Ccircle cx='136' cy='4' r='14' fill='%234f8f5f'/%3E%3Ccircle cx='78' cy='36' r='12' fill='%233f7a4f'/%3E%3Ccircle cx='28' cy='14' r='9' fill='%23ffffff' opacity='.12'/%3E%3Ccircle cx='74' cy='8' r='7' fill='%23ffffff' opacity='.12'/%3E%3Cpath d='M-4 56C26 50 56 44 92 50' fill='none' stroke='%236b4526' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' opacity='.9'/%3E%3Cpath d='M60 52Q56.7 60.7 62.8 67.8Q66.1 59 60 52ZM86 52Q80.1 58.1 83.6 65.8Q89.5 59.7 86 52ZM40 56Q38.3 64.1 44.8 69.2Q46.5 61.1 40 56Z' fill='%234f8f5f'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* dappled light through leaves slowly moves; fixed when motion is reduced */
+.home-screen[data-occasion="fathers-day"][data-screen="on"]::after {
+  background: radial-gradient(circle at 20% 15%, var(--occ-fx) 0, transparent 22%), radial-gradient(circle at 70% 30%, var(--occ-fx) 0, transparent 18%), radial-gradient(circle at 45% 60%, var(--occ-fx) 0, transparent 20%);
+  background-size: 120% 120%;
+  opacity: .7;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="fathers-day"][data-screen="on"]::after { animation: occ-dapple 40s ease-in-out infinite alternate; }
+}
+@keyframes occ-dapple { from { background-position: 0% 0%; } to { background-position: 100% 80%; } }

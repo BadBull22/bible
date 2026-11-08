@@ -47,7 +47,21 @@ export function AskRefRow({ citations, onJump }: { citations: AskCitation[]; onJ
  * caller into whatever hit-list state/markup it already has (SearchPanel's `hits`
  * side-panel list, HomeScreen's own results list), so this only owns the parts that are
  * genuinely new markup shared between both entry points. */
-export function AskAnswerView({
+/** The answer, with a note first when the question's spelling was put right ("Showing results for…"). */
+export function AskAnswerView(props: Parameters<typeof AskAnswerBody>[0]) {
+  return (
+    <>
+      {props.answer.corrected_to && (
+        <p className="search-hint did-you-mean">
+          Showing results for <strong>{props.answer.corrected_to}</strong> (your spelling was adjusted).
+        </p>
+      )}
+      <AskAnswerBody {...props} />
+    </>
+  );
+}
+
+function AskAnswerBody({
   answer,
   hitCount,
   commentaryHitCount = 0,
@@ -128,11 +142,38 @@ export function AskAnswerView({
       </div>
     );
   }
+  const related = answer.related;
   return (
-    <p className="result-count">
-      {hitCount === 0 && commentaryHitCount === 0
-        ? "No direct answer on file, and nothing closely related was found either."
-        : "No direct answer on file — here's what's most relevant:"}
-    </p>
+    <>
+      {related && (
+        <div className="curated-answer related-answer">
+          <div className="answer-bar">
+            <span className="confidence-badge conf-commentary_opinion">Related answer: it may not answer your exact question</span>
+            <BasketButton
+              add={() =>
+                addToBasket(
+                  "answer",
+                  related.question,
+                  `${related.answer}${related.citations.length ? `\n\nSee: ${related.citations.map((c) => c.reference).join("; ")}` : ""}`,
+                )
+              }
+            />
+            <CopyButton text={`${related.question}\n\n${related.answer}`} />
+          </div>
+          <p className="related-question">
+            Closest question on file: <strong>{related.question}</strong>
+          </p>
+          <p className="curated-answer-text">{related.answer}</p>
+          {related.note && <p className="snippet note">{related.note}</p>}
+          <AskRefRow citations={related.citations} onJump={onJump} />
+          <p className="search-hint">Read the verses it cites, and the passages below, and judge for yourself whether it fits what you were looking for.</p>
+        </div>
+      )}
+      <p className="result-count">
+        {hitCount === 0 && commentaryHitCount === 0
+          ? "No direct answer on file, and nothing closely related was found either."
+          : "No direct answer on file — here's what's most relevant:"}
+      </p>
+    </>
   );
 }

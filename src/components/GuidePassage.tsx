@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { GuideContext, loadParts, partRef } from "../guideData";
 import { gatherable, upcoming } from "../lectionary";
+import { plainTerm } from "../plainTerms";
 import { parseRef, Ref, refLabel } from "../sermon";
 
 const EXAMPLES = ["John 3", "Romans 8:28-39", "Psalm 23", "forgiveness", "faith in God", "the prodigal son"];
@@ -80,7 +81,7 @@ export function GuidePassage({ ctx }: { ctx: GuideContext }) {
             <span className="muted">Or start from a coming Sunday's readings:</span>
             {sundays.map((a) => (
               <div key={a.date.toISOString()} className="sg-sunday">
-                <strong>{a.date.toLocaleDateString(undefined, { day: "numeric", month: "short" })}</strong> {a.day.title.replace(/:.*$/, "")}
+                <strong>{a.date.toLocaleDateString(undefined, { day: "numeric", month: "short" })}</strong> {plainTerm(a.day.title.replace(/:.*$/, ""))}
                 {a.day.readings.map((r) => (
                   <button key={r} className="note-tag" onClick={() => start(gatherable(r))}>
                     {r}

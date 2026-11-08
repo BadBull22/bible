@@ -70,6 +70,7 @@ fn list_bundled_versions(state: &DbState) -> Result<Vec<Version>, String> {
                 name: r.get(1)?,
                 language: r.get(2)?,
                 is_original_language: r.get::<_, i64>(3)? != 0,
+                has_strongs: false,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -233,10 +234,18 @@ pub fn get_chapter_with_strongs(
 ) -> Result<Vec<VerseWithWords>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     if !is_bundled_version(&conn, &version_code) {
-        // a Library Bible: plain text, no Strong's tagging
+        // a Library Bible: its words carry Strong's numbers only if the module had them when it was added
         drop(conn);
-        let verses = library::chapter(&*lib_conn(&lib)?, &version_code, &book, chapter)?;
-        return Ok(verses.into_iter().map(|v| VerseWithWords { book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, words: Vec::new() }).collect());
+        let lib_db = lib_conn(&lib)?;
+        let verses = library::chapter(&lib_db, &version_code, &book, chapter)?;
+        let mut words = library::chapter_words(&lib_db, &version_code, &book, chapter)?;
+        return Ok(verses
+            .into_iter()
+            .map(|v| {
+                let words = words.remove(&v.verse).unwrap_or_default();
+                VerseWithWords { book: v.book, chapter: v.chapter, verse: v.verse, text: v.text, words }
+            })
+            .collect());
     }
     let bid = book_id(&conn, &book)?;
     let mut verse_stmt = conn
@@ -839,6 +848,8 @@ pub(crate) fn build_curated_entry(entry: &QaEntry, conn: &rusqlite::Connection, 
         }
         None => entry.answer.clone(),
     };
+    // each published viewpoint follows the answer under its own label
+    let answer = entry.views.iter().filter(|v| v.publish).fold(answer, |a, v| format!("{a}\n\n{}: {}", v.label, v.text));
     Ok(AskCuratedEntry {
         question: entry.question.clone(),
         confidence: entry.confidence.clone(),
@@ -888,7 +899,50 @@ pub(crate) fn build_curated_entry_from_firsts(entry: &FirstsEntry) -> AskCurated
 ///
 /// Takes already-unwrapped dependencies rather than Tauri `State`, so it can also be
 /// driven directly by a test against the real bundled data with no running Tauri app.
-fn ask_question_query(
+/// The pipeline with the question's spelling put right first ("who betryed jesus" is read as "who betrayed jesus"). The second part
+/// is the corrected question, when it was changed, so the reader can be told what the results are for.
+pub(crate) fn ask_with_correction(
+    conn: &rusqlite::Connection,
+    embedder: &crate::embeddings::Embedder,
+    commentary_conn: Option<&rusqlite::Connection>,
+    study_conn: Option<&rusqlite::Connection>,
+    firsts: &FirstsData,
+    qa: &crate::qa::QaRuntime,
+    query: &str,
+    fallback_limit: i64,
+) -> Result<(AskAnswer, Option<String>), String> {
+    let curated: Vec<String> = qa
+        .data
+        .all()
+        .iter()
+        .map(|e| format!("{} {} {}", e.question, e.alt_phrasings.join(" "), e.answer))
+        .chain(firsts.all().into_iter().map(|e| e.question.clone()))
+        .collect();
+    let vocab = crate::spell::vocab(conn, commentary_conn, &curated);
+    // a question that already has an exact stored answer or is a count is left as it was typed
+    if qa.data.find_exact(query).is_none() && qa_parser::parse_frequency_question(query).is_none() {
+        if let Some(fixed) = vocab.correct(query) {
+            let a = answer_question(conn, embedder, commentary_conn, study_conn, firsts, qa, &fixed, fallback_limit)?;
+            return Ok((a, Some(fixed)));
+        }
+    }
+    Ok((answer_question(conn, embedder, commentary_conn, study_conn, firsts, qa, query, fallback_limit)?, None))
+}
+
+pub(crate) fn ask_question_query(
+    conn: &rusqlite::Connection,
+    embedder: &crate::embeddings::Embedder,
+    commentary_conn: Option<&rusqlite::Connection>,
+    study_conn: Option<&rusqlite::Connection>,
+    firsts: &FirstsData,
+    qa: &crate::qa::QaRuntime,
+    query: &str,
+    fallback_limit: i64,
+) -> Result<AskAnswer, String> {
+    ask_with_correction(conn, embedder, commentary_conn, study_conn, firsts, qa, query, fallback_limit).map(|(a, _)| a)
+}
+
+fn answer_question(
     conn: &rusqlite::Connection,
     embedder: &crate::embeddings::Embedder,
     commentary_conn: Option<&rusqlite::Connection>,
@@ -918,6 +972,15 @@ fn ask_question_query(
         return Ok(AskAnswer::Curated { entry: curated, matched_by: "exact".to_string(), similarity: None });
     }
 
+    // Layer 2a-2: a family question ("who were John the Baptist's parents?") answered from the people data
+    // (father, mother, partners, children, siblings), with the name spelled either way. None: not such a question,
+    // or the tie is not in the data, and the layers below go on as before.
+    if let Some(c) = commentary_conn {
+        if let Some(entry) = crate::people_qa::answer(c, query)? {
+            return Ok(AskAnswer::Curated { entry, matched_by: "people".to_string(), similarity: None });
+        }
+    }
+
     // Everything from here needs the query embedded -- computed once, reused by both
     // the semantic curated-match step and the fallback if it comes to that.
     let vector = embedder.embed(query).map_err(|e| e.to_string())?;
@@ -939,32 +1002,58 @@ fn ask_question_query(
         }
         for c in candidates {
             if let Some(entry) = crate::study::lookup_headword(study, &c, prefer)? {
+                // an entry that only says "See COWARDICE" is not an answer: it has no passage and almost no words
+                if entry.body.chars().count() < 160 && !entry.body.contains('⟦') {
+                    continue;
+                }
                 return Ok(Some(AskAnswer::Dictionary { entry, term: c }));
             }
         }
         Ok(None)
     };
 
+    // A near-match that did not pass the gate: kept, and shown with the passages as a labelled "related" answer.
+    let mut related: Option<AskCuratedEntry> = None;
+
     // Layer 2b: semantic match, across qa.json AND the existing Firsts/Prophecies data.
-    if let Some((source, id, similarity)) = qa.best_match(&vector) {
+    // The few closest stored answers, best first: the closest may be a neighbour that does not answer this question, so the
+    // gate is tried on each in turn and the first that passes is the answer; the closest that failed is kept as the related one.
+    let candidates = qa.best_matches(&vector, 4);
+    for (rank, (source, id, similarity)) in candidates.into_iter().enumerate() {
+        let (source, id, similarity) = (source, id, similarity);
         // Never let a dictionary override one of the house-lens answers (scripture first,
         // then the Pentecostal reading -- see the "doctrinal lens" rule in HANDOVER.md).
         let is_house_view =
             source == "qa" && qa.data.get(&id).is_some_and(|e| e.confidence == crate::qa::QaConfidence::DoctrinalView);
-        if similarity >= ASK_SIMILARITY_THRESHOLD && similarity < ASK_DICTIONARY_OVERRIDE && !is_house_view {
+        if rank == 0 && similarity >= ASK_SIMILARITY_THRESHOLD && similarity < ASK_DICTIONARY_OVERRIDE && !is_house_view {
             if let Some(answer) = dictionary_hit()? {
                 return Ok(answer);
             }
         }
         if similarity >= ASK_SIMILARITY_THRESHOLD {
+            // A match by meaning is shown as THE answer only when it passes the gate (the same kind of question, and the
+            // words that carry the question are in the stored one). Otherwise it is a neighbour, and the layers below,
+            // which are labelled best-effort, go on instead of a confident wrong answer.
             if source == "qa" {
                 if let Some(entry) = qa.data.get(&id) {
-                    let curated = build_curated_entry(entry, conn, firsts)?;
-                    return Ok(AskAnswer::Curated { entry: curated, matched_by: "semantic".to_string(), similarity: Some(similarity) });
+                    let mut phrasings: Vec<&str> = vec![entry.question.as_str()];
+                    phrasings.extend(entry.alt_phrasings.iter().map(String::as_str));
+                    if crate::answer_gate::agrees(query, &phrasings, similarity, &crate::spell::is_name) {
+                        let curated = build_curated_entry(entry, conn, firsts)?;
+                        return Ok(AskAnswer::Curated { entry: curated, matched_by: "semantic".to_string(), similarity: Some(similarity) });
+                    }
+                    if related.is_none() {
+                        related = Some(build_curated_entry(entry, conn, firsts)?);
+                    }
                 }
             } else if let Some(entry) = firsts.all().into_iter().find(|e| e.id == id) {
-                let curated = build_curated_entry_from_firsts(&entry);
-                return Ok(AskAnswer::Curated { entry: curated, matched_by: "semantic".to_string(), similarity: Some(similarity) });
+                if crate::answer_gate::agrees(query, &[entry.question.as_str()], similarity, &crate::spell::is_name) {
+                    let curated = build_curated_entry_from_firsts(&entry);
+                    return Ok(AskAnswer::Curated { entry: curated, matched_by: "semantic".to_string(), similarity: Some(similarity) });
+                }
+                if related.is_none() {
+                    related = Some(build_curated_entry_from_firsts(&entry));
+                }
             }
         }
     }
@@ -979,7 +1068,7 @@ fn ask_question_query(
     let hits = semantic_search_query(conn, &vector, query, fallback_limit, study_conn)?;
     let commentary_hits =
         commentary_conn.map(|c| commentaries::search(c, query, None, fallback_limit).unwrap_or_default()).unwrap_or_default();
-    Ok(AskAnswer::Fallback { hits, commentary_hits })
+    Ok(AskAnswer::Fallback { hits, commentary_hits, related })
 }
 
 const DICT_GENERAL: &[&str] = &["easton", "smith", "nave", "torrey"];
@@ -1031,11 +1120,11 @@ pub fn ask_question(
     study_state: State<crate::study::StudyState>,
     query: String,
     fallback_limit: i64,
-) -> Result<AskAnswer, String> {
+) -> Result<AskReply, String> {
     let conn = db_state.0.lock().map_err(|e| e.to_string())?;
     let commentary_guard = commentary_conn(&commentary_state).ok();
     let study_guard = study_state.0.as_ref().and_then(|m| m.lock().ok());
-    ask_question_query(
+    let (answer, corrected_to) = ask_with_correction(
         &conn,
         &embedder_state.0,
         commentary_guard.as_deref(),
@@ -1044,7 +1133,8 @@ pub fn ask_question(
         &qa_state.0,
         &query,
         fallback_limit,
-    )
+    )?;
+    Ok(AskReply { answer, corrected_to })
 }
 
 #[tauri::command]
