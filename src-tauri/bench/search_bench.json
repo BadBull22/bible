@@ -2671,6 +2671,194 @@
         "Matthew 12:42",
         "2 Chronicles 9"
       ]
+    },
+    {
+      "q": "is it ever right to criticize another believer",
+      "cat": "held10",
+      "must_any": [
+        "Matthew 7",
+        "John 7:24",
+        "Galatians 6"
+      ]
+    },
+    {
+      "q": "which supernatural abilities does paul list in first corinthians twelve",
+      "cat": "held10",
+      "must_any": [
+        "1 Corinthians 12"
+      ]
+    },
+    {
+      "q": "what is it when people pray in a language they have never learned",
+      "cat": "held10",
+      "must_any": [
+        "1 Corinthians 14",
+        "Acts 2"
+      ]
+    },
+    {
+      "q": "when should a child be baptized according to the bible",
+      "cat": "held10",
+      "must_any": [
+        "Acts 2",
+        "Mark 10",
+        "Acts 16"
+      ]
+    },
+    {
+      "q": "can a christian still receive a word from god for the church",
+      "cat": "held10",
+      "must_any": [
+        "1 Corinthians 14",
+        "Acts 2",
+        "1 Thessalonians 5"
+      ]
+    },
+    {
+      "q": "who will prophesy for 1,260 days in jerusalem before the beast kills them",
+      "cat": "held10",
+      "must_any": [
+        "Revelation 11"
+      ]
+    },
+    {
+      "q": "which end time invasion of israel is described in ezekiel 38",
+      "cat": "held10",
+      "must_any": [
+        "Ezekiel 38",
+        "Ezekiel 39",
+        "Revelation 20"
+      ]
+    },
+    {
+      "q": "what did daniel and jesus say would stand in the holy place",
+      "cat": "held10",
+      "must_any": [
+        "Matthew 24",
+        "Daniel 9",
+        "Daniel 11"
+      ]
+    },
+    {
+      "q": "what is the prophecy of 490 years in daniel nine",
+      "cat": "held10",
+      "must_any": [
+        "Daniel 9"
+      ]
+    },
+    {
+      "q": "which sins are the worst according to church tradition",
+      "cat": "held10",
+      "must_any": [
+        "Proverbs 6",
+        "Galatians 5"
+      ]
+    },
+    {
+      "q": "is it a sin to talk behind someone's back",
+      "cat": "held10",
+      "must_any": [
+        "Proverbs 18",
+        "James 3",
+        "Ephesians 4:29",
+        "Proverbs 11"
+      ]
+    },
+    {
+      "q": "how should a believing father teach and correct his kids",
+      "cat": "held10",
+      "must_any": [
+        "Ephesians 6",
+        "Proverbs 22",
+        "Deuteronomy 6"
+      ]
+    },
+    {
+      "q": "which old testament prophet saw the lord in the temple and said here am i send me",
+      "cat": "held10",
+      "must_any": [
+        "Isaiah 6"
+      ]
+    },
+    {
+      "q": "who took over from elijah and asked for a double portion of his spirit",
+      "cat": "held10",
+      "must_any": [
+        "2 Kings 2",
+        "1 Kings 19"
+      ]
+    },
+    {
+      "q": "which woman did david take after seeing her bathing on a roof",
+      "cat": "held10",
+      "must_any": [
+        "2 Samuel 11",
+        "2 Samuel 12"
+      ]
+    },
+    {
+      "q": "who was taken by god without dying before the flood",
+      "cat": "held10",
+      "must_any": [
+        "Genesis 5",
+        "Hebrews 11"
+      ]
+    },
+    {
+      "q": "who spoke for moses before pharaoh and became high priest",
+      "cat": "held10",
+      "must_any": [
+        "Exodus 4",
+        "Exodus 28",
+        "Exodus 7"
+      ]
+    },
+    {
+      "q": "who was the son of abraham and hagar",
+      "cat": "held10",
+      "must_any": [
+        "Genesis 16",
+        "Genesis 21",
+        "Genesis 17"
+      ]
+    },
+    {
+      "q": "which apostle was a son of thunder and wrote the fourth gospel",
+      "cat": "held10",
+      "must_any": [
+        "John 13",
+        "John 19",
+        "Mark 3",
+        "John 21"
+      ]
+    },
+    {
+      "q": "which babylonian king burned the temple and was humbled by god",
+      "cat": "held10",
+      "must_any": [
+        "Daniel 4",
+        "2 Kings 25",
+        "Jeremiah 25"
+      ]
+    },
+    {
+      "q": "which woman prayed for a son and gave him to the lord at shiloh",
+      "cat": "held10",
+      "must_any": [
+        "1 Samuel 1",
+        "1 Samuel 2"
+      ]
+    },
+    {
+      "q": "where can a christian find hope when things look hopeless",
+      "cat": "held10",
+      "must_any": [
+        "Romans 15",
+        "Romans 5",
+        "Hebrews 6",
+        "1 Peter 1",
+        "Lamentations 3"
+      ]
     }
   ]
 }
