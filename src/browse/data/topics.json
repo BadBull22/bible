@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "tags": ["emotions", "peace", "comfort", "family", "faith", "hope", "healing", "forgiveness", "trust", "prayer", "needs", "fear", "grief", "guidance", "wisdom"],
+  "tags": ["emotions", "peace", "comfort", "family", "faith", "hope", "healing", "forgiveness", "trust", "prayer", "needs", "fear", "grief", "guidance", "wisdom", "strength", "joy", "thanks", "patience", "temptation", "love", "worship", "heaven", "loneliness", "doubt", "weariness"],
   "pages": [
     {
       "id": "anxiety",
@@ -570,6 +570,799 @@
       "tags": ["guidance", "wisdom", "trust", "faith"],
       "doctrine": "plain",
       "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "strength-and-courage",
+      "title": "Verses for strength and courage",
+      "also": ["courage", "strong", "brave", "strength", "bold"],
+      "intro": "When strength runs low, Scripture points away from our own resources to the God who steadies his people. These passages come from battlefields, prisons and sickrooms, and they speak of a courage that comes from knowing God is near.",
+      "items": [
+        {
+          "ref": "Joshua 1:6-9",
+          "note": "God tells Joshua, about to lead Israel into the land, to be strong and courageous, to keep his word close, and not to be afraid, for God goes with him."
+        },
+        {
+          "ref": "Deuteronomy 31:6-8",
+          "note": "Moses assures Israel, and then Joshua, that the LORD himself goes ahead of them and will never leave them, so they need not be afraid or lose heart."
+        },
+        {
+          "ref": "Psalms 46:1-3",
+          "note": "God is a refuge and strength, always ready to help, so even when mountains shake and seas roar the people who trust him need not be afraid."
+        },
+        {
+          "ref": "Psalms 73:25-26",
+          "note": "Asaph admits that his body and heart may fail, yet he says that God is his strength and his inheritance for ever."
+        },
+        {
+          "ref": "Psalms 31:23-24",
+          "note": "David calls on everyone who loves the LORD to be strong and take heart, because the LORD guards the faithful and deals with the proud."
+        },
+        {
+          "ref": "Isaiah 40:29-31",
+          "note": "The LORD gives power to the tired and strength to the weak; even the young stumble, but those who wait on him are renewed and do not give up."
+        },
+        {
+          "ref": "Habakkuk 3:17-19",
+          "note": "With no harvest and empty stalls, the prophet still rejoices in the LORD, who is his strength and makes him sure-footed like a deer."
+        },
+        {
+          "ref": "Nehemiah 8:10",
+          "note": "Nehemiah tells a grieving people not to mourn but to feast and share, for the joy of the LORD is their strength."
+        },
+        {
+          "ref": "2 Corinthians 12:9-10",
+          "note": "Paul begs to be rid of a thorn, but the Lord answers that his grace is enough, because power shows best in weakness, so Paul boasts in his weaknesses."
+        },
+        {
+          "ref": "Philippians 4:13",
+          "note": "From a prison cell Paul says he can face every circumstance, plenty or hunger, because Christ gives him strength."
+        },
+        {
+          "ref": "Ephesians 6:10-13",
+          "note": "Paul tells believers to find their strength in the Lord and his great might, and to put on all of God's armor so that they can stand against the devil's schemes."
+        },
+        {
+          "ref": "1 Corinthians 16:13-14",
+          "note": "Paul's short charge to the Corinthians: stay alert, stand firm in the faith, act with courage and strength, and do everything in love."
+        }
+      ],
+      "dictionary": "courage",
+      "see_also": ["fear", "hope"],
+      "tags": ["strength"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "comfort-and-loneliness",
+      "title": "Verses for comfort and loneliness",
+      "also": ["lonely", "loneliness", "alone", "comforted", "consolation", "abandoned"],
+      "intro": "God is described as near to the brokenhearted and as a father to the lonely. These passages are for the nights when no one seems to understand: they promise that you are not forgotten and that God himself stays with you.",
+      "items": [
+        {
+          "ref": "Psalms 23:4",
+          "note": "David says that even in the darkest valley he is not afraid, because the Shepherd is with him and his rod and staff bring comfort."
+        },
+        {
+          "ref": "Psalms 25:16-18",
+          "note": "Feeling lonely and troubled, David asks God to turn to him, to ease the troubles of his heart and to take away his distress and sin."
+        },
+        {
+          "ref": "Psalms 34:17-18",
+          "note": "The LORD hears the cry of the righteous and rescues them; he is close to the brokenhearted and saves those who are crushed in spirit."
+        },
+        {
+          "ref": "Psalms 68:5-6",
+          "note": "God is a father to orphans and defender of widows, and he places the lonely in families and leads prisoners out into freedom."
+        },
+        {
+          "ref": "Psalms 139:7-10",
+          "note": "There is nowhere David could go, whether heaven, the depths, the far sea or the dawn, where God's presence would not still be guiding and holding him."
+        },
+        {
+          "ref": "Psalms 147:3",
+          "note": "The LORD heals the brokenhearted and bandages their wounds."
+        },
+        {
+          "ref": "Isaiah 43:1-3",
+          "note": "God tells his people not to fear, because he has called them by name and will be with them through water and fire."
+        },
+        {
+          "ref": "Isaiah 49:15-16",
+          "note": "Even if a mother could forget her child, God says he will never forget his people; he has engraved them on the palms of his hands."
+        },
+        {
+          "ref": "Matthew 11:28-30",
+          "note": "Jesus invites everyone who is tired and loaded down to come to him for rest, and offers a gentle yoke that is easier to carry."
+        },
+        {
+          "ref": "John 14:16-18",
+          "note": "Jesus promises to send the Spirit to be with his disciples for ever, so he will not leave them like orphans but will come to them."
+        },
+        {
+          "ref": "2 Corinthians 1:3-4",
+          "note": "Paul praises God as the compassionate Father and source of every comfort, who comforts us in trouble so that we can comfort others in theirs."
+        },
+        {
+          "ref": "Hebrews 13:5-6",
+          "note": "God has promised never to leave or abandon his people, so they can be content with what they have and say that the Lord is their helper."
+        }
+      ],
+      "dictionary": "comfort",
+      "see_also": ["grief-and-loss", "peace"],
+      "tags": ["loneliness"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "trust-in-god",
+      "title": "Verses for trust in God",
+      "also": ["trusting god", "faithfulness of god", "rely on god", "confidence in god", "dependence"],
+      "intro": "To trust God is to lean the weight of our lives on him, in plenty and in trouble. These passages come from people who chose trust when things were uncertain, and they show what God does for those who rest on him.",
+      "items": [
+        {
+          "ref": "Psalms 20:7-8",
+          "note": "Some nations rely on chariots and horses, but David's people rely on the LORD their God; the first group collapses, while those who trust him stand firm."
+        },
+        {
+          "ref": "Psalms 37:3-5",
+          "note": "David urges trust in the LORD along with doing good, taking delight in him and committing your way to him, and promises that God will act."
+        },
+        {
+          "ref": "Psalms 56:3-4",
+          "note": "When afraid, David puts his trust in God and asks what mere flesh can do to him."
+        },
+        {
+          "ref": "Psalms 62:5-8",
+          "note": "David tells himself to wait quietly for God, his rock and fortress, and urges the people to trust him at all times and pour out their hearts to him."
+        },
+        {
+          "ref": "Psalms 125:1-2",
+          "note": "Anyone who trusts the LORD is compared to Mount Zion, which cannot be moved, and God surrounds his people as hills surround Jerusalem."
+        },
+        {
+          "ref": "Proverbs 3:5-6",
+          "note": "Rely on the LORD with all your heart rather than on your own understanding, and in every path he will make your way straight."
+        },
+        {
+          "ref": "Isaiah 26:3-4",
+          "note": "God keeps in perfect peace the person whose mind is fixed on him, so the people are told to trust the LORD for ever, for he is an eternal rock."
+        },
+        {
+          "ref": "Jeremiah 17:7-8",
+          "note": "The person who trusts the LORD is like a tree planted by water, which does not fear the heat and keeps bearing fruit even in a year of drought."
+        },
+        {
+          "ref": "Daniel 3:16-18",
+          "note": "Facing a furnace, three young men say that God is able to save them, and that even if he does not, they still will not bow to an idol."
+        },
+        {
+          "ref": "Nahum 1:7",
+          "note": "Nahum says the LORD is good, a safe refuge when trouble comes, and he cares for everyone who shelters in him."
+        },
+        {
+          "ref": "John 14:1",
+          "note": "On the night before his death Jesus tells his troubled friends not to let their hearts be shaken, but to trust in God and in him."
+        },
+        {
+          "ref": "Romans 8:28",
+          "note": "Paul assures believers that, in everything, God is working towards good for those who love him and are called by his purpose."
+        }
+      ],
+      "dictionary": "trust",
+      "see_also": ["fear", "guidance"],
+      "tags": ["trust"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "faith-and-doubt",
+      "title": "Verses for faith and doubt",
+      "also": ["doubt", "doubting", "unbelief", "believe", "belief", "faith"],
+      "intro": "Faith is trusting God before we can see the outcome, and the Bible is honest that doubt visits even believers. These passages show faith described, doubt met with patience, and Jesus lifting up people who struggle to believe.",
+      "items": [
+        {
+          "ref": "Hebrews 11:1-3",
+          "note": "Faith is described as confidence in what we hope for and certainty about what we cannot see; by it we understand that God made the universe by his word."
+        },
+        {
+          "ref": "Hebrews 11:6",
+          "note": "Pleasing God is impossible without faith, for whoever draws near to him must believe that he is real and that he rewards those who seek him."
+        },
+        {
+          "ref": "Mark 9:23-24",
+          "note": "A father whose son is sick tells Jesus he believes, and in the same breath asks Jesus to help his unbelief; Jesus does not turn him away."
+        },
+        {
+          "ref": "Matthew 14:28-31",
+          "note": "Peter steps onto the water at Jesus' word but sinks when he looks at the wind; Jesus catches him at once and asks why he doubted."
+        },
+        {
+          "ref": "John 20:24-29",
+          "note": "Thomas will not believe until he sees Jesus' wounds; Jesus appears, invites him to touch them, and then calls blessed those who believe without seeing."
+        },
+        {
+          "ref": "Luke 17:5-6",
+          "note": "The apostles ask Jesus to increase their faith, and he answers that faith as small as a mustard seed could uproot a tree."
+        },
+        {
+          "ref": "Romans 10:17",
+          "note": "Paul says that faith comes from hearing the message, and that the message is heard through the word about Christ."
+        },
+        {
+          "ref": "James 1:5-8",
+          "note": "James says anyone lacking wisdom should ask God, who gives generously, but must ask without doubting, for the doubter is tossed like a wave in the wind."
+        },
+        {
+          "ref": "Jude 1:22-23",
+          "note": "Believers are told to show mercy to those who are doubting, and to rescue others as if pulling them out of a fire."
+        },
+        {
+          "ref": "2 Corinthians 5:7",
+          "note": "Paul reminds believers that they live by faith, not by what they can see."
+        },
+        {
+          "ref": "Ephesians 2:8-9",
+          "note": "Salvation is God's gift received through faith, not something we earn, so nobody has reason to boast."
+        },
+        {
+          "ref": "Habakkuk 2:4",
+          "note": "In the midst of puzzling events God tells the prophet that the proud are not upright, but the righteous person will live by faithfulness."
+        }
+      ],
+      "dictionary": "faith",
+      "see_also": ["trust-in-god", "hope"],
+      "tags": ["doubt", "faith"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "joy",
+      "title": "Verses for joy",
+      "also": ["joyful", "rejoice", "happiness", "glad", "gladness", "delight"],
+      "intro": "Biblical joy is deeper than a good mood; it grows from knowing God, and it can live beside sorrow. These passages celebrate joy in his presence, joy that follows weeping, and joy that no hardship can remove.",
+      "items": [
+        {
+          "ref": "Psalms 16:11",
+          "note": "David says God shows him the path of life, and that in his presence is complete joy, with pleasures at his right hand for ever."
+        },
+        {
+          "ref": "Psalms 30:4-5",
+          "note": "God's anger is brief but his favor lasts a lifetime; tears may last through the night, yet joy arrives with the morning."
+        },
+        {
+          "ref": "Psalms 118:24",
+          "note": "The psalmist calls everyone to rejoice and be glad in the day that the LORD has made."
+        },
+        {
+          "ref": "Psalms 126:1-6",
+          "note": "Returning exiles laugh and sing for joy at what God has done, and the psalm promises that those who sow with tears will reap with shouts of joy."
+        },
+        {
+          "ref": "Zephaniah 3:17",
+          "note": "God is with his people as a mighty savior; he delights in them, quiets them with his love and rejoices over them with singing."
+        },
+        {
+          "ref": "John 15:9-11",
+          "note": "Jesus tells his followers to remain in his love and obey him, so that his joy may be in them and their joy may be complete."
+        },
+        {
+          "ref": "John 16:20-22",
+          "note": "Jesus compares the disciples' coming grief to a woman in labor, whose pain turns to joy at the birth, and promises a joy that no one can take away."
+        },
+        {
+          "ref": "Romans 14:17",
+          "note": "Paul says God's kingdom is not about food and drink but about righteousness, peace and joy given by the Holy Spirit."
+        },
+        {
+          "ref": "Galatians 5:22-23",
+          "note": "Joy is named among the fruit that the Holy Spirit produces in believers, together with love, peace, patience and self-control."
+        },
+        {
+          "ref": "Philippians 4:4",
+          "note": "From prison Paul urges the church to rejoice in the Lord always, and repeats it for emphasis."
+        },
+        {
+          "ref": "1 Peter 1:8-9",
+          "note": "Believers love Jesus without having seen him, and they rejoice with a joy too great for words as they receive the salvation of their souls."
+        },
+        {
+          "ref": "James 1:2-4",
+          "note": "James tells believers to count it pure joy when they meet trials, because testing builds the endurance that makes them mature and complete."
+        }
+      ],
+      "dictionary": "joy",
+      "see_also": ["thankfulness", "peace"],
+      "tags": ["joy"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "thankfulness",
+      "title": "Verses for thankfulness",
+      "also": ["thanks", "thanksgiving", "grateful", "gratitude", "thankful", "blessings"],
+      "intro": "Giving thanks turns our eyes from what we lack to what God has done. These passages invite thanks in song, in daily habit and in hard times, and they show how thankfulness is both a command and a delight.",
+      "items": [
+        {
+          "ref": "Psalms 95:1-3",
+          "note": "The psalm calls God's people to sing and shout to the LORD and to come before him with thanksgiving, for he is a great God and King."
+        },
+        {
+          "ref": "Psalms 100:1-5",
+          "note": "All the earth is urged to serve the LORD with gladness, enter his gates with thanks, and bless his name, because he is good and faithful for ever."
+        },
+        {
+          "ref": "Psalms 103:1-5",
+          "note": "David tells his own soul to praise the LORD and not forget his benefits: forgiveness, healing, rescue, love and a renewed youth."
+        },
+        {
+          "ref": "Psalms 136:1-4",
+          "note": "A refrain that God's love lasts for ever follows each reason for thanks, beginning with his goodness and the great wonders he does alone."
+        },
+        {
+          "ref": "1 Chronicles 16:34",
+          "note": "David's psalm of thanks says that the LORD is good and that his faithful love endures for ever."
+        },
+        {
+          "ref": "Luke 17:11-19",
+          "note": "Ten lepers are healed, but only one, a Samaritan, comes back to thank Jesus and praise God, and Jesus notes that the other nine did not return."
+        },
+        {
+          "ref": "Colossians 2:6-7",
+          "note": "Paul tells believers to keep living in Christ, rooted and built up in him and strengthened in the faith, overflowing with thankfulness."
+        },
+        {
+          "ref": "Colossians 3:15-17",
+          "note": "Believers are to let Christ's peace rule, let his word live in them richly, and do everything in the name of Jesus with thanks to God."
+        },
+        {
+          "ref": "Ephesians 5:18-20",
+          "note": "Paul urges believers to be filled with the Spirit, singing and making music to the Lord, and always giving thanks to God for everything."
+        },
+        {
+          "ref": "1 Thessalonians 5:16-18",
+          "note": "Paul's short instructions: be joyful always, pray continually, and give thanks in every circumstance, because this is what God wants for you in Christ."
+        },
+        {
+          "ref": "2 Corinthians 9:15",
+          "note": "Paul ends his talk of giving with thanks to God for his gift beyond words."
+        },
+        {
+          "ref": "Hebrews 13:15",
+          "note": "Believers are to offer to God, through Jesus, a continual sacrifice of praise, which is the fruit of lips that openly acknowledge his name."
+        }
+      ],
+      "dictionary": "thanksgiving",
+      "see_also": ["joy", "worship-and-praise"],
+      "tags": ["thanks"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "patience-and-waiting",
+      "title": "Verses for patience and waiting",
+      "also": ["patient", "wait", "waiting on the lord", "endurance", "perseverance", "delay"],
+      "intro": "Waiting is rarely easy, and Scripture does not pretend otherwise. These passages come from people who waited for rescue, for answers and for God's timing, and they say that waiting on him is never wasted.",
+      "items": [
+        {
+          "ref": "Psalms 27:13-14",
+          "note": "David is sure he will see the LORD's goodness in this life, and he tells himself to wait for the LORD, be strong and take heart."
+        },
+        {
+          "ref": "Psalms 37:7-9",
+          "note": "The psalm urges stillness before the LORD and patient waiting, without being upset by those who succeed through wickedness or giving way to anger."
+        },
+        {
+          "ref": "Psalms 40:1-3",
+          "note": "David waited patiently, and the LORD lifted him from a pit of mud and gave him a new song of praise."
+        },
+        {
+          "ref": "Lamentations 3:25-26",
+          "note": "The LORD is good to those who hope in him, and it is good to wait quietly for his rescue."
+        },
+        {
+          "ref": "Micah 7:7",
+          "note": "Surrounded by trouble, the prophet chooses to watch for the LORD and wait for the God who saves, confident that God will hear him."
+        },
+        {
+          "ref": "Habakkuk 2:3",
+          "note": "God tells the prophet that the vision waits for its appointed time and will not fail; if it seems slow, wait for it."
+        },
+        {
+          "ref": "Romans 8:24-25",
+          "note": "Paul says hope that is seen is not hope, so we wait for what we do not yet have with patient endurance."
+        },
+        {
+          "ref": "Galatians 6:9",
+          "note": "Believers are urged not to tire of doing good, because in due time they will reap a harvest if they do not give up."
+        },
+        {
+          "ref": "James 5:7-8",
+          "note": "James points to a farmer who waits for the early and late rains, and tells believers to be patient and strengthen their hearts until the Lord comes."
+        },
+        {
+          "ref": "Hebrews 10:36",
+          "note": "Believers need to persevere so that, having done God's will, they receive what he has promised."
+        },
+        {
+          "ref": "2 Peter 3:8-9",
+          "note": "God does not count time as people do, and he is not slow but patient, wanting everyone to come to repentance."
+        },
+        {
+          "ref": "Ecclesiastes 7:8",
+          "note": "The writer says finishing something beats starting it, and patience is worth more than pride."
+        }
+      ],
+      "dictionary": "patience",
+      "see_also": ["hope", "discouragement-and-weariness"],
+      "tags": ["patience"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "discouragement-and-weariness",
+      "title": "Verses for discouragement and weariness",
+      "also": ["discouraged", "tired", "weary", "exhausted", "burnout", "depressed", "downcast", "giving up", "lose heart"],
+      "intro": "Even faithful people grow weary and lose heart, and the Bible shows them honestly. These passages meet the tired and discouraged with food, rest and renewed strength. If the heaviness stays, speak with a pastor and a doctor as well.",
+      "items": [
+        {
+          "ref": "1 Kings 19:4-8",
+          "note": "Elijah, worn out and wishing to die, sleeps under a bush; an angel feeds him twice and he walks in the strength of that food for forty days."
+        },
+        {
+          "ref": "Nehemiah 4:10-14",
+          "note": "The builders say their strength is failing, but Nehemiah arms them, tells them not to fear, and reminds them that the Lord is great and awesome."
+        },
+        {
+          "ref": "Psalms 42:5-6",
+          "note": "The psalmist asks his own soul why it is downcast, and answers himself by choosing to hope in God and praise him again."
+        },
+        {
+          "ref": "Psalms 55:22",
+          "note": "David urges the burdened to hand their load to the LORD, who will sustain them and will never let the righteous be shaken."
+        },
+        {
+          "ref": "Psalms 121:1-4",
+          "note": "The traveler looks to the hills and finds that his help comes from the LORD, who made heaven and earth and never sleeps or tires."
+        },
+        {
+          "ref": "Isaiah 40:28-31",
+          "note": "The LORD never grows faint or weary, and he gives strength to the exhausted, so those who wait on him will rise like eagles."
+        },
+        {
+          "ref": "Isaiah 50:4",
+          "note": "The servant of the LORD is given a trained tongue to know how to sustain the weary with a word."
+        },
+        {
+          "ref": "Jeremiah 31:25",
+          "note": "God promises to refresh the weary and satisfy everyone who is faint."
+        },
+        {
+          "ref": "2 Corinthians 4:8-9",
+          "note": "Paul describes being pressed, perplexed, hunted and struck down, yet never crushed, in despair, abandoned or destroyed."
+        },
+        {
+          "ref": "2 Corinthians 4:16-18",
+          "note": "Though outwardly we waste away, inwardly believers are renewed day by day, and present troubles are small beside the eternal glory they produce."
+        },
+        {
+          "ref": "Galatians 6:9",
+          "note": "Do not grow weary of doing good, for the harvest comes at the proper time if we hold on."
+        },
+        {
+          "ref": "Hebrews 12:1-3",
+          "note": "Believers are told to run with endurance, looking to Jesus, who endured the cross; considering him keeps us from growing weary and losing heart."
+        }
+      ],
+      "dictionary": "discouragement",
+      "see_also": ["patience-and-waiting", "comfort-and-loneliness"],
+      "tags": ["weariness"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "temptation-and-self-control",
+      "title": "Verses for temptation and self-control",
+      "also": ["tempted", "resist sin", "self control", "discipline", "addiction", "lust", "overcome sin"],
+      "intro": "Everyone is tempted, and even Jesus was. These passages show where temptation starts, what to do when it comes, and the help that God promises, so that the struggle is faced with courage and not with shame.",
+      "items": [
+        {
+          "ref": "Matthew 4:1-11",
+          "note": "Led into the desert, Jesus is tempted by the devil three times and answers each time with Scripture until the devil leaves and angels serve him."
+        },
+        {
+          "ref": "Matthew 26:41",
+          "note": "In Gethsemane Jesus tells his sleepy disciples to keep watch and pray that they will not enter into temptation, and notes that the spirit is eager but the body is weak."
+        },
+        {
+          "ref": "1 Corinthians 10:12-13",
+          "note": "Paul warns the confident to take care not to fall, and promises that God is faithful: he will not let anyone be tested beyond their strength and will provide a way out."
+        },
+        {
+          "ref": "1 Corinthians 9:25-27",
+          "note": "Paul compares the Christian life to an athlete's training: everyone who competes practices self-control, so he disciplines his body to win a prize that lasts."
+        },
+        {
+          "ref": "James 1:12-15",
+          "note": "Blessed is the person who stays firm under testing; temptation does not come from God but from our own desires, which grow into sin and then death."
+        },
+        {
+          "ref": "James 4:7-8",
+          "note": "James tells believers to place themselves under God, stand against the devil so that he runs away, and draw near to God, who will draw near to them."
+        },
+        {
+          "ref": "Hebrews 4:14-16",
+          "note": "Jesus, our great high priest, was tempted in every way yet did not sin, so we can come boldly to his throne of grace for mercy and help."
+        },
+        {
+          "ref": "Psalms 119:9-11",
+          "note": "A young person keeps his way pure by living according to God's word; the psalmist stores it in his heart so that he will not sin against God."
+        },
+        {
+          "ref": "Proverbs 25:28",
+          "note": "A person who has no self-control is like a city whose walls have been broken down."
+        },
+        {
+          "ref": "Galatians 5:16-17",
+          "note": "Paul says to walk by the Spirit and not carry out the desires of the flesh, because the flesh and the Spirit want opposite things."
+        },
+        {
+          "ref": "Titus 2:11-12",
+          "note": "God's grace has appeared bringing salvation, and it teaches believers to say no to ungodliness and worldly passions and to live self-controlled, upright and godly lives."
+        },
+        {
+          "ref": "1 Peter 5:8-9",
+          "note": "Peter urges believers to be alert and sober because the devil prowls like a roaring lion; resist him, standing firm in the faith."
+        }
+      ],
+      "dictionary": "temptation",
+      "see_also": ["forgiveness", "strength-and-courage"],
+      "tags": ["temptation"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "love",
+      "title": "Verses for love",
+      "also": ["loving", "god's love", "love one another", "charity", "care", "affection", "love your neighbor"],
+      "intro": "The Bible says that God is love and that love is the greatest of all gifts. These passages describe the love God shows, what love looks like among people, and why it matters more than anything else we can do.",
+      "items": [
+        {
+          "ref": "Matthew 22:37-40",
+          "note": "Asked for the greatest commandment, Jesus says to love God with heart, soul and mind, and to love your neighbor like yourself, and that everything in Scripture rests on these two."
+        },
+        {
+          "ref": "John 3:16",
+          "note": "God loved the world so much that he gave his only Son, so that anyone who believes in him will not be lost but have life without end."
+        },
+        {
+          "ref": "John 13:34-35",
+          "note": "Jesus gives his disciples a new command to love one another as he has loved them, and says that this love will show everyone that they are his."
+        },
+        {
+          "ref": "Romans 5:8",
+          "note": "God shows his own love for us in that Christ died for us while we were still sinners."
+        },
+        {
+          "ref": "Romans 8:35-39",
+          "note": "Paul asks what can separate us from Christ's love, and answers that no trouble, power, death or life, present or future, can separate us from God's love in Christ."
+        },
+        {
+          "ref": "1 Corinthians 13:4-7",
+          "note": "Paul describes love as patient and kind, not envious, boastful or rude, not self-seeking or easily angered, rejoicing in truth, and bearing, believing, hoping and enduring all things."
+        },
+        {
+          "ref": "1 Corinthians 13:13",
+          "note": "Of faith, hope and love, which will remain, Paul says that the greatest is love."
+        },
+        {
+          "ref": "Ephesians 3:17-19",
+          "note": "Paul prays that believers, rooted and grounded in love, will grasp how wide, long, high and deep Christ's love is, a love beyond knowledge."
+        },
+        {
+          "ref": "Colossians 3:12-14",
+          "note": "God's chosen people are to put on compassion, kindness, humility, gentleness and patience, forgive one another, and above all put on love, which binds everything together."
+        },
+        {
+          "ref": "1 Peter 4:8",
+          "note": "Peter says that above all believers should love one another deeply, because love covers a multitude of sins."
+        },
+        {
+          "ref": "1 John 4:7-12",
+          "note": "John says love comes from God, and anyone who loves knows God; God showed his love by sending his Son, so we ought to love one another."
+        },
+        {
+          "ref": "1 John 4:18-19",
+          "note": "Perfect love drives out fear, since fear has to do with punishment; we love because God first loved us."
+        }
+      ],
+      "dictionary": "love",
+      "see_also": ["forgiveness", "joy"],
+      "tags": ["love"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "wisdom",
+      "title": "Verses for wisdom",
+      "also": ["wise", "understanding", "knowledge", "discernment", "good judgment", "advice", "counsel", "proverbs"],
+      "intro": "In Scripture, wisdom is not cleverness but knowing God and living in his ways. These passages say where wisdom starts, how to ask for it, and what a wise life looks like, mostly from Proverbs but also from the apostles.",
+      "items": [
+        {
+          "ref": "Proverbs 1:7",
+          "note": "The fear of the LORD, meaning reverence for him, is where knowledge starts, while fools despise wisdom and instruction."
+        },
+        {
+          "ref": "Proverbs 2:1-6",
+          "note": "A son is urged to treasure his father's words, seek wisdom like silver, and cry out for understanding, for the LORD himself gives wisdom."
+        },
+        {
+          "ref": "Proverbs 3:13-18",
+          "note": "The person who finds wisdom is blessed, for wisdom is worth more than silver or gold, and her ways are pleasant and lead to peace and life."
+        },
+        {
+          "ref": "Proverbs 4:5-7",
+          "note": "A father tells his son to get wisdom and understanding above all, whatever it costs, and not to forget or turn from his words."
+        },
+        {
+          "ref": "Proverbs 9:10",
+          "note": "Reverence for the LORD is where wisdom begins, and knowing the Holy One brings understanding."
+        },
+        {
+          "ref": "Proverbs 11:14",
+          "note": "A nation without direction collapses, but where advisers are many it stays safe."
+        },
+        {
+          "ref": "Proverbs 13:20",
+          "note": "Whoever walks with the wise grows wise, but anyone who befriends fools comes to grief."
+        },
+        {
+          "ref": "1 Kings 3:5-12",
+          "note": "When God offers Solomon whatever he asks, the young king asks for an understanding heart to govern the people and tell right from wrong, and God is pleased."
+        },
+        {
+          "ref": "James 1:5",
+          "note": "Anyone who lacks wisdom should ask God, who is generous to everyone and never scolds, and it will be given."
+        },
+        {
+          "ref": "James 3:13-17",
+          "note": "True wisdom from above is pure, peace-loving, gentle, willing to yield, full of mercy and good fruit, unlike the bitter envy and selfish ambition of earthly wisdom."
+        },
+        {
+          "ref": "Colossians 2:2-3",
+          "note": "Paul wants believers to know Christ fully, since all the riches of wisdom and knowledge are stored up in him."
+        },
+        {
+          "ref": "1 Corinthians 1:24-25",
+          "note": "To those God has called, Christ is God's power and wisdom, and the foolishness of God is wiser than human wisdom."
+        }
+      ],
+      "dictionary": "wisdom",
+      "see_also": ["guidance", "prayer"],
+      "tags": ["wisdom"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "worship-and-praise",
+      "title": "Verses for worship and praise",
+      "also": ["praise", "worship", "sing", "singing", "hymns", "praising god", "adoration", "dance"],
+      "intro": "Worship is giving God the honor he is due, with our voices, our hands and our whole lives. These passages show worship in song, dance and quiet, in a prison and in heaven, and they point to the worship God looks for.",
+      "items": [
+        {
+          "ref": "Psalms 95:1-7",
+          "note": "The psalmist invites the people to sing, shout, kneel and bow before the LORD their Maker, who is a great God and their shepherd."
+        },
+        {
+          "ref": "Psalms 96:1-9",
+          "note": "All the earth is called to sing a new song to the LORD, declare his glory among the nations, and bring an offering to worship him in his splendor."
+        },
+        {
+          "ref": "Psalms 98:1-6",
+          "note": "The psalm summons people to sing a new song, with harps, trumpets and shouts of joy, because the LORD has done marvelous things and won the victory."
+        },
+        {
+          "ref": "Psalms 134:1-2",
+          "note": "Those who serve at night in the LORD's house are told to lift their hands toward the sanctuary and praise him."
+        },
+        {
+          "ref": "Psalms 149:1-4",
+          "note": "The faithful are to sing and rejoice in their Maker, praising his name with dancing, tambourine and harp, for the LORD delights in his people."
+        },
+        {
+          "ref": "Psalms 150:1-6",
+          "note": "The last psalm calls for praise in God's sanctuary, with trumpet, lute, harp, tambourine, strings, flute and cymbals, and for everything that has breath to praise the LORD."
+        },
+        {
+          "ref": "2 Samuel 6:12-15",
+          "note": "David leaps and dances before the LORD with all his might as the ark of God is brought into Jerusalem with shouting and trumpets."
+        },
+        {
+          "ref": "2 Chronicles 20:20-22",
+          "note": "King Jehoshaphat sends singers ahead of his army to praise the LORD, and as they begin to sing the LORD turns the enemy against itself."
+        },
+        {
+          "ref": "John 4:23-24",
+          "note": "Jesus tells the woman at the well that the Father is looking for people who worship him through the Spirit and in truth."
+        },
+        {
+          "ref": "Acts 16:25-26",
+          "note": "Paul and Silas, beaten and in prison, pray and sing hymns at midnight while other prisoners listen, and an earthquake opens every door."
+        },
+        {
+          "ref": "Romans 12:1",
+          "note": "In view of God's mercy, Paul urges believers to offer their whole selves as a living sacrifice, holy and pleasing to God, which is true worship."
+        },
+        {
+          "ref": "Revelation 5:11-13",
+          "note": "John hears countless angels and every creature in heaven and on earth sing praise to the Lamb who was slain and to the one on the throne."
+        }
+      ],
+      "dictionary": "worship",
+      "see_also": ["thankfulness", "joy"],
+      "tags": ["worship"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "heaven-and-eternal-life",
+      "title": "Verses for heaven and eternal life",
+      "also": ["heaven", "eternal life", "afterlife", "paradise", "new heaven", "resurrection", "life after death", "everlasting life"],
+      "intro": "The Bible's promise is not only that believers live after death but that God will make all things new and live among his people. These passages speak of eternal life as a gift and of the home Christ is preparing.",
+      "items": [
+        {
+          "ref": "John 10:27-28",
+          "note": "Jesus says his sheep hear his voice and follow him, he gives them eternal life, and no one can snatch them out of his hand."
+        },
+        {
+          "ref": "John 11:25-26",
+          "note": "Before raising Lazarus, Jesus declares that he is the resurrection and the life, and that whoever believes in him will live even though they die."
+        },
+        {
+          "ref": "John 14:1-3",
+          "note": "Jesus tells his troubled disciples that there are many rooms in his Father's house, that he is going to prepare a place, and that he will return to take them there."
+        },
+        {
+          "ref": "Luke 23:42-43",
+          "note": "A dying criminal asks Jesus to remember him, and Jesus promises that today he will be with him in paradise."
+        },
+        {
+          "ref": "Romans 6:23",
+          "note": "Paul contrasts the wages of sin, which is death, with God's free gift of everlasting life through Jesus Christ our Lord."
+        },
+        {
+          "ref": "1 Corinthians 15:51-57",
+          "note": "Paul reveals a mystery: at the last trumpet the dead will be raised imperishable and the living changed, and death will be swallowed up in victory through Jesus Christ."
+        },
+        {
+          "ref": "2 Corinthians 5:1-8",
+          "note": "Paul says that when our earthly tent is destroyed God gives an eternal home in heaven, and that to be away from the body is to be at home with the Lord."
+        },
+        {
+          "ref": "Philippians 3:20-21",
+          "note": "Believers' citizenship is in heaven, and from there they await the Savior, who will change our weak bodies so that they resemble his glorious body."
+        },
+        {
+          "ref": "1 Thessalonians 4:16-18",
+          "note": "The Lord himself will come down, the dead in Christ will rise first, and then the living will be caught up with them, so they are always with the Lord."
+        },
+        {
+          "ref": "1 Peter 1:3-5",
+          "note": "God has given believers new birth into a living hope and an inheritance that cannot perish, spoil or fade, kept in heaven for them."
+        },
+        {
+          "ref": "Revelation 21:1-4",
+          "note": "John sees a new heaven and a new earth, and God living among his people, wiping away every tear, with no more death, mourning, crying or pain."
+        },
+        {
+          "ref": "Revelation 22:1-5",
+          "note": "John sees the river of the water of life, the tree of life, no more curse or night, and God's servants seeing his face and reigning for ever."
+        }
+      ],
+      "dictionary": "heaven",
+      "see_also": ["hope", "grief-and-loss"],
+      "tags": ["heaven"],
+      "doctrine": "plain",
+      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
     }
   ]
 }
