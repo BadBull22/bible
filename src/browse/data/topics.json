@@ -630,7 +630,7 @@
       "see_also": ["fear", "hope"],
       "tags": ["strength"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "comfort-and-loneliness",
@@ -691,7 +691,7 @@
       "see_also": ["grief-and-loss", "peace"],
       "tags": ["loneliness"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "trust-in-god",
@@ -752,7 +752,7 @@
       "see_also": ["fear", "guidance"],
       "tags": ["trust"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "faith-and-doubt",
@@ -813,7 +813,7 @@
       "see_also": ["trust-in-god", "hope"],
       "tags": ["doubt", "faith"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "joy",
@@ -874,7 +874,7 @@
       "see_also": ["thankfulness", "peace"],
       "tags": ["joy"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "thankfulness",
@@ -935,7 +935,7 @@
       "see_also": ["joy", "worship-and-praise"],
       "tags": ["thanks"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "patience-and-waiting",
@@ -996,7 +996,7 @@
       "see_also": ["hope", "discouragement-and-weariness"],
       "tags": ["patience"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "discouragement-and-weariness",
@@ -1057,7 +1057,7 @@
       "see_also": ["patience-and-waiting", "comfort-and-loneliness"],
       "tags": ["weariness"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "temptation-and-self-control",
@@ -1118,7 +1118,7 @@
       "see_also": ["forgiveness", "strength-and-courage"],
       "tags": ["temptation"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "love",
@@ -1179,7 +1179,7 @@
       "see_also": ["forgiveness", "joy"],
       "tags": ["love"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "wisdom",
@@ -1240,7 +1240,7 @@
       "see_also": ["guidance", "prayer"],
       "tags": ["wisdom"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "worship-and-praise",
@@ -1301,7 +1301,7 @@
       "see_also": ["thankfulness", "joy"],
       "tags": ["worship"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "heaven-and-eternal-life",
@@ -1362,7 +1362,7 @@
       "see_also": ["hope", "grief-and-loss"],
       "tags": ["heaven"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1, "date": "2026-11-08" }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     }
   ]
 }
