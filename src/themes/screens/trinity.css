@@ -1,0 +1,51 @@
+/* Trinity Sunday: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: 2 Corinthians 13:14 (BSB): “The grace of the Lord Jesus Christ, and the love of God, and the fellowship of the Holy Spirit be with all of you.” */
+.home-screen[data-occasion="trinity"], .pv[data-occasion="trinity"], .wordmark-art[data-wm="trinity"], .main-frame[data-reading-theme][data-occasion="trinity"] {
+  --wm-c1: #1f3a80;
+  --wm-c2: #b8860b;
+  --wm-c3: #3f6ab8;
+  --wm-c4: #8aa6d8;
+  --wm-ink: #5b6585;
+  --wm-hi: #fffaf0;
+  --wm-deep: #13224f;
+  --wm-warm: #9a6a12;
+  --wm-loaf: #efe0b0;
+  --occ-bg: linear-gradient(180deg,#e6eaf7 0%,#f1f0f0 55%,#f7f0dc 100%);
+  --occ-accent: #1f3a80;
+  --occ-ring: rgba(31,58,128,.18);
+  --occ-line: #cdd4ea;
+  --occ-hint: #2c4590;
+  --occ-verse: #162b66;
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, in reverence:";
+  --occ-verse-text: "“The grace of the Lord Jesus Christ, and the love of God, and the fellowship of the Holy Spirit be with all of you.”";
+  --occ-verse-ref: "2 Corinthians 13:14 (BSB)";
+}
+.home-screen[data-occasion="trinity"][data-scheme="dark"], .pv[data-occasion="trinity"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="trinity"],
+:root[data-theme="dark"] .wordmark-art[data-wm="trinity"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="trinity"] {
+  --wm-c1: #7f9cea;
+  --wm-c2: #eebb3a;
+  --wm-c3: #6f95e0;
+  --wm-c4: #a8c0f0;
+  --wm-ink: #cfd6ea;
+  --wm-hi: #f4efe2;
+  --wm-deep: #13224f;
+  --wm-warm: #d99a28;
+  --wm-loaf: #efe0b0;
+  --occ-bg: linear-gradient(180deg,#0f1736 0%,#131833 55%,#17181c 100%);
+  --occ-accent: #eebb3a;
+  --occ-ring: rgba(238,187,58,.26);
+  --occ-line: #262f58;
+  --occ-hint: #a9bdf0;
+  --occ-verse: #dbe3fa;
+}
+
+.home-screen[data-occasion="trinity"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="trinity"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cpath d='M14 82V14H82' fill='none' stroke='%23b8860b' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round' opacity='.6'/%3E%3Cpath d='M14 9Q15.1 12.9 19 14Q15.1 15.1 14 19Q12.9 15.1 9 14Q12.9 12.9 14 9Z' fill='%23b8860b'/%3E%3Ccircle cx='46' cy='34' r='14' fill='none' stroke='%23b8860b' stroke-width='1.8' opacity='.85'/%3E%3Ccircle cx='36' cy='52' r='14' fill='none' stroke='%233f6ab8' stroke-width='1.8' opacity='.85'/%3E%3Ccircle cx='56' cy='52' r='14' fill='none' stroke='%231f3a80' stroke-width='1.8' opacity='.85'/%3E%3Cpath d='M112 20Q112.9 23.1 116 24Q112.9 24.9 112 28Q111.1 24.9 108 24Q111.1 23.1 112 20Z' fill='%23b8860b'/%3E%3Cpath d='M26 100.6Q26.7 103.3 29.4 104Q26.7 104.7 26 107.4Q25.3 104.7 22.6 104Q25.3 103.3 26 100.6Z' fill='%233f6ab8'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Cpath d='M14 82V14H82' fill='none' stroke='%23b8860b' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round' opacity='.6'/%3E%3Cpath d='M14 9Q15.1 12.9 19 14Q15.1 15.1 14 19Q12.9 15.1 9 14Q12.9 12.9 14 9Z' fill='%23b8860b'/%3E%3Ccircle cx='46' cy='34' r='14' fill='none' stroke='%23b8860b' stroke-width='1.8' opacity='.85'/%3E%3Ccircle cx='36' cy='52' r='14' fill='none' stroke='%233f6ab8' stroke-width='1.8' opacity='.85'/%3E%3Ccircle cx='56' cy='52' r='14' fill='none' stroke='%231f3a80' stroke-width='1.8' opacity='.85'/%3E%3Cpath d='M112 20Q112.9 23.1 116 24Q112.9 24.9 112 28Q111.1 24.9 108 24Q111.1 23.1 112 20Z' fill='%23b8860b'/%3E%3Cpath d='M26 100.6Q26.7 103.3 29.4 104Q26.7 104.7 26 107.4Q25.3 104.7 22.6 104Q25.3 103.3 26 100.6Z' fill='%233f6ab8'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* no ::after layer and no animation: this package is kept still on purpose */
+.home-screen[data-occasion="trinity"][data-screen="on"]::after { content: none; }

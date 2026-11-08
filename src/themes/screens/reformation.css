@@ -1,0 +1,60 @@
+/* Reformation Day: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Romans 1:17 (part) (BSB): “The righteous will live by faith.” */
+.home-screen[data-occasion="reformation"], .pv[data-occasion="reformation"], .wordmark-art[data-wm="reformation"], .main-frame[data-reading-theme][data-occasion="reformation"] {
+  --wm-c1: #9a2a2a;
+  --wm-c2: #5e6e3c;
+  --wm-c3: #c28a24;
+  --wm-c4: #b8432f;
+  --wm-ink: #6b5a4a;
+  --wm-hi: #fbf3df;
+  --wm-deep: #3a2418;
+  --wm-warm: #8a5a2b;
+  --wm-loaf: #ecdcb4;
+  --occ-bg: radial-gradient(ellipse 90% 70% at 50% 40%,#fbf3df 0%,#f0e2c4 100%);
+  --occ-accent: #9a2a2a;
+  --occ-ring: rgba(154,42,42,.16);
+  --occ-line: #e3d0b3;
+  --occ-hint: #7d2f2f;
+  --occ-verse: #5c1f1f;
+  --occ-fx: rgba(214,150,60,.5);
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, straight from the Word:";
+  --occ-verse-text: "“The righteous will live by faith.”";
+  --occ-verse-ref: "Romans 1:17 (part) (BSB)";
+}
+.home-screen[data-occasion="reformation"][data-scheme="dark"], .pv[data-occasion="reformation"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="reformation"],
+:root[data-theme="dark"] .wordmark-art[data-wm="reformation"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="reformation"] {
+  --wm-c1: #e07272;
+  --wm-c2: #a3b672;
+  --wm-c3: #e6b24a;
+  --wm-c4: #e0806a;
+  --wm-ink: #d6c8b0;
+  --wm-hi: #f1e8d2;
+  --wm-deep: #3a2418;
+  --wm-warm: #b88650;
+  --wm-loaf: #ecdcb4;
+  --occ-bg: radial-gradient(ellipse 90% 70% at 50% 40%,#261a16 0%,#171414 100%);
+  --occ-accent: #e07272;
+  --occ-ring: rgba(224,114,114,.26);
+  --occ-line: #44302c;
+  --occ-hint: #eab0aa;
+  --occ-verse: #f4d3cf;
+  --occ-fx: rgba(230,150,60,.4);
+}
+
+.home-screen[data-occasion="reformation"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="reformation"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cpath d='M-6 22C50 18 104 44 152 102' fill='none' stroke='%235e6e3c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M10.7 21.7Q18.2 20.6 19.1 13.1Q11.6 14.2 10.7 21.7ZM27.3 23.2Q26.5 30.2 33.3 32.2Q34.1 25.2 27.3 23.2ZM43.8 26.6Q51.3 27.1 53.8 19.9Q46.3 19.4 43.8 26.6ZM60 31.7Q57.7 38.4 63.9 41.8Q66.2 35.1 60 31.7ZM76 38.8Q83.3 40.8 87.2 34.4Q79.9 32.3 76 38.8ZM91.8 47.6Q88.2 53.7 93.6 58.3Q97.2 52.2 91.8 47.6ZM107.3 58.4Q114 61.7 119.1 56.2Q112.3 52.8 107.3 58.4ZM122.5 71Q117.9 76.4 122.5 81.8Q127.1 76.4 122.5 71ZM137.4 85.6Q143.5 89.9 149.4 85.2Q143.3 80.8 137.4 85.6Z' fill='%235e6e3c'/%3E%3Cpath d='M10.7 21.7Q10.7 28.8 17.7 30Q17.7 22.9 10.7 21.7ZM27.3 23.2Q34.9 22.9 36.6 15.6Q29 15.9 27.3 23.2ZM43.8 26.6Q42.2 33.4 48.7 36.1Q50.3 29.2 43.8 26.6ZM60 31.7Q67.4 33 70.6 26.2Q63.2 24.9 60 31.7ZM76 38.8Q73 45.2 78.9 49.2Q81.8 42.7 76 38.8ZM91.8 47.6Q98.8 50.4 103.3 44.3Q96.3 41.6 91.8 47.6ZM107.3 58.4Q103.2 64.1 108.2 69.1Q112.3 63.4 107.3 58.4ZM122.5 71Q129 74.9 134.4 69.8Q128 65.9 122.5 71ZM137.4 85.6Q132.5 90.6 136.6 96.3Q141.6 91.3 137.4 85.6Z' fill='%2376894a'/%3E%3Ccircle cx='20.7' cy='13.6' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='27.1' cy='18.3' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='24.7' cy='25.9' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='16.7' cy='25.9' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='14.3' cy='18.3' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='20.7' cy='20.4' r='3.5' fill='%23d9a43a'/%3E%3Ccircle cx='63.2' cy='25.3' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='68.6' cy='29.2' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='66.6' cy='35.6' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='59.8' cy='35.6' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='57.8' cy='29.2' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='63.2' cy='31' r='3' fill='%23d9a43a'/%3E%3Ccircle cx='101.1' cy='46.7' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='106.1' cy='50.3' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='104.2' cy='56.1' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='98.1' cy='56.1' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='96.2' cy='50.3' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='101.1' cy='51.9' r='2.7' fill='%23d9a43a'/%3E%3Ccircle cx='134.5' cy='76.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='138.7' cy='79.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='137.1' cy='84.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='131.9' cy='84.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='130.3' cy='79.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='134.5' cy='80.5' r='2.3' fill='%23d9a43a'/%3E%3Ccircle cx='47.8' cy='35' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='50.2' cy='36.8' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='49.3' cy='39.7' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='46.2' cy='39.7' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='45.3' cy='36.8' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='47.8' cy='37.6' r='1.4' fill='%23d9a43a'/%3E%3Ccircle cx='87.9' cy='51.4' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='90.4' cy='53.2' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='89.4' cy='56.1' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='86.4' cy='56.1' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='85.4' cy='53.2' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='87.9' cy='54' r='1.4' fill='%23d9a43a'/%3E%3Ccircle cx='123.5' cy='76.7' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='126' cy='78.5' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='125' cy='81.4' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='122' cy='81.4' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='121' cy='78.5' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='123.5' cy='79.3' r='1.4' fill='%23d9a43a'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Cpath d='M-6 22C50 18 104 44 152 102' fill='none' stroke='%235e6e3c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M10.7 21.7Q18.2 20.6 19.1 13.1Q11.6 14.2 10.7 21.7ZM27.3 23.2Q26.5 30.2 33.3 32.2Q34.1 25.2 27.3 23.2ZM43.8 26.6Q51.3 27.1 53.8 19.9Q46.3 19.4 43.8 26.6ZM60 31.7Q57.7 38.4 63.9 41.8Q66.2 35.1 60 31.7ZM76 38.8Q83.3 40.8 87.2 34.4Q79.9 32.3 76 38.8ZM91.8 47.6Q88.2 53.7 93.6 58.3Q97.2 52.2 91.8 47.6ZM107.3 58.4Q114 61.7 119.1 56.2Q112.3 52.8 107.3 58.4ZM122.5 71Q117.9 76.4 122.5 81.8Q127.1 76.4 122.5 71ZM137.4 85.6Q143.5 89.9 149.4 85.2Q143.3 80.8 137.4 85.6Z' fill='%235e6e3c'/%3E%3Cpath d='M10.7 21.7Q10.7 28.8 17.7 30Q17.7 22.9 10.7 21.7ZM27.3 23.2Q34.9 22.9 36.6 15.6Q29 15.9 27.3 23.2ZM43.8 26.6Q42.2 33.4 48.7 36.1Q50.3 29.2 43.8 26.6ZM60 31.7Q67.4 33 70.6 26.2Q63.2 24.9 60 31.7ZM76 38.8Q73 45.2 78.9 49.2Q81.8 42.7 76 38.8ZM91.8 47.6Q98.8 50.4 103.3 44.3Q96.3 41.6 91.8 47.6ZM107.3 58.4Q103.2 64.1 108.2 69.1Q112.3 63.4 107.3 58.4ZM122.5 71Q129 74.9 134.4 69.8Q128 65.9 122.5 71ZM137.4 85.6Q132.5 90.6 136.6 96.3Q141.6 91.3 137.4 85.6Z' fill='%2376894a'/%3E%3Ccircle cx='20.7' cy='13.6' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='27.1' cy='18.3' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='24.7' cy='25.9' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='16.7' cy='25.9' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='14.3' cy='18.3' r='6.5' fill='%239a2a2a'/%3E%3Ccircle cx='20.7' cy='20.4' r='3.5' fill='%23d9a43a'/%3E%3Ccircle cx='63.2' cy='25.3' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='68.6' cy='29.2' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='66.6' cy='35.6' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='59.8' cy='35.6' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='57.8' cy='29.2' r='5.5' fill='%239a2a2a'/%3E%3Ccircle cx='63.2' cy='31' r='3' fill='%23d9a43a'/%3E%3Ccircle cx='101.1' cy='46.7' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='106.1' cy='50.3' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='104.2' cy='56.1' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='98.1' cy='56.1' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='96.2' cy='50.3' r='5' fill='%239a2a2a'/%3E%3Ccircle cx='101.1' cy='51.9' r='2.7' fill='%23d9a43a'/%3E%3Ccircle cx='134.5' cy='76.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='138.7' cy='79.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='137.1' cy='84.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='131.9' cy='84.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='130.3' cy='79.1' r='4.2' fill='%239a2a2a'/%3E%3Ccircle cx='134.5' cy='80.5' r='2.3' fill='%23d9a43a'/%3E%3Ccircle cx='47.8' cy='35' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='50.2' cy='36.8' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='49.3' cy='39.7' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='46.2' cy='39.7' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='45.3' cy='36.8' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='47.8' cy='37.6' r='1.4' fill='%23d9a43a'/%3E%3Ccircle cx='87.9' cy='51.4' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='90.4' cy='53.2' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='89.4' cy='56.1' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='86.4' cy='56.1' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='85.4' cy='53.2' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='87.9' cy='54' r='1.4' fill='%23d9a43a'/%3E%3Ccircle cx='123.5' cy='76.7' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='126' cy='78.5' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='125' cy='81.4' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='122' cy='81.4' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='121' cy='78.5' r='2.5' fill='%23b8432f'/%3E%3Ccircle cx='123.5' cy='79.3' r='1.4' fill='%23d9a43a'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* a warm glow along the bottom edge, like lamplight, brightens and fades very slowly */
+.home-screen[data-occasion="reformation"][data-screen="on"]::after {
+  background: radial-gradient(ellipse 70% 32% at 50% 108%, var(--occ-fx) 0%, transparent 72%);
+  opacity: .6;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="reformation"][data-screen="on"]::after { animation: occ-lamp 12s ease-in-out infinite alternate; }
+}
+@keyframes occ-lamp { from { opacity: .35; } to { opacity: .85; } }

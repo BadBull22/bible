@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { api, AskAnswer, CommentaryHit, SearchHit, Version } from "../api";
 import { AskAnswerView } from "./AskAnswerView";
+import { BrowseMatches } from "./BrowseMatches";
+import type { BrowseKind } from "../browse/types";
 import { CloseIcon } from "./icons";
 
 interface Props {
@@ -13,6 +15,8 @@ interface Props {
   onOpenDictionary: (query: string) => void;
   /** the Offline Assistant is unlocked: a button under the results asks it the same question */
   onAskAssistant?: (question: string) => void;
+  /** open a Browse page (a story, a "Verses for..." page or a children's page) */
+  onOpenBrowse: (kind: BrowseKind, id: string) => void;
   onClose: () => void;
 }
 
@@ -36,7 +40,7 @@ const PHRASE_LIMIT = 100;
 const TOPIC_LIMIT = 50;
 const COMMENTARY_LIMIT = 60;
 
-export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onOpenDictionary, onAskAssistant, onClose }: Props) {
+export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onOpenDictionary, onAskAssistant, onOpenBrowse, onClose }: Props) {
   const [mode, setMode] = useState<Mode>("ask");
   const [query, setQuery] = useState(initialQuery ?? "");
   const [searchVersion, setSearchVersion] = useState(versionCode === "ENOCH1" ? "BSB" : versionCode);
@@ -180,6 +184,7 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
         </form>
       </div>
       {error && <p className="status-error">Search failed: {error}</p>}
+      {!loading && ran && ran.mode === "ask" && <BrowseMatches query={ran.query} onOpen={onOpenBrowse} onJump={onJump} />}
       {!loading && ran && ran.mode === "ask" && askAnswer && (
         <AskAnswerView answer={askAnswer} hitCount={hits.length} commentaryHitCount={commentaryHits.length} onJump={onJump} onOpenDictionaryEntry={onOpenDictionary} />
       )}

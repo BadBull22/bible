@@ -1,0 +1,55 @@
+.home-screen[data-occasion="sea-of-galilee"], .pv[data-occasion="sea-of-galilee"], .wordmark-art[data-wm="sea-of-galilee"], .main-frame[data-reading-theme][data-occasion="sea-of-galilee"] {
+  --wm-c1: #1e78c8;
+  --wm-c2: #1c9db8;
+  --wm-c3: #d99a2b;
+  --wm-c4: #3d8f6a;
+  --wm-ink: #5b5f78;
+  --wm-hi: #fffaf0;
+  --wm-deep: #1e2b55;
+  --wm-warm: #9a5f14;
+  --wm-loaf: #e6b566;
+  --occ-bg: linear-gradient(180deg,#e8f3fa 0%,#f6fafb 62%,#faf7f0 100%);
+  --occ-accent: #1e78c8;
+  --occ-ring: rgba(30,120,200,.18);
+  --occ-line: #cde0ee;
+  --occ-hint: #2f6a9c;
+  --occ-verse: #1f4f7a;
+}
+.home-screen[data-occasion="sea-of-galilee"][data-scheme="dark"], .pv[data-occasion="sea-of-galilee"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="sea-of-galilee"],
+:root[data-theme="dark"] .wordmark-art[data-wm="sea-of-galilee"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="sea-of-galilee"] {
+  --wm-c1: #3a90de;
+  --wm-c2: #38b8d4;
+  --wm-c3: #e8c070;
+  --wm-c4: #4fb088;
+  --wm-ink: #cfd3e6;
+  --wm-hi: #f4efe2;
+  --wm-deep: #1e2b55;
+  --wm-warm: #c98a3a;
+  --wm-loaf: #e6b566;
+  --occ-bg: linear-gradient(180deg,#0f2232 0%,#14212a 60%,#17181c 100%);
+  --occ-accent: #3a90de;
+  --occ-ring: rgba(58,144,222,.3);
+  --occ-line: #23405a;
+  --occ-hint: #9cc8ee;
+  --occ-verse: #c6defa;
+}
+
+.home-screen[data-occasion="sea-of-galilee"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="sea-of-galilee"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 170 100'%3E%3Ccircle cx='136' cy='34' r='12' fill='%23d99a2b'/%3E%3Cpath d='M153 34l6 0' stroke='%23d99a2b' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M148 46l4.2 4.2' stroke='%23d99a2b' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M136 51l0 6' stroke='%23d99a2b' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M124 46l-4.2 4.2' stroke='%23d99a2b' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M119 34l-6 0' stroke='%23d99a2b' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M124 22l-4.2 -4.2' stroke='%23d99a2b' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M136 17l0 -6' stroke='%23d99a2b' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M148 22l4.2 -4.2' stroke='%23d99a2b' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M60 50q5 -9 10 0q5 -9 10 0' fill='none' stroke='%235b6a88' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M96 70q4 -7 8 0q4 -7 8 0' fill='none' stroke='%235b6a88' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-position: right top; background-size: 170px auto; background-repeat: no-repeat; opacity: .9;
+}
+/* two bands of waves along the bottom edge that drift sideways at different speeds */
+.home-screen[data-occasion="sea-of-galilee"][data-screen="on"]::after {
+  top: auto; height: 74px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 44'%3E%3Cpath d='M0 20q30 -9 60 0t60 0t60 0t60 0V44H0Z' fill='%231c9db8' fill-opacity='0.22'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 44'%3E%3Cpath d='M0 26q25 -7 50 0t50 0t50 0t50 0V44H0Z' fill='%231e78c8' fill-opacity='0.18'/%3E%3C/svg%3E");
+  background-size: 240px 44px, 200px 44px;
+  background-position: 0 100%, 60px 100%;
+  background-repeat: repeat-x;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="sea-of-galilee"][data-screen="on"]::after { animation: occ-waves 40s linear infinite; }
+}
+@keyframes occ-waves { to { background-position: -240px 100%, 460px 100%; } }

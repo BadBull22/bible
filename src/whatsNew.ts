@@ -8,6 +8,16 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: "2.10.0",
+    items: [
+      "Bibles you add to the Library that carry Strong's numbers (the KJV from CrossWire, MyBible files whose names end in a plus, and others) now show them: click a word for its Hebrew or Greek. The Translation list says “· Strong's” beside them.",
+      "Sunday service > Print the bulletin: an order of service with the notices, the songs' titles and the message, to print, save as a PDF or Word document, or copy.",
+      "Presenter > Phone remote: use your phone on the same Wi-Fi as the clicker, with Next, Back, Black, the next slide and your notes. It is off until you switch it on.",
+      "Settings > Appearance: the opening screen can wear a themed Gospel wordmark with small decorations and a verse of the season (24 themes: the church year from Advent to Trinity Sunday, Passover, Communion, Harvest, Mother's Day, Father's Day and more, plus Healing, Miracles, Sea of Galilee, Warm paper and Night reading). Near a season the app can switch to its theme and ask whether to keep it. You can also choose your interface font and your Bible reading font.",
+      "Map > Bible maps: nine ready-made maps (the twelve tribes, the kingdoms, the ministry of Jesus, Paul's journeys and more) to zoom and drag, each with the passages it goes with. The drawn map is now the “Interactive map” tab, and an atlas you add from a download still has its own tab.",
+    ],
+  },
+  {
     version: "2.9.9",
     items: [
       "The app opens on the Bible you chose last time, and the opening screen has a “Continue reading” button that takes you back to where you were.",

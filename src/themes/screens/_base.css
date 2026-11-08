@@ -1,0 +1,63 @@
+/* Shared rules for every occasion "screen package". Each package file (christmas.css ...) sets the
+   --occ-* tokens and its own decoration/animation; this file only reads the tokens.
+   Wiring idea: set data-occasion="<theme>" and data-scheme="light|dark" (or rely on
+   :root[data-theme="dark"]) on the .home-screen element, and data-screen="on" when the package
+   is wanted. Quiet mode = simply do not set data-occasion / data-screen (the plain wordmark and
+   the normal screen come back). The reading font is never touched by any of this. */
+
+.home-screen[data-screen="on"] {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--occ-bg, transparent);
+}
+.home-screen[data-screen="on"] > * { position: relative; z-index: 1; }
+.home-screen[data-screen="on"]::before,
+.home-screen[data-screen="on"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.home-screen[data-screen="on"] .home-search-box {
+  border-color: var(--occ-line, var(--border));
+}
+.home-screen[data-screen="on"] .home-search-box:focus-within {
+  border-color: var(--occ-accent);
+  box-shadow: 0 0 0 3px var(--occ-ring), 0 0 30px 5px var(--occ-glow, color-mix(in srgb, var(--occ-accent) 44%, transparent));
+}
+/* the glow around the search box and the shortcut tiles, in the theme's own colour (a theme may set --occ-glow itself) */
+.home-screen[data-screen="on"] .home-search-box,
+.home-screen[data-screen="on"] .home-stat-tile {
+  box-shadow: 0 0 26px 3px var(--occ-glow, color-mix(in srgb, var(--occ-accent) 38%, transparent));
+}
+:root[data-theme="dark"] .home-screen[data-screen="on"] .home-search-box,
+:root[data-theme="dark"] .home-screen[data-screen="on"] .home-stat-tile {
+  box-shadow: 0 0 26px 3px var(--occ-glow, color-mix(in srgb, var(--occ-accent) 30%, transparent));
+}
+:root[data-theme="dark"] .home-screen[data-screen="on"] .home-search-box:focus-within {
+  box-shadow: 0 0 0 3px var(--occ-ring), 0 0 30px 5px var(--occ-glow, color-mix(in srgb, var(--occ-accent) 38%, transparent));
+}
+.home-screen[data-screen="on"] .home-stat-tile {
+  border-top: 3px solid var(--occ-accent);
+}
+.home-screen[data-screen="on"] .home-stat-tile.is-active:hover {
+  border-color: var(--occ-accent);
+}
+.home-screen[data-screen="on"] .result-count {            /* the "No direct answer on file ..." line */
+  color: var(--occ-hint);
+  font-style: italic;
+}
+.home-screen[data-screen="on"] .occ-verse {                /* optional "verse of the season" */
+  color: var(--occ-verse);
+}
+/* narrow windows: drop the corner pictures and the moving layer so nothing crowds the tiles */
+@media (max-width: 700px) {
+  .home-screen[data-screen="on"]::before,
+  .home-screen[data-screen="on"]::after { display: none; }
+}
+/* reduced motion: every package's animation is switched off here as a second safety net */
+@media (prefers-reduced-motion: reduce) {
+  .home-screen[data-screen="on"]::after { animation: none !important; }
+}

@@ -64,6 +64,9 @@ pub struct Version {
     pub name: String,
     pub language: String,
     pub is_original_language: bool,
+    /// a Bible added to the Library whose words carry Strong's numbers (clickable in the reader);
+    /// false for the built-in Bibles, which have their own tagging
+    pub has_strongs: bool,
 }
 
 #[derive(Serialize, Clone)]
@@ -202,7 +205,21 @@ pub enum AskAnswer {
     Fallback {
         hits: Vec<SearchHit>,
         commentary_hits: Vec<CommentaryHit>,
+        /// A stored answer that is close to the question but did not pass the gate (`answer_gate`): shown under the
+        /// passages as a labelled "related" answer, never as the answer itself.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        related: Option<AskCuratedEntry>,
     },
+}
+
+/// What `ask_question` sends: the answer, and the question as it was read when its spelling was put right ("who betryed jesus" is
+/// read as "who betrayed jesus"), so the reader can be told what the results are for.
+#[derive(Serialize)]
+pub struct AskReply {
+    #[serde(flatten)]
+    pub answer: AskAnswer,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub corrected_to: Option<String>,
 }
 
 #[derive(Serialize, Clone)]

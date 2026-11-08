@@ -1,0 +1,55 @@
+.home-screen[data-occasion="passover"], .pv[data-occasion="passover"], .wordmark-art[data-wm="passover"], .main-frame[data-reading-theme][data-occasion="passover"] {
+  --wm-c1: #3a63b8;
+  --wm-c2: #a1263a;
+  --wm-c3: #6f8f2f;
+  --wm-c4: #c48a0f;
+  --wm-ink: #5b5f78;
+  --wm-hi: #fffaf0;
+  --wm-deep: #1e2b55;
+  --wm-warm: #9a5f14;
+  --wm-loaf: #e6b566;
+  --occ-bg: linear-gradient(180deg,#edf0f9 0%,#f6f4ef 60%,#faf7f0 100%);
+  --occ-accent: #3a63b8;
+  --occ-ring: rgba(58,99,184,.18);
+  --occ-line: #d3d9ec;
+  --occ-hint: #3f5a97;
+  --occ-verse: #2c4378;
+  --occ-fx: rgba(196,138,15,.7);
+}
+.home-screen[data-occasion="passover"][data-scheme="dark"], .pv[data-occasion="passover"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="passover"],
+:root[data-theme="dark"] .wordmark-art[data-wm="passover"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="passover"] {
+  --wm-c1: #6f95e0;
+  --wm-c2: #e0607a;
+  --wm-c3: #8fb03e;
+  --wm-c4: #e0aa28;
+  --wm-ink: #cfd3e6;
+  --wm-hi: #f4efe2;
+  --wm-deep: #1e2b55;
+  --wm-warm: #c98a3a;
+  --wm-loaf: #e6b566;
+  --occ-bg: linear-gradient(180deg,#131a33 0%,#16192b 55%,#17181c 100%);
+  --occ-accent: #6f95e0;
+  --occ-ring: rgba(111,149,224,.3);
+  --occ-line: #2c365a;
+  --occ-hint: #a9bef0;
+  --occ-verse: #cdd9f7;
+  --occ-fx: rgba(255,224,140,.9);
+}
+
+.home-screen[data-occasion="passover"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="passover"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 130'%3E%3Cpath d='M-6 20C50 14 110 34 172 88' fill='none' stroke='%237d8c4c' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M-6 66C26 68 54 86 88 118' fill='none' stroke='%237d8c4c' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M10.9 19Q14.9 26.1 22.9 28.1Q18.8 21 10.9 19ZM23.8 19.3Q27.3 26.6 35 29.2Q31.5 21.8 23.8 19.3ZM36.7 20.5Q39.7 28.1 47.3 31.2Q44.3 23.6 36.7 20.5ZM49.8 22.7Q52.3 30.4 59.6 34Q57.1 26.3 49.8 22.7ZM63 25.8Q64.9 33.7 72 37.8Q70 29.9 63 25.8ZM76.3 29.9Q77.7 37.9 84.4 42.5Q83.1 34.5 76.3 29.9ZM89.7 35Q90.6 43.1 97 48.1Q96.2 40 89.7 35ZM103.2 41.2Q103.6 49.3 109.7 54.7Q109.3 46.5 103.2 41.2ZM116.8 48.4Q116.7 56.5 122.5 62.2Q122.6 54.1 116.8 48.4ZM130.5 56.6Q129.9 64.8 135.4 70.8Q136 62.6 130.5 56.6ZM144.2 66Q143.3 74.1 148.5 80.4Q149.4 72.3 144.2 66ZM158.1 76.4Q156.7 84.5 161.6 91Q163 83 158.1 76.4Z' fill='%237d9a3c'/%3E%3Cpath d='M10.9 19Q18 17 21.4 10.5Q14.4 12.5 10.9 19ZM23.8 19.3Q30.9 17.8 34.9 11.6Q27.7 13.1 23.8 19.3ZM36.7 20.5Q44 19.5 48.3 13.6Q41.1 14.6 36.7 20.5ZM49.8 22.7Q57.1 22.2 61.9 16.6Q54.5 17.1 49.8 22.7ZM63 25.8Q70.3 25.8 75.4 20.6Q68.1 20.5 63 25.8ZM76.3 29.9Q83.6 30.4 89.1 25.5Q81.7 25 76.3 29.9ZM89.7 35Q97 36 102.7 31.5Q95.4 30.5 89.7 35ZM103.2 41.2Q110.4 42.6 116.4 38.4Q109.2 37 103.2 41.2ZM116.8 48.4Q123.9 50.2 130.1 46.4Q123 44.5 116.8 48.4ZM130.5 56.6Q137.5 58.9 143.9 55.4Q136.9 53.1 130.5 56.6ZM144.2 66Q151.1 68.6 157.7 65.4Q150.9 62.8 144.2 66ZM158.1 76.4Q164.8 79.4 171.6 76.5Q164.9 73.6 158.1 76.4Z' fill='%236f8f2f'/%3E%3Cpath d='M12.8 69.1Q14.2 75.6 20 78.7Q18.6 72.2 12.8 69.1ZM22 72.1Q22.7 78.6 28.3 82.3Q27.5 75.7 22 72.1ZM31.1 76Q31.3 82.6 36.5 86.7Q36.3 80.1 31.1 76ZM40.2 80.8Q39.9 87.4 44.8 91.9Q45.1 85.3 40.2 80.8ZM49.4 86.4Q48.7 93 53.2 97.8Q54 91.3 49.4 86.4ZM58.7 93Q57.6 99.6 61.9 104.6Q63 98.1 58.7 93ZM68.2 100.5Q66.8 107 70.9 112.2Q72.3 105.7 68.2 100.5Z' fill='%237d9a3c'/%3E%3Cpath d='M12.8 69.1Q18.8 69.3 22.8 64.9Q16.8 64.7 12.8 69.1ZM22 72.1Q27.9 72.8 32.3 68.8Q26.4 68 22 72.1ZM31.1 76Q36.9 77.2 41.7 73.6Q35.8 72.3 31.1 76ZM40.2 80.8Q46 82.5 50.9 79.2Q45.2 77.5 40.2 80.8ZM49.4 86.4Q55 88.5 60.2 85.6Q54.6 83.5 49.4 86.4ZM58.7 93Q64.2 95.4 69.5 92.8Q64.1 90.4 58.7 93ZM68.2 100.5Q73.6 103.2 79 100.8Q73.7 98.1 68.2 100.5Z' fill='%236f8f2f'/%3E%3Cellipse cx='54.2' cy='28.6' rx='3.4' ry='4.6' fill='%234b5a2e'/%3E%3Cellipse cx='80.8' cy='36.5' rx='3.4' ry='4.6' fill='%234b5a2e'/%3E%3Cellipse cx='107.7' cy='48.5' rx='3.4' ry='4.6' fill='%234b5a2e'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 130'%3E%3Ccircle cx='146' cy='40' r='14' fill='%23c48a0f'/%3E%3Ccircle cx='146' cy='40' r='21' fill='none' stroke='%23c48a0f' stroke-width='1.6' opacity='.5'/%3E%3Cpath d='M100 20Q101.1 24.9 106 26Q101.1 27.1 100 32Q98.9 27.1 94 26Q98.9 24.9 100 20Z' fill='%23c48a0f'/%3E%3Cpath d='M174 77Q175.3 82.7 181 84Q175.3 85.3 174 91Q172.7 85.3 167 84Q172.7 82.7 174 77Z' fill='%23c48a0f'/%3E%3Cpath d='M122 73.5Q122.8 77.2 126.5 78Q122.8 78.8 122 82.5Q121.2 78.8 117.5 78Q121.2 77.2 122 73.5Z' fill='%23c48a0f'/%3E%3Cpath d='M60 40Q60.7 43.3 64 44Q60.7 44.7 60 48Q59.3 44.7 56 44Q59.3 43.3 60 40Z' fill='%23c48a0f'/%3E%3Cpath d='M168 8Q168.7 11.3 172 12Q168.7 12.7 168 16Q167.3 12.7 164 12Q167.3 11.3 168 8Z' fill='%23c48a0f'/%3E%3Ccircle cx='84' cy='70' r='1.8' fill='%23c48a0f'/%3E%3Ccircle cx='150' cy='108' r='1.8' fill='%23c48a0f'/%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto, 190px auto; background-repeat: no-repeat; opacity: .95;
+}
+/* a few stars that slowly brighten and dim */
+.home-screen[data-occasion="passover"][data-screen="on"]::after {
+  background-image: radial-gradient(circle at 24px 30px, var(--occ-fx) 0 1.6px, transparent 2.6px), radial-gradient(circle at 96px 70px, var(--occ-fx) 0 1.6px, transparent 2.6px), radial-gradient(circle at 170px 18px, var(--occ-fx) 0 1.6px, transparent 2.6px), radial-gradient(circle at 230px 120px, var(--occ-fx) 0 1.6px, transparent 2.6px), radial-gradient(circle at 60px 150px, var(--occ-fx) 0 1.6px, transparent 2.6px), radial-gradient(circle at 190px 190px, var(--occ-fx) 0 1.6px, transparent 2.6px), radial-gradient(circle at 120px 230px, var(--occ-fx) 0 1.6px, transparent 2.6px), radial-gradient(circle at 260px 40px, var(--occ-fx) 0 1.6px, transparent 2.6px);
+  background-size: 300px 260px;
+  opacity: .8;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="passover"][data-screen="on"]::after { animation: occ-twinkle 7s ease-in-out infinite alternate; }
+}
+@keyframes occ-twinkle { from { opacity: .25; } to { opacity: 1; } }

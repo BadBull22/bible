@@ -5,7 +5,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, BookInfo, Deck, DeckKind, SavedSermon, Version } from "../api";
 import { keepChoice, KIND_NAME, loadServicePart, PresenterDeck, savedChoice, ServiceChoice, ServiceKind } from "../service";
+import { Bulletin } from "./Bulletin";
 import { DeckBuilder } from "./DeckBuilder";
+import { PrintIcon } from "./icons";
 import { Presenter } from "./SlideShow";
 
 interface Props {
@@ -33,6 +35,7 @@ export function ServiceHome({ versions, books, versionCode, onOpenSermon, onClos
   const [sermons, setSermons] = useState<SavedSermon[]>([]);
   const [choice, setChoice] = useState<ServiceChoice>(savedChoice);
   const [parts, setParts] = useState<PresenterDeck[] | null>(null);
+  const [bulletin, setBulletin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   // finding one among hundreds: what was typed, and how each list is ordered (the newest first to begin with)
@@ -99,6 +102,7 @@ export function ServiceHome({ versions, books, versionCode, onOpenSermon, onClos
   };
 
   if (editing) return <DeckBuilder kind={editing.kind} id={editing.id} versions={versions} books={books} versionCode={versionCode} onBack={() => setEditing(null)} />;
+  if (bulletin) return <Bulletin choice={{ notices: chosen("notices"), music: chosen("music"), sermon: chosen("sermon") }} onBack={() => setBulletin(false)} />;
 
   return (
     <article className="service">
@@ -169,9 +173,14 @@ export function ServiceHome({ versions, books, versionCode, onOpenSermon, onClos
       </div>
       <footer className="service-foot">
         <span className="muted">{names.length ? names.join("  ·  ") : "Tick one or more above to put them in the service."}</span>
-        <button className="pill-btn" onClick={() => void present()} disabled={names.length === 0 || busy}>
-          {busy ? "Opening…" : "▶ Present the service"}
-        </button>
+        <span className="service-foot-actions">
+          <button className="outline-btn" onClick={() => setBulletin(true)} title="The order of service, the notices and the message, to print or save as a PDF or Word document">
+            <PrintIcon size={14} /> Print the bulletin
+          </button>
+          <button className="pill-btn" onClick={() => void present()} disabled={names.length === 0 || busy}>
+            {busy ? "Opening…" : "▶ Present the service"}
+          </button>
+        </span>
       </footer>
       {parts && <Presenter decks={parts} versions={versions} books={books} versionCode={versionCode} onEnd={() => setParts(null)} />}
     </article>

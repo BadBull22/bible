@@ -252,6 +252,10 @@ export function sheetHtml(blocks: SheetBlock[]): string {
       case "lines":
         return Array.from({ length: b.count }, () => `<p style="margin: 0; height: 24pt; border-bottom: 1px solid #bbb;">&nbsp;</p>`).join("");
       case "image":
+        // a picture of its own: a landscape page to itself (printSheet gives the page its size), as large as the page allows
+        if (b.layout === "page") {
+          return `<div data-page-picture="1" style="break-before: page; page-break-before: always; page: colouring; text-align: center;"><img src="${b.src}" style="max-width: 100%; max-height: 168mm; width: auto; height: auto;" alt="${esc(b.caption)}"/><p style="${sans} font-size: 11pt; color: #333; margin: 6pt 0 0;">${esc(b.caption)}</p></div>`;
+        }
         return `<figure style="margin: 8pt 0 10pt; text-align: center;"><img src="${b.src}" width="${Math.min(b.width, 560)}" style="max-width: 100%; height: auto;" alt="${esc(b.caption)}"/><figcaption style="${sans} font-size: 9pt; color: #555; margin-top: 3pt;">${esc(b.caption)}</figcaption></figure>`;
     }
   });
@@ -307,11 +311,16 @@ export function printSheet(blocks: SheetBlock[], options: PrintOptions = {}) {
   const root = document.createElement("div");
   root.id = "sheet-print-root";
   root.innerHTML = sheetHtml(blocks);
-  if (options.large) root.style.setProperty("zoom", "1.35");
+  if (options.large) {
+    root.style.setProperty("zoom", "1.35");
+    // a picture on a page of its own keeps its size: the large print is for the text
+    root.querySelectorAll<HTMLElement>("[data-page-picture]").forEach((el) => el.style.setProperty("zoom", String(1 / 1.35)));
+  }
   document.body.appendChild(root);
   const page = document.createElement("style");
   page.id = "sheet-print-page";
-  page.textContent = options.page === "a5" ? "@page { size: A5; margin: 10mm; }" : "@page { size: A4; margin: 16mm; }";
+  const a5 = options.page === "a5";
+  page.textContent = (a5 ? "@page { size: A5; margin: 10mm; }" : "@page { size: A4; margin: 16mm; }") + (blocks.some((b) => b.kind === "image" && b.layout === "page") ? ` @page colouring { size: ${a5 ? "A5" : "A4"} landscape; margin: 10mm; }` : "");
   document.head.appendChild(page);
   document.body.classList.add("printing-sheet");
   const cleanup = () => {

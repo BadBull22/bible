@@ -8,6 +8,7 @@ pub mod firsts;
 mod genealogy;
 pub mod library;
 mod lan;
+mod remote;
 mod library_commands;
 mod logging;
 mod lyrics;
@@ -16,6 +17,11 @@ mod original_search;
 mod models;
 mod online;
 pub mod qa;
+mod answer_gate;
+mod people_qa;
+mod spell;
+#[cfg(test)]
+mod search_bench;
 mod qa_parser;
 mod sermon;
 mod sermon_media;
@@ -27,6 +33,7 @@ mod sheet;
 mod study;
 mod themes;
 mod study_commands;
+mod browse_review;
 mod sync;
 mod update;
 mod userdata;
@@ -206,6 +213,7 @@ pub fn run() {
             app.manage(offline_ai::OfflineAiState::default());
             // the phone over the home Wi-Fi, if the reader turned it on
             app.manage(lan::LanState::default());
+            app.manage(remote::RemoteState::default());
             lan::start_if_on(app.handle());
             app.manage(voice::VoiceState::default());
 
@@ -334,6 +342,9 @@ pub fn run() {
             lan::lan_enable,
             lan::lan_pair_code,
             lan::lan_forget,
+            remote::remote_start,
+            remote::remote_stop,
+            remote::remote_state,
             study_commands::sermon_templates,
             study_commands::sermon_template_save,
             study_commands::sermon_template_delete,
@@ -366,6 +377,8 @@ pub fn run() {
             study_commands::export_study,
             study_commands::import_study,
             study_commands::passage_text,
+            browse_review::browse_review_load,
+            browse_review::browse_review_save,
             study_commands::save_study_sheet,
             study_commands::basket_list,
             study_commands::basket_add,

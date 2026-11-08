@@ -1,0 +1,61 @@
+/* Mother's Day: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Proverbs 31:28 (part) (BSB): “Her children rise up and call her blessed…” */
+.home-screen[data-occasion="mothers-day"], .pv[data-occasion="mothers-day"], .wordmark-art[data-wm="mothers-day"], .main-frame[data-reading-theme][data-occasion="mothers-day"] {
+  --wm-c1: #c2547a;
+  --wm-c2: #e58aa8;
+  --wm-c3: #4f9467;
+  --wm-c4: #e8a08a;
+  --wm-ink: #7a6070;
+  --wm-hi: #fffaf0;
+  --wm-deep: #7a2f4d;
+  --wm-warm: #a8486b;
+  --wm-loaf: #f7dbe3;
+  --occ-bg: linear-gradient(180deg,#fdeaf0 0%,#fbf2ee 55%,#f1f5ec 100%);
+  --occ-accent: #c2547a;
+  --occ-ring: rgba(194,84,122,.16);
+  --occ-line: #efd2dc;
+  --occ-hint: #a8486b;
+  --occ-verse: #7a2f4d;
+  --occ-fx: rgba(255,255,255,.5);
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, with love:";
+  --occ-verse-text: "“Her children rise up and call her blessed…”";
+  --occ-verse-ref: "Proverbs 31:28 (part) (BSB)";
+}
+.home-screen[data-occasion="mothers-day"][data-scheme="dark"], .pv[data-occasion="mothers-day"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="mothers-day"],
+:root[data-theme="dark"] .wordmark-art[data-wm="mothers-day"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="mothers-day"] {
+  --wm-c1: #e57fa2;
+  --wm-c2: #f2a9c0;
+  --wm-c3: #6fbf86;
+  --wm-c4: #f0b29e;
+  --wm-ink: #d9c6cf;
+  --wm-hi: #f4efe2;
+  --wm-deep: #7a2f4d;
+  --wm-warm: #e07aa0;
+  --wm-loaf: #f7dbe3;
+  --occ-bg: linear-gradient(180deg,#2b1a22 0%,#1d1a1b 55%,#17181a 100%);
+  --occ-accent: #e57fa2;
+  --occ-ring: rgba(229,127,162,.26);
+  --occ-line: #4a2f3a;
+  --occ-hint: #f0b1c8;
+  --occ-verse: #f8d6e2;
+  --occ-fx: rgba(255,255,255,.2);
+}
+
+.home-screen[data-occasion="mothers-day"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="mothers-day"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cpath d='M-6 20C54 14 104 42 154 100' fill='none' stroke='%234f9467' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M11.7 19.2Q19 17.7 19.9 10.4Q12.6 11.9 11.7 19.2ZM28.9 20.4Q28.4 27.3 35 29.4Q35.5 22.5 28.9 20.4ZM45.6 23.7Q53 23.9 55.6 17Q48.2 16.8 45.6 23.7ZM61.8 28.9Q59.7 35.5 65.7 38.9Q67.8 32.4 61.8 28.9ZM77.8 36Q84.9 37.9 89 31.7Q81.8 29.8 77.8 36ZM93.4 45.1Q90 51.1 95.1 55.7Q98.5 49.7 93.4 45.1ZM108.7 56Q115.4 59.2 120.5 53.9Q113.9 50.7 108.7 56ZM123.9 68.8Q119.6 74.2 123.9 79.6Q128.2 74.3 123.9 68.8ZM139 83.5Q145.1 87.6 151 83.1Q144.8 79 139 83.5Z' fill='%234f9467'/%3E%3Cpath d='M11.7 19.2Q12 26.1 18.8 27.3Q18.5 20.4 11.7 19.2ZM28.9 20.4Q36.2 19.8 38 12.7Q30.6 13.3 28.9 20.4ZM45.6 23.7Q44.2 30.5 50.6 33.2Q51.9 26.5 45.6 23.7ZM61.8 28.9Q69.1 30 72.5 23.4Q65.2 22.3 61.8 28.9ZM77.8 36Q75 42.3 80.5 46.4Q83.3 40.1 77.8 36ZM93.4 45.1Q100.3 47.7 104.9 41.9Q98 39.3 93.4 45.1ZM108.7 56Q104.8 61.7 109.5 66.8Q113.4 61.1 108.7 56ZM123.9 68.8Q130.3 72.5 135.9 67.6Q129.5 63.9 123.9 68.8ZM139 83.5Q134.3 88.6 138.2 94.3Q142.9 89.2 139 83.5Z' fill='%236bb283'/%3E%3Ccircle cx='22.1' cy='18.7' r='11' fill='%23c2547a'/%3E%3Cpath d='M22.1 18.7A1.1 1.1 0 0 1 24.3 18.7A2.2 2.2 0 0 1 19.9 18.7A3.3 3.3 0 0 1 26.5 18.7A4.6 4.6 0 0 1 17.2 18.7A6.1 6.1 0 0 1 29.3 18.7A7.5 7.5 0 0 1 14.4 18.7A8.8 8.8 0 0 1 32 18.7' fill='none' stroke='%23fff0f3' stroke-width='1' stroke-linecap='round' stroke-linejoin='round' opacity='.8'/%3E%3Cpath d='M54 36.9L49.5 29.1L53.4 27.1L54 20.6L58.2 23.9L61.8 18L65.5 23.9L69.6 20.6L70.3 27.1L74.2 29.1L69.6 36.9Z' fill='%23e58aa8' stroke='%23e58aa8' stroke-width='1' stroke-linejoin='round'/%3E%3Cpath d='M57.9 35.6L57.4 26.5M61.8 35.6V23.9M65.7 35.6L66.3 26.5' fill='none' stroke='%23a8486b' stroke-width='0.8' stroke-linecap='round' stroke-linejoin='round' opacity='.6'/%3E%3Cpath d='M56 36.9L57.3 42.1H66.4L67.7 36.9Z' fill='%234f9467'/%3E%3Ccircle cx='99.5' cy='47.2' r='9.5' fill='%23c2547a'/%3E%3Cpath d='M99.5 47.2A1 1 0 0 1 101.4 47.2A1.9 1.9 0 0 1 97.6 47.2A2.9 2.9 0 0 1 103.3 47.2A4 4 0 0 1 95.4 47.2A5.2 5.2 0 0 1 105.8 47.2A6.5 6.5 0 0 1 92.9 47.2A7.6 7.6 0 0 1 108.1 47.2' fill='none' stroke='%23fff0f3' stroke-width='1' stroke-linecap='round' stroke-linejoin='round' opacity='.8'/%3E%3Cpath d='M129.4 86.4L125.5 79.8L128.8 78.2L129.4 72.7L132.9 75.4L136 70.5L139.1 75.4L142.6 72.7L143.1 78.2L146.4 79.8L142.6 86.4Z' fill='%23e58aa8' stroke='%23e58aa8' stroke-width='0.9' stroke-linejoin='round'/%3E%3Cpath d='M132.7 85.3L132.2 77.6M136 85.3V75.4M139.3 85.3L139.7 77.6' fill='none' stroke='%23a8486b' stroke-width='0.8' stroke-linecap='round' stroke-linejoin='round' opacity='.6'/%3E%3Cpath d='M131 86.4L132.1 90.8H139.8L140.9 86.4Z' fill='%234f9467'/%3E%3Ccircle cx='45.3' cy='33.6' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='47.4' cy='35.2' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='46.6' cy='37.7' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='43.9' cy='37.7' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='43.1' cy='35.2' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='45.3' cy='35.9' r='1.2' fill='%23fff7ee'/%3E%3Ccircle cx='83.9' cy='48.4' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='86.1' cy='50' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='85.2' cy='52.5' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='82.5' cy='52.5' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='81.7' cy='50' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='83.9' cy='50.7' r='1.2' fill='%23fff7ee'/%3E%3Ccircle cx='120.9' cy='74.2' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='123' cy='75.8' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='122.2' cy='78.3' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='119.5' cy='78.3' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='118.7' cy='75.8' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='120.9' cy='76.5' r='1.2' fill='%23fff7ee'/%3E%3Cpath d='M40 68.8C29.6 62.8 33.6 55.2 40 60.4C46.4 55.2 50.4 62.8 40 68.8Z' fill='%23c2547a' opacity='.8'/%3E%3Cpath d='M112 15.6C104.2 11.1 107.2 5.4 112 9.3C116.8 5.4 119.8 11.1 112 15.6Z' fill='%23e58aa8'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Cpath d='M-6 20C54 14 104 42 154 100' fill='none' stroke='%234f9467' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M11.7 19.2Q19 17.7 19.9 10.4Q12.6 11.9 11.7 19.2ZM28.9 20.4Q28.4 27.3 35 29.4Q35.5 22.5 28.9 20.4ZM45.6 23.7Q53 23.9 55.6 17Q48.2 16.8 45.6 23.7ZM61.8 28.9Q59.7 35.5 65.7 38.9Q67.8 32.4 61.8 28.9ZM77.8 36Q84.9 37.9 89 31.7Q81.8 29.8 77.8 36ZM93.4 45.1Q90 51.1 95.1 55.7Q98.5 49.7 93.4 45.1ZM108.7 56Q115.4 59.2 120.5 53.9Q113.9 50.7 108.7 56ZM123.9 68.8Q119.6 74.2 123.9 79.6Q128.2 74.3 123.9 68.8ZM139 83.5Q145.1 87.6 151 83.1Q144.8 79 139 83.5Z' fill='%234f9467'/%3E%3Cpath d='M11.7 19.2Q12 26.1 18.8 27.3Q18.5 20.4 11.7 19.2ZM28.9 20.4Q36.2 19.8 38 12.7Q30.6 13.3 28.9 20.4ZM45.6 23.7Q44.2 30.5 50.6 33.2Q51.9 26.5 45.6 23.7ZM61.8 28.9Q69.1 30 72.5 23.4Q65.2 22.3 61.8 28.9ZM77.8 36Q75 42.3 80.5 46.4Q83.3 40.1 77.8 36ZM93.4 45.1Q100.3 47.7 104.9 41.9Q98 39.3 93.4 45.1ZM108.7 56Q104.8 61.7 109.5 66.8Q113.4 61.1 108.7 56ZM123.9 68.8Q130.3 72.5 135.9 67.6Q129.5 63.9 123.9 68.8ZM139 83.5Q134.3 88.6 138.2 94.3Q142.9 89.2 139 83.5Z' fill='%236bb283'/%3E%3Ccircle cx='22.1' cy='18.7' r='11' fill='%23c2547a'/%3E%3Cpath d='M22.1 18.7A1.1 1.1 0 0 1 24.3 18.7A2.2 2.2 0 0 1 19.9 18.7A3.3 3.3 0 0 1 26.5 18.7A4.6 4.6 0 0 1 17.2 18.7A6.1 6.1 0 0 1 29.3 18.7A7.5 7.5 0 0 1 14.4 18.7A8.8 8.8 0 0 1 32 18.7' fill='none' stroke='%23fff0f3' stroke-width='1' stroke-linecap='round' stroke-linejoin='round' opacity='.8'/%3E%3Cpath d='M54 36.9L49.5 29.1L53.4 27.1L54 20.6L58.2 23.9L61.8 18L65.5 23.9L69.6 20.6L70.3 27.1L74.2 29.1L69.6 36.9Z' fill='%23e58aa8' stroke='%23e58aa8' stroke-width='1' stroke-linejoin='round'/%3E%3Cpath d='M57.9 35.6L57.4 26.5M61.8 35.6V23.9M65.7 35.6L66.3 26.5' fill='none' stroke='%23a8486b' stroke-width='0.8' stroke-linecap='round' stroke-linejoin='round' opacity='.6'/%3E%3Cpath d='M56 36.9L57.3 42.1H66.4L67.7 36.9Z' fill='%234f9467'/%3E%3Ccircle cx='99.5' cy='47.2' r='9.5' fill='%23c2547a'/%3E%3Cpath d='M99.5 47.2A1 1 0 0 1 101.4 47.2A1.9 1.9 0 0 1 97.6 47.2A2.9 2.9 0 0 1 103.3 47.2A4 4 0 0 1 95.4 47.2A5.2 5.2 0 0 1 105.8 47.2A6.5 6.5 0 0 1 92.9 47.2A7.6 7.6 0 0 1 108.1 47.2' fill='none' stroke='%23fff0f3' stroke-width='1' stroke-linecap='round' stroke-linejoin='round' opacity='.8'/%3E%3Cpath d='M129.4 86.4L125.5 79.8L128.8 78.2L129.4 72.7L132.9 75.4L136 70.5L139.1 75.4L142.6 72.7L143.1 78.2L146.4 79.8L142.6 86.4Z' fill='%23e58aa8' stroke='%23e58aa8' stroke-width='0.9' stroke-linejoin='round'/%3E%3Cpath d='M132.7 85.3L132.2 77.6M136 85.3V75.4M139.3 85.3L139.7 77.6' fill='none' stroke='%23a8486b' stroke-width='0.8' stroke-linecap='round' stroke-linejoin='round' opacity='.6'/%3E%3Cpath d='M131 86.4L132.1 90.8H139.8L140.9 86.4Z' fill='%234f9467'/%3E%3Ccircle cx='45.3' cy='33.6' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='47.4' cy='35.2' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='46.6' cy='37.7' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='43.9' cy='37.7' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='43.1' cy='35.2' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='45.3' cy='35.9' r='1.2' fill='%23fff7ee'/%3E%3Ccircle cx='83.9' cy='48.4' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='86.1' cy='50' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='85.2' cy='52.5' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='82.5' cy='52.5' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='81.7' cy='50' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='83.9' cy='50.7' r='1.2' fill='%23fff7ee'/%3E%3Ccircle cx='120.9' cy='74.2' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='123' cy='75.8' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='122.2' cy='78.3' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='119.5' cy='78.3' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='118.7' cy='75.8' r='2.2' fill='%23f0b29e'/%3E%3Ccircle cx='120.9' cy='76.5' r='1.2' fill='%23fff7ee'/%3E%3Cpath d='M40 68.8C29.6 62.8 33.6 55.2 40 60.4C46.4 55.2 50.4 62.8 40 68.8Z' fill='%23c2547a' opacity='.8'/%3E%3Cpath d='M112 15.6C104.2 11.1 107.2 5.4 112 9.3C116.8 5.4 119.8 11.1 112 15.6Z' fill='%23e58aa8'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* a few petals drift down very slowly; still when motion is reduced */
+.home-screen[data-occasion="mothers-day"][data-screen="on"]::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Cpath d='M40 40C45.2 36.2 50.1 38.5 51.3 44.1C46.8 47.6 41.5 46.3 40 40Z' fill='%23f2a9c0'/%3E%3Cpath d='M160 90C163.8 95.2 161.5 100.1 155.9 101.3C152.4 96.8 153.7 91.5 160 90Z' fill='%23f2a9c0'/%3E%3Cpath d='M250 30C245.5 34.7 240.3 33.2 238.2 27.9C242 23.7 247.4 24.1 250 30Z' fill='%23f2a9c0'/%3E%3Cpath d='M90 200C96.5 200.4 98.7 205.4 96 210.4C90.3 210.2 87.1 205.8 90 200Z' fill='%23f2a9c0'/%3E%3Cpath d='M220 240C219.6 246.5 214.6 248.7 209.6 246C209.8 240.3 214.2 237.1 220 240Z' fill='%23f2a9c0'/%3E%3Cpath d='M20 150C13.7 148.5 12.4 143.2 15.9 138.7C21.5 139.9 23.8 144.8 20 150Z' fill='%23f2a9c0'/%3E%3C/svg%3E");
+  background-size: 300px 300px;
+  opacity: .42;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="mothers-day"][data-screen="on"]::after { animation: occ-petals 130s linear infinite; }
+}
+@keyframes occ-petals { to { background-position: 300px 300px; } }

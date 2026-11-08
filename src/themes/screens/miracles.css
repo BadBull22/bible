@@ -1,0 +1,56 @@
+.home-screen[data-occasion="miracles"], .pv[data-occasion="miracles"], .wordmark-art[data-wm="miracles"], .main-frame[data-reading-theme][data-occasion="miracles"] {
+  --wm-c1: #3558b8;
+  --wm-c2: #cf8a0c;
+  --wm-c3: #1f9aa8;
+  --wm-c4: #7a4fb5;
+  --wm-ink: #5b5f78;
+  --wm-hi: #fffaf0;
+  --wm-deep: #1e2b55;
+  --wm-warm: #9a5f14;
+  --wm-loaf: #e6b566;
+  --occ-bg: linear-gradient(180deg,#eceffb 0%,#f6f4f2 60%,#faf6ea 100%);
+  --occ-accent: #3558b8;
+  --occ-ring: rgba(53,88,184,.18);
+  --occ-line: #d2d9ee;
+  --occ-hint: #3d4f93;
+  --occ-verse: #2a3a78;
+  --occ-fx: rgba(207,138,12,.12);
+}
+.home-screen[data-occasion="miracles"][data-scheme="dark"], .pv[data-occasion="miracles"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="miracles"],
+:root[data-theme="dark"] .wordmark-art[data-wm="miracles"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="miracles"] {
+  --wm-c1: #7894e8;
+  --wm-c2: #e6a82a;
+  --wm-c3: #34b8c4;
+  --wm-c4: #a07fe0;
+  --wm-ink: #cfd3e6;
+  --wm-hi: #f4efe2;
+  --wm-deep: #1e2b55;
+  --wm-warm: #c98a3a;
+  --wm-loaf: #e6b566;
+  --occ-bg: linear-gradient(180deg,#151a38 0%,#16192c 58%,#17181c 100%);
+  --occ-accent: #7894e8;
+  --occ-ring: rgba(120,148,232,.3);
+  --occ-line: #2b3464;
+  --occ-hint: #b0c0f3;
+  --occ-verse: #d4dcfa;
+  --occ-fx: rgba(230,168,42,.17);
+}
+
+.home-screen[data-occasion="miracles"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="miracles"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 120'%3E%3Cpath d='M30 15Q32.3 25.7 43 28Q32.3 30.3 30 41Q27.7 30.3 17 28Q27.7 25.7 30 15Z' fill='%23cf8a0c'/%3E%3Cpath d='M84 9Q85.3 14.7 91 16Q85.3 17.3 84 23Q82.7 17.3 77 16Q82.7 14.7 84 9Z' fill='%23cf8a0c'/%3E%3Cpath d='M62 54Q63.4 60.6 70 62Q63.4 63.4 62 70Q60.6 63.4 54 62Q60.6 60.6 62 54Z' fill='%23cf8a0c'/%3E%3Cpath d='M118 40.5Q119 45 123.5 46Q119 47 118 51.5Q117 47 112.5 46Q117 45 118 40.5Z' fill='%23cf8a0c'/%3E%3Cpath d='M14 73Q14.9 77.1 19 78Q14.9 78.9 14 83Q13.1 78.9 9 78Q13.1 77.1 14 73Z' fill='%23cf8a0c'/%3E%3Cpath d='M104 89.5Q104.8 93.2 108.5 94Q104.8 94.8 104 98.5Q103.2 94.8 99.5 94Q103.2 93.2 104 89.5Z' fill='%23cf8a0c'/%3E%3Ccircle cx='56' cy='30' r='1.7' fill='%23cf8a0c'/%3E%3Ccircle cx='100' cy='28' r='1.7' fill='%23cf8a0c'/%3E%3Ccircle cx='40' cy='90' r='1.7' fill='%23cf8a0c'/%3E%3Ccircle cx='132' cy='72' r='1.7' fill='%23cf8a0c'/%3E%3Ccircle cx='74' cy='100' r='1.7' fill='%23cf8a0c'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 120'%3E%3Cg transform='translate(150 0) scale(-1 1)'%3E%3Cpath d='M30 15Q32.3 25.7 43 28Q32.3 30.3 30 41Q27.7 30.3 17 28Q27.7 25.7 30 15Z' fill='%23cf8a0c'/%3E%3Cpath d='M84 9Q85.3 14.7 91 16Q85.3 17.3 84 23Q82.7 17.3 77 16Q82.7 14.7 84 9Z' fill='%23cf8a0c'/%3E%3Cpath d='M62 54Q63.4 60.6 70 62Q63.4 63.4 62 70Q60.6 63.4 54 62Q60.6 60.6 62 54Z' fill='%23cf8a0c'/%3E%3Cpath d='M118 40.5Q119 45 123.5 46Q119 47 118 51.5Q117 47 112.5 46Q117 45 118 40.5Z' fill='%23cf8a0c'/%3E%3Cpath d='M14 73Q14.9 77.1 19 78Q14.9 78.9 14 83Q13.1 78.9 9 78Q13.1 77.1 14 73Z' fill='%23cf8a0c'/%3E%3Cpath d='M104 89.5Q104.8 93.2 108.5 94Q104.8 94.8 104 98.5Q103.2 94.8 99.5 94Q103.2 93.2 104 89.5Z' fill='%23cf8a0c'/%3E%3Ccircle cx='56' cy='30' r='1.7' fill='%23cf8a0c'/%3E%3Ccircle cx='100' cy='28' r='1.7' fill='%23cf8a0c'/%3E%3Ccircle cx='40' cy='90' r='1.7' fill='%23cf8a0c'/%3E%3Ccircle cx='132' cy='72' r='1.7' fill='%23cf8a0c'/%3E%3Ccircle cx='74' cy='100' r='1.7' fill='%23cf8a0c'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 150px auto; background-repeat: no-repeat;
+}
+/* faint rays of light turning very slowly behind everything; fixed when motion is reduced */
+.home-screen[data-occasion="miracles"][data-screen="on"]::after {
+  inset: -70%;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, var(--occ-fx) 0deg 3deg, transparent 3deg 15deg);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0 16%, #000 34%, transparent 62%);
+          mask-image: radial-gradient(circle at 50% 50%, transparent 0 16%, #000 34%, transparent 62%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="miracles"][data-screen="on"]::after { animation: occ-rays 240s linear infinite; }
+}
+@keyframes occ-rays { to { transform: rotate(360deg); } }

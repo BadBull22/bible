@@ -11,13 +11,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { availableMonitors, currentMonitor, getCurrentWindow, type Monitor } from "@tauri-apps/api/window";
-import type { BookInfo, Version } from "../api";
+import { api, type BookInfo, type RemoteInfo, type Version } from "../api";
 import type { SlideSpec } from "../sermonOutputs";
 import { kindOfName, mediaUrl, youtubeId } from "../sermonMedia";
 import { groupsOf, slideForLetter, STRIP_LABEL, stripKind } from "../presentGroups";
 import { targetOf } from "../countdown";
 import { KIND_NAME, PresenterDeck } from "../service";
 import { LiveAdd } from "./LiveAdd";
+import { PhoneRemote } from "./PhoneRemote";
 import { Preview } from "./SlidesEditor";
 
 /** Whether a video or music clip on the slide is playing. */
@@ -314,6 +315,11 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
   const [countdown, setCountdown] = useState<number | null>(null);
   const [askCount, setAskCount] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  // the phone remote: its window, and what it is while on (the address and QR code)
+  const [remoteOpen, setRemoteOpen] = useState(false);
+  const [remote, setRemote] = useState<RemoteInfo | null>(null);
+  const [remoteBusy, setRemoteBusy] = useState(false);
+  const [remoteError, setRemoteError] = useState<string | null>(null);
   const [view, setView] = useState<"grid" | "list">(() => {
     try {
       return JSON.parse(localStorage.getItem(VIEW_KEY) ?? "{}").view === "list" ? "list" : "grid";
@@ -505,6 +511,8 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
     window.addEventListener("keydown", down);
     const offs = [
       listen<string>("show:key", (e) => !addingNow.current && key(e.payload)),
+      // the phone's buttons arrive as the same keys (only while the remote is on, the server sends none otherwise)
+      listen<string>("remote:key", (e) => !addingNow.current && key(e.payload)),
       listen("show:ended", () => setClip("stopped")),
       listen("show:blocked", () => setBlocked(true)),
       listen<{ t: number; d: number }>("show:time", (e) => setTime(e.payload)),
@@ -527,6 +535,41 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
     const off = listen<string>("show:ready", (e) => void emitTo(e.payload, "show:state", latest.current));
     return () => void off.then((un) => un());
   }, []);
+
+  // what the phone shows: this slide and the next, the notes, and the parts of the show (sent on every change while the remote is on)
+  const brief = (s: SlideSpec | undefined) => (s ? { title: (s.kind === "image" && !s.title ? "(picture)" : s.title).slice(0, 140), body: s.body.slice(0, 500) } : null);
+  const remoteJson = JSON.stringify({
+    part: deck?.title || (deck ? KIND_NAME[deck.kind] : ""),
+    index,
+    total: slides.length,
+    black,
+    clear,
+    now: brief(cur),
+    next: brief(next),
+    notes: (cur?.notes ?? "").slice(0, 800),
+    parts: decks.map((d) => KIND_NAME[d.kind]),
+    active,
+  });
+  useEffect(() => {
+    if (remote) void api.remoteState(remoteJson).catch(() => undefined);
+  }, [remote, remoteJson]);
+  // the remote stops with the show
+  useEffect(() => () => void api.remoteStop().catch(() => undefined), []);
+  const startRemote = async () => {
+    setRemoteBusy(true);
+    setRemoteError(null);
+    try {
+      setRemote(await api.remoteStart());
+    } catch (e) {
+      setRemoteError(String(e));
+    } finally {
+      setRemoteBusy(false);
+    }
+  };
+  const stopRemote = () => {
+    void api.remoteStop().catch(() => undefined);
+    setRemote(null);
+  };
 
   // the place is kept, so a show stopped by accident can be taken up again
   // (not while the offer is still showing, or an offer ignored would wipe the place it was offering)
@@ -644,6 +687,9 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
           >
             + Add
           </button>
+          <button className={"outline-btn" + (remote ? " on" : "")} onClick={() => setRemoteOpen(true)} title="Work the slides from your phone, on the same Wi-Fi">
+            {remote ? "Phone remote: on" : "Phone remote"}
+          </button>
           <button className={"outline-btn" + (clear ? " on" : "")} onClick={() => setClear((c) => !c)} title="Take the words off the screen and leave the background (Esc). The next slide brings them back.">
             {clear ? "Words back" : "Clear"}
           </button>
@@ -656,6 +702,7 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
         </span>
       </header>
       {error && <p className="error pr-msg">{error}</p>}
+      {remoteOpen && <PhoneRemote info={remote} busy={remoteBusy} error={remoteError} onStart={() => void startRemote()} onStop={stopRemote} onClose={() => setRemoteOpen(false)} />}
       {mode === "rehearsal" && (
         <p className="pr-msg pr-rehearsal">
           <strong>Rehearsal.</strong> Only one screen was found, so the preview on the right is what the room would see. Connect the projector (Windows key + P, then Extend), then{" "}

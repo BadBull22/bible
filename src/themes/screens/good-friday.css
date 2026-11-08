@@ -1,0 +1,51 @@
+/* Good Friday: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Isaiah 53:5 (BSB): “But He was pierced for our transgressions, He was crushed for our iniquities; the punishment that brought us peace was upon Him, and by His stripes we are healed.” */
+.home-screen[data-occasion="good-friday"], .pv[data-occasion="good-friday"], .wordmark-art[data-wm="good-friday"], .main-frame[data-reading-theme][data-occasion="good-friday"] {
+  --wm-c1: #3c2f4e;
+  --wm-c2: #5a5468;
+  --wm-c3: #a8872f;
+  --wm-c4: #2a2830;
+  --wm-ink: #6b6577;
+  --wm-hi: #efeaf2;
+  --wm-deep: #26222e;
+  --wm-warm: #6b5a46;
+  --wm-loaf: #bdb6c4;
+  --occ-bg: linear-gradient(180deg,#e6e2ea 0%,#efecef 60%,#f3f0ed 100%);
+  --occ-accent: #3c2f4e;
+  --occ-ring: rgba(60,47,78,.2);
+  --occ-line: #d0cad8;
+  --occ-hint: #55486a;
+  --occ-verse: #3c2f4e;
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, in quiet:";
+  --occ-verse-text: "“But He was pierced for our transgressions, He was crushed for our iniquities; the punishment that brought us peace was upon Him, and by His stripes we are healed.”";
+  --occ-verse-ref: "Isaiah 53:5 (BSB)";
+}
+.home-screen[data-occasion="good-friday"][data-scheme="dark"], .pv[data-occasion="good-friday"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="good-friday"],
+:root[data-theme="dark"] .wordmark-art[data-wm="good-friday"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="good-friday"] {
+  --wm-c1: #b3a6c8;
+  --wm-c2: #9b95a8;
+  --wm-c3: #c9a84a;
+  --wm-c4: #d6d2dc;
+  --wm-ink: #b8b4c4;
+  --wm-hi: #e8e3ee;
+  --wm-deep: #26222e;
+  --wm-warm: #9c8668;
+  --wm-loaf: #bdb6c4;
+  --occ-bg: linear-gradient(180deg,#131119 0%,#131218 60%,#101013 100%);
+  --occ-accent: #b3a6c8;
+  --occ-ring: rgba(179,166,200,.28);
+  --occ-line: #2b2833;
+  --occ-hint: #b8b0c8;
+  --occ-verse: #d8d1e4;
+}
+
+.home-screen[data-occasion="good-friday"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="good-friday"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg opacity='.5'%3E%3Cpath d='M-4 140V134C30 120 70 110 112 118C140 123 165 131 194 138V140Z' fill='%237d7590'/%3E%3Cpath d='M98.2 78H101.8V86H108.5V89.6H101.8V116H98.2V89.6H91.5V86H98.2Z' fill='%234b4460'/%3E%3Cpath d='M80.6 94H83.4V100H88.2V102.8H83.4V118H80.6V102.8H75.8V100H80.6Z' fill='%234b4460'/%3E%3Cpath d='M116.6 97H119.4V103H124.2V105.8H119.4V124H116.6V105.8H111.8V103H116.6Z' fill='%234b4460'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Cg opacity='.5'%3E%3Cpath d='M-4 140V134C30 120 70 110 112 118C140 123 165 131 194 138V140Z' fill='%237d7590'/%3E%3Cpath d='M98.2 78H101.8V86H108.5V89.6H101.8V116H98.2V89.6H91.5V86H98.2Z' fill='%234b4460'/%3E%3Cpath d='M80.6 94H83.4V100H88.2V102.8H83.4V118H80.6V102.8H75.8V100H80.6Z' fill='%234b4460'/%3E%3Cpath d='M116.6 97H119.4V103H124.2V105.8H119.4V124H116.6V105.8H111.8V103H116.6Z' fill='%234b4460'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  background-position: left bottom, right bottom; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* no ::after layer and no animation: this package is kept still on purpose */
+.home-screen[data-occasion="good-friday"][data-screen="on"]::after { content: none; }

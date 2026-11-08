@@ -1,0 +1,61 @@
+/* New Year: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Lamentations 3:22-23 (BSB): “Because of the loving devotion of the LORD we are not consumed, for His mercies never fail. They are new every morning; great is Your faithfulness!” */
+.home-screen[data-occasion="new-year"], .pv[data-occasion="new-year"], .wordmark-art[data-wm="new-year"], .main-frame[data-reading-theme][data-occasion="new-year"] {
+  --wm-c1: #3a5ab0;
+  --wm-c2: #e0902a;
+  --wm-c3: #d9b030;
+  --wm-c4: #8a62b8;
+  --wm-ink: #5b5f78;
+  --wm-hi: #fffaf0;
+  --wm-deep: #1d2a5c;
+  --wm-warm: #c8643a;
+  --wm-loaf: #f8dca0;
+  --occ-bg: linear-gradient(0deg,#ffe8c0 0%,#f3eefa 42%,#e4eaf9 100%);
+  --occ-accent: #3a5ab0;
+  --occ-ring: rgba(58,90,176,.18);
+  --occ-line: #d1d8ee;
+  --occ-hint: #3b57a3;
+  --occ-verse: #2a3f85;
+  --occ-fx: rgba(255,196,80,.9);
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, for a new beginning:";
+  --occ-verse-text: "“Because of the loving devotion of the LORD we are not consumed, for His mercies never fail. They are new every morning; great is Your faithfulness!”";
+  --occ-verse-ref: "Lamentations 3:22-23 (BSB)";
+}
+.home-screen[data-occasion="new-year"][data-scheme="dark"], .pv[data-occasion="new-year"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="new-year"],
+:root[data-theme="dark"] .wordmark-art[data-wm="new-year"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="new-year"] {
+  --wm-c1: #7a98e8;
+  --wm-c2: #f0a43e;
+  --wm-c3: #f0cc4a;
+  --wm-c4: #b794e0;
+  --wm-ink: #cfd3e6;
+  --wm-hi: #f4efe2;
+  --wm-deep: #1d2a5c;
+  --wm-warm: #e88a5a;
+  --wm-loaf: #f8dca0;
+  --occ-bg: linear-gradient(0deg,#38281a 0%,#1d1f3a 45%,#12162e 100%);
+  --occ-accent: #7a98e8;
+  --occ-ring: rgba(122,152,232,.28);
+  --occ-line: #2b3560;
+  --occ-hint: #b6c6f3;
+  --occ-verse: #dbe3fa;
+  --occ-fx: rgba(255,214,110,.95);
+}
+
+.home-screen[data-occasion="new-year"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="new-year"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cpath d='M46 0V38' fill='none' stroke='%23b89a3a' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M46 36.6C41.1 36.6 38.2 41 38.2 46.8C38.2 54 33.7 58.4 30.8 62.7H61.2C58.3 58.4 53.8 54 53.8 46.8C53.8 41 50.9 36.6 46 36.6Z' fill='%23d9b030'/%3E%3Ccircle cx='46' cy='65.9' r='3.3' fill='%23c8643a'/%3E%3Ccircle cx='46' cy='35.7' r='2.5' fill='%23d9b030'/%3E%3Cpath d='M104 19Q105.5 24.5 111 26Q105.5 27.5 104 33Q102.5 27.5 97 26Q102.5 24.5 104 19Z' fill='%23d9b030'/%3E%3Cpath d='M138 60Q138.9 63.1 142 64Q138.9 64.9 138 68Q137.1 64.9 134 64Q137.1 63.1 138 60Z' fill='%238a62b8'/%3E%3Cpath d='M20 92Q20.9 95.1 24 96Q20.9 96.9 20 100Q19.1 96.9 16 96Q19.1 95.1 20 92Z' fill='%233a5ab0'/%3E%3Cpath d='M88 74.6Q88.7 77.3 91.4 78Q88.7 78.7 88 81.4Q87.3 78.7 84.6 78Q87.3 77.3 88 74.6Z' fill='%23e0902a'/%3E%3Cpath d='M160 18.6Q160.7 21.3 163.4 22Q160.7 22.7 160 25.4Q159.3 22.7 156.6 22Q159.3 21.3 160 18.6Z' fill='%233a5ab0'/%3E%3Cpath d='M120 101Q120.7 103.3 123 104Q120.7 104.7 120 107Q119.3 104.7 117 104Q119.3 103.3 120 101Z' fill='%23d9b030'/%3E%3Ccircle cx='76' cy='12' r='1.6' fill='%238a62b8'/%3E%3Ccircle cx='150' cy='48' r='1.6' fill='%23e0902a'/%3E%3Ccircle cx='40' cy='110' r='1.6' fill='%23d9b030'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Cpath d='M46 0V38' fill='none' stroke='%23b89a3a' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M46 36.6C41.1 36.6 38.2 41 38.2 46.8C38.2 54 33.7 58.4 30.8 62.7H61.2C58.3 58.4 53.8 54 53.8 46.8C53.8 41 50.9 36.6 46 36.6Z' fill='%23d9b030'/%3E%3Ccircle cx='46' cy='65.9' r='3.3' fill='%23c8643a'/%3E%3Ccircle cx='46' cy='35.7' r='2.5' fill='%23d9b030'/%3E%3Cpath d='M104 19Q105.5 24.5 111 26Q105.5 27.5 104 33Q102.5 27.5 97 26Q102.5 24.5 104 19Z' fill='%23d9b030'/%3E%3Cpath d='M138 60Q138.9 63.1 142 64Q138.9 64.9 138 68Q137.1 64.9 134 64Q137.1 63.1 138 60Z' fill='%238a62b8'/%3E%3Cpath d='M20 92Q20.9 95.1 24 96Q20.9 96.9 20 100Q19.1 96.9 16 96Q19.1 95.1 20 92Z' fill='%233a5ab0'/%3E%3Cpath d='M88 74.6Q88.7 77.3 91.4 78Q88.7 78.7 88 81.4Q87.3 78.7 84.6 78Q87.3 77.3 88 74.6Z' fill='%23e0902a'/%3E%3Cpath d='M160 18.6Q160.7 21.3 163.4 22Q160.7 22.7 160 25.4Q159.3 22.7 156.6 22Q159.3 21.3 160 18.6Z' fill='%233a5ab0'/%3E%3Cpath d='M120 101Q120.7 103.3 123 104Q120.7 104.7 120 107Q119.3 104.7 117 104Q119.3 103.3 120 101Z' fill='%23d9b030'/%3E%3Ccircle cx='76' cy='12' r='1.6' fill='%238a62b8'/%3E%3Ccircle cx='150' cy='48' r='1.6' fill='%23e0902a'/%3E%3Ccircle cx='40' cy='110' r='1.6' fill='%23d9b030'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* gentle sparkle: the stars brighten and fade; static when motion is reduced */
+.home-screen[data-occasion="new-year"][data-screen="on"]::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 280'%3E%3Cpath d='M40 44Q41.3 48.7 46 50Q41.3 51.3 40 56Q38.7 51.3 34 50Q38.7 48.7 40 44Z' fill='%23e0a030'/%3E%3Cpath d='M190 86Q190.9 89.1 194 90Q190.9 90.9 190 94Q189.1 90.9 186 90Q189.1 89.1 190 86Z' fill='%238a62b8'/%3E%3Cpath d='M110 195Q111.1 198.9 115 200Q111.1 201.1 110 205Q108.9 201.1 105 200Q108.9 198.9 110 195Z' fill='%23e0a030'/%3E%3Cpath d='M230 226.6Q230.7 229.3 233.4 230Q230.7 230.7 230 233.4Q229.3 230.7 226.6 230Q229.3 229.3 230 226.6Z' fill='%233a5ab0'/%3E%3Cpath d='M60 146.6Q60.7 149.3 63.4 150Q60.7 150.7 60 153.4Q59.3 150.7 56.6 150Q59.3 149.3 60 146.6Z' fill='%238a62b8'/%3E%3Cpath d='M240 17Q240.7 19.3 243 20Q240.7 20.7 240 23Q239.3 20.7 237 20Q239.3 19.3 240 17Z' fill='%23e0a030'/%3E%3C/svg%3E");
+  background-size: 280px 280px;
+  opacity: .55;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="new-year"][data-screen="on"]::after { animation: occ-sparkle 6s ease-in-out infinite alternate; }
+}
+@keyframes occ-sparkle { from { opacity: .2; } to { opacity: .85; } }

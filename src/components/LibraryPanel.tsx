@@ -400,9 +400,12 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
                     </span>
                   </div>
                   <div className="library-meta muted">
-                    {[m.name, m.language, countOf(m.entries, m.kind)].filter(Boolean).join(" · ")}
+                    {[m.name, m.language, countOf(m.entries, m.kind), m.strongs ? "Strong's numbers" : ""].filter(Boolean).join(" · ")}
                     {m.licence ? ` · ${m.licence}` : ""}
                   </div>
+                  {m.strongs_missing && (
+                    <p className="library-meta muted">Has Strong's numbers, but they were not kept when it was added. Remove it and add it again to make its words clickable.</p>
+                  )}
                   {errors[m.name] && <p className="status-error">{errors[m.name]}</p>}
                 </li>
               ))}

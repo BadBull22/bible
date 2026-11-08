@@ -7,6 +7,10 @@ import { Sidebar } from "./components/Sidebar";
 import { ChapterView } from "./components/ChapterView";
 import { HomeScreen } from "./components/HomeScreen";
 import { AuthorsPanel } from "./components/AuthorsPanel";
+import { BrowsePanel } from "./components/BrowsePanel";
+import { printBrowsePage } from "./browse/printBridge";
+import { effectiveLook, useThemeState } from "./themes/themeStore";
+import type { BrowseKind } from "./browse/types";
 import { WordStudyPanel } from "./components/WordStudyPanel";
 import { ParallelPanel } from "./components/ParallelPanel";
 import { SearchPanel } from "./components/SearchPanel";
@@ -46,7 +50,8 @@ import { chapterAnnouncement, chunkText, LISTEN_EVENT, LISTEN_FINISHED_EVENT, LI
 import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
 import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs, watchSystemTheme } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { SheetIcon, BackIcon, BasketIcon, DictionaryIcon, InterlinearIcon, LibraryIcon, PictureIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
+import type { ShortcutTarget } from "./shortcuts";
+import { SheetIcon, BackIcon, BasketIcon, BookIcon, TagIcon, DictionaryIcon, InterlinearIcon, LibraryIcon, PictureIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import { TopMenu } from "./components/TopMenu";
 import "./App.css";
 
@@ -73,7 +78,7 @@ type SidePanel =
   | { kind: "xref"; book: string; chapter: number; verse: number }
   | { kind: "parallel"; book: string; chapter: number; verse: number }
   | { kind: "search"; initialQuery?: string }
-  | { kind: "settings"; focus?: "online" }
+  | { kind: "settings"; focus?: "online" | "appearance" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
   | { kind: "map"; atlas?: boolean }
@@ -92,6 +97,7 @@ type SidePanel =
   | { kind: "original"; strongs?: string }
   | { kind: "ai"; question?: string; fresh?: boolean }
   | { kind: "authors" }
+  | { kind: "browse"; tab?: BrowseKind; page?: string }
   | null;
 
 const NO_MARKS: ChapterMarks = { bookmarks: [], highlights: [], notes: [], note_spans: [] };
@@ -211,6 +217,10 @@ function App() {
   // The app opens on a search prompt instead of straight into Genesis 1 -- this flips to
   // false the moment the reader picks somewhere to go, and never flips back this session.
   const [homeActive, setHomeActive] = useState(true);
+  // the theme's background behind the Bible text, when asked for in Settings (only while a Bible chapter is on screen)
+  const themeState = useThemeState();
+  const readingLook = effectiveLook(themeState);
+  const readingTheme = !homeActive && !readingBook && themeState.reading !== "off" && readingLook.screenLook ? themeState.reading : undefined;
   // Remember where the reader is, once they have gone somewhere (not the Genesis 1 the app starts with).
   useEffect(() => {
     if (homeActive) return;
@@ -891,6 +901,28 @@ function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // everything a menu opens, offered as shortcuts on the opening screen (the reader places up to six; they replace the default tiles)
+  const homeShortcutTargets: ShortcutTarget[] = [
+    { id: "study", group: "Study", label: "My Study", sub: "Notes, highlights, bookmarks and plans", icon: <NotebookIcon size={22} />, onOpen: () => setPanel({ kind: "study" }) },
+    { id: "plans", group: "Study", label: "Reading plans", sub: "Today's reading and your progress", icon: <NotebookIcon size={22} />, onOpen: () => setPanel({ kind: "study", tab: "plans" }) },
+    { id: "service", group: "Study", label: "Sunday service", sub: "Songs, slides, notices and the bulletin", icon: <SheetIcon size={22} />, onOpen: () => { setSermonOpen(undefined); setReadingBook(SERVICE); } },
+    { id: "sermon", group: "Study", label: "Sermon builder", sub: "Prepare a message step by step", icon: <SheetIcon size={22} />, onOpen: () => { setSermonOpen(undefined); setReadingBook(SERMON_BUILDER); } },
+    { id: "basket", group: "Study", label: "Basket", sub: "Verses and notes you have gathered", icon: <BasketIcon size={22} />, onOpen: () => setPanel({ kind: "basket" }) },
+    { id: "library", group: "Study", label: "Library", sub: "Add Bibles, books and maps", icon: <LibraryIcon size={22} />, onOpen: () => setPanel({ kind: "library" }) },
+    { id: "entities", group: "Reference", label: "People & Places", sub: "Who and where, with the Bible's own text", icon: <UsersIcon size={22} />, onOpen: () => setPanel({ kind: "entities" }) },
+    { id: "firsts", group: "Reference", label: "Firsts & Milestones", sub: "Firsts, facts, promises and prophecies", icon: <StarIcon size={22} />, onOpen: () => setPanel({ kind: "firsts" }) },
+    { id: "genealogy", group: "Reference", label: "Genealogies", sub: "Family lines from Adam to Jesus", icon: <TreeIcon size={22} />, onOpen: () => setPanel({ kind: "genealogy" }) },
+    { id: "browse-stories", group: "Explore", label: "Bible stories", sub: "Short retellings with the passages to read", icon: <BookIcon size={22} />, onOpen: () => setPanel({ kind: "browse", tab: "stories" }) },
+    { id: "browse-topics", group: "Explore", label: "Verses for…", sub: "Passages for fear, grief, hope and more", icon: <TagIcon size={22} />, onOpen: () => setPanel({ kind: "browse", tab: "topics" }) },
+    { id: "browse-children", group: "Explore", label: "For children", sub: "Stories, memory verses and questions", icon: <StarIcon size={22} />, onOpen: () => setPanel({ kind: "browse", tab: "children" }) },
+    { id: "map", group: "Explore", label: "Map", sub: "Interactive map, Bible maps and your atlas", icon: <MapIcon size={22} />, onOpen: () => setPanel({ kind: "map" }) },
+    { id: "timeline", group: "Explore", label: "Timeline", sub: "Lifespans, events and the Adams chart", icon: <TimelineIcon size={22} />, onOpen: () => setPanel({ kind: "timeline" }) },
+    { id: "dictionary", group: "Explore", label: "Dictionary", sub: "Easton, Smith, Nave and Torrey", icon: <DictionaryIcon size={22} />, onOpen: () => setPanel({ kind: "dictionary" }) },
+    { id: "pictures", group: "Explore", label: "Pictures", sub: "Paintings and engravings for passages", icon: <PictureIcon size={22} />, onOpen: () => setPanel({ kind: "pictures" }) },
+    { id: "original", group: "Explore", label: "Hebrew & Greek search", sub: "Search the original words", icon: <InterlinearIcon size={22} />, onOpen: () => setPanel({ kind: "original" }) },
+    { id: "settings", group: "App", label: "Settings", sub: "Appearance, reading, voice and backup", icon: <SettingsIcon size={22} />, onOpen: () => setPanel({ kind: "settings" }) },
+  ];
+
   return (
     <>
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
@@ -950,6 +982,7 @@ function App() {
                 .map((v) => (
                   <option key={v.code} value={v.code}>
                     {v.code} — {v.name}
+                    {v.has_strongs ? " · Strong's" : ""}
                   </option>
                 ))}
             </select>
@@ -1039,6 +1072,9 @@ function App() {
             label="Explore"
             icon={<MapIcon size={15} />}
             items={[
+              { key: "browse-stories", label: "Bible stories", icon: <BookIcon size={14} />, onClick: () => setPanel({ kind: "browse", tab: "stories" }) },
+              { key: "browse-topics", label: "Verses for…", icon: <TagIcon size={14} />, onClick: () => setPanel({ kind: "browse", tab: "topics" }) },
+              { key: "browse-children", label: "For children", icon: <StarIcon size={14} />, onClick: () => setPanel({ kind: "browse", tab: "children" }) },
               { key: "map", label: "Map", icon: <MapIcon size={14} />, onClick: () => setPanel({ kind: "map" }) },
               { key: "timeline", label: "Timeline", icon: <TimelineIcon size={14} />, onClick: () => setPanel({ kind: "timeline" }) },
               { key: "dictionary", label: "Dictionary", icon: <DictionaryIcon size={14} />, onClick: () => setPanel({ kind: "dictionary" }) },
@@ -1046,7 +1082,7 @@ function App() {
               { key: "original", label: "Hebrew & Greek search", icon: <InterlinearIcon size={14} />, onClick: () => setPanel({ kind: "original" }) },
             ]}
           />
-          <button className="text-btn" onClick={() => { document.body.classList.remove("printing-sheet"); window.print(); }} title="Print this view" aria-label="Print">
+          <button className="text-btn" onClick={() => { if (printBrowsePage()) return; document.body.classList.remove("printing-sheet"); window.print(); }} title="Print this view" aria-label="Print">
             <PrintIcon size={15} /> <span className="label">Print</span>
           </button>
           <button className="text-btn" onClick={() => setFocus(true)} disabled={homeActive} title="Focus mode: full screen, just the text (F11)" aria-label="Focus mode">
@@ -1084,6 +1120,8 @@ function App() {
               />
             </>
           )}
+          {/* the frame does not scroll: it carries the theme's background and corner pictures behind the text, which stay in place while the pane inside scrolls */}
+          <div className="main-frame" data-reading-theme={readingTheme} data-occasion={readingTheme ? readingLook.screenLook?.slug : undefined}>
           <main className={"main-pane" + (readingBook === SERMON_BUILDER || readingBook === SERVICE ? " builder-pane" : "")}>
             {readingBook === SERVICE ? (
               <ServiceHome
@@ -1118,6 +1156,9 @@ function App() {
                 onOpenPlans={() => setPanel({ kind: "study", tab: "plans" })}
                 onOpenDictionary={(q) => setPanel({ kind: "dictionary", initialQuery: q })}
                 onOpenAuthors={() => setPanel({ kind: "authors" })}
+                onOpenLook={() => setPanel({ kind: "settings", focus: "appearance" })}
+                onOpenBrowse={(tab, page) => setPanel({ kind: "browse", tab, page })}
+                shortcutTargets={homeShortcutTargets}
                 resume={lastPlace}
                 versionCode={versionCode}
               />
@@ -1185,6 +1226,7 @@ function App() {
             />
             <UpdateBanner />
           </main>
+          </div>
           {panel && !focusMode && (
             <ResizeHandle
               side="right"
@@ -1255,6 +1297,7 @@ function App() {
               }}
               onOpenDictionary={(q) => setPanel({ kind: "dictionary", initialQuery: q })}
               onAskAssistant={aiOn ? (q) => setPanel({ kind: "ai", question: q }) : undefined}
+              onOpenBrowse={(kind, id) => setPanel({ kind: "browse", tab: kind, page: id })}
               onClose={() => setPanel(null)}
             />
           )}
@@ -1345,6 +1388,20 @@ function App() {
           )}
           {panel?.kind === "basket" && <BasketPanel onJump={jumpTo} onClose={() => setPanel(null)} />}
           {panel?.kind === "authors" && <AuthorsPanel onJump={jumpTo} onClose={() => setPanel(null)} />}
+          {panel?.kind === "browse" && (
+            <BrowsePanel
+              key={`${panel.tab ?? ""}:${panel.page ?? ""}`}
+              initial={{ tab: panel.tab, page: panel.page }}
+              versionCode={versionCode}
+              onJump={jumpTo}
+              onOpenDictionary={(q) => setPanel({ kind: "dictionary", initialQuery: q })}
+              onOpenPlace={(id) => {
+                setFocusedPlaceId(id);
+                setPanel({ kind: "map" });
+              }}
+              onClose={() => setPanel(null)}
+            />
+          )}
           {panel?.kind === "library" && (
             <LibraryPanel
               key={`${panel.tab ?? ""}:${panel.only ?? ""}`}
@@ -1408,7 +1465,7 @@ function App() {
 /** Mirrors the CSS defaults (.side-panel / .side-panel.wide) so the handle's first drag
  * starts from the width actually on screen. */
 function panelDefaultWidth(kind: NonNullable<SidePanel>["kind"]): number {
-  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket", "library", "pictures", "original", "authors"].includes(kind);
+  const wide = ["xref", "genealogy", "commentary", "map", "timeline", "interlinear", "dictionary", "study", "help", "sheet", "basket", "library", "pictures", "original", "authors", "browse"].includes(kind);
   const vw = window.innerWidth;
   return wide ? Math.min(640, vw * 0.42) : Math.min(400, vw * 0.36);
 }

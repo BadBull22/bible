@@ -117,7 +117,14 @@ const SECTIONS: Section[] = [
         </ul>
         <p>
           Words with a faint dotted underline carry a <strong>Strong's number</strong>: click one for its original Hebrew or
-          Greek word, definition and every place it occurs.
+          Greek word, definition and every place it occurs. A Bible you add to the <strong>Library</strong> that carries
+          Strong's numbers (for example the KJV from CrossWire, or a MyBible file whose name ends in a plus) works the same
+          way: the Library marks it <em>Strong's numbers</em> and the Translation list says <em>· Strong's</em>. A Bible
+          without the numbers shows none, and none are guessed.
+        </p>
+        <p>
+          A Bible with Strong's numbers that you added in an earlier version needs to be removed and added again to make its
+          words clickable (the Library says so under it).
         </p>
       </>
     ),
@@ -358,7 +365,7 @@ const SECTIONS: Section[] = [
   {
     id: "explore",
     title: "Genealogies, Firsts, People & Places, Map, Timeline",
-    keywords: "genealogy family tree firsts facts promises prophecies people places events map timeline adams chart",
+    keywords: "genealogy family tree firsts facts promises prophecies people places events map maps bible maps atlas timeline adams chart",
     body: (
       <ul>
         <li>
@@ -372,7 +379,10 @@ const SECTIONS: Section[] = [
           <strong>People &amp; Places</strong> — who and where appears in the chapter you're reading.
         </li>
         <li>
-          <strong>Map</strong> — biblical places with ancient and modern names, and kingdom outlines by period.
+          <strong>Map</strong> — three tabs. <em>Interactive map</em>: biblical places with ancient and modern names, and kingdom
+          outlines by period. <em>Bible maps</em>: ready-made maps that come with the app (the twelve tribes, the kingdoms, the
+          ministry of Jesus, Paul's journeys and more), to zoom and drag, each with the passages it goes with. <em>Atlas</em>:
+          the maps of an atlas you added from a download, which has its own tab once you have added one.
         </li>
         <li>
           <strong>Timeline</strong> — lifespans and events, plus a zoomable copy of Adams' 1871 Synchronological Chart.
@@ -710,6 +720,38 @@ const SECTIONS: Section[] = [
     ),
   },
   {
+    id: "browse",
+    title: "Bible stories, Verses for… and pages for children",
+    keywords: "browse bible stories verses for topics anxiety fear peace hope grief forgiveness healing prayer guidance children kids memory verse word search activity sheet print teach sunday school new",
+    body: (
+      <>
+        <p>
+          <strong>Explore → Bible stories</strong>, <strong>Verses for…</strong> and <strong>For children</strong> open Browse: short pages written for this app in plain words, each pointing you to the passages themselves.
+          The opening screen also mentions them in a small note that you can close with the ×; <em>Settings → Appearance</em> brings it back.
+        </p>
+        <ul>
+          <li>
+            <strong>Bible stories</strong>: a painting or engraving of the event (by James Tissot or Gustave Doré, with the artist and licence under it), a short retelling of the story, one thing to look closer at, what it teaches us (on some pages), and the passages to read. Press <strong>Show the words</strong> to read a passage here in the Bible you have chosen (the BSB
+            is used when your Bible does not have that passage), or press the reference to open it in the reader. Related stories, the same story in the other Gospels and a children's page are linked at the bottom.
+          </li>
+          <li>
+            <strong>Verses for…</strong>: passages for a need such as fear, grief, hope or guidance, each with a line on what it says. <strong>More on this subject</strong> opens Nave's and Torrey's topical Bibles. Where Christians
+            differ, for example on healing, the page says so in a box called <strong>Where Christians differ</strong> and takes no side.
+          </li>
+          <li>
+            <strong>For children</strong>: a story in short sentences, a memory verse, three questions to talk about (the answers are hidden until you press), and something to try together. Children's pages always use the BSB.
+            Each page has a picture to help a child imagine the story. <strong>Print the activity sheet and picture</strong> makes a sheet with the picture, the story, the big idea, the memory verse with blanks to fill in, lines for the answers and a word search, with an optional answer key for the grown-up, or the picture as an outline to colour in. Print it, save it as a
+            PDF or Word document, or copy it.
+          </li>
+          <li>
+            Type a story or a subject in the search box (or the Search panel) and the matching Browse pages are offered under the box as <strong>Stories and topics</strong>; you do not need the page's own words ("I am afraid" finds Verses for fear, "Jesus rose from the dead" finds the empty tomb), and for a matching subject the first passages, with what each one says, are listed right there. Stories and Verses for… pages have a <strong>Print this page</strong> button, and the Print button at the top prints the page you are reading, not the whole window. In the Sermon builder they appear in the gathered
+            material under the same name.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
     id: "pictures",
     title: "Pictures (Bible art for each chapter)",
     keywords: "pictures images art illustrations dore tissot sweet gallery download",
@@ -769,13 +811,41 @@ const SECTIONS: Section[] = [
     ),
   },
   {
-    id: "comfort",
-    title: "Appearance, reading comfort and focus mode",
-    keywords: "text size font line spacing width focus full screen f11 dark mode light mode theme colour color contrast pale grey faint red letter words of jesus",
+    id: "service-print-remote",
+    title: "Printed bulletin and phone remote (Sunday service)",
+    keywords: "bulletin order of service print pdf word church notices songs sermon phone remote clicker qr code wifi next back black slides presenter",
     body: (
       <>
         <p>
-          In <strong>Settings → Reading comfort</strong> change the text size, line spacing and page width. They're remembered
+          On <strong>Study → Sunday service</strong>, tick the notices, music and sermon for this Sunday, then{" "}
+          <strong>Print the bulletin</strong>. It makes an order of service with the date, the notices, the songs (their{" "}
+          <em>titles only</em>: printing the words needs a church music licence) and the sermon's title and Scripture. Change
+          the order line by line, choose the paper (A4, or A5 for a folded sheet) and how many ruled lines for notes, then print it,
+          save it as a PDF or a Word document, or copy it. The church name is remembered for next time.
+        </p>
+        <p>
+          In the presenter, <strong>Phone remote</strong> turns your phone into the clicker. Switch it on, join the phone to
+          the same Wi-Fi as this computer, and point its camera at the code. The page that opens has big <strong>Next</strong>,{" "}
+          <strong>Back</strong>, <strong>Black</strong> and <strong>Hide the words</strong> buttons, the slide that is showing, the next
+          one, and your notes. Nothing is installed on the phone and nothing goes through the internet. It is off until you switch it on,
+          needs the address with the code in it, answers only devices on your own network, and stops when the show ends.
+        </p>
+        <p>
+          If the phone cannot open the page: allow the app on <em>private</em> networks if Windows asks, and note that church or
+          guest Wi-Fi often stops devices from seeing each other. Turn on the phone's hotspot and join this computer to it instead.
+          Try it once at home, and again in the church before a service.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "comfort",
+    title: "Appearance, reading comfort and focus mode",
+    keywords: "text size font fonts line spacing width focus full screen f11 dark mode light mode theme themes look wordmark christmas easter resurrection pentecost communion season keep selection mix match background colour color contrast pale grey faint red letter words of jesus",
+    body: (
+      <>
+        <p>
+          In <strong>Settings → Reading</strong> change the text size, line spacing and page width. They're remembered
           next time.
         </p>
         <p>
@@ -793,6 +863,23 @@ const SECTIONS: Section[] = [
           <strong>Settings → Appearance</strong> chooses a light or dark <strong>theme</strong> (or matches Windows), the{" "}
           <strong>text colour</strong> (standard, strongest black or white, warm sepia, or blue-black) and the{" "}
           <strong>contrast</strong>. If headings or small labels look too pale, set Contrast to <em>High</em>.
+        </p>
+        <p>
+          <strong>Fonts.</strong> Under the same settings you can choose the <strong>interface font</strong> and the{" "}
+          <strong>Bible reading font</strong> from a short list of fonts that come with Windows. They are your own choice:
+          no theme ever changes your reading font.
+        </p>
+        <p>
+          <strong>Themes.</strong> The opening screen can wear a themed <em>Gospel</em> wordmark and a few small
+          decorations, with a verse of the season. There are 24: the church year (Advent, Christmas, New Year, Epiphany, Lent,
+          Palm Sunday, Good Friday, Resurrection Sunday, Ascension, Pentecost, Trinity Sunday), other occasions (Passover, Communion,
+          Thanksgiving / Harvest, Reformation Day, Bible Sunday, Mother's Day, Father's Day, Children's Day), moods (Healing,
+          Miracles, Sea of Galilee) and the plain Warm paper and Night reading glows. A theme is only a suggested combination: pick one in{" "}
+          <strong>Settings → Appearance</strong>. You can mix and match: take the wordmark from one theme and the background from
+          another, or make either one plain. Turn on <strong>Keep my selection as the default and never change it</strong> and whatever you have selected
+          stays, whatever the date. Otherwise, near a season (for example Christmas from 16
+          December, or the first Sunday of every month for Communion) the app can switch to that theme and ask once whether to keep it or go back to the
+          default theme. A theme you pick yourself is never switched. <strong>Colour of the app</strong> (also there) tints every window with a pastel colour of your choice, or any colour you pick, which is always softened so the text stays as easy to read as it is now; Standard keeps the app's own colours. <strong>Background behind the Bible text</strong> (in the same place) can also show the background behind the Bible when you read a chapter: Soft is a hint of it, Full shows all of it with its corner pictures. Your own paper colour is laid over it so the words stay easy to read, and the reading font is never changed.
         </p>
       </>
     ),

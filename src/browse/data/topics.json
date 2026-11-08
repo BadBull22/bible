@@ -1,0 +1,575 @@
+{
+  "format": 1,
+  "tags": ["emotions", "peace", "comfort", "family", "faith", "hope", "healing", "forgiveness", "trust", "prayer", "needs", "fear", "grief", "guidance", "wisdom"],
+  "pages": [
+    {
+      "id": "anxiety",
+      "title": "Verses for anxiety",
+      "also": ["worry", "stress", "troubled mind"],
+      "intro": "Worry is something Scripture speaks to gently. These passages invite you to hand your cares to God, to remember how he looks after what he has made, and to find a peace that does not depend on how today looks.",
+      "items": [
+        {
+          "ref": "Philippians 4:6-7",
+          "note": "Pray about everything, with thanks, and God's peace will stand guard over your thoughts."
+        },
+        {
+          "ref": "1 Peter 5:7",
+          "note": "Peter says you may hand all your worries to God, because you matter to him."
+        },
+        {
+          "ref": "Matthew 6:25-34",
+          "note": "Jesus points to the birds and the wild flowers: if God looks after them, he will look after you. Take each day as it comes."
+        },
+        {
+          "ref": "Luke 12:22-26",
+          "note": "Luke's version of the same teaching; Jesus asks what good worrying has ever done for anyone's life."
+        },
+        {
+          "ref": "Psalms 55:22",
+          "note": "David's advice from a hard season: hand your burden to the LORD, and he will keep you steady."
+        },
+        {
+          "ref": "Psalms 94:19",
+          "note": "When troubled thoughts crowd in, the psalmist finds comfort and delight in God."
+        },
+        {
+          "ref": "Psalms 139:23-24",
+          "note": "A prayer asking God to search out your anxious thoughts and lead you on the right road."
+        },
+        {
+          "ref": "Proverbs 12:25",
+          "note": "Worry weighs a person down and a kind word lifts them up: a reminder to speak gently to someone who is anxious."
+        },
+        { "ref": "Isaiah 26:3", "note": "A mind that keeps its trust fixed on God is kept in peace." },
+        {
+          "ref": "Luke 10:38-42",
+          "note": "Martha is anxious and distracted by all her serving; Jesus gently points her to what matters most."
+        },
+        {
+          "ref": "John 14:27",
+          "note": "Jesus leaves his own peace with his followers, a peace unlike the world's, and tells them not to let their hearts be troubled."
+        }
+      ],
+      "dictionary": "anxiety",
+      "stories": ["jesus-calms-the-storm"],
+      "tags": ["emotions", "peace"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "fear",
+      "title": "Verses for fear",
+      "also": ["afraid", "frightened", "courage", "dread"],
+      "intro": "Fear is a very human thing, and Scripture never scolds anyone for feeling it. These passages remind you who stands beside you when you are afraid, and show people who were frightened and found help in God.",
+      "items": [
+        {
+          "ref": "Isaiah 41:10",
+          "note": "God tells his frightened people that he is with them, and promises to strengthen them, to help them and to hold them up."
+        },
+        {
+          "ref": "Psalms 27:1-3",
+          "note": "David calls the LORD his light and his safe place, and says that even with an army camped around him, his heart stays calm."
+        },
+        {
+          "ref": "2 Timothy 1:7",
+          "note": "Paul tells young Timothy that God has not made him timid: what God gave him brings strength, love and a disciplined mind."
+        },
+        {
+          "ref": "Joshua 1:9",
+          "note": "God tells Joshua, who is stepping into Moses's place, to be strong and brave, because the LORD goes with him wherever he goes."
+        },
+        {
+          "ref": "Psalms 56:3-4",
+          "note": "When fear comes, the psalmist chooses to trust God, and asks what mere mortals can really do to him."
+        },
+        {
+          "ref": "Psalms 46:1-3",
+          "note": "God is a refuge and a help close at hand, so the psalmist stays unafraid even if the earth shakes and mountains slide into the sea."
+        },
+        {
+          "ref": "Isaiah 43:1-2",
+          "note": "God says he has bought his people back and knows them by name; in deep water or in fire, he will be with them."
+        },
+        {
+          "ref": "Matthew 10:29-31",
+          "note": "Jesus says God notices every sparrow that falls and has counted the hairs on your head, so you need not be afraid: you matter far more to him."
+        },
+        {
+          "ref": "Romans 8:31-39",
+          "note": "Paul asks who can win against us when God is on our side, and answers that no trouble, no power and not even death can pull us away from God's love."
+        },
+        {
+          "ref": "1 John 4:18",
+          "note": "Where love is complete, there is no room left for fear. John says fear is tied up with dreading punishment, and God's love moves it out."
+        },
+        {
+          "ref": "Hebrews 13:5-6",
+          "note": "God has promised never to leave or abandon his people, so they can say with confidence that the Lord is their helper and they need not be afraid."
+        },
+        {
+          "ref": "Psalms 34:4-8",
+          "note": "The psalmist sought the LORD, was answered and was freed from all his fears; he invites everyone to try for themselves and see that God is good."
+        }
+      ],
+      "dictionary": "fear",
+      "see_also": ["anxiety"],
+      "stories": ["david-and-goliath", "daniel-in-the-lions-den", "jesus-calms-the-storm"],
+      "tags": ["emotions", "fear", "trust", "comfort"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "peace",
+      "title": "Verses for peace",
+      "also": ["calm", "rest", "inner peace", "tranquility"],
+      "intro": "Peace in Scripture is more than quiet: it is being at rest with God, with other people and within yourself. These passages describe where that peace comes from, and how it can steady you when life is anything but calm.",
+      "items": [
+        {
+          "ref": "John 14:27",
+          "note": "Jesus gives his followers a peace of his own, unlike anything the world offers, and tells them not to be troubled or afraid."
+        },
+        {
+          "ref": "Philippians 4:6-7",
+          "note": "Bring every request to God in prayer, with thanks, and a peace beyond understanding will watch over your heart and mind."
+        },
+        {
+          "ref": "Numbers 6:24-26",
+          "note": "A blessing God told Aaron and his sons to speak over Israel, asking him to keep them, look kindly on them and give them peace."
+        },
+        {
+          "ref": "Psalms 4:8",
+          "note": "David can go to bed and sleep untroubled, because the LORD alone makes him safe."
+        },
+        {
+          "ref": "Psalms 29:11",
+          "note": "David says the LORD is the source of his people's strength, and that he blesses them with peace."
+        },
+        {
+          "ref": "Isaiah 26:3",
+          "note": "God keeps in complete peace the person whose mind is fixed on him, because that person trusts him."
+        },
+        {
+          "ref": "John 16:33",
+          "note": "Jesus says he spoke to his friends so they could have peace in him; the world will bring trouble, but he has overcome it."
+        },
+        {
+          "ref": "Isaiah 9:6",
+          "note": "Isaiah promises a child whose names include Prince of Peace, a ruler whose government will rest on his shoulders; Christians read this as pointing to Jesus."
+        },
+        {
+          "ref": "Romans 5:1",
+          "note": "Paul says that being put right with God by faith brings us peace with him, through Jesus, our Lord."
+        },
+        {
+          "ref": "Ephesians 2:14-17",
+          "note": "Christ himself is our peace: through the cross he removed the barrier of hostility between Jews and non-Jews, and brought both to God."
+        },
+        {
+          "ref": "Colossians 3:15",
+          "note": "Paul asks believers to let the peace Christ gives decide matters in their hearts, as parts of one body, and to be thankful."
+        },
+        {
+          "ref": "Romans 12:18",
+          "note": "Paul asks Christians to do their part, as far as it depends on them, to live in peace with everyone."
+        }
+      ],
+      "dictionary": "peace",
+      "see_also": ["anxiety"],
+      "stories": ["jesus-calms-the-storm"],
+      "tags": ["peace", "emotions", "comfort"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "hope",
+      "title": "Verses for hope",
+      "also": ["encouragement", "waiting", "future", "despair"],
+      "intro": "In Scripture, hope is not wishful thinking but a confident waiting for something God has promised. These passages come from people in exile, in sorrow and in long waiting, and they offer hope to you as steady ground.",
+      "items": [
+        {
+          "ref": "Jeremiah 29:11-13",
+          "note": "God tells exiles in Babylon that he has plans for their good and a hopeful future, and that they will find him when they seek him wholeheartedly."
+        },
+        {
+          "ref": "Romans 15:13",
+          "note": "Paul prays that the God of hope will fill believers with joy and peace as they trust him, so that hope overflows by the Spirit's power."
+        },
+        {
+          "ref": "Isaiah 40:28-31",
+          "note": "The LORD never grows tired and gives strength to the weary; those who wait on him find their strength renewed and rise up like eagles."
+        },
+        {
+          "ref": "Lamentations 3:21-26",
+          "note": "In the middle of grief, the writer recalls that God's love never runs out and his mercies begin afresh each morning, and so chooses to wait for him in hope."
+        },
+        {
+          "ref": "Psalms 42:5-6",
+          "note": "The psalmist speaks to his own sinking spirit and tells it to wait with hope for God, whom he will yet praise."
+        },
+        {
+          "ref": "Psalms 130:5-7",
+          "note": "Waiting for the LORD is like a night watchman waiting for dawn; the psalmist urges Israel to hope in him, since his love and rescue are plentiful."
+        },
+        {
+          "ref": "Romans 5:3-5",
+          "note": "Paul traces a chain: hardship builds endurance, endurance builds character, character builds hope, and this hope will not let us down because the Spirit has filled our hearts with God's love."
+        },
+        {
+          "ref": "Romans 8:24-25",
+          "note": "Hope is by nature about things we cannot yet see, Paul says, and so we wait for it patiently."
+        },
+        {
+          "ref": "Hebrews 6:18-19",
+          "note": "God's promise and oath cannot be broken, so those who run to him are strongly encouraged; this hope holds the soul steady like an anchor."
+        },
+        {
+          "ref": "1 Peter 1:3-5",
+          "note": "Peter praises God, who through Jesus's resurrection gave believers a living hope and an inheritance that cannot spoil or fade, kept safe in heaven for them."
+        },
+        {
+          "ref": "Proverbs 13:12",
+          "note": "Proverbs admits that a hope that keeps being delayed makes the heart sick, while a longing finally met is like a tree of life."
+        },
+        {
+          "ref": "Hebrews 10:23",
+          "note": "Hold on firmly to the hope we declare, the writer says, because God, who made the promise, can be trusted."
+        }
+      ],
+      "dictionary": "hope",
+      "see_also": ["grief-and-loss"],
+      "tags": ["hope", "faith", "comfort"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "grief-and-loss",
+      "title": "Verses for grief and loss",
+      "also": ["mourning", "bereavement", "sorrow", "death of a loved one", "comfort"],
+      "intro": "Grief takes the time it takes, and Scripture does not hurry anyone through it. These passages give mourners words to cry with, show Jesus weeping at a friend's grave, and speak of a God who stays close to the brokenhearted.",
+      "items": [
+        {
+          "ref": "Psalms 34:18",
+          "note": "The LORD is close to people whose hearts are broken, and he rescues those who are crushed in spirit."
+        },
+        {
+          "ref": "Psalms 23:4",
+          "note": "Even in the darkest valley, the shepherd is with you, and his rod and staff bring comfort."
+        },
+        {
+          "ref": "Matthew 5:4",
+          "note": "Jesus calls mourners blessed and promises that comfort is coming to them."
+        },
+        {
+          "ref": "John 11:32-36",
+          "note": "Mary falls at Jesus's feet in tears, and Jesus, deeply moved, weeps with her over the death of his friend Lazarus."
+        },
+        {
+          "ref": "Isaiah 61:1-3",
+          "note": "One anointed by the Spirit is sent to mend broken hearts and comfort all who mourn, giving beauty in place of ashes and joy in place of sorrow."
+        },
+        {
+          "ref": "Psalms 56:8",
+          "note": "The psalmist asks God to keep his tears in a bottle and trusts that each one is written down: God notices every tear."
+        },
+        {
+          "ref": "Psalms 13:1-2",
+          "note": "An honest cry: the psalmist asks how long God will seem to forget him, with sorrow in his heart every day. Scripture makes room for that kind of asking."
+        },
+        {
+          "ref": "Ecclesiastes 3:1-4",
+          "note": "The Teacher observes that life moves through seasons, and that there is a season for tears and for laughter, for grieving and for dancing."
+        },
+        {
+          "ref": "2 Corinthians 1:3-4",
+          "note": "Paul praises God as a compassionate Father and the source of all comfort, who helps us in trouble so that we can help others in theirs."
+        },
+        {
+          "ref": "Romans 12:15",
+          "note": "Paul's simple advice for friends: share in other people's joy, and cry alongside those who are crying."
+        },
+        {
+          "ref": "1 Thessalonians 4:13-18",
+          "note": "Paul comforts believers grieving loved ones who have died in Jesus: they grieve, but not without hope, because the Lord's coming will bring everyone together with him.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians understand the order, timing and manner of the Lord's coming described here in different ways, including when believers are gathered to him and how this fits with other events."
+        },
+        {
+          "ref": "Revelation 21:3-4",
+          "note": "John sees God making his home among his people, wiping away all their tears, and ending death, mourning, crying and pain."
+        }
+      ],
+      "dictionary": "mourning",
+      "see_also": ["hope"],
+      "stories": ["the-empty-tomb"],
+      "tags": ["grief", "comfort", "emotions", "hope"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "forgiveness",
+      "title": "Verses for forgiveness",
+      "also": ["pardon", "mercy", "guilt", "forgiving others"],
+      "intro": "Scripture speaks of forgiveness in both directions: God forgiving those who come to him, and his people forgiving one another. These passages are for anyone carrying guilt, and for anyone who is finding it hard to forgive.",
+      "items": [
+        {
+          "ref": "Psalms 103:8-12",
+          "note": "The LORD is kind, patient and rich in love; he does not treat us as our sins deserve, and puts our wrongs as far from us as sunrise is from sunset."
+        },
+        {
+          "ref": "1 John 1:9",
+          "note": "If we own up to our sins, God can be trusted to forgive them and make us clean from every wrong."
+        },
+        {
+          "ref": "Luke 15:11-32",
+          "note": "A father runs to welcome his lost son home. The story shows how ready God is to forgive; the older brother finds it hard to join the celebration."
+        },
+        {
+          "ref": "Matthew 6:12-15",
+          "note": "In the prayer he teaches, Jesus ties asking God to forgive us to forgiving other people, and then comments on that link."
+        },
+        {
+          "ref": "Matthew 18:21-35",
+          "note": "Asked how often to forgive, Jesus says far more than seven times, then tells of a servant let off a huge debt who would not forgive a small one."
+        },
+        {
+          "ref": "Luke 23:34",
+          "note": "From the cross, Jesus asks his Father to forgive the people who are killing him, because they do not realise what they are doing."
+        },
+        {
+          "ref": "Ephesians 4:31-32",
+          "note": "Paul asks believers to drop bitterness, rage and slander, and to be kind and warm-hearted, forgiving one another as God forgave them in Christ."
+        },
+        {
+          "ref": "Psalms 32:1-5",
+          "note": "David writes of the joy of being forgiven, and of how staying silent about his wrong wore him down until he finally admitted it to God."
+        },
+        {
+          "ref": "Isaiah 1:18",
+          "note": "God invites his people to talk things over, and promises that even sins that stain like crimson dye can be washed white as snow."
+        },
+        {
+          "ref": "Micah 7:18-19",
+          "note": "Micah marvels at a God who forgives wrongdoing, delights in showing mercy, and casts every sin of ours into the ocean depths."
+        },
+        {
+          "ref": "Genesis 50:15-21",
+          "note": "After Jacob dies, Joseph's frightened brothers beg his forgiveness. He weeps, tells them not to fear, says God turned their evil into good, and speaks kindly to them."
+        },
+        {
+          "ref": "Acts 7:59-60",
+          "note": "As he is being stoned, Stephen asks the Lord Jesus to receive his spirit and not to hold this sin against the people killing him."
+        }
+      ],
+      "dictionary": "forgiveness",
+      "see_also": ["peace"],
+      "stories": ["the-prodigal-son", "zacchaeus-meets-jesus"],
+      "tags": ["forgiveness", "faith"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "healing",
+      "title": "Verses for healing",
+      "also": ["sickness", "illness", "the sick", "health", "recovery"],
+      "intro": "The Bible speaks of healing in many ways: God as the one who heals, Jesus healing the sick, and healing among the gifts of the church. Read these gently if you are ill, or caring for someone who is; they say what they say and do not explain every case.",
+      "items": [
+        {
+          "ref": "Exodus 15:26",
+          "note": "God tells Israel that if they listen and obey, he will spare them the diseases that struck Egypt, and he calls himself their healer."
+        },
+        {
+          "ref": "Psalms 103:2-3",
+          "note": "David urges himself to remember all the LORD's kindnesses: he forgives every sin and heals every illness."
+        },
+        {
+          "ref": "2 Kings 20:1-6",
+          "note": "King Hezekiah, told he will die, prays and weeps; God hears, sees his tears, and promises to heal him and add fifteen years to his life."
+        },
+        {
+          "ref": "Isaiah 53:4-5",
+          "note": "The suffering servant carries our sicknesses and sorrows and is pierced for our wrongdoing; through his wounds, healing comes to us.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians differ on whether the healing spoken of here means forgiveness and spiritual restoration, healing of the body, or both."
+        },
+        {
+          "ref": "Matthew 8:16-17",
+          "note": "In the evening many troubled by spirits are carried to Jesus; he drives the spirits out and heals all the sick; Matthew says this fulfils what Isaiah wrote.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians understand Matthew's use of Isaiah's words in different ways, including whether they point to healing of the body, forgiveness of sin, or both."
+        },
+        {
+          "ref": "Mark 5:25-34",
+          "note": "A woman bleeding for twelve years, her money gone on doctors, touches Jesus's cloak and is healed; he sends her off in peace, saying her faith made her well."
+        },
+        {
+          "ref": "Acts 3:1-10",
+          "note": "Peter and John meet a man lame from birth at the temple gate; Peter tells him, in Jesus's name, to walk, and he leaps up praising God."
+        },
+        {
+          "ref": "Mark 16:17-18",
+          "note": "Jesus says signs will follow believers, including putting hands on the ill so that they get well. Many Bibles note that the oldest manuscripts lack this ending.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians differ on the standing of this ending of Mark and on what its signs mean for the church today."
+        },
+        {
+          "ref": "1 Corinthians 12:7-11",
+          "note": "Among the gifts the Spirit gives for the good of everyone are gifts of healing; the same Spirit decides who receives which gift.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians differ on how the gifts of healing work in the church today and on whether they continue in the same way."
+        },
+        {
+          "ref": "James 5:14-16",
+          "note": "A sick person is to call the church's elders, who pray and anoint with oil in the Lord's name; believers are also to be open about failings and pray together.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians differ on what prayer made with faith promises, on the place of anointing with oil, and on why some who are prayed for are not healed."
+        },
+        {
+          "ref": "1 Peter 2:24",
+          "note": "Peter says that on the cross Christ took our sins upon himself, so that we could live for what is right, and that his wounds brought healing.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians differ on whether this healing refers to the body, to the soul, or to both."
+        },
+        {
+          "ref": "2 Corinthians 12:7-9",
+          "note": "Paul asks the Lord three times to take away a painful thorn; the answer is that the Lord's grace is enough and his power shows best in weakness.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Included as part of the whole picture: Paul does not say what the thorn was, and Christians differ on what this passage teaches about suffering and prayer for healing."
+        }
+      ],
+      "dictionary": "healing",
+      "see_also": ["prayer"],
+      "tags": ["healing", "comfort", "prayer"],
+      "doctrine": "needs_review",
+      "doctrine_note": "Christians differ on whether and how God heals today, on the place of prayer for the sick, anointing with oil and the gifts of healing, and on why some who are prayed for are not healed; this page lists what the passages say and takes no side.",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "prayer",
+      "title": "Verses for prayer",
+      "also": ["praying", "talking to God", "how to pray", "asking God"],
+      "intro": "Prayer in Scripture is simply speaking with God, in a few words or through a whole night. These passages show how Jesus taught people to pray, why you can come with confidence, and the kinds of things worth bringing to him.",
+      "items": [
+        {
+          "ref": "Matthew 6:5-13",
+          "note": "Jesus says to pray simply and privately, since your Father already knows what you need, and gives a model prayer that begins by honouring God."
+        },
+        {
+          "ref": "Philippians 4:6-7",
+          "note": "Instead of worrying, bring every request to God with thanks, and his peace will guard your heart and mind."
+        },
+        {
+          "ref": "Matthew 7:7-11",
+          "note": "Jesus urges his listeners to keep asking, seeking and knocking, because the Father in heaven gives good things even more readily than earthly parents do."
+        },
+        {
+          "ref": "Psalms 145:18-19",
+          "note": "The LORD is close to everyone who calls on him sincerely; he listens when they call out and helps them."
+        },
+        {
+          "ref": "Jeremiah 33:3",
+          "note": "God invites his people to call on him, promising to answer and to show them great things they do not yet know."
+        },
+        {
+          "ref": "1 Thessalonians 5:16-18",
+          "note": "Paul's short instructions: stay joyful, keep praying constantly, and give thanks whatever the circumstances."
+        },
+        {
+          "ref": "Hebrews 4:14-16",
+          "note": "Because Jesus our high priest knows what weakness is like, we are urged to come boldly to God's throne to receive mercy and help when we need it."
+        },
+        {
+          "ref": "Luke 18:1-8",
+          "note": "Jesus tells of a widow who keeps asking an unjust judge until he gives her justice, to show that people should keep praying and not give up."
+        },
+        {
+          "ref": "Luke 18:9-14",
+          "note": "A proud Pharisee thanks God that he is better than others, while a tax collector simply asks for mercy; Jesus says the humble man went home right with God."
+        },
+        {
+          "ref": "1 John 5:14-15",
+          "note": "John says we can be confident that God hears whatever we ask in keeping with his will, and that we can know we have what we asked of him."
+        },
+        {
+          "ref": "Romans 8:26-27",
+          "note": "When we are at a loss how to pray, Paul says the Spirit helps us and pleads for us with sighs that words cannot express, always in line with God's will.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians differ on what the Spirit's wordless pleading means: praying in tongues, an unspoken longing in the believer, or the Spirit's own intercession for believers."
+        },
+        {
+          "ref": "Mark 1:35",
+          "note": "Jesus gets up before dawn and goes off alone to a quiet place to pray, an example of making time alone with God."
+        }
+      ],
+      "dictionary": "prayer",
+      "see_also": ["guidance"],
+      "tags": ["prayer", "faith", "trust"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    },
+    {
+      "id": "guidance",
+      "title": "Verses for guidance",
+      "also": ["direction", "decisions", "God's will", "wisdom", "which way to go"],
+      "intro": "Many people come to Scripture asking which way to go. These passages speak of a God who guides: through his word, through the advice of wise people, through his Spirit, and by watching over the steps you take.",
+      "items": [
+        {
+          "ref": "Proverbs 3:5-6",
+          "note": "Trust the LORD fully rather than relying only on your own understanding; include him in everything you do, and he will straighten your road."
+        },
+        {
+          "ref": "Psalms 23:1-3",
+          "note": "The LORD is the shepherd who provides, gives rest in green pastures and by quiet water, restores the soul and leads along right paths."
+        },
+        {
+          "ref": "Psalms 32:8",
+          "note": "In God's own voice, the psalm promises to teach you the road to take, to advise you and to watch over you."
+        },
+        {
+          "ref": "Psalms 119:105",
+          "note": "God's word is pictured as a lamp for walking and a light on the path ahead."
+        },
+        {
+          "ref": "Isaiah 30:21",
+          "note": "God promises that a voice behind you will point out the right way, whichever direction you turn."
+        },
+        {
+          "ref": "James 1:5",
+          "note": "James says anyone who needs wisdom can simply ask God, who is a generous giver and does not scold."
+        },
+        {
+          "ref": "Proverbs 16:9",
+          "note": "We make plans in our hearts, yet the LORD directs where our steps actually fall."
+        },
+        {
+          "ref": "Proverbs 15:22",
+          "note": "Plans go wrong where there is no advice, but succeed where there are many counsellors."
+        },
+        {
+          "ref": "Psalms 25:4-5",
+          "note": "A prayer to be shown God's ways and led in his truth, from someone who waits on God all day long."
+        },
+        {
+          "ref": "Romans 8:14",
+          "note": "Those who follow the leading of God's Spirit are his children."
+        },
+        {
+          "ref": "John 16:13",
+          "note": "Jesus promises that the Spirit of truth, once he arrives, will lead the disciples into the whole truth and tell them what lies ahead.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians differ on whether this promise was given to the apostles only or to all believers, and on how the Spirit guides people today."
+        },
+        {
+          "ref": "Acts 16:6-10",
+          "note": "The Holy Spirit holds Paul's team back from some places; then Paul has a night-time vision of a Macedonian pleading for help, and they conclude God is calling them there.",
+          "doctrine": "needs_review",
+          "doctrine_note": "Christians differ on how God guides today, including through visions and inner promptings, and on how such guidance should be tested."
+        }
+      ],
+      "dictionary": "guidance",
+      "see_also": ["prayer"],
+      "tags": ["guidance", "wisdom", "trust", "faith"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-07" }
+    }
+  ]
+}

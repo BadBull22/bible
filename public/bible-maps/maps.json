@@ -1,0 +1,316 @@
+{
+  "about": "The Bible maps shipped in the app (Map > Bible maps). Same folder and file for the phone. Credits must be shown with each map.",
+  "credits": {
+    "biblica": {
+      "name": "Biblica Open Bible Maps",
+      "text": "Biblica Open Bible Maps, copyright Biblica, Inc., licensed CC BY-SA 4.0 (creativecommons.org/licenses/by-sa/4.0). The original work by Biblica, Inc. is available for free at www.biblica.com and open.bible. “Biblica” is a trademark of Biblica, Inc. Shown at a smaller file size, otherwise unchanged."
+    },
+    "rand-mcnally-1910": {
+      "name": "Rand McNally, 1910",
+      "text": "Rand McNally, “The modern world and the Bible lands”, 1910. Public domain. From Project Gutenberg, through Wikimedia Commons. Shown at a smaller file size, otherwise unchanged."
+    },
+    "rawson-1873": {
+      "name": "A. L. Rawson, 1873",
+      "text": "The plan of Jerusalem from A. L. Rawson, “Map of Palestine and all Bible lands” (H. H. Lloyd & Co., 1873). Public domain. Scan by the Norman B. Leventhal Map Center at the Boston Public Library, through Wikimedia Commons. Shown at a smaller file size, otherwise unchanged."
+    }
+  },
+  "maps": [
+    {
+      "id": "twelve-tribes",
+      "file": "twelve-tribes.webp",
+      "title": "The twelve tribes of Israel",
+      "description": "Where each tribe settled in the land after the conquest, with the cities of refuge marked.",
+      "group": "Old Testament",
+      "passages": [
+        {
+          "label": "Joshua 13: the lands of the tribes",
+          "book": "Joshua",
+          "chapter": 13,
+          "verse": 1
+        },
+        {
+          "label": "Joshua 20: the cities of refuge",
+          "book": "Joshua",
+          "chapter": 20,
+          "verse": 1
+        }
+      ],
+      "credit": "biblica",
+      "licence": "CC BY-SA 4.0",
+      "width": 1341,
+      "height": 2000
+    },
+    {
+      "id": "kingdoms-saul-david-solomon",
+      "file": "kingdoms-saul-david-solomon.webp",
+      "title": "The kingdoms of Saul, David and Solomon",
+      "description": "How far the kingdom reached under Saul, then under David and Solomon, and the lands beyond it that Solomon controlled.",
+      "group": "Old Testament",
+      "passages": [
+        {
+          "label": "1 Samuel 9: Saul becomes king",
+          "book": "1 Samuel",
+          "chapter": 9,
+          "verse": 1
+        },
+        {
+          "label": "2 Samuel 5: David reigns over all Israel",
+          "book": "2 Samuel",
+          "chapter": 5,
+          "verse": 1
+        },
+        {
+          "label": "1 Kings 4:21: the extent of Solomon's rule",
+          "book": "1 Kings",
+          "chapter": 4,
+          "verse": 21
+        }
+      ],
+      "credit": "biblica",
+      "licence": "CC BY-SA 4.0",
+      "width": 1348,
+      "height": 2000
+    },
+    {
+      "id": "israel-and-judah",
+      "file": "israel-and-judah.webp",
+      "title": "The kingdoms of Israel and Judah",
+      "description": "The land after the kingdom divided: Israel in the north and east, Judah in the south, with the cities named in the books of Kings.",
+      "group": "Old Testament",
+      "passages": [
+        {
+          "label": "1 Kings 12: the kingdom divides",
+          "book": "1 Kings",
+          "chapter": 12,
+          "verse": 1
+        },
+        {
+          "label": "2 Kings 17: the fall of Israel",
+          "book": "2 Kings",
+          "chapter": 17,
+          "verse": 1
+        },
+        {
+          "label": "2 Kings 25: the fall of Judah",
+          "book": "2 Kings",
+          "chapter": 25,
+          "verse": 1
+        }
+      ],
+      "credit": "biblica",
+      "licence": "CC BY-SA 4.0",
+      "width": 1348,
+      "height": 2000
+    },
+    {
+      "id": "ministry-of-jesus",
+      "file": "ministry-of-jesus.webp",
+      "title": "The ministry of Jesus",
+      "description": "Where Jesus went, with a note on what the Gospels tell of each place and the main roads. A question mark before a name means the place is uncertain.",
+      "group": "Gospels and Jerusalem",
+      "passages": [
+        {
+          "label": "Matthew 4:12: Jesus begins in Galilee",
+          "book": "Matthew",
+          "chapter": 4,
+          "verse": 12
+        },
+        {
+          "label": "John 2: the wedding at Cana",
+          "book": "John",
+          "chapter": 2,
+          "verse": 1
+        },
+        {
+          "label": "Mark 8:27: Caesarea Philippi",
+          "book": "Mark",
+          "chapter": 8,
+          "verse": 27
+        },
+        {
+          "label": "Luke 19: Jericho",
+          "book": "Luke",
+          "chapter": 19,
+          "verse": 1
+        }
+      ],
+      "credit": "biblica",
+      "licence": "CC BY-SA 4.0",
+      "width": 1337,
+      "height": 2000
+    },
+    {
+      "id": "christ-in-judea",
+      "file": "christ-in-judea.webp",
+      "title": "Christ in Judea",
+      "description": "Judea, Samaria and the Jordan valley: the cities named in the Gospels, other towns of the time, and places whose site is uncertain.",
+      "group": "Gospels and Jerusalem",
+      "passages": [
+        {
+          "label": "Luke 2:4: Bethlehem",
+          "book": "Luke",
+          "chapter": 2,
+          "verse": 4
+        },
+        {
+          "label": "John 3:22: Aenon near Salim",
+          "book": "John",
+          "chapter": 3,
+          "verse": 22
+        },
+        {
+          "label": "John 11: Bethany",
+          "book": "John",
+          "chapter": 11,
+          "verse": 1
+        },
+        {
+          "label": "Luke 24:13: the road to Emmaus",
+          "book": "Luke",
+          "chapter": 24,
+          "verse": 13
+        }
+      ],
+      "credit": "biblica",
+      "licence": "CC BY-SA 4.0",
+      "width": 2000,
+      "height": 1500
+    },
+    {
+      "id": "jerusalem-1873",
+      "file": "jerusalem-1873.webp",
+      "title": "Plan of Jerusalem, 1873",
+      "description": "A nineteenth-century plan of Jerusalem and its surroundings: the temple hill (Moriah), Zion, the Mount of Olives, and the Kidron, Hinnom and Siloam valleys. It marks the holy places as they were understood in 1873, and many of those sites are traditional, not certain.",
+      "group": "Gospels and Jerusalem",
+      "passages": [
+        {
+          "label": "2 Samuel 5:6: David takes Jerusalem",
+          "book": "2 Samuel",
+          "chapter": 5,
+          "verse": 6
+        },
+        {
+          "label": "Nehemiah 3: rebuilding the walls",
+          "book": "Nehemiah",
+          "chapter": 3,
+          "verse": 1
+        },
+        {
+          "label": "John 5:2: the pool of Bethesda",
+          "book": "John",
+          "chapter": 5,
+          "verse": 2
+        },
+        {
+          "label": "John 9:7: the pool of Siloam",
+          "book": "John",
+          "chapter": 9,
+          "verse": 7
+        },
+        {
+          "label": "Matthew 26:36: Gethsemane",
+          "book": "Matthew",
+          "chapter": 26,
+          "verse": 36
+        }
+      ],
+      "credit": "rawson-1873",
+      "licence": "Public domain",
+      "width": 1647,
+      "height": 1689
+    },
+    {
+      "id": "pauls-journeys",
+      "file": "pauls-journeys.webp",
+      "title": "Paul's journeys",
+      "description": "Paul's first, second and third journeys and his voyage to Rome, with the outer limit of Roman rule.",
+      "group": "Acts and Epistles",
+      "passages": [
+        {
+          "label": "Acts 13: the first journey",
+          "book": "Acts",
+          "chapter": 13,
+          "verse": 1
+        },
+        {
+          "label": "Acts 15:36: the second journey",
+          "book": "Acts",
+          "chapter": 15,
+          "verse": 36
+        },
+        {
+          "label": "Acts 18:23: the third journey",
+          "book": "Acts",
+          "chapter": 18,
+          "verse": 23
+        },
+        {
+          "label": "Acts 27: the voyage to Rome",
+          "book": "Acts",
+          "chapter": 27,
+          "verse": 1
+        }
+      ],
+      "credit": "biblica",
+      "licence": "CC BY-SA 4.0",
+      "width": 2000,
+      "height": 1500
+    },
+    {
+      "id": "corinthians",
+      "file": "corinthians.webp",
+      "title": "The places in Corinthians",
+      "description": "The cities and regions named in 1 and 2 Corinthians: Corinth in Achaia, Ephesus, Macedonia, Troas, Galatia, Asia, Damascus and Judea.",
+      "group": "Acts and Epistles",
+      "passages": [
+        {
+          "label": "1 Corinthians 1:1: Corinth",
+          "book": "1 Corinthians",
+          "chapter": 1,
+          "verse": 1
+        },
+        {
+          "label": "1 Corinthians 16:8: Ephesus",
+          "book": "1 Corinthians",
+          "chapter": 16,
+          "verse": 8
+        },
+        {
+          "label": "2 Corinthians 2:12: Troas",
+          "book": "2 Corinthians",
+          "chapter": 2,
+          "verse": 12
+        },
+        {
+          "label": "2 Corinthians 11:32: Damascus",
+          "book": "2 Corinthians",
+          "chapter": 11,
+          "verse": 32
+        }
+      ],
+      "credit": "biblica",
+      "licence": "CC BY-SA 4.0",
+      "width": 2000,
+      "height": 1500
+    },
+    {
+      "id": "modern-world-bible-lands",
+      "file": "modern-world-bible-lands.webp",
+      "title": "The modern world and the Bible lands (1910)",
+      "description": "A world map of 1910 with the lands of the Bible marked inside the red lines; the names and borders of the world are those of 1910.",
+      "group": "The world",
+      "passages": [
+        {
+          "label": "Acts 1:8: to the ends of the earth",
+          "book": "Acts",
+          "chapter": 1,
+          "verse": 8
+        }
+      ],
+      "credit": "rand-mcnally-1910",
+      "licence": "Public domain",
+      "width": 2000,
+      "height": 1521
+    }
+  ]
+}

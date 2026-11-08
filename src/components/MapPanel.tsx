@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { api, EntityDetail, EntitySummary, MapPlace } from "../api";
 import { CloseIcon } from "./icons";
 import { AtlasView } from "./AtlasView";
+import { BibleMapsView } from "./BibleMapsView";
 
 interface Props {
   onClose: () => void;
@@ -199,9 +200,10 @@ function jitterPositions(items: { id: string; lat: number; lon: number; weight: 
 export function MapPanel({ onClose, onJump, initialFocusId, onFocusPlace, startOnAtlas }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  // an atlas the reader added (MyBible's Bible Maps, say) is a second view of this panel
+  // three views: the interactive map (drawn by the app), the Bible maps that come with the app, and an atlas the reader added
+  // (MyBible's Bible Maps, say), which has its own tab once one has been added
   const [atlasCount, setAtlasCount] = useState(0);
-  const [view, setView] = useState<"map" | "atlas">(startOnAtlas ? "atlas" : "map");
+  const [view, setView] = useState<"map" | "bible" | "atlas">(startOnAtlas ? "atlas" : "map");
   useEffect(() => {
     api
       .atlasMaps()
@@ -210,10 +212,10 @@ export function MapPanel({ onClose, onJump, initialFocusId, onFocusPlace, startO
   }, []);
   // where the interactive map was looking when the atlas took its place (a hidden map measures itself as empty)
   const savedView = useRef<{ center: L.LatLng; zoom: number } | null>(null);
-  const showAtlas = () => {
+  const showOther = (next: "bible" | "atlas") => {
     const m = mapRef.current;
-    if (m) savedView.current = { center: m.getCenter(), zoom: m.getZoom() };
-    setView("atlas");
+    if (m && view === "map") savedView.current = { center: m.getCenter(), zoom: m.getZoom() };
+    setView(next);
   };
   useEffect(() => {
     // the interactive map was hidden while the atlas showed: it measures itself again and looks where it looked
@@ -524,23 +526,27 @@ export function MapPanel({ onClose, onJump, initialFocusId, onFocusPlace, startO
   return (
     <aside className="side-panel wide">
       <div className="side-panel-header">
-        <h3>{view === "atlas" ? "Maps: your atlas" : "Map: places of the biblical world"}</h3>
+        <h3>{view === "atlas" ? "Maps: your atlas" : view === "bible" ? "Bible maps" : "Interactive map: places of the biblical world"}</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />
         </button>
       </div>
-      {atlasCount > 0 && (
-        <div className="mode-toggle" role="tablist" aria-label="Which maps">
-          <button role="tab" aria-selected={view === "map"} className={view === "map" ? "active" : ""} onClick={() => setView("map")}>
-            Interactive map
-          </button>
-          <button role="tab" aria-selected={view === "atlas"} className={view === "atlas" ? "active" : ""} onClick={showAtlas}>
+      <div className="mode-toggle" role="tablist" aria-label="Which maps">
+        <button role="tab" aria-selected={view === "map"} className={view === "map" ? "active" : ""} onClick={() => setView("map")}>
+          Interactive map
+        </button>
+        <button role="tab" aria-selected={view === "bible"} className={view === "bible" ? "active" : ""} onClick={() => showOther("bible")}>
+          Bible maps
+        </button>
+        {atlasCount > 0 && (
+          <button role="tab" aria-selected={view === "atlas"} className={view === "atlas" ? "active" : ""} onClick={() => showOther("atlas")}>
             Atlas (maps you added)
           </button>
-        </div>
-      )}
+        )}
+      </div>
+      {view === "bible" && <BibleMapsView onJump={onJump} />}
       {view === "atlas" && <AtlasView onJump={onJump} />}
-      <div style={{ display: view === "atlas" ? "none" : "contents" }}>
+      <div style={{ display: view !== "map" ? "none" : "contents" }}>
       <div className="mode-toggle" role="tablist" aria-label="Name era">
         <button role="tab" aria-selected={mode === "ancient"} className={mode === "ancient" ? "active" : ""} onClick={() => applyMode("ancient")}>
           Ancient names

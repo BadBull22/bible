@@ -1,0 +1,43 @@
+/* The plain looks: only colours, no wordmark picture. Warm paper: a slight warm yellow glow around the search box and the
+   shortcut tiles. Night reading: a slight blue glow around them. (Owner's request, 2026-11-07.) */
+
+.home-screen[data-occasion="warm-paper"] {
+  --occ-bg: transparent;
+  --occ-accent: #c58208;
+  --occ-ring: rgba(197, 130, 8, 0.2);
+  --occ-line: var(--border);
+  --occ-hint: var(--text-muted);
+  --occ-verse: var(--text-muted);
+  --occ-glow: rgba(240, 190, 80, 0.42);
+}
+:root[data-theme="dark"] .home-screen[data-occasion="warm-paper"] {
+  --occ-accent: #e6a92a;
+  --occ-ring: rgba(230, 169, 42, 0.28);
+  --occ-glow: rgba(235, 180, 70, 0.3);
+}
+
+.home-screen[data-occasion="night-reading"] {
+  --occ-bg: transparent;
+  --occ-accent: #4a74d4;
+  --occ-ring: rgba(74, 116, 212, 0.2);
+  --occ-line: var(--border);
+  --occ-hint: var(--text-muted);
+  --occ-verse: var(--text-muted);
+  --occ-glow: rgba(90, 140, 235, 0.38);
+}
+:root[data-theme="dark"] .home-screen[data-occasion="night-reading"] {
+  --occ-accent: #7b9be0;
+  --occ-ring: rgba(123, 155, 224, 0.3);
+  --occ-glow: rgba(100, 150, 240, 0.36);
+}
+
+.home-screen[data-occasion="warm-paper"][data-screen="on"] .home-search-box,
+.home-screen[data-occasion="warm-paper"][data-screen="on"] .home-stat-tile,
+.home-screen[data-occasion="night-reading"][data-screen="on"] .home-search-box,
+.home-screen[data-occasion="night-reading"][data-screen="on"] .home-stat-tile {
+  box-shadow: 0 0 26px 3px var(--occ-glow);
+}
+.home-screen[data-occasion="warm-paper"][data-screen="on"] .home-search-box:focus-within,
+.home-screen[data-occasion="night-reading"][data-screen="on"] .home-search-box:focus-within {
+  box-shadow: 0 0 0 3px var(--occ-ring), 0 0 30px 5px var(--occ-glow);
+}

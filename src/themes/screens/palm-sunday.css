@@ -1,0 +1,60 @@
+/* Palm Sunday: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Matthew 21:9 (part) (BSB): “Blessed is He who comes in the name of the Lord!” */
+.home-screen[data-occasion="palm-sunday"], .pv[data-occasion="palm-sunday"], .wordmark-art[data-wm="palm-sunday"], .main-frame[data-reading-theme][data-occasion="palm-sunday"] {
+  --wm-c1: #2f7d3f;
+  --wm-c2: #c28d0c;
+  --wm-c3: #b5473a;
+  --wm-c4: #3f6fb0;
+  --wm-ink: #5b5f78;
+  --wm-hi: #fffaf0;
+  --wm-deep: #1f5a31;
+  --wm-warm: #8a5a2b;
+  --wm-loaf: #e8d2a0;
+  --occ-bg: linear-gradient(180deg,#eaf5e2 0%,#f7f5e2 55%,#faf3d8 100%);
+  --occ-accent: #2f7d3f;
+  --occ-ring: rgba(47,125,63,.18);
+  --occ-line: #cfe0c4;
+  --occ-hint: #2f6f3d;
+  --occ-verse: #24582f;
+  --occ-fx: rgba(236,196,70,.5);
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, with hosannas:";
+  --occ-verse-text: "“Blessed is He who comes in the name of the Lord!”";
+  --occ-verse-ref: "Matthew 21:9 (part) (BSB)";
+}
+.home-screen[data-occasion="palm-sunday"][data-scheme="dark"], .pv[data-occasion="palm-sunday"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="palm-sunday"],
+:root[data-theme="dark"] .wordmark-art[data-wm="palm-sunday"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="palm-sunday"] {
+  --wm-c1: #5cb86e;
+  --wm-c2: #e3b53a;
+  --wm-c3: #e0705f;
+  --wm-c4: #6e9be0;
+  --wm-ink: #cfd3e6;
+  --wm-hi: #f4efe2;
+  --wm-deep: #1f5a31;
+  --wm-warm: #b98a52;
+  --wm-loaf: #e8d2a0;
+  --occ-bg: linear-gradient(180deg,#14261a 0%,#1a2016 60%,#17181c 100%);
+  --occ-accent: #5cb86e;
+  --occ-ring: rgba(92,184,110,.28);
+  --occ-line: #2d4a35;
+  --occ-hint: #a9dcb3;
+  --occ-verse: #cdeed3;
+  --occ-fx: rgba(236,196,70,.28);
+}
+
+.home-screen[data-occasion="palm-sunday"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="palm-sunday"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cpath d='M-4 -4Q70.2 29.1 128.6 85.5' fill='none' stroke='%232f7d3f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M17 6Q30.8 6.4 38.1 -5.3Q24.3 -5.7 17 6ZM17 6Q11.8 18.8 20.4 29.7Q25.5 16.9 17 6ZM28.9 12.3Q42 13.1 49.3 2.1Q36.2 1.3 28.9 12.3ZM28.9 12.3Q23.7 24.3 31.5 34.9Q36.7 22.8 28.9 12.3ZM40.6 18.8Q53 20 60.2 9.8Q47.8 8.7 40.6 18.8ZM40.6 18.8Q35.3 30.1 42.4 40.3Q47.7 29.1 40.6 18.8ZM52.1 25.8Q63.7 27.2 70.8 17.8Q59.1 16.4 52.1 25.8ZM52.1 25.8Q46.8 36.2 53.2 46.1Q58.5 35.6 52.1 25.8ZM63.3 33Q74.3 34.6 81.2 26Q70.2 24.4 63.3 33ZM63.3 33Q58.1 42.7 63.8 52.1Q69.1 42.4 63.3 33ZM74.4 40.6Q84.6 42.4 91.3 34.5Q81.1 32.6 74.4 40.6ZM74.4 40.6Q69.2 49.5 74.3 58.5Q79.5 49.6 74.4 40.6ZM85.2 48.4Q94.7 50.4 101.1 43.2Q91.7 41.2 85.2 48.4ZM85.2 48.4Q80.1 56.7 84.6 65.2Q89.7 57 85.2 48.4ZM95.8 56.6Q104.5 58.7 110.7 52.2Q102 50.1 95.8 56.6ZM95.8 56.6Q90.8 64.1 94.8 72.2Q99.8 64.7 95.8 56.6ZM106.2 65.2Q114.2 67.4 120.1 61.5Q112.1 59.3 106.2 65.2ZM106.2 65.2Q101.4 72 104.9 79.5Q109.7 72.7 106.2 65.2ZM116.4 74Q123.6 76.2 129.2 71.1Q121.9 68.9 116.4 74ZM116.4 74Q111.8 80.1 114.8 87.1Q119.3 81 116.4 74ZM128.6 85.5Q133.4 95.6 144.6 96.2Q139.8 86.1 128.6 85.5Z' fill='%233f9a55'/%3E%3Cpath d='M-4 -4Q33.5 45.6 49.5 105.7' fill='none' stroke='%232f7d3f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7.6 12.4Q17.5 18.4 27.6 12.9Q17.8 6.8 7.6 12.4ZM7.6 12.4Q-1.4 19.6 0.3 31Q9.3 23.8 7.6 12.4ZM14.3 23Q23.4 29 33.1 24.2Q24.1 18.2 14.3 23ZM14.3 23Q5.6 29.4 6.8 40.2Q15.5 33.7 14.3 23ZM20.6 33.8Q28.8 39.7 38.1 35.6Q29.9 29.6 20.6 33.8ZM20.6 33.8Q12.2 39.4 12.9 49.5Q21.3 43.9 20.6 33.8ZM26.4 44.8Q33.8 50.6 42.6 47.2Q35.2 41.3 26.4 44.8ZM26.4 44.8Q18.4 49.8 18.7 59.2Q26.7 54.2 26.4 44.8ZM31.8 56Q38.4 61.7 46.7 58.8Q40 53.2 31.8 56ZM31.8 56Q24.2 60.3 24.1 69Q31.7 64.8 31.8 56ZM36.8 67.5Q42.6 73 50.3 70.6Q44.4 65.2 36.8 67.5ZM36.8 67.5Q29.6 71.2 29.2 79.1Q36.3 75.5 36.8 67.5ZM41.2 79.2Q46.4 84.4 53.4 82.5Q48.3 77.4 41.2 79.2ZM41.2 79.2Q34.6 82.3 34 89.5Q40.6 86.5 41.2 79.2ZM45.3 91.1Q49.7 96 56.1 94.5Q51.7 89.7 45.3 91.1ZM45.3 91.1Q39.2 93.6 38.3 100.2Q44.4 97.6 45.3 91.1ZM49.5 105.7Q48.7 114.2 55.9 118.8Q56.6 110.3 49.5 105.7Z' fill='%2352ad63'/%3E%3Cpath d='M150 17Q151.1 20.9 155 22Q151.1 23.1 150 27Q148.9 23.1 145 22Q148.9 20.9 150 17Z' fill='%23e0b030'/%3E%3Cpath d='M120 66.6Q120.7 69.3 123.4 70Q120.7 70.7 120 73.4Q119.3 70.7 116.6 70Q119.3 69.3 120 66.6Z' fill='%23e0b030'/%3E%3Cpath d='M44 108.6Q44.7 111.3 47.4 112Q44.7 112.7 44 115.4Q43.3 112.7 40.6 112Q43.3 111.3 44 108.6Z' fill='%23e0b030'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Cpath d='M-4 -4Q70.2 29.1 128.6 85.5' fill='none' stroke='%232f7d3f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M17 6Q30.8 6.4 38.1 -5.3Q24.3 -5.7 17 6ZM17 6Q11.8 18.8 20.4 29.7Q25.5 16.9 17 6ZM28.9 12.3Q42 13.1 49.3 2.1Q36.2 1.3 28.9 12.3ZM28.9 12.3Q23.7 24.3 31.5 34.9Q36.7 22.8 28.9 12.3ZM40.6 18.8Q53 20 60.2 9.8Q47.8 8.7 40.6 18.8ZM40.6 18.8Q35.3 30.1 42.4 40.3Q47.7 29.1 40.6 18.8ZM52.1 25.8Q63.7 27.2 70.8 17.8Q59.1 16.4 52.1 25.8ZM52.1 25.8Q46.8 36.2 53.2 46.1Q58.5 35.6 52.1 25.8ZM63.3 33Q74.3 34.6 81.2 26Q70.2 24.4 63.3 33ZM63.3 33Q58.1 42.7 63.8 52.1Q69.1 42.4 63.3 33ZM74.4 40.6Q84.6 42.4 91.3 34.5Q81.1 32.6 74.4 40.6ZM74.4 40.6Q69.2 49.5 74.3 58.5Q79.5 49.6 74.4 40.6ZM85.2 48.4Q94.7 50.4 101.1 43.2Q91.7 41.2 85.2 48.4ZM85.2 48.4Q80.1 56.7 84.6 65.2Q89.7 57 85.2 48.4ZM95.8 56.6Q104.5 58.7 110.7 52.2Q102 50.1 95.8 56.6ZM95.8 56.6Q90.8 64.1 94.8 72.2Q99.8 64.7 95.8 56.6ZM106.2 65.2Q114.2 67.4 120.1 61.5Q112.1 59.3 106.2 65.2ZM106.2 65.2Q101.4 72 104.9 79.5Q109.7 72.7 106.2 65.2ZM116.4 74Q123.6 76.2 129.2 71.1Q121.9 68.9 116.4 74ZM116.4 74Q111.8 80.1 114.8 87.1Q119.3 81 116.4 74ZM128.6 85.5Q133.4 95.6 144.6 96.2Q139.8 86.1 128.6 85.5Z' fill='%233f9a55'/%3E%3Cpath d='M-4 -4Q33.5 45.6 49.5 105.7' fill='none' stroke='%232f7d3f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7.6 12.4Q17.5 18.4 27.6 12.9Q17.8 6.8 7.6 12.4ZM7.6 12.4Q-1.4 19.6 0.3 31Q9.3 23.8 7.6 12.4ZM14.3 23Q23.4 29 33.1 24.2Q24.1 18.2 14.3 23ZM14.3 23Q5.6 29.4 6.8 40.2Q15.5 33.7 14.3 23ZM20.6 33.8Q28.8 39.7 38.1 35.6Q29.9 29.6 20.6 33.8ZM20.6 33.8Q12.2 39.4 12.9 49.5Q21.3 43.9 20.6 33.8ZM26.4 44.8Q33.8 50.6 42.6 47.2Q35.2 41.3 26.4 44.8ZM26.4 44.8Q18.4 49.8 18.7 59.2Q26.7 54.2 26.4 44.8ZM31.8 56Q38.4 61.7 46.7 58.8Q40 53.2 31.8 56ZM31.8 56Q24.2 60.3 24.1 69Q31.7 64.8 31.8 56ZM36.8 67.5Q42.6 73 50.3 70.6Q44.4 65.2 36.8 67.5ZM36.8 67.5Q29.6 71.2 29.2 79.1Q36.3 75.5 36.8 67.5ZM41.2 79.2Q46.4 84.4 53.4 82.5Q48.3 77.4 41.2 79.2ZM41.2 79.2Q34.6 82.3 34 89.5Q40.6 86.5 41.2 79.2ZM45.3 91.1Q49.7 96 56.1 94.5Q51.7 89.7 45.3 91.1ZM45.3 91.1Q39.2 93.6 38.3 100.2Q44.4 97.6 45.3 91.1ZM49.5 105.7Q48.7 114.2 55.9 118.8Q56.6 110.3 49.5 105.7Z' fill='%2352ad63'/%3E%3Cpath d='M150 17Q151.1 20.9 155 22Q151.1 23.1 150 27Q148.9 23.1 145 22Q148.9 20.9 150 17Z' fill='%23e0b030'/%3E%3Cpath d='M120 66.6Q120.7 69.3 123.4 70Q120.7 70.7 120 73.4Q119.3 70.7 116.6 70Q119.3 69.3 120 66.6Z' fill='%23e0b030'/%3E%3Cpath d='M44 108.6Q44.7 111.3 47.4 112Q44.7 112.7 44 115.4Q43.3 112.7 40.6 112Q43.3 111.3 44 108.6Z' fill='%23e0b030'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* warm sunlight that drifts very slowly across the top; fixed when motion is reduced */
+.home-screen[data-occasion="palm-sunday"][data-screen="on"]::after {
+  background: radial-gradient(ellipse 60% 38% at 78% 0%, var(--occ-fx) 0%, transparent 70%);
+  opacity: .8;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="palm-sunday"][data-screen="on"]::after { animation: occ-sun 22s ease-in-out infinite alternate; }
+}
+@keyframes occ-sun { from { transform: translateX(-9%); opacity: .5; } to { transform: translateX(9%); opacity: 1; } }

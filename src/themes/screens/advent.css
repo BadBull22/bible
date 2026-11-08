@@ -1,0 +1,61 @@
+/* Advent: screen package (a suggestion; the reader can switch the picture and the package on or off separately).
+   Needs _base.css. Wordmark colours: --wm-*. Screen tokens: --occ-*. The Bible reading font is never touched.
+   Verse of the season: Isaiah 9:2 (BSB): “The people walking in darkness have seen a great light; on those living in the land of the shadow of death, a light has dawned.” */
+.home-screen[data-occasion="advent"], .pv[data-occasion="advent"], .wordmark-art[data-wm="advent"], .main-frame[data-reading-theme][data-occasion="advent"] {
+  --wm-c1: #5a3d99;
+  --wm-c2: #2d5aa6;
+  --wm-c3: #c98a14;
+  --wm-c4: #3f7352;
+  --wm-ink: #5b5f78;
+  --wm-hi: #fffaf0;
+  --wm-deep: #1d2a5c;
+  --wm-warm: #b5527f;
+  --wm-loaf: #efe3c2;
+  --occ-bg: linear-gradient(180deg,#ece8f8 0%,#f3f0fa 45%,#faf7f0 100%);
+  --occ-accent: #5a3d99;
+  --occ-ring: rgba(90,61,153,.18);
+  --occ-line: #d9d1ec;
+  --occ-hint: #5a3f95;
+  --occ-verse: #45307c;
+  --occ-fx: rgba(255,206,110,.9);
+  --occ-hint-text: "No direct answer on file — here's what's most relevant, as we wait:";
+  --occ-verse-text: "“The people walking in darkness have seen a great light; on those living in the land of the shadow of death, a light has dawned.”";
+  --occ-verse-ref: "Isaiah 9:2 (BSB)";
+}
+.home-screen[data-occasion="advent"][data-scheme="dark"], .pv[data-occasion="advent"][data-scheme="dark"],
+:root[data-theme="dark"] .home-screen[data-occasion="advent"],
+:root[data-theme="dark"] .wordmark-art[data-wm="advent"],
+:root[data-theme="dark"] .main-frame[data-reading-theme][data-occasion="advent"] {
+  --wm-c1: #a58be3;
+  --wm-c2: #6f9be0;
+  --wm-c3: #f0b840;
+  --wm-c4: #62a97c;
+  --wm-ink: #cfd3e6;
+  --wm-hi: #f4efe2;
+  --wm-deep: #1d2a5c;
+  --wm-warm: #de7fab;
+  --wm-loaf: #efe3c2;
+  --occ-bg: linear-gradient(180deg,#1b1838 0%,#171826 55%,#17181c 100%);
+  --occ-accent: #a58be3;
+  --occ-ring: rgba(165,139,227,.28);
+  --occ-line: #34304f;
+  --occ-hint: #c3b3ee;
+  --occ-verse: #d9cef6;
+  --occ-fx: rgba(255,214,120,.9);
+}
+
+.home-screen[data-occasion="advent"][data-screen="on"]::before,
+.main-frame[data-reading-theme="full"][data-occasion="advent"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cpath d='M-6 14C50 12 110 40 158 104' fill='none' stroke='%233f7352' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7 14.1Q15.5 12.6 16.8 4.1Q8.3 5.6 7 14.1ZM20.1 15.2Q19.5 23.3 27.2 25.6Q27.8 17.6 20.1 15.2ZM33.2 17.5Q41.8 17.5 44.5 9.3Q35.9 9.3 33.2 17.5ZM46.4 20.8Q44.5 28.7 51.8 32.2Q53.6 24.4 46.4 20.8ZM59.5 25.3Q68 26.7 72 19Q63.5 17.7 59.5 25.3ZM72.5 31Q69.5 38.5 76.1 43.1Q79.1 35.6 72.5 31ZM85.4 37.8Q93.7 40.4 98.8 33.5Q90.5 30.8 85.4 37.8ZM98.2 45.8Q94.1 52.7 99.9 58.3Q104.1 51.3 98.2 45.8ZM110.8 55Q118.5 58.8 124.5 52.6Q116.8 48.8 110.8 55ZM123 65.4Q118 71.7 123 78Q128.1 71.7 123 65.4ZM135.1 77Q142.2 81.8 149 76.5Q141.9 71.7 135.1 77ZM146.7 89.9Q140.9 95.4 145 102.4Q150.9 96.8 146.7 89.9Z' fill='%233f7352'/%3E%3Cpath d='M7 14.1Q7.1 22.1 15 23.8Q14.9 15.8 7 14.1ZM20.1 15.2Q28.7 14.5 30.7 6.1Q22.1 6.8 20.1 15.2ZM33.2 17.5Q32 25.5 39.5 28.4Q40.7 20.4 33.2 17.5ZM46.4 20.8Q55 21.5 58.3 13.6Q49.7 12.9 46.4 20.8ZM59.5 25.3Q57 33 64 37.1Q66.4 29.4 59.5 25.3ZM72.5 31Q80.9 33 85.5 25.7Q77.1 23.7 72.5 31ZM85.4 37.8Q81.8 45 88.1 50.1Q91.7 42.9 85.4 37.8ZM98.2 45.8Q106.2 49 111.8 42.4Q103.8 39.2 98.2 45.8ZM110.8 55Q106.1 61.6 111.6 67.5Q116.2 60.9 110.8 55ZM123 65.4Q130.5 69.7 137 63.9Q129.5 59.6 123 65.4ZM135.1 77Q129.6 82.9 134.2 89.6Q139.6 83.6 135.1 77ZM146.7 89.9Q153.6 95.1 160.7 90.3Q153.9 85 146.7 89.9Z' fill='%235a9470'/%3E%3Cpath d='M126 0V36' fill='none' stroke='%23c9a14a' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M126 35L128.7 42.3L136.5 42.6L130.4 47.4L132.5 54.9L126 50.6L119.5 54.9L121.6 47.4L115.5 42.6L123.3 42.3Z' fill='%23e6ac2c'/%3E%3Ccircle cx='126' cy='46' r='17' fill='%23e6ac2c' opacity='.18'/%3E%3Cpath d='M86 12Q86.9 15.1 90 16Q86.9 16.9 86 20Q85.1 16.9 82 16Q85.1 15.1 86 12Z' fill='%237d5cc0'/%3E%3Cpath d='M158 33Q158.7 35.3 161 36Q158.7 36.7 158 39Q157.3 36.7 155 36Q157.3 35.3 158 33Z' fill='%23e6ac2c'/%3E%3Cpath d='M40 62.6Q40.7 65.3 43.4 66Q40.7 66.7 40 69.4Q39.3 66.7 36.6 66Q39.3 65.3 40 62.6Z' fill='%23e6ac2c'/%3E%3Cpath d='M30 14L18 6Q14 14 20 22Z' fill='%237d5cc0'/%3E%3Cpath d='M30 14L42 6Q46 14 40 22Z' fill='%237d5cc0'/%3E%3Ccircle cx='30' cy='14' r='3.4' fill='%239a7fd6'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 190 140'%3E%3Cg transform='translate(190 0) scale(-1 1)'%3E%3Cpath d='M-6 14C50 12 110 40 158 104' fill='none' stroke='%233f7352' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7 14.1Q15.5 12.6 16.8 4.1Q8.3 5.6 7 14.1ZM20.1 15.2Q19.5 23.3 27.2 25.6Q27.8 17.6 20.1 15.2ZM33.2 17.5Q41.8 17.5 44.5 9.3Q35.9 9.3 33.2 17.5ZM46.4 20.8Q44.5 28.7 51.8 32.2Q53.6 24.4 46.4 20.8ZM59.5 25.3Q68 26.7 72 19Q63.5 17.7 59.5 25.3ZM72.5 31Q69.5 38.5 76.1 43.1Q79.1 35.6 72.5 31ZM85.4 37.8Q93.7 40.4 98.8 33.5Q90.5 30.8 85.4 37.8ZM98.2 45.8Q94.1 52.7 99.9 58.3Q104.1 51.3 98.2 45.8ZM110.8 55Q118.5 58.8 124.5 52.6Q116.8 48.8 110.8 55ZM123 65.4Q118 71.7 123 78Q128.1 71.7 123 65.4ZM135.1 77Q142.2 81.8 149 76.5Q141.9 71.7 135.1 77ZM146.7 89.9Q140.9 95.4 145 102.4Q150.9 96.8 146.7 89.9Z' fill='%233f7352'/%3E%3Cpath d='M7 14.1Q7.1 22.1 15 23.8Q14.9 15.8 7 14.1ZM20.1 15.2Q28.7 14.5 30.7 6.1Q22.1 6.8 20.1 15.2ZM33.2 17.5Q32 25.5 39.5 28.4Q40.7 20.4 33.2 17.5ZM46.4 20.8Q55 21.5 58.3 13.6Q49.7 12.9 46.4 20.8ZM59.5 25.3Q57 33 64 37.1Q66.4 29.4 59.5 25.3ZM72.5 31Q80.9 33 85.5 25.7Q77.1 23.7 72.5 31ZM85.4 37.8Q81.8 45 88.1 50.1Q91.7 42.9 85.4 37.8ZM98.2 45.8Q106.2 49 111.8 42.4Q103.8 39.2 98.2 45.8ZM110.8 55Q106.1 61.6 111.6 67.5Q116.2 60.9 110.8 55ZM123 65.4Q130.5 69.7 137 63.9Q129.5 59.6 123 65.4ZM135.1 77Q129.6 82.9 134.2 89.6Q139.6 83.6 135.1 77ZM146.7 89.9Q153.6 95.1 160.7 90.3Q153.9 85 146.7 89.9Z' fill='%235a9470'/%3E%3Cpath d='M126 0V36' fill='none' stroke='%23c9a14a' stroke-width='1.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M126 35L128.7 42.3L136.5 42.6L130.4 47.4L132.5 54.9L126 50.6L119.5 54.9L121.6 47.4L115.5 42.6L123.3 42.3Z' fill='%23e6ac2c'/%3E%3Ccircle cx='126' cy='46' r='17' fill='%23e6ac2c' opacity='.18'/%3E%3Cpath d='M86 12Q86.9 15.1 90 16Q86.9 16.9 86 20Q85.1 16.9 82 16Q85.1 15.1 86 12Z' fill='%237d5cc0'/%3E%3Cpath d='M158 33Q158.7 35.3 161 36Q158.7 36.7 158 39Q157.3 36.7 155 36Q157.3 35.3 158 33Z' fill='%23e6ac2c'/%3E%3Cpath d='M40 62.6Q40.7 65.3 43.4 66Q40.7 66.7 40 69.4Q39.3 66.7 36.6 66Q39.3 65.3 40 62.6Z' fill='%23e6ac2c'/%3E%3Cpath d='M30 14L18 6Q14 14 20 22Z' fill='%237d5cc0'/%3E%3Cpath d='M30 14L42 6Q46 14 40 22Z' fill='%237d5cc0'/%3E%3Ccircle cx='30' cy='14' r='3.4' fill='%239a7fd6'/%3E%3C/g%3E%3C/svg%3E");
+  background-position: left top, right top; background-size: 190px auto; background-repeat: no-repeat;
+}
+/* quiet stars that slowly brighten and fade (the waiting); static specks when motion is reduced */
+.home-screen[data-occasion="advent"][data-screen="on"]::after {
+  background-image: radial-gradient(circle at 40px 50px, var(--occ-fx) 0 1.8px, transparent 2.8px), radial-gradient(circle at 150px 120px, var(--occ-fx) 0 1.5px, transparent 2.5px), radial-gradient(circle at 250px 30px, var(--occ-fx) 0 2.1px, transparent 3.1px), radial-gradient(circle at 90px 220px, var(--occ-fx) 0 1.6px, transparent 2.6px), radial-gradient(circle at 210px 190px, var(--occ-fx) 0 2.0px, transparent 3.0px), radial-gradient(circle at 30px 160px, var(--occ-fx) 0 1.4px, transparent 2.4px), radial-gradient(circle at 270px 260px, var(--occ-fx) 0 1.7px, transparent 2.7px), radial-gradient(circle at 130px 280px, var(--occ-fx) 0 1.4px, transparent 2.4px);
+  background-size: 300px 300px;
+  opacity: .65;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .home-screen[data-occasion="advent"][data-screen="on"]::after { animation: occ-wait 9s ease-in-out infinite alternate; }
+}
+@keyframes occ-wait { from { opacity: .25; } to { opacity: .9; } }

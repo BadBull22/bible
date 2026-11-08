@@ -1,0 +1,247 @@
+/* The opening screen's looks: the screen packages (one file per look) and the few rules that wire them into the real screen. */
+@import "./screens/_base.css";
+@import "./screens/christmas.css";
+@import "./screens/easter.css";
+@import "./screens/pentecost.css";
+@import "./screens/passover.css";
+@import "./screens/communion.css";
+@import "./screens/healing.css";
+@import "./screens/miracles.css";
+@import "./screens/sea-of-galilee.css";
+@import "./screens/advent.css";
+@import "./screens/palm-sunday.css";
+@import "./screens/good-friday.css";
+@import "./screens/lent.css";
+@import "./screens/ascension.css";
+@import "./screens/epiphany.css";
+@import "./screens/harvest.css";
+@import "./screens/new-year.css";
+@import "./screens/reformation.css";
+@import "./screens/mothers-day.css";
+@import "./screens/fathers-day.css";
+@import "./screens/trinity.css";
+@import "./screens/bible-sunday.css";
+@import "./screens/childrens-day.css";
+@import "./screens/plain.css";
+
+/* a look's wordmark picture replaces the coloured letters (the real text "Gospel" stays on the heading for screen readers) */
+.gospel-wordmark.has-art {
+  font-size: 0;
+  line-height: 0;
+  margin: 0 0 0.6rem;
+}
+.gospel-wordmark .wordmark-art {
+  display: block;
+}
+.gospel-wordmark .wordmark-art svg {
+  display: block;
+  width: min(20rem, 72vw);
+  height: auto;
+  margin: 0 auto;
+}
+
+/* the verse of the season, under the search box */
+.occ-verse {
+  margin: 0.9rem auto 0;
+  max-width: 34rem;
+  text-align: center;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-style: italic;
+}
+.occ-verse cite {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.74rem;
+  font-style: normal;
+  opacity: 0.85;
+}
+
+/* the keep-it-or-go-back question near a season */
+.season-prompt {
+  position: relative;
+  margin: 0.9rem auto 0;
+  max-width: 34rem;
+  padding: 0.7rem 2.2rem 0.7rem 0.9rem;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent-500);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised, #fff);
+  text-align: left;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.season-prompt p {
+  margin: 0 0 0.5rem;
+}
+.season-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.season-prompt-close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.4rem;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* the small line on the opening screen that leads to the look settings */
+.home-look-line {
+  margin: 0.55rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* the default theme: a slight glow in the app's accent colour around the search box and the shortcut tiles */
+.home-screen[data-glow="default"] .home-search-box,
+.home-screen[data-glow="default"] .home-stat-tile {
+  box-shadow: 0 0 24px 2px color-mix(in srgb, var(--accent-500) 30%, transparent);
+}
+.home-screen[data-glow="default"] .home-search-box:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-500) 22%, transparent), 0 0 28px 4px color-mix(in srgb, var(--accent-500) 38%, transparent);
+}
+:root[data-theme="dark"] .home-screen[data-glow="default"] .home-search-box,
+:root[data-theme="dark"] .home-screen[data-glow="default"] .home-stat-tile {
+  box-shadow: 0 0 24px 2px color-mix(in srgb, var(--accent-500) 26%, transparent);
+}
+
+/* a short window: a themed wordmark, its verse and the notes around it take less room, so the tiles stay on the screen */
+@media (max-height: 800px) {
+  .gospel-wordmark .wordmark-art svg {
+    width: min(16rem, 70vw);
+  }
+  .occ-verse {
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+  .home-look-line {
+    margin-top: 0.3rem;
+  }
+  .daily-verse blockquote {
+    font-size: 0.95rem;
+  }
+}
+
+/* The theme's background behind the Bible text (Settings > Appearance). The frame around the reading pane does not scroll: it carries the
+   theme's background and, at "full", its corner pictures, so they stay where they are drawn while the text scrolls past. The reader's own
+   paper colour is laid over the background as a veil, so the text stays as readable as it was in any reading colour mode: "soft" is mostly
+   paper with a hint of the theme, "full" is the whole background. Only the Bible reading pane is touched, and never the reading font. */
+.main-frame {
+  display: contents;
+}
+.main-frame[data-reading-theme] {
+  display: flex;
+  flex: 1;
+  min-width: 320px;
+  position: relative;
+  isolation: isolate;
+  --reading-veil: color-mix(in srgb, var(--paper) 65%, transparent);
+  background: linear-gradient(var(--reading-veil), var(--reading-veil)), var(--occ-bg, var(--paper));
+}
+.main-frame[data-reading-theme="full"] {
+  --reading-veil: color-mix(in srgb, var(--paper) 30%, transparent);
+}
+.main-frame[data-reading-theme="full"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.main-frame[data-reading-theme] > .main-pane {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+@media (max-width: 700px) {
+  .main-frame[data-reading-theme="full"]::before {
+    display: none;
+  }
+}
+
+/* The reader's own colour for the whole app (Settings > Appearance > Colour of the app): the page, the raised panels, the bars and the borders of
+   every window take a pastel tint of it (a deep, muted shade in the dark appearance). src/themes/palette.ts makes the --ac-* colours: clear pastels in
+   the light appearance (with the two small grey text colours darkened to stay at 4.5 to 1), and shades exactly as bright as the standard ones in
+   dark. High contrast keeps its own borders and greys. */
+html[data-app-colour] {
+  --paper: var(--ac-paper);
+  --paper-raised: var(--ac-raised);
+  --chrome-bg: var(--ac-chrome);
+  --accent-100: var(--ac-accent100);
+}
+html[data-app-colour]:not([data-contrast="high"]) {
+  --border: var(--ac-border);
+}
+/* the small grey labels and hints are darkened a little in the light appearance so they stay readable on the stronger tint (not in dark mode, not in high contrast) */
+html[data-app-colour]:not([data-theme="dark"]):not([data-contrast="high"]) {
+  --text-muted: var(--ac-muted);
+  --text-faint: var(--ac-faint);
+}
+html[data-app-colour][data-theme="dark"] {
+  --paper: var(--ac-paper-dark);
+  --paper-raised: var(--ac-raised-dark);
+  --chrome-bg: var(--ac-chrome-dark);
+  --accent-100: var(--ac-accent100-dark);
+}
+html[data-app-colour][data-theme="dark"]:not([data-contrast="high"]) {
+  --border: var(--ac-border-dark);
+}
+
+/* the colour choices in Settings */
+.app-colour {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.4rem 0 0.5rem;
+}
+.app-colour .swatch {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  background: var(--sw, var(--paper));
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+}
+.app-colour .swatch:hover {
+  border-color: var(--text-muted);
+}
+.app-colour .swatch[aria-checked="true"] {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--text);
+}
+.app-colour .swatch.standard {
+  width: auto;
+  padding: 0 0.8rem;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--paper-raised);
+}
+.app-colour .swatch.custom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: conic-gradient(#f3cdd6, #f6eab5, #cdebd8, #cfe3f6, #e0d2f1, #f3cdd6);
+}
+.app-colour .swatch.custom input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}

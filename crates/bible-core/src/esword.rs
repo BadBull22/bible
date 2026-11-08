@@ -47,6 +47,9 @@ pub struct Module {
     /// the words of Jesus in the verses that have some: (book, chapter, verse, inclusive [first, last]
     /// ranges of words, a word being a run of letters and digits, as the red-letter data of the built-in Bibles)
     pub red: Vec<(&'static str, i64, i64, Vec<(usize, usize)>)>,
+    /// the words that carry Strong's numbers in the verses that have some: (book, chapter, verse,
+    /// [(the words as spelled in the verse text, their numbers "H430" / "G25")])
+    pub words: Vec<(&'static str, i64, i64, Vec<(String, Vec<String>)>)>,
     /// commentary notes: (book, chapter, first verse, text); chapter 0 = on the book, verse 0 = on the chapter
     pub notes: Vec<(&'static str, i64, i64, String)>,
     /// dictionary / devotional entries: (key, headword, body)
@@ -526,6 +529,23 @@ fn mybible_text(raw: &str) -> (String, bool, Vec<(usize, usize)>) {
 /// A footnote or study note of a MyBible Bible as the app's text: its links to verses
 /// (`<a href="B:400 6:7">Mic. 6:7</a>`) become the app's markers, paragraphs stay apart, the
 /// rest of the tags are taken off.
+/// The words of a MyBible verse that carry Strong's numbers (`word<S>1234</S>`). A bare number
+/// is Hebrew in the Old Testament books (`hebrew`) and Greek in the New; `<S>G1234</S>` says so itself.
+fn mybible_words(raw: &str, hebrew: bool) -> Vec<(String, Vec<String>)> {
+    if !raw.contains("<S>") {
+        return Vec::new();
+    }
+    markup::words_from_tags(
+        raw,
+        rx!(r"(?s)<S>\s*([HGhg]?)0*(\d+)[A-Za-z]?\s*</S>"),
+        |c| {
+            let lang = c[1].chars().next().map(|l| l.to_ascii_uppercase()).unwrap_or(if hebrew { 'H' } else { 'G' });
+            markup::strongs_number(&format!("{lang}{}", &c[2]))
+        },
+        |span| mybible_text(span).0,
+    )
+}
+
 fn mybible_note(raw: &str) -> String {
     let s = rx!(r#"(?is)<a\b[^>]*href=['"]B:(\d+) (\d+):(\d+)(?:-(\d+))?['"][^>]*>(.*?)</a>"#).replace_all(raw, |c: &Captures| {
         let label = markup::unescape(&rx!(r"<[^>]*>").replace_all(&c[5], ""));
@@ -753,6 +773,10 @@ fn read_mybible(c: &Connection, tabs: &[(String, Vec<String>)], file_name: Optio
             if !ranges.is_empty() {
                 m.red.push((book, r[1].1, r[2].1, ranges));
             }
+            let words = mybible_words(&r[3].0, r[0].1 <= 460);
+            if !words.is_empty() {
+                m.words.push((book, r[1].1, r[2].1, words));
+            }
             m.verses.push((book, r[1].1, r[2].1, text));
         }
     }
@@ -813,6 +837,13 @@ pub fn read(path: &Path, file_name: Option<&str>) -> Result<Module, String> {
             }
             let text = convert(&r[3].0, m.program, Kind::Bible);
             if !text.is_empty() {
+                // Strong's numbers are written `word<WH430>` in e-Sword and MySword Bibles (not in the RTF ones)
+                if !r[3].0.trim_start().starts_with("{\\rtf") {
+                    let words = markup::strongs_words(&r[3].0, "GBF");
+                    if !words.is_empty() {
+                        m.words.push((book, r[1].1, r[2].1, words));
+                    }
+                }
                 m.verses.push((book, r[1].1, r[2].1, text));
             }
         }
@@ -1004,6 +1035,28 @@ mod tests {
         assert_eq!((m.notes[2].0, m.notes[2].1, m.notes[2].2), ("John", 3, 0));
     }
 
+    #[test]
+    fn a_mybible_bible_keeps_its_strongs_numbers() {
+        let w = |s: &str, n: &[&str]| (s.to_string(), n.iter().map(|x| x.to_string()).collect::<Vec<_>>());
+        // bare numbers: Hebrew before Matthew, Greek from there; a footnote and a morphology tag between words
+        assert_eq!(
+            mybible_words("In the beginning<S>7225</S> God<S>430</S> created<S>853</S><S>1254</S><f>[1]</f> the heaven<S>8064</S><m>N-FSA</m>.", true),
+            vec![w("In the beginning", &["H7225"]), w("God", &["H430"]), w("created", &["H853", "H1254"]), w("the heaven", &["H8064"])]
+        );
+        assert_eq!(mybible_words("For<S>1063</S> God<S>G2316</S> so<S>3779</S>", false), vec![w("For", &["G1063"]), w("God", &["G2316"]), w("so", &["G3779"])]);
+        assert!(mybible_words("In the beginning God created.", true).is_empty());
+
+        let p = db("CREATE TABLE info(name TEXT, value TEXT);
+             CREATE TABLE verses(book_number NUMERIC, chapter NUMERIC, verse NUMERIC, text TEXT);
+             INSERT INTO info VALUES ('description', 'Tagged'), ('language', 'en');
+             INSERT INTO verses VALUES (10,1,1,'In the beginning<S>7225</S> God<S>430</S> created<S>1254</S>.'), (500,3,16,'For<S>1063</S> God<S>2316</S> so<S>3779</S> loved.'), (730,22,21,'Grace.');");
+        let m = read(&p, Some("TG.SQLite3")).unwrap();
+        assert_eq!(m.verses.len(), 3);
+        assert_eq!(m.words.len(), 2, "Revelation 22:21 has no tags: {:?}", m.words);
+        assert_eq!(m.words[0], ("Genesis", 1, 1, vec![w("In the beginning", &["H7225"]), w("God", &["H430"]), w("created", &["H1254"])]));
+        assert_eq!((m.words[1].0, m.words[1].3[1].1.clone()), ("John", vec!["G2316".to_string()]));
+    }
+
     /// The reader's own MyBible downloads (zips as they came): `MYBIBLE_SAMPLES=<folder> cargo test real_mybible -- --ignored --nocapture`.
     #[test]
     #[ignore]
@@ -1057,6 +1110,60 @@ mod tests {
                 }
                 Ok(None) => println!("{fname}: not an e-Sword/MySword/MyBible file"),
                 Err(e) => println!("{fname}: error {e}"),
+            }
+        }
+    }
+
+    /// Which Bibles in a folder of zips carry Strong's numbers, and what the importer keeps of them (a development aid):
+    /// `MYBIBLE_SAMPLES=<folder> cargo test --lib strongs_in_the_zips -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn strongs_in_the_zips_of_a_folder() {
+        let Ok(dir) = std::env::var("MYBIBLE_SAMPLES") else { return };
+        let mut files: Vec<_> = std::fs::read_dir(dir).unwrap().flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|e| e == "zip")).collect();
+        files.sort();
+        for f in files {
+            let bytes = std::fs::read(&f).unwrap();
+            let fname = f.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string();
+            let Ok(Some((module, name))) = crate::library::esword_bytes(&bytes, Some(&fname)) else {
+                println!("{fname}: not an e-Sword/MySword/MyBible file");
+                continue;
+            };
+            let p = std::env::temp_dir().join("strongs-in-the-zips.sqlite");
+            std::fs::write(&p, module).unwrap();
+            let c = Connection::open_with_flags(&p, OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap();
+            // how many verses hold each tag form in the file itself
+            let has = |tag: &str| -> i64 {
+                ["SELECT count(*) FROM verses WHERE instr(text, ?1) > 0", "SELECT count(*) FROM Bible WHERE instr(Scripture, ?1) > 0"]
+                    .iter()
+                    .find_map(|q| c.query_row(q, [tag], |r| r.get::<_, i64>(0)).ok())
+                    .unwrap_or(0)
+            };
+            let hints = format!("<S> {}, <WH {}, <WG {}, lemma= {}", has("<S>"), has("<WH"), has("<WG"), has("lemma="));
+            match read(&p, Some(&name)) {
+                Ok(m) if m.kind == "bible" => {
+                    let text: std::collections::HashMap<(&str, i64, i64), &str> = m.verses.iter().map(|v| ((v.0, v.1, v.2), v.3.as_str())).collect();
+                    let (mut words, mut lost) = (0, 0);
+                    for (b, ch, v, list) in &m.words {
+                        let t = text.get(&(*b, *ch, *v)).copied().unwrap_or("");
+                        for (surface, nums) in list {
+                            words += 1;
+                            assert!(!nums.is_empty() && nums.iter().all(|n| markup::strongs_number(n).as_deref() == Some(n.as_str())), "{fname} {b} {ch}:{v} {nums:?}");
+                            if !surface.split_whitespace().all(|p| t.contains(p)) {
+                                lost += 1;
+                                if lost <= 5 {
+                                    println!("    not in the text: {b} {ch}:{v} {surface:?}  <-  {t}");
+                                }
+                            }
+                        }
+                    }
+                    println!("{fname}: Bible {:?} ({}, {}) {} verses; in the file: {hints}; kept: {} verses with {words} words ({lost} not found in their text)", m.title, m.program, m.abbreviation, m.verses.len(), m.words.len());
+                    if let Some((b, ch, v, list)) = m.words.iter().find(|w| w.0 == "John" && w.1 == 3 && w.2 == 16).or(m.words.first()) {
+                        println!("    {b} {ch}:{v}  {}\n    {:?}", text.get(&(*b, *ch, *v)).copied().unwrap_or(""), list);
+                    }
+                }
+                Ok(m) => println!("{fname}: {} ({}), not a Bible; in the file: {hints}", m.kind, m.program),
+                Err(e) => println!("{fname}: refused: {e}"),
             }
         }
     }
