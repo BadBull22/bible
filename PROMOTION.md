@@ -25,7 +25,7 @@ Kept for reference. The Google verification file is `docs/google605daed453905d75
 3. Add that TXT record at the company where you bought the domain (its DNS settings), then press
    **Verify** (it can take an hour to be seen).
    - *Easier alternative:* choose **URL prefix** (`https://bible4me.org/`) → **HTML tag**, and send
-     the tag to Claude; it goes into the site's pages and you press Verify.
+     the tag to the site's developer; it goes into the site's pages and you press Verify.
 4. **Sitemaps** → submit `https://bible4me.org/sitemap.xml`.
 5. **URL inspection** → paste `https://bible4me.org/` → **Request indexing**; do the same for
    `/windows/` and `/android/`.

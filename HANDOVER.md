@@ -1,6 +1,6 @@
 # Bible Concordance — Handover
 
-Saved here (not in Claude's per-machine memory) because this project lives on `V:\Code\bible`,
+Saved here (not in a per-machine memory) because this project lives on `V:\Code\bible`,
 a network share, and the next session may run from a different PC. Read this file first when
 resuming.
 
@@ -12,7 +12,7 @@ semantic/topical search, a visual cross-reference graph, curated genealogies and
 index, optional live NIV/NKJV lookup via the user's own api.bible key, and printable views.
 
 Full original plan (data sources, phasing, architecture rationale) is at:
-a local Claude plan file on the PC this was built on — copy its
+a local plan file on the PC this was built on — copy its
 contents here if you need it from a different machine, since that path is local to that PC.
 
 ## Current status: Phases 1-17 done — v2.9.0 (desktop and Android) released 2026-10-17 (GitHub + bible4me.org); v2.7.0 committed 2026-10-16 (the sermon builder rebuilt; not published); v2.8.0 built 2026-10-16 for the owner to try; v2.6.1 released 2026-10-13 (Appearance settings, readable buttons); Android 0.3.2 Beta (released 2026-10-13; it looks for its own updates); website at https://bible4me.org
@@ -867,8 +867,7 @@ bundled data and incorporated.** `qa.json` grew from 34 to 133 entries (the coun
 stated as "23 to 122" in an earlier version of this note -- that was a miscount, the
 file has 133 entries with unique ids); `qa_index.json` from 202 to 494 embedded rows.
 
-- **The document was AI-generated** (its own footer says so: "AI responses may
-  include mistakes") **and checking it, not just importing it, turned up real
+- **The source document contained mistakes, and checking it, not just importing it, turned up real
   errors**, exactly validating why the user asked for it to be checked rather than
   copied in directly:
   - Question 12 ("Is God male or a genderless spirit?") cited Luke 24:39 as support --
