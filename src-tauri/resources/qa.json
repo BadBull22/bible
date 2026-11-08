@@ -8799,7 +8799,7 @@
         "was mary a virgin"
       ],
       "confidence": "doctrinal_view",
-      "answer": "Scripture: Mary was a young virgin of Nazareth, engaged to Joseph, to whom the angel Gabriel said, “you who are highly favored”, and told her that she would conceive by the Holy Spirit and bear the Son of the Most High (Luke 1:26-38; Matthew 1:18-23). Elizabeth called her blessed because she believed (Luke 1:42-45), and she answered in her song of praise (Luke 1:46-55). She gave birth to Jesus in Bethlehem (Luke 2:1-7), heard Simeon's warning that a sword would pierce her soul (Luke 2:34-35), asked Jesus for help at the wedding in Cana (John 2:1-5), stood by the cross, where Jesus entrusted her to the care of John (John 19:25-27), and was among the believers praying in the upper room (Acts 1:14).\n\nPentecostal understanding: Mary is honoured as the blessed virgin chosen to bear the Savior and as an example of faith and obedience, but she is a believer saved by Christ like the rest of us, and is not to be worshipped or prayed to, because there is one mediator between God and men, the man Christ Jesus (1 Timothy 2:5).\n\nOther views: Roman Catholic and Orthodox churches honour her as the Mother of God (Theotokos), and Catholics teach her immaculate conception, perpetual virginity and assumption into heaven, and ask for her prayers; most Protestants honour her but reject those teachings.",
+      "answer": "Scripture: Mary was a young virgin of Nazareth, engaged to Joseph, to whom the angel Gabriel said, “you who are highly favored”, and told her that she would conceive by the Holy Spirit and bear the Son of the Most High (Luke 1:26-38; Matthew 1:18-23). Elizabeth called her blessed because she believed (Luke 1:42-45), and she answered in her song of praise (Luke 1:46-55). She gave birth to Jesus in Bethlehem (Luke 2:1-7), heard Simeon's warning that a sword would pierce her soul (Luke 2:34-35), asked Jesus for help at the wedding in Cana (John 2:1-5), stood by the cross, where Jesus entrusted her to the care of John (John 19:25-27), and was among the believers praying in the upper room (Acts 1:14).\n\nPentecostal understanding: Mary is honoured as the blessed virgin chosen to bear the Savior and as an example of faith and obedience, but she is a believer saved by Christ like the rest of us, and is not to be worshipped or prayed to, because there is one mediator between God and men, the man Christ Jesus (1 Timothy 2:5). She was a virgin when Jesus was conceived and born, but the Gospels' own words point to a normal married life afterward. Matthew 1:25 says that Joseph “had no union with her until she gave birth to a Son”, and the word “until” suggests that they came together afterward. Luke 2:7 calls Jesus her “firstborn, a Son”, which suggests that other children followed, and the people of Nazareth named Jesus' brothers and sisters (Mark 6:3; Matthew 13:55-56).\n\nOther views: Roman Catholic and Orthodox churches honour her as the Mother of God (Theotokos), and Catholics teach her immaculate conception, perpetual virginity and assumption into heaven, and ask for her prayers; most Protestants honour her but reject those teachings.",
       "citations": [
         {
           "reference": "Luke 1:26-38",
@@ -8827,6 +8827,18 @@
         },
         {
           "reference": "1 Timothy 2:5",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 1:25",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 6:3",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 13:55-56",
           "role": "stated"
         }
       ],
