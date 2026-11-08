@@ -12,8 +12,15 @@ const SHOWN = 3;
  * Under a search: the Browse pages (stories, "Verses for…", children's pages) that are about what was typed, and, for the best matching subject, its
  * first passages with what each one says, so the verses are in the results themselves. Nothing is shown when no page matches.
  */
-export function BrowseMatches({ query, onOpen, onJump }: { query: string; onOpen: (kind: BrowseKind, id: string) => void; onJump?: (book: string, chapter: number, verse: number) => void }) {
-  const found = useMemo(() => findBrowse(query, 4), [query]);
+export function BrowseMatches({ query, also = [], onOpen, onJump }: { query: string; /** other wordings of the same question (the curated answer's own question), so a paraphrase finds the same pages */ also?: string[]; onOpen: (kind: BrowseKind, id: string) => void; onJump?: (book: string, chapter: number, verse: number) => void }) {
+  const alsoKey = also.join("|");
+  const found = useMemo(() => {
+    const out = findBrowse(query, 4);
+    for (const q of alsoKey ? alsoKey.split("|") : []) {
+      for (const e of findBrowse(q, 4)) if (out.length < 4 && !out.some((o) => o.kind === e.kind && o.id === e.id)) out.push(e);
+    }
+    return out;
+  }, [query, alsoKey]);
   if (found.length === 0) return null;
   // the first subject found, if any: its verses are listed (a subject on which Christians differ lists none, only its page, which carries the neutral box)
   const subject = found.find((e) => e.kind === "topics");
