@@ -9,6 +9,7 @@ quoted segment with the closest contiguous run of BSB words.
 
     python audit_qa_quotes.py          # report only
     python audit_qa_quotes.py --fix    # rewrite qa.json in place (review the diff!)
+    python audit_qa_quotes.py --sweep  # report only: every quoted passage, with or without a citation straight after it
 """
 
 import difflib
@@ -25,13 +26,20 @@ ROOT = Path(__file__).resolve().parent.parent
 QA = ROOT / "src-tauri" / "resources" / "qa.json"
 DB = ROOT / "src-tauri" / "resources" / "bible.db"
 
-# "quoted text" followed (within a few characters) by a parenthesised citation.
+# "quoted text" (straight or curly quotes) followed (within a few characters) by a parenthesised citation.
 QUOTE_CITE = re.compile(r'"([^"]{8,}?)"\s*\(([^()]*?\d+:\d+[^()]*)\)')
+QUOTE_CITE_CURLY = re.compile(r'“([^”]{8,}?)”\s*\(([^()]*?\d+:\d+[^()]*)\)')
+QUOTE_PATTERNS = ((QUOTE_CITE, '"', '"'), (QUOTE_CITE_CURLY, "“", "”"))
+# any quoted passage, with or without a citation straight after it (used by --sweep)
+ANY_QUOTE = re.compile(r'"([^"]{4,}?)"|“([^”]{4,}?)”')
+PAREN_REF = re.compile(r"\(([^()]*?\d+:\d+[^()]*?)\)")
 WORD = re.compile(r"[A-Za-z0-9']+")
 
 
 def norm_words(s: str) -> list[str]:
-    return [w.lower().strip("'") for w in WORD.findall(s.replace("’", "'"))]
+    # a lone apostrophe (a closing quote mark, or the space-apostrophe in "Jesus ’ glory") is not a word
+    words = (w.lower().strip("'") for w in WORD.findall(s.replace("’", "'")))
+    return [w for w in words if w]
 
 
 def bsb_text(con, refs) -> str:
@@ -154,7 +162,7 @@ def main(fix: bool):
     for e in data["entries"]:
         ans = e["answer"]
         new_ans = ans
-        for m in QUOTE_CITE.finditer(ans):
+        for m, lq, rq in [(m, lq, rq) for pattern, lq, rq in QUOTE_PATTERNS for m in pattern.finditer(ans)]:
             quote, cite = m.group(1), m.group(2)
             refs = parse_ref_list(cite)
             source = bsb_text(con, refs)
@@ -166,7 +174,7 @@ def main(fix: bool):
                 if ov != quote:
                     mismatched += 1
                     print(f"[{e['id']}] ({cite}) OVERRIDE\n   was: {quote}\n   BSB: {ov}\n")
-                    new_ans = new_ans.replace(f'"{quote}"', f'"{ov}"', 1)
+                    new_ans = new_ans.replace(f"{lq}{quote}{rq}", f"{lq}{ov}{rq}", 1)
                 continue
             segments = [s for s in re.split(r"\.\.\.|…", quote)]
             new_segments = []
@@ -191,7 +199,7 @@ def main(fix: bool):
                 mismatched += 1
                 replacement = tidy("...".join(new_segments))
                 print(f"[{e['id']}] ({cite})\n   was: {quote}\n   BSB: {replacement}\n")
-                new_ans = new_ans.replace(f'"{quote}"', f'"{replacement}"', 1)
+                new_ans = new_ans.replace(f"{lq}{quote}{rq}", f"{lq}{replacement}{rq}", 1)
         if fix and new_ans != ans:
             e["answer"] = new_ans
             fixed += 1
@@ -205,5 +213,40 @@ def main(fix: bool):
         print(f"rewrote {QA}")
 
 
+def sweep():
+    """Report only. Every quoted passage of three or more words, wherever it stands in the answer, must be BSB wording found in
+    the verses the answer cites (the references in its brackets and in its list of passages). Catches a quote that has no citation
+    directly after it, such as the second half of a longer quotation or a quote from a neighbouring verse."""
+    data = json.loads(QA.read_text("utf-8"))
+    con = sqlite3.connect(DB)
+    bad = checked = 0
+    for e in data["entries"]:
+        texts = []
+        for c in e.get("citations", []):
+            try:
+                texts.append(bsb_text(con, parse_ref_list(c["reference"])))
+            except Exception:
+                pass
+        for m in PAREN_REF.finditer(e["answer"]):
+            try:
+                texts.append(bsb_text(con, parse_ref_list(m.group(1))))
+            except Exception:
+                pass
+        pool = " ".join(norm_words(" ".join(texts)))
+        for m in ANY_QUOTE.finditer(e["answer"]):
+            quote = m.group(1) or m.group(2)
+            for seg in re.split(r"\.\.\.|…", quote):
+                w = " ".join(norm_words(seg))
+                if len(w.split()) >= 3:
+                    checked += 1
+                    if w not in pool:
+                        bad += 1
+                        print(f"[{e['id']}] not in the cited verses: {seg.strip()[:150]}")
+    print(f"quoted passages checked: {checked} | not found in the cited verses: {bad}")
+
+
 if __name__ == "__main__":
-    main("--fix" in sys.argv)
+    if "--sweep" in sys.argv:
+        sweep()
+    else:
+        main("--fix" in sys.argv)
