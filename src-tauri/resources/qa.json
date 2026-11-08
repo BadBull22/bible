@@ -10964,6 +10964,1388 @@
         }
       ],
       "note": null
+    },
+    {
+      "id": "who_is_jesus_christ",
+      "question": "Who is Jesus Christ?",
+      "alt_phrasings": [
+        "who is jesus",
+        "who is jesus of nazareth",
+        "who was jesus",
+        "tell me about jesus",
+        "who is jesus according to the bible",
+        "what does the bible say about jesus"
+      ],
+      "confidence": "stated",
+      "answer": "Jesus of Nazareth is the Son of God, who became a man, died for our sins, rose again on the third day, and will come again. John writes that in the beginning was the Word, “and the Word was with God, and the Word was God,” and that “The Word became flesh and made His dwelling among us” (John 1:1, 14). He is “the image of the invisible God, the firstborn over all creation” (Colossians 1:15), and “the radiance of God's glory and the exact representation of His nature” (Hebrews 1:3). Though He existed in the form of God, He “emptied Himself, taking the form of a servant,” and was obedient even to death on a cross (Philippians 2:6-8). He was born of the virgin Mary in Bethlehem (Matthew 1:18-25; Luke 2:1-7), taught and healed, was crucified under Pontius Pilate, was buried and was raised on the third day (1 Corinthians 15:3-4). “Christ” means the Anointed One, the promised Messiah (Matthew 16:16), and the name Jesus tells us that He will save His people from their sins (Matthew 1:21). John wrote his Gospel “so that you may believe that Jesus is the Christ, the Son of God, and that by believing you may have life in His name” (John 20:31). Jesus said, “I am the way and the truth and the life. No one comes to the Father except through Me” (John 14:6).",
+      "citations": [
+        {
+          "reference": "John 1:1-14",
+          "role": "stated"
+        },
+        {
+          "reference": "Colossians 1:15-20",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 1:1-4",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 2:5-11",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 16:13-17",
+          "role": "stated"
+        },
+        {
+          "reference": "John 20:30-31",
+          "role": "stated"
+        },
+        {
+          "reference": "John 14:6",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 15:3-4",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "why_did_jesus_die",
+      "question": "Why did Jesus have to die?",
+      "alt_phrasings": [
+        "why did jesus die on the cross",
+        "why did jesus die",
+        "what did the cross accomplish",
+        "why was jesus crucified",
+        "what is the atonement",
+        "what does it mean that jesus died for our sins",
+        "why did christ die for us",
+        "what was the point of christ's death on the cross",
+        "what was the purpose of the crucifixion",
+        "what is the purpose of jesus' death",
+        "why was the cross necessary",
+        "what did christ accomplish by dying on the cross"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: “But God proves His love for us in this: While we were still sinners, Christ died for us” (Romans 5:8). “He Himself bore our sins in His body on the tree, so that we might die to sin and live to righteousness” (1 Peter 2:24). “God made Him who knew no sin to be sin on our behalf, so that in Him we might become the righteousness of God” (2 Corinthians 5:21). Jesus said that the Son of Man came “to give His life as a ransom for many” (Mark 10:45). “Without the shedding of blood there is no forgiveness” (Hebrews 9:22), and God “sent His Son as the atoning sacrifice for our sins” (1 John 4:10). On the cross He also disarmed the powers and authorities, “triumphing over them by the cross” (Colossians 2:15). Isaiah foretold that He was “pierced for our transgressions” and that “by His stripes we are healed” (Isaiah 53:5).\n\nPentecostal understanding: Jesus died in our place, bearing the punishment our sins deserved, so that we could be forgiven, made righteous and reconciled to God (Romans 3:23-26); He also defeated Satan, sin and death, and, as Isaiah 53:5 and 1 Peter 2:24 say, His stripes have provided for our healing (Matthew 8:16-17).\n\nOther views: the Church has always used several pictures of the cross, a ransom, a sacrifice, a victory over evil (Hebrews 2:14-15), and a demonstration of love that draws us to God (Romans 5:8; John 12:32); different traditions stress different ones. Roman Catholic teaching speaks of Christ making satisfaction for sin, the Eastern Orthodox emphasise His victory over death and the healing of human nature, and many Reformed teachers stress that He bore the penalty in our place. Many Christians do not hold that healing is guaranteed in the atonement in the same way.",
+      "citations": [
+        {
+          "reference": "Romans 5:6-11",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Peter 2:21-25",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Corinthians 5:14-21",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 10:45",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 9:22",
+          "role": "stated"
+        },
+        {
+          "reference": "1 John 4:9-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 53:4-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Colossians 2:13-15",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "what_is_the_gospel",
+      "question": "What is the gospel?",
+      "alt_phrasings": [
+        "what does the gospel mean",
+        "what is the good news",
+        "what is the gospel message",
+        "what is the gospel of jesus christ",
+        "explain the gospel",
+        "what is the christian message",
+        "summarize the christian gospel",
+        "what is the good news that christians preach",
+        "what is the message of the gospel",
+        "what is the gospel in simple terms"
+      ],
+      "confidence": "stated",
+      "answer": "The word gospel means good news. Paul sums it up: “Christ died for our sins according to the Scriptures, that He was buried, that He was raised on the third day according to the Scriptures” (1 Corinthians 15:3-4). Jesus began His ministry by saying, “The time is fulfilled,” and, “the kingdom of God is near. Repent and believe in the gospel!” (Mark 1:15). Paul wrote, “I am not ashamed of the gospel, because it is the power of God for salvation to everyone who believes” (Romans 1:16), and “if you confess with your mouth, ‘Jesus is Lord,’ and believe in your heart that God raised Him from the dead, you will be saved” (Romans 10:9). We are saved by grace through faith, not by our works (Ephesians 2:8-9). The good news is that God has forgiven sinners and offers eternal life through Jesus Christ, who died in our place and rose again, and that the kingdom of God is open to all who repent and believe (John 3:16; Acts 2:38).",
+      "citations": [
+        {
+          "reference": "1 Corinthians 15:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 1:16-17",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 1:14-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 10:9-13",
+          "role": "stated"
+        },
+        {
+          "reference": "Ephesians 2:8-9",
+          "role": "stated"
+        },
+        {
+          "reference": "John 3:16",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 2:38",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "born_again",
+      "question": "What does it mean to be born again?",
+      "alt_phrasings": [
+        "what does born again mean",
+        "what is the new birth",
+        "how do i get born again",
+        "what does jesus mean by born again",
+        "what is spiritual rebirth",
+        "must you be born again",
+        "what does it mean to be born of water and the spirit",
+        "what is meant by being born again in john 3",
+        "what does john 3 mean by born again",
+        "what did jesus tell nicodemus about being born again",
+        "how does a person become born again",
+        "what does it mean to be reborn spiritually",
+        "what does it mean when a person is reborn spiritually",
+        "what is spiritual rebirth in christianity"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Jesus told Nicodemus, “Truly, truly, I tell you, no one can see the kingdom of God unless he is born again” (John 3:3), and “no one can enter the kingdom of God unless he is born of water and the Spirit. Flesh is born of flesh, but spirit is born of the Spirit” (John 3:5-6). Peter writes, “you have been born again, not of perishable seed, but of imperishable, through the living and enduring word of God” (1 Peter 1:23). Paul says that God “saved us, not by the righteous deeds we had done, but according to His mercy, through the washing of new birth and renewal by the Holy Spirit” (Titus 3:5), and that “if anyone is in Christ, he is a new creation. The old has passed away. Behold, the new has come!” (2 Corinthians 5:17). God had promised through Ezekiel, “I will give you a new heart and put a new spirit within you” (Ezekiel 36:26-27).\n\nPentecostal understanding: being born again is the work of the Holy Spirit, who makes a person alive to God when he repents of his sins and puts his faith in Christ; he receives a new heart, becomes a child of God (John 1:12-13; 1 John 5:1), and is a new creation. This is a different experience from the baptism in the Holy Spirit, which Pentecostals teach is given for power to witness.\n\nOther views: the Roman Catholic, Eastern Orthodox, Lutheran and Anglican churches generally understand the “water” of John 3:5 as baptism and teach that new birth is given in baptism, including to infants. Many Reformed and evangelical teachers read “water and the Spirit” in the light of Ezekiel 36:25-27 as the cleansing and renewing work of the Spirit, and say that God gives new life before a person can believe.",
+      "citations": [
+        {
+          "reference": "John 3:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Peter 1:23",
+          "role": "stated"
+        },
+        {
+          "reference": "Titus 3:4-7",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Corinthians 5:17",
+          "role": "stated"
+        },
+        {
+          "reference": "Ezekiel 36:25-27",
+          "role": "stated"
+        },
+        {
+          "reference": "John 1:12-13",
+          "role": "stated"
+        },
+        {
+          "reference": "1 John 5:1",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "repentance_meaning",
+      "question": "What is repentance?",
+      "alt_phrasings": [
+        "what does repent mean",
+        "what does it mean to repent",
+        "what is repentance in the bible",
+        "why must i repent",
+        "how do i repent",
+        "what is biblical repentance",
+        "what does repentance mean",
+        "what does repenting involve",
+        "what does repenting mean",
+        "what is involved in repentance",
+        "what does the bible mean by repent"
+      ],
+      "confidence": "stated",
+      "answer": "To repent is to change one's mind about sin and turn back to God. The Greek word (metanoia) means a change of mind that leads to a change of direction. Jesus began His ministry by saying, “Repent and believe in the gospel!” (Mark 1:15), and warned, “unless you repent, you too will all perish” (Luke 13:3). Peter preached, “Repent, then, and turn back, so that your sins may be wiped away” (Acts 3:19), and on the day of Pentecost, “Repent and be baptized, every one of you, in the name of Jesus Christ for the forgiveness of your sins, and you will receive the gift of the Holy Spirit” (Acts 2:38). True repentance is more than regret: “Godly sorrow brings repentance that leads to salvation without regret, but worldly sorrow brings death” (2 Corinthians 7:10). It shows in a changed life (Luke 3:8), it begins with confessing our sins, and God is faithful to forgive (1 John 1:9). Jesus said that there is joy in heaven over one sinner who repents (Luke 15:7).",
+      "citations": [
+        {
+          "reference": "Mark 1:15",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 13:1-5",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 3:19",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 2:38",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Corinthians 7:8-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 15:7",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 3:8",
+          "role": "stated"
+        },
+        {
+          "reference": "1 John 1:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "baptism_holy_spirit",
+      "question": "What is the baptism in the Holy Spirit?",
+      "alt_phrasings": [
+        "what is baptism of the holy spirit",
+        "what is spirit baptism",
+        "what does it mean to be baptized with the holy spirit",
+        "how do i receive the holy spirit",
+        "is the baptism in the holy spirit for today",
+        "what is the infilling of the holy spirit",
+        "what is the pentecostal experience",
+        "how do i receive the baptism of the holy spirit like at pentecost",
+        "how do i get baptized in the holy spirit",
+        "how do you receive the holy spirit"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: John the Baptist said of Jesus, “He will baptize you with the Holy Spirit and with fire” (Matthew 3:11). Before He ascended, Jesus told His disciples to wait for the gift the Father promised: “in a few days you will be baptized with the Holy Spirit” (Acts 1:4-5), and “you will receive power when the Holy Spirit comes upon you, and you will be My witnesses” (Acts 1:8). On the day of Pentecost “they were all filled with the Holy Spirit and began to speak in other tongues as the Spirit enabled them” (Acts 2:4). The Samaritans received the Spirit when Peter and John prayed and laid hands on them (Acts 8:14-17), the household of Cornelius when “they heard them speaking in tongues and exalting God” (Acts 10:44-46), and the disciples at Ephesus when “the Holy Spirit came upon them, and they spoke in tongues and prophesied” (Acts 19:1-6). Jesus said that the Father will give the Holy Spirit “to those who ask Him” (Luke 11:13), and Paul wrote, “For in one Spirit we were all baptized into one body” (1 Corinthians 12:13).\n\nPentecostal understanding: the baptism in the Holy Spirit is a gift of Christ to believers, distinct from and following the new birth, to empower them for witness and service. The first sign of it, as at Pentecost, at Caesarea and at Ephesus, is speaking in other tongues as the Spirit gives utterance. It is promised to every believer (Acts 2:38-39), is received by asking in faith, and is followed by a life continually filled with the Spirit (Ephesians 5:18).\n\nOther views: most evangelical and Reformed teachers hold that every believer is baptized with the Spirit at conversion, citing 1 Corinthians 12:13, and that the Acts accounts describe unique moments as the gospel reached new peoples. They look for the Spirit's work in character and fruit rather than in tongues. The Roman Catholic and Orthodox churches link the gift of the Spirit with baptism and confirmation or chrismation, and Catholic charismatics speak of a “release” of the Spirit received at baptism.",
+      "citations": [
+        {
+          "reference": "Matthew 3:11",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 1:4-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 2:1-4",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 8:14-17",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 10:44-46",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 19:1-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 11:13",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 12:13",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "bible_on_worry",
+      "question": "What does the Bible say about worry?",
+      "alt_phrasings": [
+        "what does the bible say about worrying",
+        "what does the bible say about anxiety",
+        "how do i stop worrying",
+        "bible verses about worry",
+        "do not worry bible",
+        "what does the bible say about being anxious",
+        "does god want me to worry",
+        "i am so worried about everything what does scripture say",
+        "what does scripture say about worry",
+        "how do i stop being anxious according to the bible"
+      ],
+      "confidence": "stated",
+      "answer": "The Bible tells us not to worry, because God knows our needs and cares for us. Jesus said, “Do not worry about your life, what you will eat or drink; or about your body, what you will wear. Is not life more than food, and the body more than clothes?” (Matthew 6:25), and, “But seek first the kingdom of God and His righteousness, and all these things will be added unto you. Therefore do not worry about tomorrow, for tomorrow will worry about itself. Today has enough trouble of its own” (Matthew 6:33-34). Paul wrote, “Be anxious for nothing, but in everything, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus” (Philippians 4:6-7). Peter says, “Cast all your anxiety on Him, because He cares for you” (1 Peter 5:7). See also Psalm 55:22 and Isaiah 26:3. When worry grows into constant anxiety or depression, it is wise to seek a pastor and also medical help, as the Bible does not forbid this (Proverbs 11:14).",
+      "citations": [
+        {
+          "reference": "Matthew 6:25-34",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 4:6-7",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Peter 5:7",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 55:22",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 26:3",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 12:22-26",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "bible_on_abortion",
+      "question": "What does the Bible say about abortion?",
+      "alt_phrasings": [
+        "is abortion a sin",
+        "what does the bible say about the unborn",
+        "does the bible mention abortion",
+        "when does life begin according to the bible",
+        "what does god say about abortion",
+        "is abortion murder bible",
+        "bible verses about unborn babies",
+        "does god value the life of a baby in the womb",
+        "does the bible say unborn babies are people",
+        "what does the bible say about babies in the womb",
+        "does god know us before we are born",
+        "what does scripture say about abortion",
+        "what scripture speaks about unborn babies and abortion"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: the Bible does not use the word abortion, but it speaks often of the child in the womb. David praises God: “You knit me together in my mother's womb... Your eyes saw my unformed body; all my days were written in Your book and ordained for me before one of them came to be” (Psalm 139:13-16). God told Jeremiah, “Before I formed you in the womb I knew you, and before you were born I set you apart” (Jeremiah 1:5), and when Mary greeted Elizabeth, “the baby leaped in her womb” (Luke 1:41). The command is “You shall not murder” (Exodus 20:13), and God hates “hands that shed innocent blood” (Proverbs 6:16-17). Exodus 21:22-25 speaks of men who strike a pregnant woman so that her child is born prematurely and requires payment for any harm that follows.\n\nPentecostal understanding: the unborn child is a person known and formed by God from conception, so abortion takes an innocent human life, and the Church should speak for the unborn (Proverbs 31:8) while showing compassion and practical help to mothers and families. Those who have had an abortion are not beyond forgiveness: “If we confess our sins, He is faithful and just to forgive us our sins and to cleanse us from all unrighteousness” (1 John 1:9).\n\nOther views: the Roman Catholic and Eastern Orthodox churches also teach that abortion is wrong from conception. Some Christians read Exodus 21:22-25 as treating the loss of an unborn child differently from the loss of a life and therefore hold that abortion may be allowed in limited cases, such as danger to the mother's life, and a few Christian bodies support legal access to abortion as a matter of conscience.",
+      "citations": [
+        {
+          "reference": "Psalm 139:13-16",
+          "role": "stated"
+        },
+        {
+          "reference": "Jeremiah 1:5",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 1:41-44",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 20:13",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 21:22-25",
+          "role": "stated"
+        },
+        {
+          "reference": "Proverbs 6:16-17",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 49:1",
+          "role": "stated"
+        },
+        {
+          "reference": "1 John 1:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "names_of_god",
+      "question": "What is the name of God?",
+      "alt_phrasings": [
+        "what is god's name",
+        "what is the name of god in the bible",
+        "what is yahweh",
+        "who is jehovah",
+        "what is the difference between yahweh and jehovah",
+        "what does lord in capital letters mean",
+        "what are the names of god",
+        "what is el shaddai",
+        "what is elohim",
+        "are there other names for god besides yahweh",
+        "what is the sacred name of god in the old testament",
+        "what are the hebrew names for god",
+        "what is the lord's name in the old testament"
+      ],
+      "confidence": "stated",
+      "answer": "God told Moses His name at the burning bush: “I AM WHO I AM. This is what you are to say to the Israelites: ‘I AM has sent me to you’”, and, “The LORD, the God of your fathers... has sent me to you. This is My name forever” (Exodus 3:14-15). Where English Bibles print LORD in capital letters, the Hebrew has God's personal name, four letters (YHWH), probably pronounced Yahweh. Out of reverence the Jews did not say it aloud and read Adonai (Lord) instead; “Jehovah” is an old English form made by joining the consonants of YHWH to the vowels of Adonai. God said, “I am the LORD; that is My name!” (Isaiah 42:8). Other names and titles in the Bible include Elohim (God, as in Genesis 1:1), El Shaddai (God Almighty, Genesis 17:1; Exodus 6:3), El Elyon (God Most High, Genesis 14:18-20) and Yahweh Yireh (“The LORD Will Provide”, Genesis 22:14). Jesus taught us to pray to “our Father” (Matthew 6:9), and the name of Jesus means that the LORD saves (Matthew 1:21).",
+      "citations": [
+        {
+          "reference": "Exodus 3:13-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 6:2-3",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 42:8",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 17:1",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 22:14",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 14:18-20",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 6:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "christmas_date",
+      "question": "Was Jesus born on December 25?",
+      "alt_phrasings": [
+        "when was jesus born",
+        "what date was jesus born",
+        "what is the real birthday of jesus",
+        "why do we celebrate christmas on december 25",
+        "is christmas in the bible",
+        "was jesus born in winter",
+        "what does the bible say about christmas",
+        "which day was the savior born",
+        "what day was jesus born",
+        "on what date was jesus born",
+        "what is jesus's birthday",
+        "did jesus have a birthday"
+      ],
+      "confidence": "unattested",
+      "answer": "The Bible does not say on what day, or in what month, Jesus was born. Luke tells us that there were “shepherds residing in the fields nearby, keeping watch over their flocks by night” (Luke 2:8), and that Mary gave birth in Bethlehem during a census (Luke 2:1-7), during the reign of King Herod (Matthew 2:1), but gives no date. Some think the shepherds point to a time other than midwinter, though others note that flocks could be kept out in the Judean winter. The earliest record of Christians keeping December 25 as the birth of Christ comes from Rome in the fourth century. Scholars are not agreed on why that date was chosen, some say it was calculated from the date of His conception or death, others that it replaced a pagan midwinter festival. The Bible gives no command to keep Christmas, and Paul writes that one person “regards a certain day above the others, while someone else considers every day alike. Each one should be fully convinced in his own mind” and that he who observes a special day “does so to the Lord” (Romans 14:5-6). Christians therefore differ on keeping it, but all can rejoice that the Savior was born.",
+      "citations": [
+        {
+          "reference": "Luke 2:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 2:1",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 14:5-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Galatians 4:4",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "three_wise_men",
+      "question": "What do we know about the wise men (Magi) who visited Jesus?",
+      "alt_phrasings": [
+        "who were the three wise men",
+        "who were the magi",
+        "how many wise men were there",
+        "were the wise men kings",
+        "what were the names of the wise men",
+        "what gifts did the wise men bring",
+        "when did the wise men visit jesus",
+        "where did the wise men come from",
+        "who were the visitors who followed the star to bethlehem",
+        "who followed the star to bethlehem",
+        "who came to see baby jesus",
+        "who were the kings who visited jesus",
+        "what was the star of bethlehem",
+        "who were the magi in matthew 2",
+        "tell me about the magi",
+        "who were the wise men",
+        "what did the magi bring jesus",
+        "who were the wise men who visited jesus",
+        "how many wise men visited jesus",
+        "how many magi visited jesus",
+        "how many wise men were there at the nativity"
+      ],
+      "confidence": "stated",
+      "answer": "Matthew tells us that “Magi from the east arrived in Jerusalem, asking, ‘Where is the One who has been born King of the Jews? We saw His star in the east and have come to worship Him’” (Matthew 2:1-2). Magi were learned men who studied the stars. Herod, told that the Christ would be born in Bethlehem (Micah 5:2), sent them there, and the star went ahead of them (Matthew 2:7-10). “On coming to the house, they saw the Child with His mother Mary, and they fell down and worshiped Him. Then they opened their treasures and presented Him with gifts of gold and frankincense and myrrh” (Matthew 2:11). Warned in a dream, they returned home another way (Matthew 2:12). The Bible does not say that there were three, it says only that there were three gifts; it does not call them kings or give their names. The names Caspar, Melchior and Balthazar come from later tradition. They found Jesus in a house, as a Child, not in the manger, and Herod, working from the time they gave him, had all the boys in Bethlehem “two years old and under” put to death (Matthew 2:16), so Jesus may have been up to two years old.",
+      "citations": [
+        {
+          "reference": "Matthew 2:1-12",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 2:16",
+          "role": "stated"
+        },
+        {
+          "reference": "Micah 5:2",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 60:6",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "ark_of_the_covenant",
+      "question": "What is the Ark of the Covenant and where is it now?",
+      "alt_phrasings": [
+        "what happened to the ark of the covenant",
+        "where is the ark of the covenant",
+        "what was in the ark of the covenant",
+        "what is the ark of the covenant",
+        "what was the ark of the covenant used for",
+        "is the ark of the covenant still in existence",
+        "whatever became of the chest that held the ten commandments",
+        "where is the ark now",
+        "what happened to the ark",
+        "what is the ark of god",
+        "what was the chest that held the ten commandments",
+        "what happened to the ark of the covenant after the babylonian exile",
+        "was the ark of the covenant destroyed by babylon",
+        "where did the ark go after solomon's temple"
+      ],
+      "confidence": "traditional",
+      "answer": "The Ark of the Covenant was the gold-covered wooden chest that God told Moses to make for the tabernacle (Exodus 25:10-22). Its lid, the mercy seat, was topped by two cherubim, and God said, “I will meet with you there above the mercy seat... I will speak with you about all that I command you” (Exodus 25:22). Inside were the stone tablets of the covenant, the gold jar of manna and Aaron's staff that had budded (Hebrews 9:4; 1 Kings 8:9). It went before Israel at the crossing of the Jordan (Joshua 3) and the fall of Jericho (Joshua 6), was captured by the Philistines (1 Samuel 4-6), and was brought to Jerusalem by David (2 Samuel 6) and placed in Solomon's temple (1 Kings 8:1-9). The last time the Bible mentions it on earth is when King Josiah told the Levites, “Put the holy ark in the temple built by Solomon” (2 Chronicles 35:3). When Babylon destroyed the temple in 586 BC the Bible does not say what became of it, and Jeremiah foretold that it would no longer be remembered (Jeremiah 3:16). Its fate is unknown. Some say it was destroyed or taken by the Babylonians, a Jewish writing outside the Bible says Jeremiah hid it (2 Maccabees 2:4-8), and the Ethiopian church claims to have it in Axum, but none of this can be proved. John saw “the ark of His covenant” in the temple of God in heaven (Revelation 11:19).",
+      "citations": [
+        {
+          "reference": "Exodus 25:10-22",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 9:4",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Kings 8:1-9",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Chronicles 35:3",
+          "role": "stated"
+        },
+        {
+          "reference": "Jeremiah 3:16",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 11:19",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "passover_meaning",
+      "question": "What is Passover and why is it important?",
+      "alt_phrasings": [
+        "what is the passover",
+        "why do jews celebrate passover",
+        "what is the meaning of passover",
+        "what does passover mean",
+        "what is the passover feast",
+        "how does passover relate to jesus",
+        "was the last supper a passover meal",
+        "what was the feast when god passed over the houses with blood",
+        "what is the feast of the passover lamb",
+        "why did god pass over the houses of israel",
+        "what is pesach"
+      ],
+      "confidence": "stated",
+      "answer": "Passover is the feast that remembers how God freed Israel from slavery in Egypt. On the night of the tenth plague each family killed a lamb and put its blood on the doorposts, and God said, “when I see the blood, I will pass over you. No plague will fall on you to destroy you when I strike the land of Egypt” (Exodus 12:1-13). God commanded, “this day will be a memorial for you, and you are to celebrate it as a feast to the LORD, as a permanent statute for the generations to come” (Exodus 12:14), on the fourteenth day of the first month (Leviticus 23:5), followed by the seven days of Unleavened Bread. Jesus kept the Passover with His disciples and said, “I have eagerly desired to eat this Passover with you before My suffering” (Luke 22:15), and at that meal gave the bread and the cup of the new covenant (Luke 22:19-20). He died at Passover time. John the Baptist called Him “the Lamb of God, who takes away the sin of the world” (John 1:29), and Paul writes, “Christ, our Passover lamb, has been sacrificed” (1 Corinthians 5:7). Passover is therefore a picture of deliverance by the blood of the lamb.",
+      "citations": [
+        {
+          "reference": "Exodus 12:1-14",
+          "role": "stated"
+        },
+        {
+          "reference": "Leviticus 23:4-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 22:7-20",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 5:7",
+          "role": "stated"
+        },
+        {
+          "reference": "John 1:29",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "bible_on_slavery",
+      "question": "What does the Bible say about slavery?",
+      "alt_phrasings": [
+        "does the bible support slavery",
+        "does the bible condone slavery",
+        "why does the bible allow slavery",
+        "is slavery in the bible",
+        "what did paul say about slaves",
+        "was slavery wrong according to the bible",
+        "does scripture approve of owning slaves",
+        "does god approve of slavery",
+        "can christians own slaves",
+        "what does the bible say about slaves and masters",
+        "is slavery allowed in the bible",
+        "why does the bible mention slaves so much",
+        "why does the bible talk about slaves",
+        "what does the bible say about slave owners"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: slavery was a part of the ancient world, and the Bible speaks about it in several ways. God began Israel's story by freeing them from it: “I am the LORD your God, who brought you out of the land of Egypt, out of the house of slavery” (Exodus 20:2). The law said, “Whoever kidnaps another man must be put to death, whether he sells him or the man is found in his possession” (Exodus 21:16), set rules for servants including their release (Exodus 21:2-11; Leviticus 25:39-43), but also permitted buying servants from the surrounding nations (Leviticus 25:44). In the New Testament Paul lists “slave traders” among the lawless (1 Timothy 1:10), tells masters to treat their slaves justly and to “Give up your use of threats” (Ephesians 6:9; Colossians 4:1), tells slaves who can gain freedom to take it (1 Corinthians 7:21), and asks Philemon to receive his runaway slave Onesimus “no longer as a slave, but better than a slave, as a beloved brother” (Philemon 1:15-16). “There is neither Jew nor Greek, slave nor free, male nor female, for you are all one in Christ Jesus” (Galatians 3:28).\n\nPentecostal understanding: the Bible did not invent slavery; it restrained it, condemned man-stealing and the trade in people, and taught that every person is made in God's image (Genesis 1:27) and is equal in Christ. Those truths led believers such as William Wilberforce to fight against the slave trade, and the Azusa Street revival of 1906, led by William Seymour, a son of former slaves, was notable for black and white believers worshipping together.\n\nOther views: critics say that the Bible should have forbidden slavery outright, and that its laws allowing the purchase of foreigners (Leviticus 25:44-46) and the rules on beating slaves (Exodus 21:20-21) accept it. Scholars differ on how the servitude of Israelites, a kind of debt service, compares with the slavery of foreigners. Some people in the past used the Bible to defend slavery, and the Church has since repented of that.",
+      "citations": [
+        {
+          "reference": "Exodus 20:2",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 21:2-11",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 21:16",
+          "role": "stated"
+        },
+        {
+          "reference": "Leviticus 25:39-46",
+          "role": "stated"
+        },
+        {
+          "reference": "Ephesians 6:5-9",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Timothy 1:10",
+          "role": "stated"
+        },
+        {
+          "reference": "Philemon 1:15-16",
+          "role": "stated"
+        },
+        {
+          "reference": "Galatians 3:28",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "clean_unclean_foods",
+      "question": "Can Christians eat pork?",
+      "alt_phrasings": [
+        "can christians eat pork",
+        "are christians allowed to eat shellfish",
+        "does the bible forbid eating pork",
+        "what are clean and unclean foods",
+        "are the old testament food laws still binding",
+        "is pork a sin",
+        "are all foods clean",
+        "what did peter's vision of the sheet mean",
+        "are the old testament dietary laws still required for believers",
+        "can christians eat bacon",
+        "are christians allowed to eat ham",
+        "does the bible forbid eating pig",
+        "should christians keep kosher",
+        "what does the bible say about eating pork",
+        "what does the bible say about eating shellfish"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: the law of Moses listed clean and unclean animals, and pigs were unclean (Leviticus 11:2-8; Deuteronomy 14:3-8). After the flood God had told Noah that every moving thing that lives would be food for him (Genesis 9:3). Jesus said that nothing that enters a man from the outside can defile him, because it goes into the stomach, and Mark adds, “Thus all foods are clean” (Mark 7:18-19). Peter was told in a vision, “Do not call anything impure that God has made clean” (Acts 10:13-15). Paul wrote, “I am convinced and fully persuaded in the Lord Jesus that nothing is unclean in itself” (Romans 14:14), and, “every creation of God is good, and nothing that is received with thanksgiving should be rejected, because it is sanctified by the word of God and prayer” (1 Timothy 4:4-5). The early church asked Gentile believers only to abstain from food polluted by idols, from the meat of strangled animals and from blood (Acts 15:19-20). We are not to judge one another over food (Romans 14:1-4; Colossians 2:16).\n\nPentecostal understanding: the food laws were part of the law that set Israel apart until Christ came; because Christ declared all foods clean, a Christian is free to eat pork and shellfish, giving thanks to God, and should not be judged over it.\n\nOther views: Jewish people keep the kosher laws, as do some Messianic Jewish believers, Seventh-day Adventists, who teach that the distinction between clean and unclean animals still applies, and some other Christians who keep the Old Testament food laws. Some read Peter's vision as being mainly about accepting Gentile people (Acts 10:28) rather than about food.",
+      "citations": [
+        {
+          "reference": "Leviticus 11:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 9:3",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 7:18-19",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 10:9-16",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 14:14",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Timothy 4:3-5",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 15:19-20",
+          "role": "stated"
+        },
+        {
+          "reference": "Colossians 2:16-17",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "bible_on_polygamy",
+      "question": "Does the Bible allow polygamy?",
+      "alt_phrasings": [
+        "is polygamy a sin",
+        "what does the bible say about polygamy",
+        "did god approve of polygamy",
+        "why did abraham and david have many wives",
+        "can a christian have more than one wife",
+        "what does the bible say about having multiple wives",
+        "is polygamy allowed in the bible",
+        "did the patriarchs have several wives and was it right",
+        "why did david have so many wives",
+        "did abraham have more than one wife",
+        "is it ok to have more than one wife",
+        "what does the bible say about plural marriage",
+        "can a man have two wives"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: from the beginning God joined one man to one woman: “a man will leave his father and mother and be united to his wife, and they will become one flesh” (Genesis 2:24), and Jesus quoted this when He taught on marriage (Matthew 19:4-6). The first man recorded with two wives was Lamech (Genesis 4:19). Abraham, Jacob, David and Solomon had more than one wife, and the Bible shows the trouble it caused, with jealousy in the households of Abraham and Jacob (Genesis 16; 29-30), and Solomon's wives turning his heart from God (1 Kings 11:1-4). The law told the king, “He must not take many wives for himself, lest his heart go astray” (Deuteronomy 17:17), and regulated the rights of wives in a household (Exodus 21:10). In the New Testament an overseer must be “the husband of but one wife” (1 Timothy 3:2; Titus 1:6).\n\nPentecostal understanding: God's design for marriage is one man and one woman for life. The Bible records the polygamy of the patriarchs and kings without approving of it, and its consequences warn against it. Marriage is a picture of Christ and the church (Ephesians 5:31-32).\n\nOther views: some say that because the Old Testament law regulated rather than forbade plural marriage, and the New Testament rule on having one wife is given to church leaders, polygamy was tolerated for others. Churches in countries where polygamy is accepted differ on how to receive a man who already has several wives when he comes to faith: some ask him to stay with his family but not to take leadership, others ask that he not marry again.",
+      "citations": [
+        {
+          "reference": "Genesis 2:24",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 19:4-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Deuteronomy 17:17",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Kings 11:1-4",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Timothy 3:2",
+          "role": "stated"
+        },
+        {
+          "reference": "Titus 1:6",
+          "role": "stated"
+        },
+        {
+          "reference": "Ephesians 5:31-32",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "second_coming_of_christ",
+      "question": "Will Jesus come back?",
+      "alt_phrasings": [
+        "is jesus coming back",
+        "what does the bible say about the second coming",
+        "what is the second coming of christ",
+        "when will jesus return",
+        "how will jesus return",
+        "what is the return of jesus",
+        "will christ come again",
+        "will the lord return to earth one day",
+        "when will christ return",
+        "will jesus return to earth",
+        "what does the bible say about the return of christ",
+        "is the second coming real",
+        "what is the second advent"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: as Jesus went up into heaven two angels said, “This same Jesus, who has been taken from you into heaven, will come back in the same way you have seen Him go into heaven” (Acts 1:11). Jesus said that “the sign of the Son of Man will appear in heaven... They will see the Son of Man coming on the clouds of heaven, with power and great glory” (Matthew 24:30). John writes, “Behold, He is coming with the clouds, and every eye will see Him” (Revelation 1:7), and Paul calls it “the blessed hope and glorious appearance of our great God and Savior Jesus Christ” (Titus 2:13). “For the Lord Himself will descend from heaven with a loud command, with the voice of an archangel, and with the trumpet of God, and the dead in Christ will be the first to rise. After that, we who are alive and remain will be caught up together with them in the clouds to meet the Lord in the air” (1 Thessalonians 4:16-17). No one knows the day or the hour (Matthew 24:36), so we are to be ready (Matthew 24:42-44).\n\nPentecostal understanding: Christ will return in two stages: first He will come for His church, who will be caught up to meet Him in the air at the rapture; then, after the tribulation, He will come back to earth with His saints to defeat the Antichrist and reign for a thousand years (Zechariah 14:4; Revelation 19:11-16; 20:4-6).\n\nOther views: some believe that the church will go through the tribulation and be caught up when Christ returns after it (a post-tribulation return), and many others (amillennialists) teach that He returns once, at the end of history, to raise the dead, judge all people and make all things new. All Christians agree that Jesus will return in glory and that the dead will be raised.",
+      "citations": [
+        {
+          "reference": "Acts 1:9-11",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 24:29-31",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Thessalonians 4:13-18",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 1:7",
+          "role": "stated"
+        },
+        {
+          "reference": "Titus 2:13",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 19:11-16",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 24:36",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "four_horsemen",
+      "question": "Who are the four horsemen of the Apocalypse?",
+      "alt_phrasings": [
+        "what are the four horsemen of the apocalypse",
+        "what do the four horsemen represent",
+        "what is the white horse in revelation",
+        "what are the four horsemen in revelation 6",
+        "what is the pale horse in the bible",
+        "what are the first four seals",
+        "what do the colored horses in the book of revelation mean",
+        "what do the four horses in revelation mean",
+        "what is the red horse in revelation",
+        "what is the black horse in revelation",
+        "who rides the white horse in revelation 6",
+        "what are the four horsemen",
+        "what do the horsemen in revelation six stand for",
+        "what do the horsemen in revelation represent",
+        "what are the horsemen in revelation 6",
+        "who is the rider on the pale horse"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: when the Lamb opened the first four of the seven seals, four horses came out (Revelation 6:1-8). The first was a white horse whose rider “held a bow. And he was given a crown, and he rode out to overcome and conquer.” The second was bright red, and its rider “was granted permission to take away peace from the earth and to make men slay one another.” The third was black, and its rider held a pair of scales, with the price of food rising: “A quart of wheat for a denarius, and three quarts of barley for a denarius.” The fourth was a pale green horse, whose rider's name “was Death, and Hades followed close behind. And they were given authority over a fourth of the earth, to kill by sword, by famine, by plague, and by the beasts of the earth.”\n\nPentecostal understanding: the seals are judgments of the future tribulation, which follows the rapture of the church. The white horseman is the Antichrist, who comes as a conqueror and a counterfeit of Christ, and who is not to be confused with the rider on the white horse in Revelation 19:11, “Faithful and True.” The other three bring war, famine and death.\n\nOther views: some Christians think the white horse is Christ, or the spread of the gospel, with the other three horsemen as the sufferings that accompany it. Others see all four as symbols of conquest, war, famine and death that have recurred throughout history, or as events of the first century, and some take them as a picture of the whole age between Christ's two comings.",
+      "citations": [
+        {
+          "reference": "Revelation 6:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 19:11",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 24:6-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Zechariah 6:1-8",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "the_144000",
+      "question": "Who are the 144,000 in Revelation?",
+      "alt_phrasings": [
+        "who are the 144000",
+        "what does the number 144000 mean",
+        "who are the 144,000 sealed",
+        "who are the 144000 in the bible",
+        "are the 144000 jews",
+        "who will go to heaven 144000",
+        "what is the seal of god on the forehead",
+        "who are the sealed servants from the tribes of israel",
+        "who are the 144,000 jews",
+        "what does the 144000 in revelation mean",
+        "who are the sealed in revelation 7",
+        "who are the 144 thousand",
+        "what is the 12000 from each tribe",
+        "what are the 144000 people in revelation",
+        "who are the 144000 people",
+        "who are the 144,000 people in revelation"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: John heard an angel say, “Do not harm the land or sea or trees until we have sealed the foreheads of the servants of our God,” and heard the number of those sealed, “144,000 from all the tribes of Israel” (Revelation 7:3-4), with twelve thousand from each of twelve tribes (Revelation 7:5-8). Later he saw “the Lamb standing on Mount Zion, and with Him 144,000 who had His name and His Father's name written on their foreheads” (Revelation 14:1). They sing a new song before the throne, they “follow the Lamb wherever He goes,” and they “have been redeemed from among men as firstfruits to God and to the Lamb” (Revelation 14:3-4). “No lie was found in their mouths; they are blameless” (Revelation 14:5).\n\nPentecostal understanding: the 144,000 are Jewish believers, twelve thousand from each tribe of Israel, who are sealed by God for protection and witness during the tribulation, and who are followed by a multitude from every nation (Revelation 7:9). They are a picture of God keeping His promises to Israel (Romans 11:25-29).\n\nOther views: many Christians read the number as a symbol, twelve times twelve times a thousand, for the whole people of God, Jew and Gentile, complete and protected (compare Galatians 6:16). The Jehovah's Witnesses teach that 144,000 is the literal number of believers who go to heaven, while the rest of the faithful live on a restored earth; most other Christians do not accept this, since the Bible also speaks of a countless multitude before the throne (Revelation 7:9).",
+      "citations": [
+        {
+          "reference": "Revelation 7:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 7:9-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 14:1-5",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 11:25-29",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "selah_meaning",
+      "question": "What does Selah mean?",
+      "alt_phrasings": [
+        "what is selah in the psalms",
+        "what does selah mean in the bible",
+        "why is selah in the psalms",
+        "meaning of selah",
+        "what does selah mean in hebrew"
+      ],
+      "confidence": "traditional",
+      "answer": "Selah is a Hebrew word found 71 times in the Psalms and three times in Habakkuk 3 (verses 3, 9, 13). An example is “Many say of me, ‘God will not deliver him.’ Selah” (Psalm 3:2). The Bible does not explain it. It probably was a direction to the singers or musicians, and most commonly it is taken to mean a pause: to stop and think about what has just been said, or to lift up the voice, or a musical interlude. The old Greek translation of the Psalms treats it as a musical break. Because nobody is certain, translators leave the word as it is.",
+      "citations": [
+        {
+          "reference": "Psalm 3:2",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 46:3",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 24:10",
+          "role": "stated"
+        },
+        {
+          "reference": "Habakkuk 3:3",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "hallelujah_meaning",
+      "question": "What does Hallelujah mean?",
+      "alt_phrasings": [
+        "what does hallelujah mean",
+        "what does halleluyah mean",
+        "meaning of hallelujah in the bible",
+        "what is the origin of hallelujah",
+        "what does praise ye the lord mean",
+        "what is the hebrew word that means praise the lord",
+        "what is the word hallelujah",
+        "hallelujah meaning",
+        "what does alleluia mean",
+        "what does hallelu yah mean"
+      ],
+      "confidence": "stated",
+      "answer": "Hallelujah is a Hebrew word meaning “Praise the LORD”: hallelu is the command to praise, and Yah is the short form of the LORD's name (Yahweh). It begins and ends many psalms, for example, “Hallelujah! Give thanks to the LORD, for He is good; His loving devotion endures forever” (Psalm 106:1; see also Psalms 111-113; 146-150). In the New Testament the word appears only in Revelation 19, where a great multitude in heaven shouts, “Hallelujah! Salvation and glory and power belong to our God!” (Revelation 19:1; see also verses 3, 4 and 6). Some Bibles translate it as “Praise the LORD” or “Praise Yah”.",
+      "citations": [
+        {
+          "reference": "Psalm 106:1",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 150:1",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 19:1-6",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "immanuel_meaning",
+      "question": "What does Immanuel mean?",
+      "alt_phrasings": [
+        "what does emmanuel mean",
+        "what does immanuel mean in the bible",
+        "meaning of emmanuel",
+        "what does god with us mean",
+        "who is immanuel",
+        "what is the meaning of the name immanuel"
+      ],
+      "confidence": "stated",
+      "answer": "Immanuel is a Hebrew name meaning “God with us.” Isaiah told King Ahaz, “the Lord Himself will give you a sign: Behold, the virgin will be with child and will give birth to a son, and will call Him Immanuel” (Isaiah 7:14). Matthew applies it to the birth of Jesus: “they will call Him Immanuel” (which means, “God with us”) (Matthew 1:22-23). It tells us that in Jesus, God Himself came to live among His people (John 1:14), and Jesus ended His Gospel with the promise, “I am with you always, even to the end of the age” (Matthew 28:20). Emmanuel is the Greek spelling of the same name.",
+      "citations": [
+        {
+          "reference": "Isaiah 7:14",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 1:22-23",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 8:8",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 28:20",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "abba_father_meaning",
+      "question": "What does Abba Father mean?",
+      "alt_phrasings": [
+        "what does abba mean",
+        "what does abba father mean",
+        "why do we call god abba",
+        "what is the meaning of abba in the bible",
+        "is abba daddy",
+        "why did jesus call god abba in gethsemane",
+        "why did jesus say abba father",
+        "what does abba father mean in the bible",
+        "what is the aramaic word for father",
+        "why do christians say abba"
+      ],
+      "confidence": "stated",
+      "answer": "Abba is the Aramaic word for father. Jesus prayed in Gethsemane, “Abba, Father,” He said, “all things are possible for You. Take this cup from Me. Yet not what I will, but what You will” (Mark 14:36). Paul says that believers “did not receive a spirit of slavery that returns you to fear, but you received the Spirit of sonship, by whom we cry, ‘Abba! Father!’” (Romans 8:15), and “because you are sons, God sent the Spirit of His Son into our hearts, crying out, ‘Abba, Father!’” (Galatians 4:6). The word expresses the trust and closeness of a child to a father. It is often said to mean “daddy”, but scholars point out that it was also used by grown sons and daughters, so it is better understood as “my Father”, said with love and respect. It is the Holy Spirit who enables us to speak to God in this way.",
+      "citations": [
+        {
+          "reference": "Mark 14:36",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 8:15",
+          "role": "stated"
+        },
+        {
+          "reference": "Galatians 4:6",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 6:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_mary_magdalene",
+      "question": "Who was Mary Magdalene?",
+      "alt_phrasings": [
+        "tell me about mary magdalene",
+        "was mary magdalene a prostitute",
+        "was mary magdalene married to jesus",
+        "who was mary magdalene in the bible",
+        "what did mary magdalene do",
+        "why is mary magdalene important",
+        "tell me about the woman who first saw the risen lord",
+        "who was mary of magdala",
+        "was mary magdalene a disciple of jesus",
+        "who was the woman from magdala",
+        "biography of mary magdalene"
+      ],
+      "confidence": "stated",
+      "answer": "Mary Magdalene, that is, Mary of Magdala, a town on the Sea of Galilee, was a follower of Jesus: “Mary called Magdalene, from whom seven demons had gone out,” who with other women supported Jesus and the Twelve out of their own means (Luke 8:2-3). She watched the crucifixion, with other women (Mark 15:40; John 19:25) and saw where He was buried (Mark 15:47). Early on the first day of the week she went to the tomb and found the stone removed (John 20:1). The risen Jesus appeared first to her, called her by name, and sent her to tell the disciples; she announced, “I have seen the Lord!” (John 20:11-18; Mark 16:9). The Bible never says she was a prostitute. The idea that she was the sinful woman of Luke 7:36-50 comes from a sermon by Pope Gregory in AD 591, and the Catholic Church dropped it in 1969. The Bible also does not say she married Jesus, and no early source says so.",
+      "citations": [
+        {
+          "reference": "Luke 8:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 15:40",
+          "role": "stated"
+        },
+        {
+          "reference": "John 19:25",
+          "role": "stated"
+        },
+        {
+          "reference": "John 20:1-2",
+          "role": "stated"
+        },
+        {
+          "reference": "John 20:11-18",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 16:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_melchizedek",
+      "question": "Who was Melchizedek?",
+      "alt_phrasings": [
+        "who is melchizedek",
+        "tell me about melchizedek",
+        "who was melchizedek in the bible",
+        "was melchizedek jesus",
+        "what is the order of melchizedek",
+        "what does priest forever after the order of melchizedek mean",
+        "who was the priest king that blessed abraham",
+        "who was the king of salem",
+        "who was the priest of god most high",
+        "what does order of melchizedek mean",
+        "who was the king of salem who blessed abraham",
+        "story of melchizedek"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: when Abram returned from defeating the kings, “Melchizedek king of Salem brought out bread and wine, since he was priest of God Most High, and he blessed Abram” and Abram gave him a tenth of everything (Genesis 14:18-20). David foretold of the Messiah, “You are a priest forever in the order of Melchizedek” (Psalm 110:4). The letter to the Hebrews explains that his name means king of righteousness and king of peace, and that “without father or mother or genealogy, without beginning of days or end of life, like the Son of God, he remains a priest for all time” (Hebrews 7:1-3). Jesus is a priest in his order (Hebrews 5:10; 6:20), greater than the Levitical priests because Levi himself, in Abraham, paid tithes to Melchizedek (Hebrews 7:4-10).\n\nPentecostal understanding: Melchizedek was a real king and priest of Salem, later Jerusalem, who served the one true God, and he is a picture of Christ, the King of righteousness and peace and a priest who lasts forever, appointed not by descent but by God's oath (Hebrews 7:11-22).\n\nOther views: some teachers hold that he was an appearance of the Son of God before He was born as a man (a Christophany). Jewish tradition identified him with Shem, the son of Noah. Others think Hebrews says that he is “like” the Son of God, so he is a type of Christ rather than Christ Himself, and that the details about no beginning or end refer to the silence of Scripture about his birth and death.",
+      "citations": [
+        {
+          "reference": "Genesis 14:18-20",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 110:4",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 5:5-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 7:1-28",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_abraham",
+      "question": "Who was Abraham?",
+      "alt_phrasings": [
+        "tell me about abraham",
+        "who was abraham in the bible",
+        "who was abram",
+        "why is abraham called the father of faith",
+        "why is abraham the father of many nations",
+        "what did abraham do",
+        "tell me about the man god called out of ur",
+        "who was the father of the jews",
+        "who was the father of faith",
+        "who is the father of many nations in the bible",
+        "why was abram's name changed to abraham",
+        "biography of abraham",
+        "life of abraham",
+        "summary of abraham's life",
+        "story of abraham"
+      ],
+      "confidence": "stated",
+      "answer": "Abraham, first called Abram, was born in Ur of the Chaldeans, the son of Terah (Genesis 11:26-31). God called him to leave his country and promised, “I will make you into a great nation, and I will bless you; I will make your name great, so that you will be a blessing... and all the families of the earth will be blessed through you” (Genesis 12:2-3). He went to Canaan, and God made a covenant with him. “Abram believed the LORD, and it was credited to him as righteousness” (Genesis 15:6). God changed his name: “No longer will you be called Abram, but your name will be Abraham, for I have made you a father of many nations” (Genesis 17:5). His sons were Ishmael, by Sarah's servant Hagar, and Isaac, the son of promise, born to Sarah when Abraham was a hundred (Genesis 16; 21). God tested him by asking him to offer Isaac, and provided a ram instead (Genesis 22). He died at 175 years old (Genesis 25:7-8). The New Testament calls him the father of all who believe (Romans 4:11-12; Galatians 3:7-9); James adds that “he was called a friend of God” (James 2:23).",
+      "citations": [
+        {
+          "reference": "Genesis 12:1-4",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 15:1-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 17:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 22:1-18",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 4:1-5",
+          "role": "stated"
+        },
+        {
+          "reference": "Galatians 3:6-9",
+          "role": "stated"
+        },
+        {
+          "reference": "James 2:23",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 11:8-10",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_the_apostle_paul",
+      "question": "Who was the apostle Paul?",
+      "alt_phrasings": [
+        "who was paul",
+        "tell me about the apostle paul",
+        "who was saul of tarsus",
+        "what did the apostle paul do",
+        "who was paul in the bible",
+        "how did saul become paul",
+        "what happened to paul on the road to damascus",
+        "who is the pharisee who met jesus on the road to damascus",
+        "who was saul who persecuted christians",
+        "what happened to saul on the road to damascus",
+        "who was the pharisee that became an apostle",
+        "who was the apostle to the gentiles",
+        "who was paul of tarsus",
+        "biography of the apostle paul",
+        "life of paul",
+        "summary of paul's life",
+        "story of the apostle paul"
+      ],
+      "confidence": "stated",
+      "answer": "Paul, also called Saul, was a Jew “born in Tarsus of Cilicia, but raised in” Jerusalem and “educated at the feet of Gamaliel in strict conformity to the law” (Acts 22:3). He was of the tribe of Benjamin, “a Hebrew of Hebrews; as to the law, a Pharisee; as to zeal, persecuting the church” (Philippians 3:5-6). He approved of Stephen's death and set out to arrest believers in Damascus, but the risen Jesus appeared to him on the road (Acts 7:58; 9:1-9). The Lord said of him, “This man is My chosen instrument to carry My name before the Gentiles and their kings, and before the people of Israel” (Acts 9:15). He was baptized, and made three missionary journeys, planting churches in Asia Minor, Macedonia and Greece (Acts 13-21). He was arrested in Jerusalem and sent to Rome (Acts 21-28). He wrote thirteen letters of the New Testament (Romans through Philemon), and tradition says he was put to death in Rome under Nero. He wrote near the end of his life, “I have fought the good fight, I have finished the race, I have kept the faith” (2 Timothy 4:7).",
+      "citations": [
+        {
+          "reference": "Acts 9:1-19",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 22:3-16",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 3:4-9",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 13:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "Galatians 1:11-24",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Timothy 4:6-8",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_simon_peter",
+      "question": "Who was the apostle Peter?",
+      "alt_phrasings": [
+        "who was peter",
+        "tell me about the apostle peter",
+        "who was simon peter",
+        "who was peter in the bible",
+        "was peter the first pope",
+        "what did jesus mean by on this rock i will build my church",
+        "why did peter deny jesus",
+        "who was the fisherman who became the leader of the apostles",
+        "who was peter the apostle",
+        "was simon peter the first pope",
+        "who was the leader of the twelve apostles",
+        "what did jesus mean by you are peter and on this rock",
+        "biography of peter",
+        "life of peter the apostle",
+        "tell me about peter the disciple",
+        "peter the disciple"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Simon, son of John (or Jonah), was a fisherman from Bethsaida, brought to Jesus by his brother Andrew, and Jesus named him Cephas, in Greek Peter, which means rock (John 1:40-42). When Jesus asked who the disciples said He was, “Simon Peter answered, ‘You are the Christ, the Son of the living God.’” Jesus replied, “And I tell you that you are Peter, and on this rock I will build My church, and the gates of Hades will not prevail against it. I will give you the keys of the kingdom of heaven” (Matthew 16:16-19). He walked on the water (Matthew 14:28-31), was at the transfiguration, denied Jesus three times (Luke 22:54-62), and was restored by the risen Lord, who said three times, “Feed My sheep” (John 21:15-17). On the day of Pentecost he preached and about three thousand were baptized (Acts 2:14-41); he first took the gospel to the Gentiles at the house of Cornelius (Acts 10). He wrote 1 and 2 Peter. Tradition says he was crucified in Rome.\n\nPentecostal understanding: the rock on which Christ builds His church is the truth Peter confessed, that Jesus is the Christ, the Son of the living God, and Christ Himself is the foundation (1 Corinthians 3:11; 1 Peter 2:4-8; Ephesians 2:20). Peter was a leading apostle and a pastor of the church, and an elder among elders (1 Peter 5:1), but not a ruler over the others.\n\nOther views: the Roman Catholic Church teaches that Jesus made Peter the first pope and that his authority passes to the bishops of Rome. The Eastern Orthodox Church honours Peter as first among the apostles but does not give the bishop of Rome authority over the other churches.",
+      "citations": [
+        {
+          "reference": "John 1:40-42",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 16:13-19",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 22:54-62",
+          "role": "stated"
+        },
+        {
+          "reference": "John 21:15-19",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 2:14-41",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 10:34-48",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Peter 5:1-4",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_jacob",
+      "question": "Who was Jacob?",
+      "alt_phrasings": [
+        "tell me about jacob",
+        "who was jacob in the bible",
+        "why was jacob renamed israel",
+        "who was israel in the bible",
+        "what did jacob do",
+        "who was the father of the twelve tribes",
+        "who was the man who wrestled with god and became israel",
+        "who wrestled with the angel",
+        "why did god change jacob's name to israel",
+        "who is israel in genesis",
+        "who stole esau's birthright",
+        "biography of jacob",
+        "story of jacob"
+      ],
+      "confidence": "stated",
+      "answer": "Jacob was the younger twin son of Isaac and Rebekah; he was born holding his brother Esau's heel, hence his name, which sounds like heel (Genesis 25:24-26). He bought Esau's birthright for a bowl of stew (Genesis 25:29-34), and with Rebekah's help took Isaac's blessing by deceit (Genesis 27), and fled from Esau to his uncle Laban. At Bethel he dreamed of a ladder to heaven, and God promised, “I am with you, and I will watch over you wherever you go, and I will bring you back to this land” (Genesis 28:10-15). He worked fourteen years for Rachel and Leah (Genesis 29), and had twelve sons by them and their servants, who became the twelve tribes of Israel (Genesis 29-30; 35:22-26). Returning home, he wrestled with a man at Peniel, who said, “Your name will no longer be Jacob, but Israel, because you have struggled with God and with men, and you have prevailed” (Genesis 32:24-30). He loved Joseph most, grieved when he was lost, and moved to Egypt when Joseph became ruler there, where he died at 147 and was buried in Canaan (Genesis 37; 46-50).",
+      "citations": [
+        {
+          "reference": "Genesis 25:19-34",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 27:1-29",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 28:10-22",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 32:22-32",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 35:9-12",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 49:28-33",
+          "role": "stated"
+        }
+      ],
+      "note": null
     }
   ]
 }
