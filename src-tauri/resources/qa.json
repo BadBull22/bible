@@ -7779,6 +7779,671 @@
         }
       ],
       "note": null
+    },
+    {
+      "id": "who_was_john_the_baptist",
+      "question": "Who was John the Baptist?",
+      "alt_phrasings": [
+        "tell me about john the baptist",
+        "who is john the baptist",
+        "what did john the baptist do",
+        "why was john the baptist important",
+        "what happened to john the baptist"
+      ],
+      "confidence": "stated",
+      "answer": "John the Baptist was the son of the priest Zechariah and Elizabeth, born after the angel Gabriel promised his parents a son who would be filled with the Holy Spirit from the womb (Luke 1:5-25, 57-63). He lived in the wilderness, wore a garment of camel's hair and ate locusts and wild honey (Matthew 3:4). He preached repentance and baptized in the Jordan, preparing the way for the Lord as Isaiah had foretold (Matthew 3:1-6; Isaiah 40:3). He baptized Jesus (Matthew 3:13-17) and pointed to Him as the Lamb of God who takes away the sin of the world (John 1:29). He rebuked Herod Antipas for taking his brother's wife and was beheaded (Mark 6:17-29). Jesus said that no one born of women was greater than John (Matthew 11:11) and that he was the Elijah who was to come (Matthew 11:14).",
+      "citations": [
+        {
+          "reference": "Luke 1:5-25",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 3:1-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 3:13-17",
+          "role": "stated"
+        },
+        {
+          "reference": "John 1:29",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 6:17-29",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 11:11",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_deborah",
+      "question": "Who was Deborah?",
+      "alt_phrasings": [
+        "who was deborah the judge",
+        "tell me about deborah in the bible",
+        "who was the prophetess deborah",
+        "what did deborah do in the bible",
+        "who was the female judge of israel",
+        "who was the woman judge of israel",
+        "which woman was a judge in israel",
+        "the woman who led israel in battle"
+      ],
+      "confidence": "stated",
+      "answer": "Deborah was a prophetess and a judge of Israel, the wife of Lappidoth. She sat under the palm of Deborah in the hill country of Ephraim, and the Israelites came to her for judgment (Judges 4:4-5). At God's word she called Barak to gather ten thousand men against Sisera, the commander of the Canaanite king Jabin, who had oppressed Israel for twenty years (Judges 4:3, 6-7). Barak would go only if she went with him, and she told him that the honour of the victory would go to a woman (Judges 4:8-10). The LORD routed Sisera's army, and Jael killed Sisera in her tent (Judges 4:14-22). Deborah and Barak sang a song of victory (Judges 5), and the land had peace for forty years (Judges 5:31). A different Deborah, Rebekah's nurse, is mentioned in Genesis 35:8.",
+      "citations": [
+        {
+          "reference": "Judges 4:4-5",
+          "role": "stated"
+        },
+        {
+          "reference": "Judges 4:6-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Judges 4:14-22",
+          "role": "stated"
+        },
+        {
+          "reference": "Judges 5:1-31",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 35:8",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_elijah",
+      "question": "Who was Elijah?",
+      "alt_phrasings": [
+        "tell me about elijah the prophet",
+        "who is elijah in the bible",
+        "what did elijah do",
+        "what happened to elijah",
+        "why is elijah important",
+        "where did elijah go"
+      ],
+      "confidence": "stated",
+      "answer": "Elijah the Tishbite was a prophet of Israel in the days of King Ahab and Queen Jezebel (1 Kings 17:1). He declared a drought, was fed by ravens at the brook Cherith, and for a widow in Zarephath the jar of flour and the jug of oil did not run out; he raised her son (1 Kings 17:2-24). On Mount Carmel he challenged the prophets of Baal, and fire fell from heaven on his sacrifice (1 Kings 18:20-39). Fleeing Jezebel, he met God not in the wind, earthquake or fire but in a gentle whisper at Horeb (1 Kings 19:11-13). He called Elisha to follow him (1 Kings 19:19-21) and was taken up to heaven in a whirlwind with chariots and horses of fire (2 Kings 2:11). Malachi promised that Elijah would come before the great day of the LORD (Malachi 4:5-6), and Jesus said that John the Baptist was that Elijah (Matthew 11:14). Elijah appeared with Moses at the Transfiguration (Matthew 17:1-3), and James holds him up as a man of powerful prayer (James 5:16-18).",
+      "citations": [
+        {
+          "reference": "1 Kings 17:1",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Kings 18:20-39",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Kings 19:11-13",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Kings 2:11",
+          "role": "stated"
+        },
+        {
+          "reference": "Malachi 4:5-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 17:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "James 5:16-18",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "what_is_the_tabernacle",
+      "question": "What was the tabernacle?",
+      "alt_phrasings": [
+        "what is the tabernacle",
+        "what was the tabernacle in the wilderness",
+        "what was the tent of meeting",
+        "why did god have moses build the tabernacle",
+        "what was inside the tabernacle",
+        "what does the tabernacle represent",
+        "what was the portable sanctuary of israel",
+        "what was the tent moses made for gods presence",
+        "what was the tent where god met his people"
+      ],
+      "confidence": "stated",
+      "answer": "The tabernacle was the portable tent sanctuary that God commanded Moses to build in the wilderness, so that He could live among His people (Exodus 25:8-9). It was made to the pattern God showed Moses on the mountain (Exodus 25:9, 40). It had an outer court with the bronze altar and basin, a Holy Place with the lampstand, the table of the bread of the Presence and the altar of incense, and behind a veil the Most Holy Place with the ark of the covenant (Exodus 25-27; 30). When it was finished the cloud covered it and the glory of the LORD filled it (Exodus 40:34-35). It was later replaced by Solomon's temple (1 Kings 8). The New Testament sees it as a copy and shadow of heavenly things (Hebrews 8:5; 9:23-24); Christ entered the greater and more perfect tabernacle by His own blood (Hebrews 9:11-12), and John says that the Word became flesh and “made His dwelling among us” (John 1:14), a word that echoes the tabernacle (the Greek verb means to pitch a tent).",
+      "citations": [
+        {
+          "reference": "Exodus 25:8-9",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 40:34-35",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 8:5",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 9:11-12",
+          "role": "stated"
+        },
+        {
+          "reference": "John 1:14",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_wrote_the_bible",
+      "question": "Who wrote the Bible?",
+      "alt_phrasings": [
+        "who is the author of the bible",
+        "who were the authors of the bible",
+        "who wrote the books of the bible",
+        "how was the bible written",
+        "who really wrote the bible",
+        "how many authors wrote the bible",
+        "who put the bible together",
+        "who is the true author of the bible",
+        "who is the ultimate author of the bible",
+        "is god the author of the bible"
+      ],
+      "confidence": "stated",
+      "answer": "The Bible is a library of 66 books written by about forty human authors over some 1,500 years: Moses wrote the first five books (Exodus 24:4; Deuteronomy 31:9), David and others the psalms, Solomon much of the wisdom writings, the prophets their own books, and Matthew, Mark, Luke and John the four Gospels (Luke 1:1-4; John 21:24). Paul wrote many of the letters, with letters also by Peter, James, John and Jude; Hebrews is anonymous. Yet Scripture says that God is the source: “All Scripture is God-breathed and is useful for instruction, for conviction, for correction, and for training in righteousness” (2 Timothy 3:16), and “men spoke from God as they were carried along by the Holy Spirit” (2 Peter 1:21).",
+      "citations": [
+        {
+          "reference": "2 Timothy 3:16",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Peter 1:21",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 24:4",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 1:1-4",
+          "role": "stated"
+        },
+        {
+          "reference": "John 21:24",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "forgiveness_bible",
+      "question": "What does the Bible say about forgiveness?",
+      "alt_phrasings": [
+        "bible verses about forgiveness",
+        "how does god forgive us",
+        "why should we forgive others",
+        "what does the bible teach about forgiving",
+        "what is forgiveness according to the bible",
+        "how do i forgive according to the bible"
+      ],
+      "confidence": "stated",
+      "answer": "God forgives those who come to Him: “If we confess our sins, He is faithful and just to forgive us our sins and to cleanse us from all unrighteousness” (1 John 1:9). In Christ we have redemption through His blood, the forgiveness of sins (Ephesians 1:7), and God removes our sins from us as far as the east is from the west (Psalm 103:12). We are told to forgive in the same way: “forgiving each other, just as in Christ God forgave you” (Ephesians 4:32; Colossians 3:13). Jesus said that if we forgive others our Father will forgive us, but if we do not forgive, neither will He forgive our sins (Matthew 6:14-15); when we stand praying we are to forgive anyone we hold something against (Mark 11:25). We are to forgive again and again (Matthew 18:21-22; Luke 17:3-4). Jesus forgave His killers from the cross (Luke 23:34), and Stephen did the same (Acts 7:60).",
+      "citations": [
+        {
+          "reference": "1 John 1:9",
+          "role": "stated"
+        },
+        {
+          "reference": "Ephesians 1:7",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 103:12",
+          "role": "stated"
+        },
+        {
+          "reference": "Ephesians 4:32",
+          "role": "stated"
+        },
+        {
+          "reference": "Colossians 3:13",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 6:14-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 11:25",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 23:34",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_pontius_pilate",
+      "question": "Who was Pontius Pilate?",
+      "alt_phrasings": [
+        "who was pilate",
+        "tell me about pontius pilate",
+        "what did pilate do to jesus",
+        "why did pilate crucify jesus",
+        "who was the roman governor who sentenced jesus"
+      ],
+      "confidence": "traditional",
+      "answer": "Pontius Pilate was the Roman governor of Judea in the days of Tiberius Caesar (Luke 3:1), the official before whom the Jewish leaders brought Jesus (Matthew 27:11-26; John 18:28-19:16). Pilate asked Him whether He was the King of the Jews and said three times that he found no guilt in Him (John 18:38; Luke 23:4, 14-22); his wife warned him about Jesus after a dream (Matthew 27:19). Fearing the crowd, he washed his hands before them and handed Jesus over to be crucified (Matthew 27:24-26), and he had the notice “Jesus of Nazareth, the King of the Jews” fixed to the cross (John 19:19). He later allowed Joseph of Arimathea to bury the body and set a guard at the tomb (Mark 15:43-45; Matthew 27:62-66). The rest of Pilate's life is told outside the Bible.",
+      "citations": [
+        {
+          "reference": "Luke 3:1",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 27:11-26",
+          "role": "stated"
+        },
+        {
+          "reference": "John 18:38",
+          "role": "stated"
+        },
+        {
+          "reference": "John 19:19",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 15:43-45",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "shalom_meaning",
+      "question": "What does shalom mean?",
+      "alt_phrasings": [
+        "what does the word shalom mean",
+        "what is the meaning of shalom",
+        "what is shalom in the bible",
+        "shalom meaning hebrew",
+        "what does peace mean in the bible"
+      ],
+      "confidence": "stated",
+      "answer": "Shalom is the Hebrew word for peace, but it means much more than the absence of war: wholeness, health, safety and well-being in every part of life. It is used as a greeting and a farewell, “Peace be with you” (Judges 6:23), and in asking after someone's welfare (Genesis 43:27). Gideon named his altar “The LORD Is Peace” (Judges 6:24). The priestly blessing asks the LORD to look on His people with favour and give them peace (Numbers 6:24-26). The Messiah is the Prince of Peace (Isaiah 9:6); God keeps in perfect peace the one whose mind is stayed on Him (Isaiah 26:3). Jesus said, “Peace I leave with you; My peace I give to you” (John 14:27), and the peace of God guards the hearts and minds of those who pray (Philippians 4:6-7).",
+      "citations": [
+        {
+          "reference": "Judges 6:23-24",
+          "role": "stated"
+        },
+        {
+          "reference": "Numbers 6:24-26",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 9:6",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 26:3",
+          "role": "stated"
+        },
+        {
+          "reference": "John 14:27",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 4:6-7",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "name_jesus_meaning",
+      "question": "What does the name Jesus mean?",
+      "alt_phrasings": [
+        "what is the meaning of the name jesus",
+        "what does jesus mean in hebrew",
+        "what does yeshua mean",
+        "what does christ mean",
+        "what does the name immanuel mean",
+        "why was he named jesus"
+      ],
+      "confidence": "stated",
+      "answer": "“Jesus” is the Greek form of the Hebrew name Yeshua (Joshua), which means “the LORD saves”. The angel told Joseph, “you are to give Him the name Jesus, because He will save His people from their sins” (Matthew 1:21; Luke 1:31). “Christ” is not a surname but a title: the Greek for the Hebrew Messiah, the Anointed One (John 1:41). Matthew also records the name Immanuel, “God with us” (Matthew 1:23; Isaiah 7:14). God has given Him the name above every name, at which every knee will bow (Philippians 2:9-11), and there is salvation in no one else, for there is no other name under heaven by which we must be saved (Acts 4:12).",
+      "citations": [
+        {
+          "reference": "Matthew 1:21",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 1:31",
+          "role": "stated"
+        },
+        {
+          "reference": "John 1:41",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 1:23",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 2:9-11",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 4:12",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "body_of_christ",
+      "question": "What is the body of Christ?",
+      "alt_phrasings": [
+        "what does the body of christ mean",
+        "what is meant by the body of christ",
+        "who is the body of christ",
+        "what is the church the body of christ",
+        "we are the body of christ"
+      ],
+      "confidence": "stated",
+      "answer": "The body of Christ is the church, all believers joined to Him and to one another. Christ is its head (Colossians 1:18; Ephesians 1:22-23). “The body is a unit, though it is composed of many parts. And although its parts are many, they all form one body. So it is with Christ” (1 Corinthians 12:12): by one Spirit we were all baptized into one body (1 Corinthians 12:13). Each member has a different gift and is needed; no part can say to another, “I do not need you” (1 Corinthians 12:14-27; Romans 12:4-8). Christ gave apostles, prophets, evangelists, pastors and teachers to equip the saints until the body grows up in love (Ephesians 4:11-16). In Communion the bread is also called a sharing in the body of Christ (1 Corinthians 10:16-17).",
+      "citations": [
+        {
+          "reference": "Colossians 1:18",
+          "role": "stated"
+        },
+        {
+          "reference": "Ephesians 1:22-23",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 12:12-27",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 12:4-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Ephesians 4:11-16",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "holy_of_holies",
+      "question": "What was the Holy of Holies?",
+      "alt_phrasings": [
+        "what is the holy of holies",
+        "what is the most holy place",
+        "what was the inner room of the temple",
+        "what was behind the veil in the temple",
+        "why was the veil torn when jesus died"
+      ],
+      "confidence": "stated",
+      "answer": "The Holy of Holies, or Most Holy Place, was the inner room of the tabernacle and later of the temple, separated from the Holy Place by a veil (Exodus 26:33-34; 1 Kings 6:16, 19). It held the ark of the covenant with the mercy seat between the cherubim, where God said He would meet with Moses and speak (Exodus 25:22). Only the high priest could enter, once a year on the Day of Atonement, and not without blood (Leviticus 16:2, 12-15; Hebrews 9:7). When Jesus died the temple veil was torn in two from top to bottom (Matthew 27:51), and Hebrews says that “we have confidence to enter the Most Holy Place by the blood of Jesus” (Hebrews 10:19-22; 9:11-12).",
+      "citations": [
+        {
+          "reference": "Exodus 26:33-34",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 25:22",
+          "role": "stated"
+        },
+        {
+          "reference": "Leviticus 16:2",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 27:51",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 10:19-22",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "seven_churches_revelation",
+      "question": "What are the seven churches in Revelation?",
+      "alt_phrasings": [
+        "who are the seven churches of revelation",
+        "what were the seven churches of asia",
+        "list the seven churches in revelation",
+        "what are the letters to the seven churches",
+        "what did jesus say to the seven churches"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Jesus told John to write to seven churches in Asia (what is now western Turkey): Ephesus, Smyrna, Pergamum, Thyatira, Sardis, Philadelphia and Laodicea (Revelation 1:11; chapters 2-3). Ephesus had left its first love (2:4). Smyrna was faithful in suffering and was promised the crown of life (2:10). Pergamum stayed faithful but tolerated false teaching (2:14-15). Thyatira grew in love and service but tolerated the false prophetess Jezebel (2:19-20). Sardis had a reputation of being alive but was dead (3:1). Philadelphia had little strength but had kept His word and was given an open door (3:8). Laodicea was lukewarm and was told to buy gold refined by fire and to open the door to Christ (3:15-20). Each letter ends with a promise to the one who overcomes.\n\nPentecostal understanding: they were real churches that received a real letter, and each also warns the church of every age, so that a church or a believer who goes cold, compromises or grows lukewarm must repent; many Pentecostal and dispensational teachers also see in the seven a picture of the stages of church history.\n\nOther views: many read the seven only as the churches of John's day, with lessons for all churches; others take the seven as a symbol of the whole church (seven being the number of completeness).",
+      "citations": [
+        {
+          "reference": "Revelation 1:11",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 2:1-7",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 2:8-11",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 3:1-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 3:14-22",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_of_life",
+      "question": "What is the Book of Life?",
+      "alt_phrasings": [
+        "what is the book of life in revelation",
+        "is my name in the book of life",
+        "what is the lambs book of life",
+        "who is written in the book of life",
+        "can your name be taken out of the book of life",
+        "what does the bible say about the book of life"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: the Book of Life is the record of those who belong to God. Jesus told His disciples to rejoice that their names are written in heaven (Luke 10:20), and Paul speaks of fellow workers whose names are in the book of life (Philippians 4:3). Revelation says that whoever's name is not found written in the book of life is thrown into the lake of fire (Revelation 20:12, 15), and that nothing unclean will enter the New Jerusalem, only those written in the Lamb's book of life (Revelation 21:27). Jesus promises the one who overcomes that He will never blot out his name from the book of life, but will acknowledge it before the Father (Revelation 3:5); Moses and the psalmist also speak of names blotted out (Exodus 32:32-33; Psalm 69:28).\n\nPentecostal understanding: the names of the born-again are written there through the blood of the Lamb, and the warnings of Scripture show that a believer who willfully turns away from Christ and does not overcome is at risk (Exodus 32:33; Revelation 3:5).\n\nOther views: Reformed and others hold that the names were written before the foundation of the world and can never be removed (Revelation 13:8; 17:8), so that those who seem to fall away were never truly written there.",
+      "citations": [
+        {
+          "reference": "Luke 10:20",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 4:3",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 20:12-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 21:27",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 3:5",
+          "role": "stated"
+        },
+        {
+          "reference": "Exodus 32:32-33",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "lake_of_fire",
+      "question": "What is the lake of fire?",
+      "alt_phrasings": [
+        "what is the second death",
+        "what is the lake of fire in revelation",
+        "who goes to the lake of fire",
+        "what does the bible say about the lake of fire",
+        "what is the second death in revelation"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: the lake of fire is the final place of judgment. The beast and the false prophet are thrown into it alive (Revelation 19:20), the devil is thrown in and tormented day and night forever (Revelation 20:10), and then Death and Hades, and anyone whose name was not found in the book of life (Revelation 20:14-15). Revelation calls it the second death and names the cowardly, unbelieving, murderers, the sexually immoral, sorcerers, idolaters and all liars among those who face it (Revelation 21:8). Jesus said that it was prepared for the devil and his angels (Matthew 25:41), and that the wicked go away to eternal punishment and the righteous to eternal life (Matthew 25:46). The second death has no power over those who share in the first resurrection (Revelation 20:6) or the one who overcomes (Revelation 2:11).\n\nPentecostal understanding: it is a real place of everlasting separation from God for the devil and for all who finally reject Christ, which is why the gospel must be preached.\n\nOther views: some Christians (annihilationists) hold that the lost are destroyed rather than tormented without end; a few hold that all will finally be saved; some read the fire as a picture of God's judgment rather than a literal flame.",
+      "citations": [
+        {
+          "reference": "Revelation 19:20",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 20:10",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 20:14-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 21:8",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 25:41",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 25:46",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "hear_gods_voice",
+      "question": "How can I hear God's voice?",
+      "alt_phrasings": [
+        "how do i hear god's voice",
+        "how does god speak to us",
+        "how can i hear god speaking to me",
+        "how do i know if god is speaking to me",
+        "does god still speak today",
+        "how to hear the holy spirit"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: God has spoken most fully through His Son (Hebrews 1:1-2) and through His written Word, which is a lamp to our feet (Psalm 119:105; 2 Timothy 3:16-17). Jesus said that His sheep listen to His voice (John 10:27) and promised that the Holy Spirit would guide us into all the truth and tell us what is to come (John 16:13). The Spirit testifies with our spirit that we are God's children (Romans 8:14-16), God spoke to Elijah in a gentle whisper (1 Kings 19:12), and God gives gifts of the Spirit, including prophecy, for the building up of the church (1 Corinthians 12:7-11; 14:1-3). We are to be still before Him (Psalm 46:10), to pray, and to test every spirit and every word (1 John 4:1; 1 Thessalonians 5:19-21).\n\nPentecostal understanding: the Spirit still speaks, first through the Bible, then by an inward witness, prophecy, a word of knowledge and sometimes dreams or visions (Acts 2:17), and all of it must agree with Scripture and be tested by mature believers.\n\nOther views: cessationist teachers hold that God now speaks to us only through the completed Bible, and that He guides through wisdom, circumstances and counsel instead of fresh revelation.",
+      "citations": [
+        {
+          "reference": "Hebrews 1:1-2",
+          "role": "stated"
+        },
+        {
+          "reference": "Psalm 119:105",
+          "role": "stated"
+        },
+        {
+          "reference": "John 10:27",
+          "role": "stated"
+        },
+        {
+          "reference": "John 16:13",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 8:14-16",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Kings 19:12",
+          "role": "stated"
+        },
+        {
+          "reference": "1 John 4:1",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "where_did_paul_die",
+      "question": "How did the apostle Paul die?",
+      "alt_phrasings": [
+        "where did paul die",
+        "how did paul die",
+        "what happened to the apostle paul in the end",
+        "was paul executed",
+        "how did the apostle paul end his life"
+      ],
+      "confidence": "traditional",
+      "answer": "The Bible does not record Paul's death. Acts ends with Paul in Rome under house arrest, welcoming all who came to him and proclaiming the kingdom of God for two years (Acts 28:30-31). In his last letter he writes, “For I am already being poured out like a drink offering, and the time of my departure is near,” and he looks ahead to the crown of righteousness that the Lord will give to all who love His appearing (2 Timothy 4:6-8). Early Christian tradition outside the Bible says that he was beheaded in Rome under the emperor Nero, about AD 64 to 67.",
+      "citations": [
+        {
+          "reference": "Acts 28:30-31",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Timothy 4:6-8",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "jesus_middle_name",
+      "question": "Did Jesus have a middle name?",
+      "alt_phrasings": [
+        "what was jesus's middle name",
+        "what is jesus's middle name",
+        "what was jesus christ's middle name",
+        "does jesus have a middle name",
+        "what was the full name of jesus"
+      ],
+      "confidence": "unattested",
+      "answer": "The Bible gives Jesus no middle name, and middle names were not the custom in His day. He was named Jesus at the angel's word (Matthew 1:21; Luke 1:31), and people identified Him by His town or His family: “Jesus of Nazareth” (John 1:45; Acts 2:22) and “the son of Joseph” (Luke 3:23; John 6:42). “Christ” is not a middle name or a surname but the title Messiah, the Anointed One (John 1:41).",
+      "citations": [
+        {
+          "reference": "Matthew 1:21",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 1:31",
+          "role": "stated"
+        },
+        {
+          "reference": "John 1:45",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 3:23",
+          "role": "stated"
+        },
+        {
+          "reference": "John 1:41",
+          "role": "stated"
+        }
+      ],
+      "note": null
     }
   ]
 }
