@@ -9134,6 +9134,1836 @@
         }
       ],
       "note": null
+    },
+    {
+      "id": "book_overview_genesis",
+      "question": "What is the book of Genesis about?",
+      "alt_phrasings": [
+        "what is genesis about",
+        "summary of the book of genesis",
+        "overview of the book of genesis",
+        "what is the message of the book of genesis",
+        "what happens in the book of genesis",
+        "tell me about the book of genesis",
+        "what does the book of genesis teach",
+        "what is the book of genesis"
+      ],
+      "confidence": "traditional",
+      "answer": "Genesis, the first book of the Bible, is traditionally ascribed to Moses. It tells of the beginning: the creation of the world, the fall of man, the flood, the call of Abraham, and the stories of Isaac, Jacob and Joseph, ending with Israel's family in Egypt. It shows God as the Creator who makes a people for Himself by promise. Key verse: “In the beginning God created the heavens and the earth.” (Genesis 1:1).",
+      "citations": [
+        {
+          "reference": "Genesis 1:1",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_exodus",
+      "question": "What is the book of Exodus about?",
+      "alt_phrasings": [
+        "what is exodus about",
+        "summary of the book of exodus",
+        "overview of the book of exodus",
+        "what is the message of the book of exodus",
+        "what happens in the book of exodus",
+        "tell me about the book of exodus",
+        "what does the book of exodus teach",
+        "what is the book of exodus"
+      ],
+      "confidence": "traditional",
+      "answer": "Exodus is traditionally ascribed to Moses. It tells how God freed Israel from slavery in Egypt through the ten plagues and the Passover, brought them through the Red Sea, gave the law at Mount Sinai and had the tabernacle built so that He could live among them. Key verse: “I am the LORD your God, who brought you out of the land of Egypt, out of the house of slavery.” (Exodus 20:2).",
+      "citations": [
+        {
+          "reference": "Exodus 20:2",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_leviticus",
+      "question": "What is the book of Leviticus about?",
+      "alt_phrasings": [
+        "what is leviticus about",
+        "summary of the book of leviticus",
+        "overview of the book of leviticus",
+        "what is the message of the book of leviticus",
+        "what happens in the book of leviticus",
+        "tell me about the book of leviticus",
+        "what does the book of leviticus teach",
+        "what is the book of leviticus"
+      ],
+      "confidence": "traditional",
+      "answer": "Leviticus is traditionally ascribed to Moses. It sets out the laws of sacrifice and priesthood, the Day of Atonement, clean and unclean, and the feasts. It teaches that a holy God is approached through atonement, and that His people are to be holy. Key verse: “Speak to the whole congregation of Israel and tell them: Be holy because I, the LORD your God, am holy.” (Leviticus 19:2).",
+      "citations": [
+        {
+          "reference": "Leviticus 19:2",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_numbers",
+      "question": "What is the book of Numbers about?",
+      "alt_phrasings": [
+        "what is numbers about",
+        "summary of the book of numbers",
+        "overview of the book of numbers",
+        "what is the message of the book of numbers",
+        "what happens in the book of numbers",
+        "tell me about the book of numbers",
+        "what does the book of numbers teach",
+        "what is the book of numbers"
+      ],
+      "confidence": "traditional",
+      "answer": "Numbers is traditionally ascribed to Moses. It records Israel's counting and their forty years in the wilderness: the unbelief at Kadesh, the death of that generation, and a new generation brought to the edge of the promised land. It shows God's faithfulness in spite of Israel's complaining. Key verse: “May the LORD bless you and keep you; may the LORD cause His face to shine upon you and be gracious to you; may the LORD lift up His countenance toward you and give you peace.'” (Numbers 6:24-26).",
+      "citations": [
+        {
+          "reference": "Numbers 6:24-26",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_deuteronomy",
+      "question": "What is the book of Deuteronomy about?",
+      "alt_phrasings": [
+        "what is deuteronomy about",
+        "summary of the book of deuteronomy",
+        "overview of the book of deuteronomy",
+        "what is the message of the book of deuteronomy",
+        "what happens in the book of deuteronomy",
+        "tell me about the book of deuteronomy",
+        "what does the book of deuteronomy teach",
+        "what is the book of deuteronomy"
+      ],
+      "confidence": "traditional",
+      "answer": "Deuteronomy is traditionally ascribed to Moses. It is Moses' farewell speech on the plains of Moab: a review of the journey, the law repeated, and the covenant renewed with its blessings and curses, with the call to love the LORD and choose life. It ends with Moses' death. Key verse: “Hear, O Israel: The LORD our God, the LORD is One. And you shall love the LORD your God with all your heart and with all your soul and with all your strength.” (Deuteronomy 6:4-5).",
+      "citations": [
+        {
+          "reference": "Deuteronomy 6:4-5",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_joshua",
+      "question": "What is the book of Joshua about?",
+      "alt_phrasings": [
+        "what is joshua about",
+        "summary of the book of joshua",
+        "overview of the book of joshua",
+        "what is the message of the book of joshua",
+        "what happens in the book of joshua",
+        "tell me about the book of joshua",
+        "what does the book of joshua teach",
+        "what is the book of joshua"
+      ],
+      "confidence": "traditional",
+      "answer": "Joshua is named after its main character and is traditionally ascribed to Joshua, with later additions. It tells how Israel crossed the Jordan, took Jericho and the land of Canaan, and divided it among the tribes, and how God kept His promise to give them the land. Key verse: “Have I not commanded you to be strong and courageous? Do not be afraid; do not be discouraged, for the LORD your God is with you wherever you go.” (Joshua 1:9).",
+      "citations": [
+        {
+          "reference": "Joshua 1:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_judges",
+      "question": "What is the book of Judges about?",
+      "alt_phrasings": [
+        "what is judges about",
+        "summary of the book of judges",
+        "overview of the book of judges",
+        "what is the message of the book of judges",
+        "what happens in the book of judges",
+        "tell me about the book of judges",
+        "what does the book of judges teach",
+        "what is the book of judges"
+      ],
+      "confidence": "traditional",
+      "answer": "Judges is traditionally ascribed to Samuel. It tells of a repeating cycle: Israel forgets the LORD, is oppressed, cries out, and is rescued by a judge such as Deborah, Gideon or Samson. It shows how far a people falls without a faithful king and leader. Key verse: “In those days there was no king in Israel; everyone did what was right in his own eyes.” (Judges 21:25).",
+      "citations": [
+        {
+          "reference": "Judges 21:25",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_ruth",
+      "question": "What is the book of Ruth about?",
+      "alt_phrasings": [
+        "what is ruth about",
+        "summary of the book of ruth",
+        "overview of the book of ruth",
+        "what is the message of the book of ruth",
+        "what happens in the book of ruth",
+        "tell me about the book of ruth",
+        "what does the book of ruth teach",
+        "what is the book of ruth"
+      ],
+      "confidence": "traditional",
+      "answer": "Ruth is of unknown authorship, traditionally ascribed to Samuel. It tells how a Moabite widow, Ruth, stays loyal to her mother-in-law Naomi, comes to Bethlehem and marries Boaz, her redeemer, and becomes the great-grandmother of King David. Key verse: “But Ruth replied: Do not urge me to leave you or to turn from following you. For wherever you go, I will go, and wherever you live, I will live; your people will be my people, and your God will be my God.” (Ruth 1:16).",
+      "citations": [
+        {
+          "reference": "Ruth 1:16",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_1_samuel",
+      "question": "What is the book of 1 Samuel about?",
+      "alt_phrasings": [
+        "what is 1 samuel about",
+        "summary of the book of 1 samuel",
+        "overview of the book of 1 samuel",
+        "what is the message of the book of 1 samuel",
+        "what happens in the book of 1 samuel",
+        "tell me about the book of 1 samuel",
+        "what does the book of 1 samuel teach",
+        "what is the book of 1 samuel",
+        "what is first samuel about",
+        "summary of the book of first samuel",
+        "overview of the book of first samuel",
+        "what is the message of the book of first samuel",
+        "what happens in the book of first samuel",
+        "tell me about the book of first samuel",
+        "what does the book of first samuel teach",
+        "what is the book of first samuel",
+        "what is 1st samuel about",
+        "summary of the book of 1st samuel",
+        "overview of the book of 1st samuel",
+        "what is the message of the book of 1st samuel",
+        "what happens in the book of 1st samuel",
+        "tell me about the book of 1st samuel",
+        "what does the book of 1st samuel teach",
+        "what is the book of 1st samuel"
+      ],
+      "confidence": "traditional",
+      "answer": "1 Samuel is traditionally ascribed to Samuel and later prophets. It tells of Samuel's birth and call, Israel's demand for a king, the rise and failure of Saul, and the anointing of David, who defeats Goliath and is hunted by Saul. Key verse: “But the LORD said to Samuel, Do not consider his appearance or height, for I have rejected him; the LORD does not see as man does. For man sees the outward appearance, but the LORD sees the heart.” (1 Samuel 16:7).",
+      "citations": [
+        {
+          "reference": "1 Samuel 16:7",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_2_samuel",
+      "question": "What is the book of 2 Samuel about?",
+      "alt_phrasings": [
+        "what is 2 samuel about",
+        "summary of the book of 2 samuel",
+        "overview of the book of 2 samuel",
+        "what is the message of the book of 2 samuel",
+        "what happens in the book of 2 samuel",
+        "tell me about the book of 2 samuel",
+        "what does the book of 2 samuel teach",
+        "what is the book of 2 samuel",
+        "what is second samuel about",
+        "summary of the book of second samuel",
+        "overview of the book of second samuel",
+        "what is the message of the book of second samuel",
+        "what happens in the book of second samuel",
+        "tell me about the book of second samuel",
+        "what does the book of second samuel teach",
+        "what is the book of second samuel",
+        "what is 2nd samuel about",
+        "summary of the book of 2nd samuel",
+        "overview of the book of 2nd samuel",
+        "what is the message of the book of 2nd samuel",
+        "what happens in the book of 2nd samuel",
+        "tell me about the book of 2nd samuel",
+        "what does the book of 2nd samuel teach",
+        "what is the book of 2nd samuel"
+      ],
+      "confidence": "traditional",
+      "answer": "2 Samuel continues the story of 1 Samuel. It tells of David's reign over Judah and then all Israel, his capture of Jerusalem, God's promise of an everlasting throne, his sin with Bathsheba and the troubles in his family that followed, including Absalom's revolt. Key verse: “Your house and kingdom will endure forever before Me, and your throne will be established forever.” (2 Samuel 7:16).",
+      "citations": [
+        {
+          "reference": "2 Samuel 7:16",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_1_kings",
+      "question": "What is the book of 1 Kings about?",
+      "alt_phrasings": [
+        "what is 1 kings about",
+        "summary of the book of 1 kings",
+        "overview of the book of 1 kings",
+        "what is the message of the book of 1 kings",
+        "what happens in the book of 1 kings",
+        "tell me about the book of 1 kings",
+        "what does the book of 1 kings teach",
+        "what is the book of 1 kings",
+        "what is first kings about",
+        "summary of the book of first kings",
+        "overview of the book of first kings",
+        "what is the message of the book of first kings",
+        "what happens in the book of first kings",
+        "tell me about the book of first kings",
+        "what does the book of first kings teach",
+        "what is the book of first kings",
+        "what is 1st kings about",
+        "summary of the book of 1st kings",
+        "overview of the book of 1st kings",
+        "what is the message of the book of 1st kings",
+        "what happens in the book of 1st kings",
+        "tell me about the book of 1st kings",
+        "what does the book of 1st kings teach",
+        "what is the book of 1st kings"
+      ],
+      "confidence": "traditional",
+      "answer": "1 Kings is of unknown authorship, traditionally ascribed to Jeremiah. It tells of Solomon's wisdom and the building of the temple, the division of the kingdom into Israel and Judah, and the prophet Elijah's stand against King Ahab and the worship of Baal. Key verse: “Then Elijah approached all the people and said, How long will you waver between two opinions? If the LORD is God, follow Him. But if Baal is God, follow him. But the people did not answer a word.” (1 Kings 18:21).",
+      "citations": [
+        {
+          "reference": "1 Kings 18:21",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_2_kings",
+      "question": "What is the book of 2 Kings about?",
+      "alt_phrasings": [
+        "what is 2 kings about",
+        "summary of the book of 2 kings",
+        "overview of the book of 2 kings",
+        "what is the message of the book of 2 kings",
+        "what happens in the book of 2 kings",
+        "tell me about the book of 2 kings",
+        "what does the book of 2 kings teach",
+        "what is the book of 2 kings",
+        "what is second kings about",
+        "summary of the book of second kings",
+        "overview of the book of second kings",
+        "what is the message of the book of second kings",
+        "what happens in the book of second kings",
+        "tell me about the book of second kings",
+        "what does the book of second kings teach",
+        "what is the book of second kings",
+        "what is 2nd kings about",
+        "summary of the book of 2nd kings",
+        "overview of the book of 2nd kings",
+        "what is the message of the book of 2nd kings",
+        "what happens in the book of 2nd kings",
+        "tell me about the book of 2nd kings",
+        "what does the book of 2nd kings teach",
+        "what is the book of 2nd kings"
+      ],
+      "confidence": "traditional",
+      "answer": "2 Kings continues 1 Kings. It follows the kings of Israel and Judah, the miracles of Elisha, and the fall of Samaria to Assyria and of Jerusalem to Babylon, showing that the exile came because Israel and its kings would not turn back to the LORD. Key verse: “Do not be afraid, Elisha answered, for those who are with us are more than those who are with them.” (2 Kings 6:16).",
+      "citations": [
+        {
+          "reference": "2 Kings 6:16",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_1_chronicles",
+      "question": "What is the book of 1 Chronicles about?",
+      "alt_phrasings": [
+        "what is 1 chronicles about",
+        "summary of the book of 1 chronicles",
+        "overview of the book of 1 chronicles",
+        "what is the message of the book of 1 chronicles",
+        "what happens in the book of 1 chronicles",
+        "tell me about the book of 1 chronicles",
+        "what does the book of 1 chronicles teach",
+        "what is the book of 1 chronicles",
+        "what is first chronicles about",
+        "summary of the book of first chronicles",
+        "overview of the book of first chronicles",
+        "what is the message of the book of first chronicles",
+        "what happens in the book of first chronicles",
+        "tell me about the book of first chronicles",
+        "what does the book of first chronicles teach",
+        "what is the book of first chronicles",
+        "what is 1st chronicles about",
+        "summary of the book of 1st chronicles",
+        "overview of the book of 1st chronicles",
+        "what is the message of the book of 1st chronicles",
+        "what happens in the book of 1st chronicles",
+        "tell me about the book of 1st chronicles",
+        "what does the book of 1st chronicles teach",
+        "what is the book of 1st chronicles"
+      ],
+      "confidence": "traditional",
+      "answer": "1 Chronicles is traditionally ascribed to Ezra. Written after the exile, it opens with the family lines from Adam, then retells the reign of David and his preparations for the temple, to remind the returned exiles of their roots and their worship. Key verse: “Give thanks to the LORD, for He is good; His loving devotion endures forever.” (1 Chronicles 16:34).",
+      "citations": [
+        {
+          "reference": "1 Chronicles 16:34",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_2_chronicles",
+      "question": "What is the book of 2 Chronicles about?",
+      "alt_phrasings": [
+        "what is 2 chronicles about",
+        "summary of the book of 2 chronicles",
+        "overview of the book of 2 chronicles",
+        "what is the message of the book of 2 chronicles",
+        "what happens in the book of 2 chronicles",
+        "tell me about the book of 2 chronicles",
+        "what does the book of 2 chronicles teach",
+        "what is the book of 2 chronicles",
+        "what is second chronicles about",
+        "summary of the book of second chronicles",
+        "overview of the book of second chronicles",
+        "what is the message of the book of second chronicles",
+        "what happens in the book of second chronicles",
+        "tell me about the book of second chronicles",
+        "what does the book of second chronicles teach",
+        "what is the book of second chronicles",
+        "what is 2nd chronicles about",
+        "summary of the book of 2nd chronicles",
+        "overview of the book of 2nd chronicles",
+        "what is the message of the book of 2nd chronicles",
+        "what happens in the book of 2nd chronicles",
+        "tell me about the book of 2nd chronicles",
+        "what does the book of 2nd chronicles teach",
+        "what is the book of 2nd chronicles"
+      ],
+      "confidence": "traditional",
+      "answer": "2 Chronicles continues 1 Chronicles. It tells of Solomon and the temple, then of the kings of Judah, with an emphasis on revivals under kings like Hezekiah and Josiah, and ends with the exile and the decree of Cyrus that sends the people home. Key verse: “and if My people who are called by My name humble themselves and pray and seek My face and turn from their wicked ways, then I will hear from heaven, forgive their sin, and heal their land.” (2 Chronicles 7:14).",
+      "citations": [
+        {
+          "reference": "2 Chronicles 7:14",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_ezra",
+      "question": "What is the book of Ezra about?",
+      "alt_phrasings": [
+        "what is ezra about",
+        "summary of the book of ezra",
+        "overview of the book of ezra",
+        "what is the message of the book of ezra",
+        "what happens in the book of ezra",
+        "tell me about the book of ezra",
+        "what does the book of ezra teach",
+        "what is the book of ezra"
+      ],
+      "confidence": "traditional",
+      "answer": "Ezra is traditionally ascribed to Ezra the priest and scribe. It tells how the exiles returned from Babylon under Zerubbabel, rebuilt the temple, and later came back with Ezra, who taught the law and called the people to put away unfaithfulness. Key verse: “For Ezra had set his heart to study the Law of the LORD, to practice it, and to teach its statutes and ordinances in Israel.” (Ezra 7:10).",
+      "citations": [
+        {
+          "reference": "Ezra 7:10",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_nehemiah",
+      "question": "What is the book of Nehemiah about?",
+      "alt_phrasings": [
+        "what is nehemiah about",
+        "summary of the book of nehemiah",
+        "overview of the book of nehemiah",
+        "what is the message of the book of nehemiah",
+        "what happens in the book of nehemiah",
+        "tell me about the book of nehemiah",
+        "what does the book of nehemiah teach",
+        "what is the book of nehemiah"
+      ],
+      "confidence": "traditional",
+      "answer": "Nehemiah is traditionally ascribed to Nehemiah, with Ezra. It tells how Nehemiah, cupbearer to the king of Persia, led the rebuilding of Jerusalem's wall in fifty-two days despite opposition, and how the people heard the law and renewed their covenant. Key verse: “Then Nehemiah told them, Go and eat what is rich, drink what is sweet, and send out portions to those who have nothing prepared, since today is holy to our Lord. Do not grieve, for the joy of the LORD is your strength.” (Nehemiah 8:10).",
+      "citations": [
+        {
+          "reference": "Nehemiah 8:10",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_esther",
+      "question": "What is the book of Esther about?",
+      "alt_phrasings": [
+        "what is esther about",
+        "summary of the book of esther",
+        "overview of the book of esther",
+        "what is the message of the book of esther",
+        "what happens in the book of esther",
+        "tell me about the book of esther",
+        "what does the book of esther teach",
+        "what is the book of esther"
+      ],
+      "confidence": "traditional",
+      "answer": "Esther is of unknown authorship. It tells how a Jewish orphan, Esther, became queen of Persia and, with her cousin Mordecai, saved her people from Haman's plot to destroy them. God's name is never mentioned, yet His care is seen throughout, and the feast of Purim remembers the rescue. Key verse: “For if you remain silent at this time, relief and deliverance for the Jews will arise from another place, but you and your father's house will perish. And who knows if perhaps you have come to the kingdom for such a time as this?” (Esther 4:14).",
+      "citations": [
+        {
+          "reference": "Esther 4:14",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_job",
+      "question": "What is the book of Job about?",
+      "alt_phrasings": [
+        "what is job about",
+        "summary of the book of job",
+        "overview of the book of job",
+        "what is the message of the book of job",
+        "what happens in the book of job",
+        "tell me about the book of job",
+        "what does the book of job teach",
+        "what is the book of job"
+      ],
+      "confidence": "traditional",
+      "answer": "Job is of unknown authorship. It tells of a righteous man who loses his children, wealth and health, of the wrong answers of his friends, and of God speaking from the whirlwind. It deals with suffering and shows that God is wise and sovereign and that Job's trust was not in vain. Key verse: “But I know that my Redeemer lives, and in the end He will stand upon the earth.” (Job 19:25).",
+      "citations": [
+        {
+          "reference": "Job 19:25",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_psalms",
+      "question": "What is the book of Psalms about?",
+      "alt_phrasings": [
+        "what is psalms about",
+        "summary of the book of psalms",
+        "overview of the book of psalms",
+        "what is the message of the book of psalms",
+        "what happens in the book of psalms",
+        "tell me about the book of psalms",
+        "what does the book of psalms teach",
+        "what is the book of psalms",
+        "what is the psalms about",
+        "summary of the book of the psalms",
+        "overview of the book of the psalms",
+        "what is the message of the book of the psalms",
+        "what happens in the book of the psalms",
+        "tell me about the book of the psalms",
+        "what does the book of the psalms teach",
+        "what is the book of the psalms",
+        "what is psalm about",
+        "summary of the book of psalm",
+        "overview of the book of psalm",
+        "what is the message of the book of psalm",
+        "what happens in the book of psalm",
+        "tell me about the book of psalm",
+        "what does the book of psalm teach",
+        "what is the book of psalm"
+      ],
+      "confidence": "traditional",
+      "answer": "Psalms is a book of 150 songs and prayers; David wrote many of them, and others are by Asaph, the sons of Korah, Solomon and Moses. It holds praise, thanksgiving, lament, trust and repentance, along with royal psalms that point to the Messiah. It was Israel's hymnbook and has been the church's prayer book ever since. Key verse: “The LORD is my shepherd; I shall not want.” (Psalm 23:1).",
+      "citations": [
+        {
+          "reference": "Psalm 23:1",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_proverbs",
+      "question": "What is the book of Proverbs about?",
+      "alt_phrasings": [
+        "what is proverbs about",
+        "summary of the book of proverbs",
+        "overview of the book of proverbs",
+        "what is the message of the book of proverbs",
+        "what happens in the book of proverbs",
+        "tell me about the book of proverbs",
+        "what does the book of proverbs teach",
+        "what is the book of proverbs"
+      ],
+      "confidence": "traditional",
+      "answer": "Proverbs is largely by Solomon, with sayings by other wise men. It is a collection of short sayings of wisdom for daily life: the fear of the LORD is the beginning of wisdom, and the book speaks on work, speech, money, friendship, family and the choice between wisdom and folly. Key verse: “Trust in the LORD with all your heart, and lean not on your own understanding; in all your ways acknowledge Him, and He will make your paths straight.” (Proverbs 3:5-6).",
+      "citations": [
+        {
+          "reference": "Proverbs 3:5-6",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_ecclesiastes",
+      "question": "What is the book of Ecclesiastes about?",
+      "alt_phrasings": [
+        "what is ecclesiastes about",
+        "summary of the book of ecclesiastes",
+        "overview of the book of ecclesiastes",
+        "what is the message of the book of ecclesiastes",
+        "what happens in the book of ecclesiastes",
+        "tell me about the book of ecclesiastes",
+        "what does the book of ecclesiastes teach",
+        "what is the book of ecclesiastes"
+      ],
+      "confidence": "traditional",
+      "answer": "Ecclesiastes is traditionally ascribed to Solomon, \"the Teacher\". It looks at life \"under the sun\" and finds work, pleasure and wealth empty without God. It ends with the call to fear God and keep His commandments. Key verse: “When all has been heard, the conclusion of the matter is this: Fear God and keep His commandments, because this is the whole duty of man.” (Ecclesiastes 12:13).",
+      "citations": [
+        {
+          "reference": "Ecclesiastes 12:13",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_song_of_solomon",
+      "question": "What is the book of Song of Solomon about?",
+      "alt_phrasings": [
+        "what is song of solomon about",
+        "summary of the book of song of solomon",
+        "overview of the book of song of solomon",
+        "what is the message of the book of song of solomon",
+        "what happens in the book of song of solomon",
+        "tell me about the book of song of solomon",
+        "what does the book of song of solomon teach",
+        "what is the book of song of solomon",
+        "what is song of songs about",
+        "summary of the book of song of songs",
+        "overview of the book of song of songs",
+        "what is the message of the book of song of songs",
+        "what happens in the book of song of songs",
+        "tell me about the book of song of songs",
+        "what does the book of song of songs teach",
+        "what is the book of song of songs"
+      ],
+      "confidence": "traditional",
+      "answer": "The Song of Solomon (Song of Songs) is traditionally ascribed to Solomon. It is a love poem between a bride and bridegroom that celebrates faithful married love as God's gift. Jews and Christians have also read it as a picture of God's love for His people, and of Christ and the church. Key verse: “My beloved is mine and I am his; he pastures his flock among the lilies.” (Song of Solomon 2:16).",
+      "citations": [
+        {
+          "reference": "Song of Solomon 2:16",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_isaiah",
+      "question": "What is the book of Isaiah about?",
+      "alt_phrasings": [
+        "what is isaiah about",
+        "summary of the book of isaiah",
+        "overview of the book of isaiah",
+        "what is the message of the book of isaiah",
+        "what happens in the book of isaiah",
+        "tell me about the book of isaiah",
+        "what does the book of isaiah teach",
+        "what is the book of isaiah"
+      ],
+      "confidence": "traditional",
+      "answer": "Isaiah is the work of the prophet Isaiah son of Amoz, who served in Jerusalem in the eighth century BC. It warns of judgment on Judah and the nations, and then brings comfort and hope: a child who is born to rule, the suffering Servant who bears our sins (chapter 53), and a new heaven and a new earth. Key verse: “For unto us a child is born, unto us a son is given, and the government will be upon His shoulders. And He will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.” (Isaiah 9:6).",
+      "citations": [
+        {
+          "reference": "Isaiah 9:6",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_jeremiah",
+      "question": "What is the book of Jeremiah about?",
+      "alt_phrasings": [
+        "what is jeremiah about",
+        "summary of the book of jeremiah",
+        "overview of the book of jeremiah",
+        "what is the message of the book of jeremiah",
+        "what happens in the book of jeremiah",
+        "tell me about the book of jeremiah",
+        "what does the book of jeremiah teach",
+        "what is the book of jeremiah"
+      ],
+      "confidence": "traditional",
+      "answer": "Jeremiah is the work of the prophet Jeremiah. It records forty years of his warnings to Judah before Jerusalem fell to Babylon, his suffering for speaking God's word, the seventy years of exile, and the promise of a new covenant. Key verse: “For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, to give you a future and a hope.” (Jeremiah 29:11).",
+      "citations": [
+        {
+          "reference": "Jeremiah 29:11",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_lamentations",
+      "question": "What is the book of Lamentations about?",
+      "alt_phrasings": [
+        "what is lamentations about",
+        "summary of the book of lamentations",
+        "overview of the book of lamentations",
+        "what is the message of the book of lamentations",
+        "what happens in the book of lamentations",
+        "tell me about the book of lamentations",
+        "what does the book of lamentations teach",
+        "what is the book of lamentations"
+      ],
+      "confidence": "traditional",
+      "answer": "Lamentations is traditionally ascribed to Jeremiah. It is five poems of grief over the fall of Jerusalem, and in the midst of the sorrow it confesses hope in the mercy and faithfulness of God. Key verse: “Because of the loving devotion of the LORD we are not consumed, for His mercies never fail. They are new every morning; great is Your faithfulness!” (Lamentations 3:22-23).",
+      "citations": [
+        {
+          "reference": "Lamentations 3:22-23",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_ezekiel",
+      "question": "What is the book of Ezekiel about?",
+      "alt_phrasings": [
+        "what is ezekiel about",
+        "summary of the book of ezekiel",
+        "overview of the book of ezekiel",
+        "what is the message of the book of ezekiel",
+        "what happens in the book of ezekiel",
+        "tell me about the book of ezekiel",
+        "what does the book of ezekiel teach",
+        "what is the book of ezekiel"
+      ],
+      "confidence": "traditional",
+      "answer": "Ezekiel is the work of the prophet and priest Ezekiel, who was taken to Babylon in the exile. It records his vision of God's glory, his warnings of Jerusalem's fall, judgments on the nations, and then the promise of restoration: a new heart and Spirit, the valley of dry bones, and a new temple. Key verse: “I will give you a new heart and put a new spirit within you; I will remove your heart of stone and give you a heart of flesh.” (Ezekiel 36:26).",
+      "citations": [
+        {
+          "reference": "Ezekiel 36:26",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_daniel",
+      "question": "What is the book of Daniel about?",
+      "alt_phrasings": [
+        "what is daniel about",
+        "summary of the book of daniel",
+        "overview of the book of daniel",
+        "what is the message of the book of daniel",
+        "what happens in the book of daniel",
+        "tell me about the book of daniel",
+        "what does the book of daniel teach",
+        "what is the book of daniel"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Daniel is the work of the prophet Daniel, who served in Babylon and Persia. Its first half tells of Daniel and his friends: the fiery furnace, the writing on the wall and the lions' den. Its second half records visions of four world kingdoms, the Son of Man receiving an everlasting kingdom, and the seventy weeks. Key verse: “If the God whom we serve exists, then He is able to deliver us from the blazing fiery furnace and from your hand, O king. But even if He does not, let it be known to you, O king, that we will not serve your gods or worship the golden statue you have set up.” (Daniel 3:17-18).\n\nPentecostal understanding: the visions of Daniel look ahead to the last days, including the coming of the Antichrist (Daniel 9:27; 11:36-45) and Christ's everlasting kingdom (Daniel 7:13-14), and Daniel 12:1-3 points to the great tribulation and the resurrection.\n\nOther views: many scholars date the visions to the second century BC and read them as pointing to Antiochus Epiphanes; preterist teachers see the fulfilment in the first century, and historicists in the whole sweep of church history.",
+      "citations": [
+        {
+          "reference": "Daniel 3:17-18",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_hosea",
+      "question": "What is the book of Hosea about?",
+      "alt_phrasings": [
+        "what is hosea about",
+        "summary of the book of hosea",
+        "overview of the book of hosea",
+        "what is the message of the book of hosea",
+        "what happens in the book of hosea",
+        "tell me about the book of hosea",
+        "what does the book of hosea teach",
+        "what is the book of hosea"
+      ],
+      "confidence": "traditional",
+      "answer": "Hosea is the work of the prophet Hosea, who served in the northern kingdom of Israel. God told him to marry Gomer, who was unfaithful, as a picture of Israel's unfaithfulness to the LORD and of God's love that will not let go and will restore. Key verse: “For I desire mercy, not sacrifice, and the knowledge of God rather than burnt offerings.” (Hosea 6:6).",
+      "citations": [
+        {
+          "reference": "Hosea 6:6",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_joel",
+      "question": "What is the book of Joel about?",
+      "alt_phrasings": [
+        "what is joel about",
+        "summary of the book of joel",
+        "overview of the book of joel",
+        "what is the message of the book of joel",
+        "what happens in the book of joel",
+        "tell me about the book of joel",
+        "what does the book of joel teach",
+        "what is the book of joel"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Joel is the work of the prophet Joel. After a plague of locusts, Joel calls the people to repent and warns of the day of the LORD. He promises that God will pour out His Spirit on all people. Key verse: “And afterward, I will pour out My Spirit on all people. Your sons and daughters will prophesy, your old men will dream dreams, your young men will see visions.” (Joel 2:28).\n\nPentecostal understanding: Peter quoted this promise on the day of Pentecost (Acts 2:16-21) as the outpouring of the Spirit that began then and goes on for all who call on the Lord, and which points ahead to the signs before the day of the LORD.\n\nOther views: some hold that Joel's promise was fully fulfilled at Pentecost; others that its final fulfilment is still future for Israel.",
+      "citations": [
+        {
+          "reference": "Joel 2:28",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_amos",
+      "question": "What is the book of Amos about?",
+      "alt_phrasings": [
+        "what is amos about",
+        "summary of the book of amos",
+        "overview of the book of amos",
+        "what is the message of the book of amos",
+        "what happens in the book of amos",
+        "tell me about the book of amos",
+        "what does the book of amos teach",
+        "what is the book of amos"
+      ],
+      "confidence": "traditional",
+      "answer": "Amos is the work of the prophet Amos, a herdsman from Tekoa who spoke to the northern kingdom. He announced God's judgment on the nations and on Israel for injustice, oppression of the poor and empty worship, and ended with the promise of restoration. Key verse: “But let justice roll on like a river, and righteousness like an ever-flowing stream.” (Amos 5:24).",
+      "citations": [
+        {
+          "reference": "Amos 5:24",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_obadiah",
+      "question": "What is the book of Obadiah about?",
+      "alt_phrasings": [
+        "what is obadiah about",
+        "summary of the book of obadiah",
+        "overview of the book of obadiah",
+        "what is the message of the book of obadiah",
+        "what happens in the book of obadiah",
+        "tell me about the book of obadiah",
+        "what does the book of obadiah teach",
+        "what is the book of obadiah"
+      ],
+      "confidence": "traditional",
+      "answer": "Obadiah is the work of the prophet Obadiah and is the shortest book of the Old Testament. It announces judgment on Edom for its pride and for standing by when its brother Judah was attacked, and promises that the kingdom will be the LORD's. Key verse: “For the Day of the LORD is near for all the nations. As you have done, it will be done to you; your recompense will return upon your own head.” (Obadiah 1:15).",
+      "citations": [
+        {
+          "reference": "Obadiah 1:15",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_jonah",
+      "question": "What is the book of Jonah about?",
+      "alt_phrasings": [
+        "what is jonah about",
+        "summary of the book of jonah",
+        "overview of the book of jonah",
+        "what is the message of the book of jonah",
+        "what happens in the book of jonah",
+        "tell me about the book of jonah",
+        "what does the book of jonah teach",
+        "what is the book of jonah"
+      ],
+      "confidence": "traditional",
+      "answer": "Jonah is traditionally ascribed to the prophet Jonah. It tells how God sent Jonah to Nineveh, how he fled by sea, was swallowed by a great fish and prayed, and how Nineveh repented. It shows God's mercy toward all people, even Israel's enemies. Key verse: “But I, with the voice of thanksgiving, will sacrifice to You. I will fulfill what I have vowed. Salvation is from the LORD!” (Jonah 2:9).",
+      "citations": [
+        {
+          "reference": "Jonah 2:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_micah",
+      "question": "What is the book of Micah about?",
+      "alt_phrasings": [
+        "what is micah about",
+        "summary of the book of micah",
+        "overview of the book of micah",
+        "what is the message of the book of micah",
+        "what happens in the book of micah",
+        "tell me about the book of micah",
+        "what does the book of micah teach",
+        "what is the book of micah"
+      ],
+      "confidence": "traditional",
+      "answer": "Micah is the work of the prophet Micah. He warns Judah and Israel about injustice and false worship, foretells the birth of the ruler from Bethlehem, and says what the LORD requires of us. Key verse: “He has shown you, O man, what is good. And what does the LORD require of you but to act justly, to love mercy, and to walk humbly with your God?” (Micah 6:8).",
+      "citations": [
+        {
+          "reference": "Micah 6:8",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_nahum",
+      "question": "What is the book of Nahum about?",
+      "alt_phrasings": [
+        "what is nahum about",
+        "summary of the book of nahum",
+        "overview of the book of nahum",
+        "what is the message of the book of nahum",
+        "what happens in the book of nahum",
+        "tell me about the book of nahum",
+        "what does the book of nahum teach",
+        "what is the book of nahum"
+      ],
+      "confidence": "traditional",
+      "answer": "Nahum is the work of the prophet Nahum. It announces the fall of Nineveh, the cruel capital of Assyria, and shows that God is good, a refuge in times of trouble, and just. Key verse: “The LORD is good, a stronghold in the day of distress; He cares for those who trust in Him.” (Nahum 1:7).",
+      "citations": [
+        {
+          "reference": "Nahum 1:7",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_habakkuk",
+      "question": "What is the book of Habakkuk about?",
+      "alt_phrasings": [
+        "what is habakkuk about",
+        "summary of the book of habakkuk",
+        "overview of the book of habakkuk",
+        "what is the message of the book of habakkuk",
+        "what happens in the book of habakkuk",
+        "tell me about the book of habakkuk",
+        "what does the book of habakkuk teach",
+        "what is the book of habakkuk"
+      ],
+      "confidence": "traditional",
+      "answer": "Habakkuk is the work of the prophet Habakkuk. He asks God why evil goes unpunished and why God uses Babylon, and God answers that the righteous will live by faith. The book ends in a song of trust. Key verse: “Look at the proud one; his soul is not upright — but the righteous will live by faith —” (Habakkuk 2:4).",
+      "citations": [
+        {
+          "reference": "Habakkuk 2:4",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_zephaniah",
+      "question": "What is the book of Zephaniah about?",
+      "alt_phrasings": [
+        "what is zephaniah about",
+        "summary of the book of zephaniah",
+        "overview of the book of zephaniah",
+        "what is the message of the book of zephaniah",
+        "what happens in the book of zephaniah",
+        "tell me about the book of zephaniah",
+        "what does the book of zephaniah teach",
+        "what is the book of zephaniah"
+      ],
+      "confidence": "traditional",
+      "answer": "Zephaniah is the work of the prophet Zephaniah. It warns of the coming day of the LORD on Judah and the nations, and then promises that a humble remnant will be restored and that God will rejoice over His people. Key verse: “The LORD your God is among you; He is mighty to save. He will rejoice over you with gladness; He will quiet you with His love; He will rejoice over you with singing.” (Zephaniah 3:17).",
+      "citations": [
+        {
+          "reference": "Zephaniah 3:17",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_haggai",
+      "question": "What is the book of Haggai about?",
+      "alt_phrasings": [
+        "what is haggai about",
+        "summary of the book of haggai",
+        "overview of the book of haggai",
+        "what is the message of the book of haggai",
+        "what happens in the book of haggai",
+        "tell me about the book of haggai",
+        "what does the book of haggai teach",
+        "what is the book of haggai"
+      ],
+      "confidence": "traditional",
+      "answer": "Haggai is the work of the prophet Haggai. After the return from exile, he urged the people to put God's house first and finish rebuilding the temple, and promised that its later glory would be greater than the former. Key verse: “The latter glory of this house will be greater than the former, says the LORD of Hosts. And in this place I will provide peace, declares the LORD of Hosts.” (Haggai 2:9).",
+      "citations": [
+        {
+          "reference": "Haggai 2:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_zechariah",
+      "question": "What is the book of Zechariah about?",
+      "alt_phrasings": [
+        "what is zechariah about",
+        "summary of the book of zechariah",
+        "overview of the book of zechariah",
+        "what is the message of the book of zechariah",
+        "what happens in the book of zechariah",
+        "tell me about the book of zechariah",
+        "what does the book of zechariah teach",
+        "what is the book of zechariah"
+      ],
+      "confidence": "traditional",
+      "answer": "Zechariah is the work of the prophet Zechariah. He encouraged the returned exiles through eight night visions, and foretold the coming King who rides on a donkey, the pierced one, and the day when the LORD will be king over all the earth. Key verse: “Rejoice greatly, O Daughter of Zion! Shout in triumph, O Daughter of Jerusalem! See, your King comes to you, righteous and victorious, humble and riding on a donkey, on a colt, the foal of a donkey.” (Zechariah 9:9).",
+      "citations": [
+        {
+          "reference": "Zechariah 9:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_malachi",
+      "question": "What is the book of Malachi about?",
+      "alt_phrasings": [
+        "what is malachi about",
+        "summary of the book of malachi",
+        "overview of the book of malachi",
+        "what is the message of the book of malachi",
+        "what happens in the book of malachi",
+        "tell me about the book of malachi",
+        "what does the book of malachi teach",
+        "what is the book of malachi"
+      ],
+      "confidence": "traditional",
+      "answer": "Malachi is the work of the prophet Malachi and is the last book of the Old Testament. He rebuked the priests and the people for half-hearted worship, unfaithfulness and robbing God, and promised the messenger who would prepare the way and the coming of Elijah before the great day of the LORD. Key verse: “Behold, I will send My messenger, who will prepare the way before Me. Then the Lord whom you seek will suddenly come to His temple — the Messenger of the covenant, in whom you delight — see, He is coming, says the LORD of Hosts.” (Malachi 3:1).",
+      "citations": [
+        {
+          "reference": "Malachi 3:1",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_matthew",
+      "question": "What is the book of Matthew about?",
+      "alt_phrasings": [
+        "what is matthew about",
+        "summary of the book of matthew",
+        "overview of the book of matthew",
+        "what is the message of the book of matthew",
+        "what happens in the book of matthew",
+        "tell me about the book of matthew",
+        "what does the book of matthew teach",
+        "what is the book of matthew"
+      ],
+      "confidence": "traditional",
+      "answer": "Matthew is traditionally ascribed to Matthew (Levi), the tax collector who became an apostle. It presents Jesus as the promised Messiah and King of the Jews, from His genealogy and birth through the Sermon on the Mount, His parables and miracles, to His death, resurrection and the Great Commission. Key verse: “Therefore go and make disciples of all nations, baptizing them in the name of the Father, and of the Son, and of the Holy Spirit, and teaching them to obey all that I have commanded you. And surely I am with you always, even to the end of the age.” (Matthew 28:19-20).",
+      "citations": [
+        {
+          "reference": "Matthew 28:19-20",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_mark",
+      "question": "What is the book of Mark about?",
+      "alt_phrasings": [
+        "what is mark about",
+        "summary of the book of mark",
+        "overview of the book of mark",
+        "what is the message of the book of mark",
+        "what happens in the book of mark",
+        "tell me about the book of mark",
+        "what does the book of mark teach",
+        "what is the book of mark"
+      ],
+      "confidence": "traditional",
+      "answer": "Mark is traditionally ascribed to John Mark, who wrote down the preaching of Peter. It is the shortest and most action-filled Gospel, showing Jesus as the Servant who came to give His life as a ransom, with the cross at its centre. Key verse: “For even the Son of Man did not come to be served, but to serve, and to give His life as a ransom for many.” (Mark 10:45).",
+      "citations": [
+        {
+          "reference": "Mark 10:45",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_luke",
+      "question": "What is the book of Luke about?",
+      "alt_phrasings": [
+        "what is luke about",
+        "summary of the book of luke",
+        "overview of the book of luke",
+        "what is the message of the book of luke",
+        "what happens in the book of luke",
+        "tell me about the book of luke",
+        "what does the book of luke teach",
+        "what is the book of luke"
+      ],
+      "confidence": "traditional",
+      "answer": "Luke is traditionally ascribed to Luke the physician, Paul's companion, who also wrote Acts. It is a careful, orderly account of Jesus' life that stresses His compassion for the poor, outcasts and women, and His parables such as the Good Samaritan and the Prodigal Son. Key verse: “For the Son of Man came to seek and to save the lost.” (Luke 19:10).",
+      "citations": [
+        {
+          "reference": "Luke 19:10",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_john",
+      "question": "What is the book of John about?",
+      "alt_phrasings": [
+        "what is john about",
+        "summary of the book of john",
+        "overview of the book of john",
+        "what is the message of the book of john",
+        "what happens in the book of john",
+        "tell me about the book of john",
+        "what does the book of john teach",
+        "what is the book of john"
+      ],
+      "confidence": "traditional",
+      "answer": "John is traditionally ascribed to John the apostle. It shows Jesus as the eternal Word who became flesh, through seven signs and the \"I am\" sayings, and was written so that people would believe and have life in His name. Key verse: “But these are written so that you may believe that Jesus is the Christ, the Son of God, and that by believing you may have life in His name.” (John 20:31).",
+      "citations": [
+        {
+          "reference": "John 20:31",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_acts",
+      "question": "What is the book of Acts about?",
+      "alt_phrasings": [
+        "what is acts about",
+        "summary of the book of acts",
+        "overview of the book of acts",
+        "what is the message of the book of acts",
+        "what happens in the book of acts",
+        "tell me about the book of acts",
+        "what does the book of acts teach",
+        "what is the book of acts",
+        "what is the acts of the apostles about",
+        "summary of the book of the acts of the apostles",
+        "overview of the book of the acts of the apostles",
+        "what is the message of the book of the acts of the apostles",
+        "what happens in the book of the acts of the apostles",
+        "tell me about the book of the acts of the apostles",
+        "what does the book of the acts of the apostles teach",
+        "what is the book of the acts of the apostles"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Acts (the Acts of the Apostles) was written by Luke as the second part of his Gospel. It tells of the ascension, the coming of the Holy Spirit at Pentecost, and the spread of the gospel from Jerusalem through Judea and Samaria to Rome, through Peter, Stephen, Philip and above all Paul. Key verse: “But you will receive power when the Holy Spirit comes upon you, and you will be My witnesses in Jerusalem, and in all Judea and Samaria, and to the ends of the earth.” (Acts 1:8).\n\nPentecostal understanding: Acts is the pattern for the church in every age, with the baptism in the Holy Spirit and speaking in tongues (Acts 2:4; 10:44-46; 19:6), healings, signs and wonders, which are for us today (Acts 2:38-39).\n\nOther views: cessationist teachers hold that Acts records the unique days of the apostles and is not a pattern for today; others take Acts as a record of what happened and a guide to the church's mission, but not a rule for each believer's experience.",
+      "citations": [
+        {
+          "reference": "Acts 1:8",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_romans",
+      "question": "What is the book of Romans about?",
+      "alt_phrasings": [
+        "what is romans about",
+        "summary of the book of romans",
+        "overview of the book of romans",
+        "what is the message of the book of romans",
+        "what happens in the book of romans",
+        "tell me about the book of romans",
+        "what does the book of romans teach",
+        "what is the book of romans"
+      ],
+      "confidence": "traditional",
+      "answer": "Romans is a letter from the apostle Paul to the church in Rome. It sets out the gospel: all have sinned, and God's righteousness is given as a gift through faith in Jesus, who died for us, then life in the Spirit, God's plan for Israel, and how to live as the people of God. Key verse: “I am not ashamed of the gospel, because it is the power of God for salvation to everyone who believes, first to the Jew, then to the Greek.” (Romans 1:16).",
+      "citations": [
+        {
+          "reference": "Romans 1:16",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_1_corinthians",
+      "question": "What is the book of 1 Corinthians about?",
+      "alt_phrasings": [
+        "what is 1 corinthians about",
+        "summary of the book of 1 corinthians",
+        "overview of the book of 1 corinthians",
+        "what is the message of the book of 1 corinthians",
+        "what happens in the book of 1 corinthians",
+        "tell me about the book of 1 corinthians",
+        "what does the book of 1 corinthians teach",
+        "what is the book of 1 corinthians",
+        "what is first corinthians about",
+        "summary of the book of first corinthians",
+        "overview of the book of first corinthians",
+        "what is the message of the book of first corinthians",
+        "what happens in the book of first corinthians",
+        "tell me about the book of first corinthians",
+        "what does the book of first corinthians teach",
+        "what is the book of first corinthians",
+        "what is 1st corinthians about",
+        "summary of the book of 1st corinthians",
+        "overview of the book of 1st corinthians",
+        "what is the message of the book of 1st corinthians",
+        "what happens in the book of 1st corinthians",
+        "tell me about the book of 1st corinthians",
+        "what does the book of 1st corinthians teach",
+        "what is the book of 1st corinthians"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: 1 Corinthians is a letter from the apostle Paul to the church in Corinth. He answers reports of divisions, immorality, lawsuits and abuses at the Lord's Supper, teaches about marriage, idols and spiritual gifts (chapters 12-14), gives the chapter on love (chapter 13), and defends the resurrection (chapter 15). Key verse: “And now these three remain: faith, hope, and love; but the greatest of these is love.” (1 Corinthians 13:13).\n\nPentecostal understanding: chapters 12 and 14 teach that the gifts of the Spirit, including tongues, interpretation and prophecy, are given to the church and are for today (1 Corinthians 12:7-11; 14:1-5, 39), and that love must rule their use (1 Corinthians 13).\n\nOther views: cessationist teachers read 1 Corinthians 13:8-10 as saying that some gifts ended with the apostles and the completed Scriptures; others hold that all the gifts continue until Christ returns.",
+      "citations": [
+        {
+          "reference": "1 Corinthians 13:13",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_2_corinthians",
+      "question": "What is the book of 2 Corinthians about?",
+      "alt_phrasings": [
+        "what is 2 corinthians about",
+        "summary of the book of 2 corinthians",
+        "overview of the book of 2 corinthians",
+        "what is the message of the book of 2 corinthians",
+        "what happens in the book of 2 corinthians",
+        "tell me about the book of 2 corinthians",
+        "what does the book of 2 corinthians teach",
+        "what is the book of 2 corinthians",
+        "what is second corinthians about",
+        "summary of the book of second corinthians",
+        "overview of the book of second corinthians",
+        "what is the message of the book of second corinthians",
+        "what happens in the book of second corinthians",
+        "tell me about the book of second corinthians",
+        "what does the book of second corinthians teach",
+        "what is the book of second corinthians",
+        "what is 2nd corinthians about",
+        "summary of the book of 2nd corinthians",
+        "overview of the book of 2nd corinthians",
+        "what is the message of the book of 2nd corinthians",
+        "what happens in the book of 2nd corinthians",
+        "tell me about the book of 2nd corinthians",
+        "what does the book of 2nd corinthians teach",
+        "what is the book of 2nd corinthians"
+      ],
+      "confidence": "traditional",
+      "answer": "2 Corinthians is a letter from the apostle Paul to the church in Corinth. It is his most personal letter: he defends his ministry, speaks of comfort in suffering and of his own weakness, in which God's power is shown, and urges generous giving. Key verse: “Therefore if anyone is in Christ, he is a new creation. The old has passed away. Behold, the new has come!” (2 Corinthians 5:17).",
+      "citations": [
+        {
+          "reference": "2 Corinthians 5:17",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_galatians",
+      "question": "What is the book of Galatians about?",
+      "alt_phrasings": [
+        "what is galatians about",
+        "summary of the book of galatians",
+        "overview of the book of galatians",
+        "what is the message of the book of galatians",
+        "what happens in the book of galatians",
+        "tell me about the book of galatians",
+        "what does the book of galatians teach",
+        "what is the book of galatians"
+      ],
+      "confidence": "traditional",
+      "answer": "Galatians is a letter from the apostle Paul to the churches of Galatia. He answers teachers who said that Gentile believers must keep the law of Moses, and shows that we are justified by faith in Christ, not by works of the law, and live by the Spirit. Key verse: “I have been crucified with Christ, and I no longer live, but Christ lives in me. The life I live in the body, I live by faith in the Son of God, who loved me and gave Himself up for me.” (Galatians 2:20).",
+      "citations": [
+        {
+          "reference": "Galatians 2:20",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_ephesians",
+      "question": "What is the book of Ephesians about?",
+      "alt_phrasings": [
+        "what is ephesians about",
+        "summary of the book of ephesians",
+        "overview of the book of ephesians",
+        "what is the message of the book of ephesians",
+        "what happens in the book of ephesians",
+        "tell me about the book of ephesians",
+        "what does the book of ephesians teach",
+        "what is the book of ephesians"
+      ],
+      "confidence": "traditional",
+      "answer": "Ephesians is a letter from the apostle Paul, written from prison. It tells of God's eternal plan in Christ, salvation by grace, one body of Jew and Gentile in the church, how to live as God's people, and the armour of God. Key verse: “Blessed be the God and Father of our Lord Jesus Christ, who has blessed us in Christ with every spiritual blessing in the heavenly realms.” (Ephesians 1:3).",
+      "citations": [
+        {
+          "reference": "Ephesians 1:3",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_philippians",
+      "question": "What is the book of Philippians about?",
+      "alt_phrasings": [
+        "what is philippians about",
+        "summary of the book of philippians",
+        "overview of the book of philippians",
+        "what is the message of the book of philippians",
+        "what happens in the book of philippians",
+        "tell me about the book of philippians",
+        "what does the book of philippians teach",
+        "what is the book of philippians"
+      ],
+      "confidence": "traditional",
+      "answer": "Philippians is a letter from the apostle Paul, written from prison, to the church in Philippi. It is a letter of joy and thanks that urges unity and humility, after the example of Christ, and shows Paul's confidence that to live is Christ and to die is gain. Key verse: “Rejoice in the Lord always. I will say it again: Rejoice!” (Philippians 4:4).",
+      "citations": [
+        {
+          "reference": "Philippians 4:4",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_colossians",
+      "question": "What is the book of Colossians about?",
+      "alt_phrasings": [
+        "what is colossians about",
+        "summary of the book of colossians",
+        "overview of the book of colossians",
+        "what is the message of the book of colossians",
+        "what happens in the book of colossians",
+        "tell me about the book of colossians",
+        "what does the book of colossians teach",
+        "what is the book of colossians"
+      ],
+      "confidence": "traditional",
+      "answer": "Colossians is a letter from the apostle Paul, written from prison, to the church in Colosse. It answers false teaching by showing that Christ is supreme over all things and is enough for us, and calls believers to set their hearts on things above. Key verse: “And whatever you do, in word or deed, do it all in the name of the Lord Jesus, giving thanks to God the Father through Him.” (Colossians 3:17).",
+      "citations": [
+        {
+          "reference": "Colossians 3:17",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_1_thessalonians",
+      "question": "What is the book of 1 Thessalonians about?",
+      "alt_phrasings": [
+        "what is 1 thessalonians about",
+        "summary of the book of 1 thessalonians",
+        "overview of the book of 1 thessalonians",
+        "what is the message of the book of 1 thessalonians",
+        "what happens in the book of 1 thessalonians",
+        "tell me about the book of 1 thessalonians",
+        "what does the book of 1 thessalonians teach",
+        "what is the book of 1 thessalonians",
+        "what is first thessalonians about",
+        "summary of the book of first thessalonians",
+        "overview of the book of first thessalonians",
+        "what is the message of the book of first thessalonians",
+        "what happens in the book of first thessalonians",
+        "tell me about the book of first thessalonians",
+        "what does the book of first thessalonians teach",
+        "what is the book of first thessalonians",
+        "what is 1st thessalonians about",
+        "summary of the book of 1st thessalonians",
+        "overview of the book of 1st thessalonians",
+        "what is the message of the book of 1st thessalonians",
+        "what happens in the book of 1st thessalonians",
+        "tell me about the book of 1st thessalonians",
+        "what does the book of 1st thessalonians teach",
+        "what is the book of 1st thessalonians"
+      ],
+      "confidence": "traditional",
+      "answer": "1 Thessalonians is a letter from the apostle Paul to the young church in Thessalonica. He thanks them for their faith, encourages them in persecution, calls them to holy living, and comforts them about believers who have died and the return of the Lord. Key verse: “Rejoice at all times. Pray without ceasing. Give thanks in every circumstance, for this is God's will for you in Christ Jesus.” (1 Thessalonians 5:16-18).",
+      "citations": [
+        {
+          "reference": "1 Thessalonians 5:16-18",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_2_thessalonians",
+      "question": "What is the book of 2 Thessalonians about?",
+      "alt_phrasings": [
+        "what is 2 thessalonians about",
+        "summary of the book of 2 thessalonians",
+        "overview of the book of 2 thessalonians",
+        "what is the message of the book of 2 thessalonians",
+        "what happens in the book of 2 thessalonians",
+        "tell me about the book of 2 thessalonians",
+        "what does the book of 2 thessalonians teach",
+        "what is the book of 2 thessalonians",
+        "what is second thessalonians about",
+        "summary of the book of second thessalonians",
+        "overview of the book of second thessalonians",
+        "what is the message of the book of second thessalonians",
+        "what happens in the book of second thessalonians",
+        "tell me about the book of second thessalonians",
+        "what does the book of second thessalonians teach",
+        "what is the book of second thessalonians",
+        "what is 2nd thessalonians about",
+        "summary of the book of 2nd thessalonians",
+        "overview of the book of 2nd thessalonians",
+        "what is the message of the book of 2nd thessalonians",
+        "what happens in the book of 2nd thessalonians",
+        "tell me about the book of 2nd thessalonians",
+        "what does the book of 2nd thessalonians teach",
+        "what is the book of 2nd thessalonians"
+      ],
+      "confidence": "traditional",
+      "answer": "2 Thessalonians is a letter from the apostle Paul to the church in Thessalonica. He encourages them in persecution, corrects the idea that the day of the Lord had already come, speaks of the man of lawlessness, and tells idle believers to work. Key verse: “But the Lord is faithful, and He will strengthen you and guard you from the evil one.” (2 Thessalonians 3:3).",
+      "citations": [
+        {
+          "reference": "2 Thessalonians 3:3",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_1_timothy",
+      "question": "What is the book of 1 Timothy about?",
+      "alt_phrasings": [
+        "what is 1 timothy about",
+        "summary of the book of 1 timothy",
+        "overview of the book of 1 timothy",
+        "what is the message of the book of 1 timothy",
+        "what happens in the book of 1 timothy",
+        "tell me about the book of 1 timothy",
+        "what does the book of 1 timothy teach",
+        "what is the book of 1 timothy",
+        "what is first timothy about",
+        "summary of the book of first timothy",
+        "overview of the book of first timothy",
+        "what is the message of the book of first timothy",
+        "what happens in the book of first timothy",
+        "tell me about the book of first timothy",
+        "what does the book of first timothy teach",
+        "what is the book of first timothy",
+        "what is 1st timothy about",
+        "summary of the book of 1st timothy",
+        "overview of the book of 1st timothy",
+        "what is the message of the book of 1st timothy",
+        "what happens in the book of 1st timothy",
+        "tell me about the book of 1st timothy",
+        "what does the book of 1st timothy teach",
+        "what is the book of 1st timothy"
+      ],
+      "confidence": "traditional",
+      "answer": "1 Timothy is a letter from the apostle Paul to his helper Timothy. It gives guidance for the church at Ephesus: sound teaching, prayer, the qualifications of overseers and deacons, and how a young minister should live. Key verse: “Let no one despise your youth, but set an example for the believers in speech, in conduct, in love, in faith, in purity.” (1 Timothy 4:12).",
+      "citations": [
+        {
+          "reference": "1 Timothy 4:12",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_2_timothy",
+      "question": "What is the book of 2 Timothy about?",
+      "alt_phrasings": [
+        "what is 2 timothy about",
+        "summary of the book of 2 timothy",
+        "overview of the book of 2 timothy",
+        "what is the message of the book of 2 timothy",
+        "what happens in the book of 2 timothy",
+        "tell me about the book of 2 timothy",
+        "what does the book of 2 timothy teach",
+        "what is the book of 2 timothy",
+        "what is second timothy about",
+        "summary of the book of second timothy",
+        "overview of the book of second timothy",
+        "what is the message of the book of second timothy",
+        "what happens in the book of second timothy",
+        "tell me about the book of second timothy",
+        "what does the book of second timothy teach",
+        "what is the book of second timothy",
+        "what is 2nd timothy about",
+        "summary of the book of 2nd timothy",
+        "overview of the book of 2nd timothy",
+        "what is the message of the book of 2nd timothy",
+        "what happens in the book of 2nd timothy",
+        "tell me about the book of 2nd timothy",
+        "what does the book of 2nd timothy teach",
+        "what is the book of 2nd timothy"
+      ],
+      "confidence": "traditional",
+      "answer": "2 Timothy is the apostle Paul's last letter, written from prison to Timothy. He urges Timothy to guard the gospel, endure hardship, keep to the God-breathed Scriptures and preach the word, and speaks of his own coming departure. Key verse: “I have fought the good fight, I have finished the race, I have kept the faith.” (2 Timothy 4:7).",
+      "citations": [
+        {
+          "reference": "2 Timothy 4:7",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_titus",
+      "question": "What is the book of Titus about?",
+      "alt_phrasings": [
+        "what is titus about",
+        "summary of the book of titus",
+        "overview of the book of titus",
+        "what is the message of the book of titus",
+        "what happens in the book of titus",
+        "tell me about the book of titus",
+        "what does the book of titus teach",
+        "what is the book of titus"
+      ],
+      "confidence": "traditional",
+      "answer": "Titus is a letter from the apostle Paul to Titus, who was serving on the island of Crete. It tells Titus to appoint elders, teach sound doctrine, and show that salvation by grace leads to good works. Key verse: “He saved us, not by the righteous deeds we had done, but according to His mercy, through the washing of new birth and renewal by the Holy Spirit.” (Titus 3:5).",
+      "citations": [
+        {
+          "reference": "Titus 3:5",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_philemon",
+      "question": "What is the book of Philemon about?",
+      "alt_phrasings": [
+        "what is philemon about",
+        "summary of the book of philemon",
+        "overview of the book of philemon",
+        "what is the message of the book of philemon",
+        "what happens in the book of philemon",
+        "tell me about the book of philemon",
+        "what does the book of philemon teach",
+        "what is the book of philemon"
+      ],
+      "confidence": "traditional",
+      "answer": "Philemon is a short letter from the apostle Paul to Philemon. Paul appeals to Philemon to receive back his runaway slave Onesimus, who had become a Christian, no longer as a slave but as a beloved brother. Key verse: “For perhaps this is why he was separated from you for a while, so that you might have him back for good — no longer as a slave, but better than a slave, as a beloved brother. He is especially beloved to me, but even more so to you, both in person and in the Lord.” (Philemon 1:15-16).",
+      "citations": [
+        {
+          "reference": "Philemon 1:15-16",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_hebrews",
+      "question": "What is the book of Hebrews about?",
+      "alt_phrasings": [
+        "what is hebrews about",
+        "summary of the book of hebrews",
+        "overview of the book of hebrews",
+        "what is the message of the book of hebrews",
+        "what happens in the book of hebrews",
+        "tell me about the book of hebrews",
+        "what does the book of hebrews teach",
+        "what is the book of hebrews"
+      ],
+      "confidence": "traditional",
+      "answer": "Hebrews is a letter whose author is not named (see \"Who wrote the book of Hebrews?\"). It shows that Jesus is greater than the angels, Moses and the priests of the old covenant, and that His sacrifice once for all brings a better covenant. It urges believers to hold on in faith, as in the heroes of faith of chapter 11. Key verse: “Therefore, since we are surrounded by such a great cloud of witnesses, let us throw off every encumbrance and the sin that so easily entangles, and let us run with endurance the race set out for us. Let us fix our eyes on Jesus, the author and perfecter of our faith, who for the joy set before Him endured the cross, scorning its shame, and sat down at the right hand of the throne of God.” (Hebrews 12:1-2).",
+      "citations": [
+        {
+          "reference": "Hebrews 12:1-2",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_james",
+      "question": "What is the book of James about?",
+      "alt_phrasings": [
+        "what is james about",
+        "summary of the book of james",
+        "overview of the book of james",
+        "what is the message of the book of james",
+        "what happens in the book of james",
+        "tell me about the book of james",
+        "what does the book of james teach",
+        "what is the book of james"
+      ],
+      "confidence": "traditional",
+      "answer": "James is a letter from James, the brother of Jesus and leader of the church in Jerusalem. It is practical and plain: faith must show itself in works, trials produce endurance, the tongue must be tamed, the rich must not oppress the poor, and the sick are to be prayed for. Key verse: “Be doers of the word, and not hearers only. Otherwise, you are deceiving yourselves.” (James 1:22).",
+      "citations": [
+        {
+          "reference": "James 1:22",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_1_peter",
+      "question": "What is the book of 1 Peter about?",
+      "alt_phrasings": [
+        "what is 1 peter about",
+        "summary of the book of 1 peter",
+        "overview of the book of 1 peter",
+        "what is the message of the book of 1 peter",
+        "what happens in the book of 1 peter",
+        "tell me about the book of 1 peter",
+        "what does the book of 1 peter teach",
+        "what is the book of 1 peter",
+        "what is first peter about",
+        "summary of the book of first peter",
+        "overview of the book of first peter",
+        "what is the message of the book of first peter",
+        "what happens in the book of first peter",
+        "tell me about the book of first peter",
+        "what does the book of first peter teach",
+        "what is the book of first peter",
+        "what is 1st peter about",
+        "summary of the book of 1st peter",
+        "overview of the book of 1st peter",
+        "what is the message of the book of 1st peter",
+        "what happens in the book of 1st peter",
+        "tell me about the book of 1st peter",
+        "what does the book of 1st peter teach",
+        "what is the book of 1st peter"
+      ],
+      "confidence": "traditional",
+      "answer": "1 Peter is a letter from the apostle Peter to believers scattered through Asia Minor. It encourages Christians who are suffering for their faith, with the living hope they have in Christ, holy living, and the example of Jesus, who suffered for us. Key verse: “Cast all your anxiety on Him, because He cares for you.” (1 Peter 5:7).",
+      "citations": [
+        {
+          "reference": "1 Peter 5:7",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_2_peter",
+      "question": "What is the book of 2 Peter about?",
+      "alt_phrasings": [
+        "what is 2 peter about",
+        "summary of the book of 2 peter",
+        "overview of the book of 2 peter",
+        "what is the message of the book of 2 peter",
+        "what happens in the book of 2 peter",
+        "tell me about the book of 2 peter",
+        "what does the book of 2 peter teach",
+        "what is the book of 2 peter",
+        "what is second peter about",
+        "summary of the book of second peter",
+        "overview of the book of second peter",
+        "what is the message of the book of second peter",
+        "what happens in the book of second peter",
+        "tell me about the book of second peter",
+        "what does the book of second peter teach",
+        "what is the book of second peter",
+        "what is 2nd peter about",
+        "summary of the book of 2nd peter",
+        "overview of the book of 2nd peter",
+        "what is the message of the book of 2nd peter",
+        "what happens in the book of 2nd peter",
+        "tell me about the book of 2nd peter",
+        "what does the book of 2nd peter teach",
+        "what is the book of 2nd peter"
+      ],
+      "confidence": "traditional",
+      "answer": "2 Peter is a letter from the apostle Peter, written near the end of his life. He warns against false teachers and scoffers, urges believers to grow in grace and knowledge, and assures them that the Lord is patient and will come like a thief. Key verse: “The Lord is not slow in keeping His promise as some understand slowness, but is patient with you, not wanting anyone to perish but everyone to come to repentance.” (2 Peter 3:9).",
+      "citations": [
+        {
+          "reference": "2 Peter 3:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_1_john",
+      "question": "What is the book of 1 John about?",
+      "alt_phrasings": [
+        "what is 1 john about",
+        "summary of the book of 1 john",
+        "overview of the book of 1 john",
+        "what is the message of the book of 1 john",
+        "what happens in the book of 1 john",
+        "tell me about the book of 1 john",
+        "what does the book of 1 john teach",
+        "what is the book of 1 john",
+        "what is first john about",
+        "summary of the book of first john",
+        "overview of the book of first john",
+        "what is the message of the book of first john",
+        "what happens in the book of first john",
+        "tell me about the book of first john",
+        "what does the book of first john teach",
+        "what is the book of first john",
+        "what is 1st john about",
+        "summary of the book of 1st john",
+        "overview of the book of 1st john",
+        "what is the message of the book of 1st john",
+        "what happens in the book of 1st john",
+        "tell me about the book of 1st john",
+        "what does the book of 1st john teach",
+        "what is the book of 1st john"
+      ],
+      "confidence": "traditional",
+      "answer": "1 John is a letter traditionally ascribed to the apostle John. It gives tests of a living faith: walking in the light, obeying God, loving one another and believing that Jesus is the Son of God, so that believers may know they have eternal life. Key verse: “I have written these things to you who believe in the name of the Son of God, so that you may know that you have eternal life.” (1 John 5:13).",
+      "citations": [
+        {
+          "reference": "1 John 5:13",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_2_john",
+      "question": "What is the book of 2 John about?",
+      "alt_phrasings": [
+        "what is 2 john about",
+        "summary of the book of 2 john",
+        "overview of the book of 2 john",
+        "what is the message of the book of 2 john",
+        "what happens in the book of 2 john",
+        "tell me about the book of 2 john",
+        "what does the book of 2 john teach",
+        "what is the book of 2 john",
+        "what is second john about",
+        "summary of the book of second john",
+        "overview of the book of second john",
+        "what is the message of the book of second john",
+        "what happens in the book of second john",
+        "tell me about the book of second john",
+        "what does the book of second john teach",
+        "what is the book of second john",
+        "what is 2nd john about",
+        "summary of the book of 2nd john",
+        "overview of the book of 2nd john",
+        "what is the message of the book of 2nd john",
+        "what happens in the book of 2nd john",
+        "tell me about the book of 2nd john",
+        "what does the book of 2nd john teach",
+        "what is the book of 2nd john"
+      ],
+      "confidence": "traditional",
+      "answer": "2 John is a short letter from \"the elder\", traditionally the apostle John, to \"the chosen lady and her children\". It urges the church to walk in the truth and in love, and not to welcome teachers who deny that Jesus Christ came in the flesh. Key verse: “And this is love, that we walk according to His commandments. This is the very commandment you have heard from the beginning, that you must walk in love.” (2 John 1:6).",
+      "citations": [
+        {
+          "reference": "2 John 1:6",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_3_john",
+      "question": "What is the book of 3 John about?",
+      "alt_phrasings": [
+        "what is 3 john about",
+        "summary of the book of 3 john",
+        "overview of the book of 3 john",
+        "what is the message of the book of 3 john",
+        "what happens in the book of 3 john",
+        "tell me about the book of 3 john",
+        "what does the book of 3 john teach",
+        "what is the book of 3 john",
+        "what is third john about",
+        "summary of the book of third john",
+        "overview of the book of third john",
+        "what is the message of the book of third john",
+        "what happens in the book of third john",
+        "tell me about the book of third john",
+        "what does the book of third john teach",
+        "what is the book of third john",
+        "what is 3rd john about",
+        "summary of the book of 3rd john",
+        "overview of the book of 3rd john",
+        "what is the message of the book of 3rd john",
+        "what happens in the book of 3rd john",
+        "tell me about the book of 3rd john",
+        "what does the book of 3rd john teach",
+        "what is the book of 3rd john"
+      ],
+      "confidence": "traditional",
+      "answer": "3 John is a short letter from \"the elder\", traditionally the apostle John, to his friend Gaius. It praises Gaius for his hospitality to traveling teachers and warns about Diotrephes, who loved to be first. Key verse: “I have no greater joy than to hear that my children are walking in the truth.” (3 John 1:4).",
+      "citations": [
+        {
+          "reference": "3 John 1:4",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_jude",
+      "question": "What is the book of Jude about?",
+      "alt_phrasings": [
+        "what is jude about",
+        "summary of the book of jude",
+        "overview of the book of jude",
+        "what is the message of the book of jude",
+        "what happens in the book of jude",
+        "tell me about the book of jude",
+        "what does the book of jude teach",
+        "what is the book of jude"
+      ],
+      "confidence": "traditional",
+      "answer": "Jude is a short letter from Jude, the brother of James and of Jesus. He urges believers to contend for the faith once entrusted to the saints against false teachers who have crept in, and ends with a doxology. Key verse: “Now to Him who is able to keep you from stumbling and to present you unblemished in His glorious presence, with great joy — to the only God our Savior be glory, majesty, dominion, and authority through Jesus Christ our Lord before all time, and now, and for all eternity. Amen.” (Jude 1:24-25).",
+      "citations": [
+        {
+          "reference": "Jude 1:24-25",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "book_overview_revelation",
+      "question": "What is the book of Revelation about?",
+      "alt_phrasings": [
+        "what is revelation about",
+        "summary of the book of revelation",
+        "overview of the book of revelation",
+        "what is the message of the book of revelation",
+        "what happens in the book of revelation",
+        "tell me about the book of revelation",
+        "what does the book of revelation teach",
+        "what is the book of revelation",
+        "what is the revelation of john about",
+        "summary of the book of the revelation of john",
+        "overview of the book of the revelation of john",
+        "what is the message of the book of the revelation of john",
+        "what happens in the book of the revelation of john",
+        "tell me about the book of the revelation of john",
+        "what does the book of the revelation of john teach",
+        "what is the book of the revelation of john"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Revelation was written by John while he was exiled on the island of Patmos. It opens with letters to seven churches, then shows the throne of God, the seals, trumpets and bowls of judgment, the Antichrist, the return of Christ, the thousand years, the final judgment, and the new heaven and new earth. Key verse: “He who testifies to these things says, Yes, I am coming soon. Amen. Come, Lord Jesus!” (Revelation 22:20).\n\nPentecostal understanding: most of the book looks ahead to the Rapture, the Tribulation, the return of Christ in glory, the thousand-year reign and the final judgment, in the order held by pre-tribulation, premillennial believers.\n\nOther views: amillennial and postmillennial teachers read the thousand years as the present age or a golden age before Christ returns; preterists see most of it fulfilled in the first century, and historicists in the history of the church.",
+      "citations": [
+        {
+          "reference": "Revelation 22:20",
+          "role": "stated"
+        }
+      ],
+      "note": null
     }
   ]
 }
