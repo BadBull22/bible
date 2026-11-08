@@ -184,7 +184,14 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
         </form>
       </div>
       {error && <p className="status-error">Search failed: {error}</p>}
-      {!loading && ran && ran.mode === "ask" && <BrowseMatches query={ran.query} onOpen={onOpenBrowse} onJump={onJump} />}
+      {!loading && ran && ran.mode === "ask" && (
+        <BrowseMatches
+          query={ran.query}
+          also={askAnswer?.kind === "curated" ? [askAnswer.entry.question] : askAnswer?.kind === "fallback" && askAnswer.related ? [askAnswer.related.question] : []}
+          onOpen={onOpenBrowse}
+          onJump={onJump}
+        />
+      )}
       {!loading && ran && ran.mode === "ask" && askAnswer && (
         <AskAnswerView answer={askAnswer} hitCount={hits.length} commentaryHitCount={commentaryHits.length} onJump={onJump} onOpenDictionaryEntry={onOpenDictionary} />
       )}
