@@ -8444,6 +8444,667 @@
         }
       ],
       "note": null
+    },
+    {
+      "id": "who_was_isaac",
+      "question": "Who was Isaac?",
+      "alt_phrasings": [
+        "tell me about isaac",
+        "who was isaac in the bible",
+        "who was abraham's son isaac",
+        "what is the story of isaac",
+        "who were the parents of isaac"
+      ],
+      "confidence": "stated",
+      "answer": "Isaac was the son of Abraham and Sarah, born when Abraham was a hundred years old and Sarah far past the age of bearing, as God had promised (Genesis 17:15-19; 21:1-5). His name means “he laughs”, and Sarah said that God had made her laugh (Genesis 21:6). God tested Abraham by asking him to offer Isaac on Mount Moriah, then stopped his hand and provided a ram instead (Genesis 22:1-14). Isaac married Rebekah (Genesis 24:62-67) and was the father of the twins Esau and Jacob (Genesis 25:19-26). God renewed to him the covenant made with Abraham (Genesis 26:2-5), and he died at the age of 180 (Genesis 35:28-29). The New Testament calls him the child of promise (Galatians 4:28) and sees in his offering a picture of faith in the God who raises the dead (Hebrews 11:17-19).",
+      "citations": [
+        {
+          "reference": "Genesis 17:15-19",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 21:1-5",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 22:1-14",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 24:62-67",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 26:2-5",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 11:17-19",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_king_david",
+      "question": "Who was King David?",
+      "alt_phrasings": [
+        "tell me about king david",
+        "who was david in the bible",
+        "who was david",
+        "what did david do",
+        "what is the story of king david",
+        "why was david called a man after god's own heart",
+        "tell me about the king david of israel",
+        "who was israel's greatest king",
+        "who was the shepherd boy who became king",
+        "david the king of israel"
+      ],
+      "confidence": "stated",
+      "answer": "David was the youngest son of Jesse of Bethlehem, a shepherd whom the prophet Samuel anointed as king (1 Samuel 16:1-13). He killed the giant Goliath (1 Samuel 17), served King Saul and fled from his jealousy (1 Samuel 18-27), then became king of Judah at Hebron and of all Israel, and took Jerusalem (2 Samuel 2:4; 5:1-9). He brought the ark to Jerusalem (2 Samuel 6), and God promised him a house and a throne that would last forever (2 Samuel 7:12-16). He sinned with Bathsheba and against her husband Uriah, and repented (2 Samuel 11-12; Psalm 51). God called him “a man after My own heart” (Acts 13:22), and he wrote many of the psalms. He reigned forty years (2 Samuel 5:4). Jesus is the promised Son of David (Matthew 1:1; Luke 1:32).",
+      "citations": [
+        {
+          "reference": "1 Samuel 16:1-13",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 17",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Samuel 5:1-9",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Samuel 7:12-16",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Samuel 11-12",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 13:22",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 1:32",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_daniel",
+      "question": "Who was the prophet Daniel?",
+      "alt_phrasings": [
+        "who was daniel",
+        "tell me about daniel in the bible",
+        "who was daniel in babylon",
+        "what did daniel do",
+        "story of daniel",
+        "who was daniel in the lions den",
+        "who was the prophet in the lions den",
+        "who was the jewish prophet in babylon"
+      ],
+      "confidence": "stated",
+      "answer": "Daniel was a young Jewish nobleman taken to Babylon by Nebuchadnezzar, trained in the king's service, and kept faithful to God, refusing the king's food (Daniel 1:1-16). God gave him wisdom to interpret dreams, including Nebuchadnezzar's great statue (Daniel 2) and the tree that was cut down (Daniel 4), and he read the writing on the wall for Belshazzar (Daniel 5). He served under both Babylon and Persia (Daniel 6:1-3). Because he prayed three times a day to God, he was thrown into the lions' den and was delivered (Daniel 6). He received visions of the four beasts, the Son of Man and the seventy weeks (Daniel 7; 9:24-27). Ezekiel names him with Noah and Job as a righteous man (Ezekiel 14:14), and Jesus speaks of “the prophet Daniel” (Matthew 24:15).",
+      "citations": [
+        {
+          "reference": "Daniel 1:1-16",
+          "role": "stated"
+        },
+        {
+          "reference": "Daniel 2",
+          "role": "stated"
+        },
+        {
+          "reference": "Daniel 5",
+          "role": "stated"
+        },
+        {
+          "reference": "Daniel 6",
+          "role": "stated"
+        },
+        {
+          "reference": "Daniel 7",
+          "role": "stated"
+        },
+        {
+          "reference": "Daniel 9:24-27",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 24:15",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_jeremiah",
+      "question": "Who was the prophet Jeremiah?",
+      "alt_phrasings": [
+        "who was jeremiah",
+        "tell me about jeremiah in the bible",
+        "who was the weeping prophet",
+        "what did jeremiah prophesy",
+        "story of jeremiah",
+        "tell me about the prophet jeremiah",
+        "who wept over jerusalem",
+        "who was the prophet who wept over jerusalem",
+        "who was the prophet of the new covenant"
+      ],
+      "confidence": "stated",
+      "answer": "Jeremiah was a prophet and priest from Anathoth, the son of Hilkiah, whom God called while he was still young (Jeremiah 1:1-10). For some forty years he warned Judah to turn back to God before Jerusalem fell to Babylon, and he was mocked, beaten, put in the stocks, imprisoned and thrown into a cistern (Jeremiah 20:1-2; 37-38). His grief for his people has earned him the name of the weeping prophet (Jeremiah 9:1). He foretold seventy years of exile (Jeremiah 25:11-12; 29:10) and wrote to the exiles that God had “plans to prosper you and not to harm you, to give you a future and a hope” (Jeremiah 29:11). He promised the new covenant (Jeremiah 31:31-34), which Jesus established in His blood (Luke 22:20). Tradition says he also wrote Lamentations.",
+      "citations": [
+        {
+          "reference": "Jeremiah 1:1-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Jeremiah 9:1",
+          "role": "stated"
+        },
+        {
+          "reference": "Jeremiah 29:10-11",
+          "role": "stated"
+        },
+        {
+          "reference": "Jeremiah 31:31-34",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 22:20",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_ezekiel",
+      "question": "Who was the prophet Ezekiel?",
+      "alt_phrasings": [
+        "who was ezekiel",
+        "tell me about ezekiel in the bible",
+        "what did ezekiel prophesy",
+        "what is the book of ezekiel about",
+        "story of ezekiel",
+        "who was the prophet of the dry bones",
+        "who saw the valley of dry bones",
+        "who was the prophet who saw the valley of dry bones"
+      ],
+      "confidence": "stated",
+      "answer": "Ezekiel was a priest, the son of Buzi, who was taken to Babylon in the exile of 597 BC and called to be a prophet by the Chebar canal (Ezekiel 1:1-3; 2:1-3). He saw the glory of the LORD in a vision of living creatures, wheels and a throne (Ezekiel 1). God made him a watchman for Israel (Ezekiel 3:17; 33:7). He foretold the fall of Jerusalem, often through signs acted out before the people (Ezekiel 4-24), spoke against the nations (Ezekiel 25-32), and then promised restoration: a new heart and God's Spirit within His people (Ezekiel 36:26-27), the valley of dry bones brought to life (Ezekiel 37), the war of Gog and Magog (Ezekiel 38-39) and the vision of a new temple (Ezekiel 40-48).",
+      "citations": [
+        {
+          "reference": "Ezekiel 1:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "Ezekiel 37",
+          "role": "stated"
+        },
+        {
+          "reference": "Ezekiel 36:26-27",
+          "role": "stated"
+        },
+        {
+          "reference": "Ezekiel 3:17",
+          "role": "stated"
+        },
+        {
+          "reference": "Ezekiel 38-39",
+          "role": "stated"
+        },
+        {
+          "reference": "Ezekiel 40-48",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_lydia",
+      "question": "Who was Lydia in the Bible?",
+      "alt_phrasings": [
+        "who was lydia",
+        "tell me about lydia in acts",
+        "who was lydia the seller of purple",
+        "who was the first convert in europe"
+      ],
+      "confidence": "stated",
+      "answer": "Lydia was a woman from the city of Thyatira who sold purple cloth and lived in Philippi. She worshipped God, and when Paul spoke to the women by the river outside the city on the Sabbath, the Lord opened her heart to respond to his message (Acts 16:13-14). She and her household were baptized, and she urged Paul and his companions to stay in her home (Acts 16:15). After Paul and Silas were released from prison, they met with the believers at her house (Acts 16:40). She is the first person in Europe whose conversion is recorded.",
+      "citations": [
+        {
+          "reference": "Acts 16:13-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 16:40",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_rahab",
+      "question": "Who was Rahab?",
+      "alt_phrasings": [
+        "who was rahab the harlot",
+        "tell me about rahab in the bible",
+        "who was rahab in jericho",
+        "what did rahab do",
+        "who was the woman who hid the spies",
+        "who was the woman who hid the spies in jericho",
+        "who helped the israelite spies in jericho",
+        "who was the woman who helped the spies"
+      ],
+      "confidence": "stated",
+      "answer": "Rahab was a prostitute in Jericho who hid the two Israelite spies on her roof and sent the king's men in the wrong direction (Joshua 2:1-7). She told the spies that the LORD had given the land to Israel and that He is God in heaven above and on earth below, and she asked that her family be spared (Joshua 2:8-13). She tied a scarlet cord in her window (Joshua 2:18-21). When the walls fell she and all her family were saved (Joshua 6:17, 22-25). She is named in the line of David and of Jesus (Matthew 1:5), is honoured for her faith (Hebrews 11:31) and for her works (James 2:25).",
+      "citations": [
+        {
+          "reference": "Joshua 2:1-21",
+          "role": "stated"
+        },
+        {
+          "reference": "Joshua 6:22-25",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 1:5",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 11:31",
+          "role": "stated"
+        },
+        {
+          "reference": "James 2:25",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_joseph_son_of_jacob",
+      "question": "Who was Joseph, the son of Jacob?",
+      "alt_phrasings": [
+        "who was joseph in egypt",
+        "who was joseph in the bible",
+        "tell me about joseph and his brothers",
+        "what is the story of joseph",
+        "who was the joseph with the coat of many colours",
+        "who was jacob's son who became ruler of egypt",
+        "who became ruler in egypt",
+        "who was the israelite who ruled egypt",
+        "who was sold into slavery by his brothers"
+      ],
+      "confidence": "stated",
+      "answer": "Joseph was the eleventh son of Jacob, the firstborn of Rachel, and his father's favourite. His brothers hated him for his dreams and his special coat, and sold him to traders who took him to Egypt (Genesis 37). In Potiphar's house he was falsely accused and imprisoned, but the LORD was with him (Genesis 39). He interpreted the dreams of Pharaoh's cupbearer and baker and then Pharaoh's dream of seven good years and seven years of famine, and Pharaoh made him ruler over Egypt at the age of thirty (Genesis 40-41). When his brothers came to buy grain he tested them and then forgave them: “what you intended against me for evil, God intended for good” (Genesis 50:20; chapters 42-45). Jacob's family settled in Egypt (Genesis 46-47), and Joseph died at 110, asking that his bones be taken to the promised land (Genesis 50:22-26; Exodus 13:19).",
+      "citations": [
+        {
+          "reference": "Genesis 37",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 39",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 41",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 45",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 50:20",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 50:22-26",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "mary_mother_of_jesus",
+      "question": "Who was Mary, the mother of Jesus?",
+      "alt_phrasings": [
+        "who was mary",
+        "tell me about mary the mother of jesus",
+        "who was the virgin mary",
+        "what does the bible say about mary",
+        "who was mary in the bible",
+        "was mary a virgin"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: Mary was a young virgin of Nazareth, engaged to Joseph, to whom the angel Gabriel said, “you who are highly favored”, and told her that she would conceive by the Holy Spirit and bear the Son of the Most High (Luke 1:26-38; Matthew 1:18-23). Elizabeth called her blessed because she believed (Luke 1:42-45), and she answered in her song of praise (Luke 1:46-55). She gave birth to Jesus in Bethlehem (Luke 2:1-7), heard Simeon's warning that a sword would pierce her soul (Luke 2:34-35), asked Jesus for help at the wedding in Cana (John 2:1-5), stood by the cross, where Jesus entrusted her to the care of John (John 19:25-27), and was among the believers praying in the upper room (Acts 1:14).\n\nPentecostal understanding: Mary is honoured as the blessed virgin chosen to bear the Savior and as an example of faith and obedience, but she is a believer saved by Christ like the rest of us, and is not to be worshipped or prayed to, because there is one mediator between God and men, the man Christ Jesus (1 Timothy 2:5).\n\nOther views: Roman Catholic and Orthodox churches honour her as the Mother of God (Theotokos), and Catholics teach her immaculate conception, perpetual virginity and assumption into heaven, and ask for her prayers; most Protestants honour her but reject those teachings.",
+      "citations": [
+        {
+          "reference": "Luke 1:26-38",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 1:18-23",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 1:42-45",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 2:1-7",
+          "role": "stated"
+        },
+        {
+          "reference": "John 19:25-27",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 1:14",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Timothy 2:5",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "james_brother_of_jesus",
+      "question": "Who was James, the brother of Jesus?",
+      "alt_phrasings": [
+        "who was james the brother of jesus",
+        "who was james in the bible",
+        "did jesus have brothers",
+        "who were the brothers of jesus",
+        "who wrote the book of james",
+        "did jesus have a brother james",
+        "was james the brother of jesus",
+        "who was the lord's brother james"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: the people of Nazareth named Jesus' brothers: James, Joseph, Simon and Judas, and His sisters (Mark 6:3; Matthew 13:55). During His ministry His brothers did not believe in Him (John 7:5), but Jesus appeared to James after the resurrection (1 Corinthians 15:7), and His brothers were among the believers praying in the upper room (Acts 1:14). Paul met “James, the Lord's brother” in Jerusalem (Galatians 1:19) and counted him one of the pillars of the church (Galatians 2:9). James spoke at the council of Jerusalem (Acts 15:13-21) and wrote the letter of James (James 1:1); his brother Jude wrote the letter of Jude (Jude 1). Tradition says he was martyred in Jerusalem about AD 62.\n\nPentecostal understanding: they were younger half-brothers of Jesus, sons of Joseph and Mary born after Jesus (Matthew 1:25; Luke 2:7).\n\nOther views: the Orthodox churches hold that they were Joseph's children from an earlier marriage, and the Catholic Church that they were close relatives (cousins), since both teach that Mary remained a virgin all her life.",
+      "citations": [
+        {
+          "reference": "Mark 6:3",
+          "role": "stated"
+        },
+        {
+          "reference": "John 7:5",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 15:7",
+          "role": "stated"
+        },
+        {
+          "reference": "Galatians 1:19",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 15:13-21",
+          "role": "stated"
+        },
+        {
+          "reference": "James 1:1",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "joseph_husband_of_mary",
+      "question": "Who was Joseph, the husband of Mary?",
+      "alt_phrasings": [
+        "who was joseph the father of jesus",
+        "who was jesus's earthly father",
+        "tell me about joseph the carpenter",
+        "who was joseph in the christmas story",
+        "what does the bible say about joseph the husband of mary"
+      ],
+      "confidence": "stated",
+      "answer": "Joseph was a descendant of David from Nazareth, a carpenter (Matthew 1:20; 13:55), and a righteous man who did not want to expose Mary to public disgrace when he learned that she was expecting (Matthew 1:19). An angel told him in a dream to take Mary as his wife and to name the child Jesus, and he obeyed (Matthew 1:20-25). He took Mary to Bethlehem for the census (Luke 2:4-7), fled with the child to Egypt after a warning in a dream (Matthew 2:13-15), and brought the family back to Nazareth (Matthew 2:19-23). He took Jesus to Jerusalem at twelve (Luke 2:41-52). He is not mentioned after that, and the Bible does not say when he died. People spoke of Jesus as the son of Joseph (Luke 3:23; John 6:42).",
+      "citations": [
+        {
+          "reference": "Matthew 1:18-25",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 2:4-7",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 2:13-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 2:19-23",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 2:41-52",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "day_of_atonement",
+      "question": "What is the Day of Atonement?",
+      "alt_phrasings": [
+        "what happens on the day of atonement",
+        "what is yom kippur",
+        "what is yom kippur in the bible",
+        "what was the day of atonement in leviticus",
+        "what is the meaning of the day of atonement",
+        "what is the jewish day of atonement",
+        "what is the day when israel's sins were atoned",
+        "what is the holiest day of the jewish year",
+        "what is the scapegoat"
+      ],
+      "confidence": "stated",
+      "answer": "The Day of Atonement (Yom Kippur) was the holiest day of Israel's year, on the tenth day of the seventh month. Israel was to deny themselves and do no work, because on that day atonement was made to cleanse them from all their sins before the LORD (Leviticus 16:29-31; 23:26-32). Once a year the high priest, after offering a sacrifice for himself, entered the Most Holy Place with the blood of a bull and of a goat and sprinkled it on the mercy seat (Leviticus 16:3-17). The second goat, the scapegoat, had the sins of the people confessed over it and was sent away into the wilderness (Leviticus 16:7-10, 20-22). Hebrews says that Christ has entered the heavenly Most Holy Place once for all, not with the blood of goats and calves but with His own blood, having obtained eternal redemption (Hebrews 9:7-14, 24-28).",
+      "citations": [
+        {
+          "reference": "Leviticus 16:29-31",
+          "role": "stated"
+        },
+        {
+          "reference": "Leviticus 23:26-32",
+          "role": "stated"
+        },
+        {
+          "reference": "Leviticus 16:3-17",
+          "role": "stated"
+        },
+        {
+          "reference": "Leviticus 16:20-22",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 9:7-14",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "feast_of_tabernacles",
+      "question": "What is the Feast of Tabernacles?",
+      "alt_phrasings": [
+        "what is sukkot",
+        "what is the feast of booths",
+        "what is the feast of tabernacles in the bible",
+        "why did israel live in booths",
+        "what is the meaning of the feast of tabernacles",
+        "why did the jews live in booths",
+        "what do the booths of the feast mean",
+        "what is the jewish feast of booths for"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: the Feast of Tabernacles (Booths, Sukkot) began on the fifteenth day of the seventh month and lasted seven days. Israel was to live in booths made of branches so that their descendants would know that God had made them live in booths when He brought them out of Egypt, and they were to rejoice before the LORD (Leviticus 23:33-43; Deuteronomy 16:13-15). At this feast Jesus stood and cried out, “If anyone is thirsty, let him come to Me and drink” (John 7:2, 37-38). Zechariah foretells that the survivors of the nations will go up each year to Jerusalem to worship the King, the LORD of Hosts, and to keep this feast (Zechariah 14:16-19).\n\nPentecostal understanding: many see in the feast a picture of the coming kingdom, when Christ reigns on earth and God dwells among His people (Zechariah 14:9, 16; Revelation 21:3).\n\nOther views: others see it fulfilled in Christ, who “made His dwelling among us” (John 1:14), and in the church as God's dwelling by the Spirit.",
+      "citations": [
+        {
+          "reference": "Leviticus 23:33-43",
+          "role": "stated"
+        },
+        {
+          "reference": "Deuteronomy 16:13-15",
+          "role": "stated"
+        },
+        {
+          "reference": "John 7:2",
+          "role": "stated"
+        },
+        {
+          "reference": "John 7:37-38",
+          "role": "stated"
+        },
+        {
+          "reference": "Zechariah 14:16-19",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "image_of_god",
+      "question": "What does it mean that we are made in the image of God?",
+      "alt_phrasings": [
+        "what is the image of god",
+        "what does made in the image of god mean",
+        "what does the bible mean by the image of god",
+        "what does imago dei mean",
+        "are we made in the image of god"
+      ],
+      "confidence": "traditional",
+      "answer": "Scripture: God said, “Let Us make man in Our image, after Our likeness,” and made them male and female (Genesis 1:26-27). Even after the fall that image is not lost: taking human life is forbidden because man was made in God's image (Genesis 9:6), and James says people are made in God's likeness (James 3:9). Christ is the image of the invisible God (Colossians 1:15; 2 Corinthians 4:4). Believers are being renewed in knowledge after the image of their Creator (Colossians 3:10; Ephesians 4:24), are being transformed into the Lord's image from one degree of glory to another (2 Corinthians 3:18), and will be conformed to the image of His Son (Romans 8:29; 1 Corinthians 15:49). The Bible does not define the image in a single sentence. The church has understood it as our ability to know and love God, our moral sense, our rule over creation and our relationships, so that the whole person, not any one part, bears God's image.",
+      "citations": [
+        {
+          "reference": "Genesis 1:26-27",
+          "role": "stated"
+        },
+        {
+          "reference": "Genesis 9:6",
+          "role": "stated"
+        },
+        {
+          "reference": "James 3:9",
+          "role": "stated"
+        },
+        {
+          "reference": "Colossians 1:15",
+          "role": "stated"
+        },
+        {
+          "reference": "Colossians 3:10",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Corinthians 3:18",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 8:29",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "righteousness_meaning",
+      "question": "What is righteousness?",
+      "alt_phrasings": [
+        "what does the bible mean by righteousness",
+        "what is the righteousness of god",
+        "what does it mean to be righteous",
+        "what is righteousness according to the bible",
+        "what is the righteousness of christ"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: righteousness is being right with God and living right before Him. God Himself is righteous (Psalm 119:137; 145:17). No one is righteous in himself, for all have sinned and fall short of the glory of God (Romans 3:10, 23). But God's righteousness is given through faith in Jesus Christ to all who believe (Romans 3:21-26; Philippians 3:9): “God made Him who knew no sin to be sin on our behalf, so that in Him we might become the righteousness of God” (2 Corinthians 5:21). Believers are called to live it: to offer ourselves to God as instruments of righteousness (Romans 6:13, 18), to practice it (1 John 3:7), and to hunger and thirst for it (Matthew 5:6) and seek it first with God's kingdom (Matthew 6:33).\n\nPentecostal understanding: righteousness is God's gift through faith in the blood of Jesus, and the born-again are called to live it out in the power of the Spirit (Romans 8:4; 1 John 3:7).\n\nOther views: Reformed and Lutheran teaching holds that Christ's righteousness is counted as ours once and for all (imputed); Roman Catholic teaching holds that righteousness is also poured into the believer and grows through the sacraments.",
+      "citations": [
+        {
+          "reference": "Romans 3:21-26",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 3:9",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Corinthians 5:21",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 6:13",
+          "role": "stated"
+        },
+        {
+          "reference": "1 John 3:7",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 5:6",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 6:33",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "the_soul",
+      "question": "What is the soul?",
+      "alt_phrasings": [
+        "what is the human soul",
+        "what does the bible say about the soul",
+        "what is the soul according to the bible",
+        "what is the difference between soul and spirit",
+        "do we have a soul",
+        "what happens to the soul"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: God formed man from the dust of the ground and breathed into his nostrils the breath of life, and the man became a living being (Genesis 2:7). The word the Old Testament uses for soul (nephesh) often means the life or the whole person. Jesus said, “Do not fear those who kill the body but cannot kill the soul,” but fear the One who can destroy both soul and body in hell (Matthew 10:28), and asked what it profits a man to gain the whole world and forfeit his soul (Matthew 16:26). We are to love God with all our heart, soul, mind and strength (Mark 12:30), and the psalmist speaks to his own soul: “Bless the LORD, O my soul” (Psalm 103:1). Paul prays, “Now may the God of peace Himself sanctify you completely, and may your entire spirit, soul, and body be kept blameless at the coming of our Lord Jesus Christ” (1 Thessalonians 5:23), and the word of God divides soul and spirit (Hebrews 4:12).\n\nPentecostal understanding: a person is spirit, soul and body: the spirit is where we meet God and are born again, the soul is the mind, will and emotions, and the soul is eternal and must be saved (James 1:21; 1 Peter 1:9).\n\nOther views: many teachers hold that soul and spirit are two names for the one inner life (dichotomy); others hold that the Bible speaks of the whole person and that “soul” means the life of the person (monism); Roman Catholic teaching holds that each soul is created by God and immortal.",
+      "citations": [
+        {
+          "reference": "Genesis 2:7",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 10:28",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 16:26",
+          "role": "stated"
+        },
+        {
+          "reference": "Mark 12:30",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Thessalonians 5:23",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 4:12",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Peter 1:9",
+          "role": "stated"
+        }
+      ],
+      "note": null
     }
   ]
 }

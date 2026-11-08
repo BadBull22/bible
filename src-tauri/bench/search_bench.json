@@ -1885,6 +1885,138 @@
         "2 Timothy 4:6",
         "Acts 28"
       ]
+    },
+    {
+      "q": "tell me about isaac the son of abraham",
+      "cat": "held6",
+      "must_any": [
+        "Genesis 21",
+        "Genesis 22"
+      ]
+    },
+    {
+      "q": "tell me about israel's greatest king david",
+      "cat": "held6",
+      "must_any": [
+        "1 Samuel 16",
+        "2 Samuel 7",
+        "2 Samuel 5"
+      ]
+    },
+    {
+      "q": "who was the jewish prophet in the lions den",
+      "cat": "held6",
+      "must_any": [
+        "Daniel 6",
+        "Daniel 1"
+      ]
+    },
+    {
+      "q": "tell me about the prophet who wept over jerusalem",
+      "cat": "held6",
+      "must_any": [
+        "Jeremiah"
+      ]
+    },
+    {
+      "q": "who was the prophet of the valley of dry bones",
+      "cat": "held6",
+      "must_any": [
+        "Ezekiel 37",
+        "Ezekiel 1"
+      ]
+    },
+    {
+      "q": "who was lydia in the book of acts",
+      "cat": "held6",
+      "must_any": [
+        "Acts 16"
+      ]
+    },
+    {
+      "q": "who was the woman who helped the spies in jericho",
+      "cat": "held6",
+      "must_any": [
+        "Joshua 2",
+        "Hebrews 11:31"
+      ]
+    },
+    {
+      "q": "who was jacob's son who became ruler in egypt",
+      "cat": "held6",
+      "must_any": [
+        "Genesis 37",
+        "Genesis 41",
+        "Genesis 50"
+      ]
+    },
+    {
+      "q": "tell me about jesus' mother mary",
+      "cat": "held6",
+      "must_any": [
+        "Luke 1",
+        "Luke 2",
+        "John 19:25"
+      ]
+    },
+    {
+      "q": "did jesus have a brother named james",
+      "cat": "held6",
+      "must_any": [
+        "Mark 6:3",
+        "Galatians 1:19",
+        "1 Corinthians 15:7"
+      ]
+    },
+    {
+      "q": "who raised jesus as a child",
+      "cat": "held6",
+      "must_any": [
+        "Matthew 1",
+        "Matthew 2",
+        "Luke 2"
+      ]
+    },
+    {
+      "q": "what is the jewish holy day when sins were atoned",
+      "cat": "held6",
+      "must_any": [
+        "Leviticus 16",
+        "Leviticus 23"
+      ]
+    },
+    {
+      "q": "what do the booths in the jewish feast stand for",
+      "cat": "held6",
+      "must_any": [
+        "Leviticus 23",
+        "Zechariah 14"
+      ]
+    },
+    {
+      "q": "what does it mean that man was made in gods image",
+      "cat": "held6",
+      "must_any": [
+        "Genesis 1:26",
+        "Genesis 9:6"
+      ]
+    },
+    {
+      "q": "what does it mean to be righteous before god",
+      "cat": "held6",
+      "must_any": [
+        "Romans 3",
+        "2 Corinthians 5:21"
+      ]
+    },
+    {
+      "q": "what is the human soul according to the bible",
+      "cat": "held6",
+      "must_any": [
+        "Matthew 10:28",
+        "1 Thessalonians 5:23",
+        "Genesis 2:7"
+      ]
     }
   ]
 }
