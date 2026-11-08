@@ -77,7 +77,7 @@ shows it:
   prayer, resurrection, the cross, the blood of Jesus, second coming / rapture, water
   baptism, spiritual warfare, worship, giving, fear and anxiety, holiness, marriage, hope,
   peace, joy. A test checks every passage exists in the text. **The choice of passages is
-  Claude's, from memory of the standard ones; the user was told to say where a list is wrong
+  from memory of the standard ones; the user was told to say where a list is wrong
   or thin.** A narrower subject replaces the broader ones inside it ("gifts of the Spirit"
   doesn't also bring the general Holy Spirit list).
 - A single verse inside a longer passage is folded into the passage, which takes over its
@@ -101,7 +101,7 @@ cover it; only Scofield reads it from the pre-tribulation position, briefly. Pub
 dispensational works are openly downloadable from the Internet Archive as EPUB: Larkin (The
 Book of Revelation; Dispensational Truth), Ironside, Gaebelein, Seiss (3 vols), William
 Kelly, Blackstone (Jesus Is Coming), Pember. Not open: Walvoord, Newell. Copyright status is
-Claude's understanding (all pre-1929), not checked legally.
+Our understanding (all pre-1929), not checked legally.
 
 The Internet Archive's EPUBs are automatic scans, one file per printed page, with no
 chapters. The importer now recognises them (30+ pages, almost none titled) and:
