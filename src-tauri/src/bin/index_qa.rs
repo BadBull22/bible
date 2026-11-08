@@ -46,7 +46,8 @@ fn main() -> anyhow::Result<()> {
     let start = Instant::now();
     let mut rows = Vec::with_capacity(phrasings.len());
     for (i, (source, id, phrasing)) in phrasings.iter().enumerate() {
-        let vector = embedder.embed(phrasing)?;
+        // 4 decimals are plenty for matching by meaning and make the file about half the size
+        let vector: Vec<f32> = embedder.embed(phrasing)?.into_iter().map(|x| (x * 1e4).round() / 1e4).collect();
         rows.push(QaIndexRow { source: source.clone(), id: id.clone(), phrasing: phrasing.clone(), vector });
         if i % 20 == 0 {
             println!("  {i}/{} ({:.1}s elapsed)", phrasings.len(), start.elapsed().as_secs_f32());
@@ -55,7 +56,7 @@ fn main() -> anyhow::Result<()> {
     println!("Done in {:.1}s. Writing {}...", start.elapsed().as_secs_f32(), out_path.display());
 
     let out = OutFile { entries: rows };
-    std::fs::write(&out_path, serde_json::to_string_pretty(&out)?)?;
+    std::fs::write(&out_path, serde_json::to_string(&out)?)?;
     println!("Wrote {} rows.", out.entries.len());
 
     Ok(())
