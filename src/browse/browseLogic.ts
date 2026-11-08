@@ -32,7 +32,7 @@ export interface BrowseEntry {
   flagged: boolean;
 }
 
-const STOP = new Set(["the", "a", "an", "of", "in", "on", "to", "for", "and", "with", "is", "are", "was", "what", "about", "verse", "verses", "story", "stories", "bible", "page", "pages", "kids", "children", "childrens", "who", "whom", "how", "why", "when", "where", "which", "tell", "me", "my", "i", "do", "does", "did", "can", "you", "your", "from", "give", "show", "find", "some", "any", "there", "it", "this", "that", "be", "by", "at", "as", "or", "if", "into", "we", "say", "says", "said", "were", "has", "have", "had", "am", "his", "her", "its", "our", "their", "please", "show", "feel", "feels", "feeling"]);
+const STOP = new Set(["the", "a", "an", "of", "in", "on", "to", "for", "and", "with", "is", "are", "was", "what", "about", "verse", "verses", "story", "stories", "bible", "page", "pages", "kids", "children", "childrens", "who", "whom", "how", "why", "when", "where", "which", "tell", "me", "my", "i", "do", "does", "did", "can", "you", "your", "from", "give", "show", "find", "some", "any", "there", "it", "this", "that", "be", "by", "at", "as", "or", "if", "into", "we", "say", "says", "said", "were", "has", "have", "had", "am", "his", "her", "its", "our", "their", "please", "show", "feel", "feels", "feeling", "not", "dont", "should", "would", "could", "must"]);
 
 /** lower-case words, without small joining words, with a plain plural s dropped ("lions" finds "lion"; "Jesus" and "grass" are left alone) */
 export function words(text: string): string[] {
