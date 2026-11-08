@@ -1249,8 +1249,10 @@
     },
     {
       "q": "how many wise men visited jesus",
-      "cat": "held2-honest",
-      "abstain": true
+      "cat": "held7",
+      "must_any": [
+        "Matthew 2"
+      ]
     },
     {
       "q": "what kind of fruit did eve eat",
@@ -2086,6 +2088,404 @@
       "cat": "books",
       "must_any": [
         "Jude 1:24-25"
+      ]
+    },
+    {
+      "q": "tell me who jesus christ really is",
+      "cat": "held7",
+      "must_any": [
+        "John 1",
+        "Colossians 1",
+        "Philippians 2",
+        "John 20:31"
+      ]
+    },
+    {
+      "q": "what did christ accomplish by dying on the cross",
+      "cat": "held7",
+      "must_any": [
+        "Romans 5",
+        "1 Peter 2",
+        "2 Corinthians 5",
+        "Isaiah 53"
+      ]
+    },
+    {
+      "q": "what is the good news that christians preach",
+      "cat": "held7",
+      "must_any": [
+        "1 Corinthians 15",
+        "Romans 1:16",
+        "Romans 10:9",
+        "Mark 1:15"
+      ]
+    },
+    {
+      "q": "what does jesus mean when he says you must be born again",
+      "cat": "held7",
+      "must_any": [
+        "John 3",
+        "Titus 3:5",
+        "1 Peter 1:23"
+      ]
+    },
+    {
+      "q": "what does it mean when the bible says repent",
+      "cat": "held7",
+      "must_any": [
+        "Acts 3:19",
+        "Acts 2:38",
+        "2 Corinthians 7:10",
+        "Luke 13"
+      ]
+    },
+    {
+      "q": "how do i receive the baptism of the holy spirit like at pentecost",
+      "cat": "held7",
+      "must_any": [
+        "Acts 2",
+        "Acts 1:8",
+        "Acts 19",
+        "Luke 11:13"
+      ]
+    },
+    {
+      "q": "i am so worried about everything what does scripture say",
+      "cat": "held7",
+      "must_any": [
+        "Matthew 6",
+        "Philippians 4",
+        "1 Peter 5:7"
+      ]
+    },
+    {
+      "q": "what scripture speaks about unborn babies and abortion",
+      "cat": "held7",
+      "must_any": [
+        "Psalm 139",
+        "Jeremiah 1:5",
+        "Exodus 21"
+      ]
+    },
+    {
+      "q": "what is the sacred name of god in the old testament",
+      "cat": "held7",
+      "must_any": [
+        "Exodus 3",
+        "Exodus 6:3",
+        "Isaiah 42:8"
+      ]
+    },
+    {
+      "q": "which day was the savior born",
+      "cat": "held7-honest",
+      "abstain": true
+    },
+    {
+      "q": "who were the visitors who followed the star to bethlehem",
+      "cat": "held7",
+      "must_any": [
+        "Matthew 2"
+      ]
+    },
+    {
+      "q": "whatever became of the chest that held the ten commandments",
+      "cat": "held7",
+      "must_any": [
+        "Exodus 25",
+        "Hebrews 9:4",
+        "Jeremiah 3:16"
+      ]
+    },
+    {
+      "q": "what was the feast when god passed over the houses with blood",
+      "cat": "held7",
+      "must_any": [
+        "Exodus 12",
+        "Luke 22",
+        "1 Corinthians 5:7"
+      ]
+    },
+    {
+      "q": "does scripture approve of owning slaves",
+      "cat": "held7",
+      "must_any": [
+        "Philemon",
+        "Exodus 21",
+        "Ephesians 6",
+        "Galatians 3:28"
+      ]
+    },
+    {
+      "q": "are the old testament dietary laws still required for believers",
+      "cat": "held7",
+      "must_any": [
+        "Mark 7",
+        "Acts 10",
+        "Romans 14",
+        "1 Timothy 4",
+        "Romans 6:14",
+        "Galatians 3",
+        "Matthew 5:17"
+      ]
+    },
+    {
+      "q": "did the patriarchs have several wives and was it right",
+      "cat": "held7",
+      "must_any": [
+        "Genesis 2:24",
+        "Deuteronomy 17",
+        "1 Timothy 3",
+        "1 Kings 11"
+      ]
+    },
+    {
+      "q": "will the lord return to earth one day",
+      "cat": "held7",
+      "must_any": [
+        "Acts 1:11",
+        "1 Thessalonians 4",
+        "Matthew 24",
+        "Revelation 1:7"
+      ]
+    },
+    {
+      "q": "what do the colored horses in the book of revelation mean",
+      "cat": "held7",
+      "must_any": [
+        "Revelation 6"
+      ]
+    },
+    {
+      "q": "who are the sealed servants from the tribes of israel",
+      "cat": "held7",
+      "must_any": [
+        "Revelation 7",
+        "Revelation 14"
+      ]
+    },
+    {
+      "q": "what is the word selah that appears in psalms",
+      "cat": "held7",
+      "must_any": [
+        "Psalm 3",
+        "Psalm 46",
+        "Habakkuk 3"
+      ]
+    },
+    {
+      "q": "what is the hebrew word that means praise the lord",
+      "cat": "held7",
+      "must_any": [
+        "Psalm 106",
+        "Psalm 150",
+        "Revelation 19"
+      ]
+    },
+    {
+      "q": "what is the name which means god is with us",
+      "cat": "held7",
+      "must_any": [
+        "Isaiah 7",
+        "Matthew 1:23"
+      ]
+    },
+    {
+      "q": "why did jesus call god abba in gethsemane",
+      "cat": "held7",
+      "must_any": [
+        "Mark 14:36",
+        "Romans 8:15",
+        "Galatians 4:6"
+      ]
+    },
+    {
+      "q": "tell me about the woman who first saw the risen lord",
+      "cat": "held7",
+      "must_any": [
+        "John 20",
+        "Mark 16:9"
+      ]
+    },
+    {
+      "q": "who was the priest king that blessed abraham",
+      "cat": "held7",
+      "must_any": [
+        "Genesis 14",
+        "Hebrews 7",
+        "Psalm 110:4"
+      ]
+    },
+    {
+      "q": "tell me about the man god called out of ur",
+      "cat": "held7",
+      "must_any": [
+        "Genesis 12",
+        "Genesis 15",
+        "Romans 4"
+      ]
+    },
+    {
+      "q": "who is the pharisee who met jesus on the road to damascus",
+      "cat": "held7",
+      "must_any": [
+        "Acts 9",
+        "Philippians 3",
+        "Acts 22"
+      ]
+    },
+    {
+      "q": "who was the fisherman who became the leader of the apostles",
+      "cat": "held7",
+      "must_any": [
+        "Matthew 16",
+        "John 21",
+        "Acts 2",
+        "John 1"
+      ]
+    },
+    {
+      "q": "who was the man who wrestled with god and became israel",
+      "cat": "held7",
+      "must_any": [
+        "Genesis 32",
+        "Genesis 28",
+        "Genesis 25"
+      ]
+    },
+    {
+      "q": "does the bible say anything about worrying too much",
+      "cat": "held8",
+      "must_any": [
+        "Matthew 6",
+        "Philippians 4",
+        "1 Peter 5"
+      ]
+    },
+    {
+      "q": "what was the point of christ's death on the cross",
+      "cat": "held8",
+      "must_any": [
+        "Romans 5",
+        "1 Peter 2",
+        "2 Corinthians 5",
+        "Isaiah 53",
+        "Mark 10:45"
+      ]
+    },
+    {
+      "q": "what is meant by being born again in john 3",
+      "cat": "held8",
+      "must_any": [
+        "John 3",
+        "1 Peter 1:23",
+        "Titus 3"
+      ]
+    },
+    {
+      "q": "summarize the christian gospel in a few sentences",
+      "cat": "held8",
+      "must_any": [
+        "1 Corinthians 15",
+        "Romans 1:16",
+        "Romans 10:9"
+      ]
+    },
+    {
+      "q": "is pork forbidden for christians",
+      "cat": "held8",
+      "must_any": [
+        "Mark 7",
+        "Acts 10",
+        "Romans 14",
+        "1 Timothy 4",
+        "Leviticus 11"
+      ]
+    },
+    {
+      "q": "are there other names for god besides yahweh",
+      "cat": "held8",
+      "must_any": [
+        "Exodus 3",
+        "Exodus 6",
+        "Genesis 17",
+        "Genesis 22"
+      ]
+    },
+    {
+      "q": "who were the magi in matthew 2",
+      "cat": "held8",
+      "must_any": [
+        "Matthew 2"
+      ]
+    },
+    {
+      "q": "give me a short biography of abraham",
+      "cat": "held8",
+      "must_any": [
+        "Genesis 12",
+        "Genesis 15",
+        "Genesis 17",
+        "Genesis 22",
+        "Romans 4"
+      ]
+    },
+    {
+      "q": "give me a short biography of the apostle paul",
+      "cat": "held8",
+      "must_any": [
+        "Acts 9",
+        "Philippians 3",
+        "Acts 22",
+        "Galatians 1"
+      ]
+    },
+    {
+      "q": "what happened to the ark of the covenant after the babylonian exile",
+      "cat": "held8",
+      "must_any": [
+        "Jeremiah 3:16",
+        "2 Chronicles 35:3",
+        "Revelation 11:19",
+        "Hebrews 9:4"
+      ]
+    },
+    {
+      "q": "does the bible allow a man to have two wives",
+      "cat": "held8",
+      "must_any": [
+        "Genesis 2:24",
+        "Deuteronomy 17",
+        "1 Timothy 3",
+        "1 Kings 11",
+        "Matthew 19"
+      ]
+    },
+    {
+      "q": "what do the horsemen in revelation six stand for",
+      "cat": "held8",
+      "must_any": [
+        "Revelation 6"
+      ]
+    },
+    {
+      "q": "short biography of peter the disciple",
+      "cat": "held8",
+      "must_any": [
+        "Matthew 16",
+        "John 21",
+        "Acts 2",
+        "John 1"
+      ]
+    },
+    {
+      "q": "does god value the life of a baby in the womb",
+      "cat": "held8",
+      "must_any": [
+        "Psalm 139",
+        "Jeremiah 1:5",
+        "Luke 1",
+        "Exodus 21"
       ]
     }
   ]
