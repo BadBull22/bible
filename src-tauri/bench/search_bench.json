@@ -2487,6 +2487,190 @@
         "Luke 1",
         "Exodus 21"
       ]
+    },
+    {
+      "q": "which festivals did god command israel to keep",
+      "cat": "held9",
+      "must_any": [
+        "Leviticus 23"
+      ]
+    },
+    {
+      "q": "what festival remembers esther and haman",
+      "cat": "held9",
+      "must_any": [
+        "Esther 9",
+        "Esther 3"
+      ]
+    },
+    {
+      "q": "was the jewish festival of lights celebrated in the time of jesus",
+      "cat": "held9",
+      "must_any": [
+        "John 10"
+      ]
+    },
+    {
+      "q": "what festival is announced by trumpet blasts on the first day of the seventh month",
+      "cat": "held9",
+      "must_any": [
+        "Leviticus 23",
+        "Numbers 29"
+      ]
+    },
+    {
+      "q": "why does paul call christ the firstfruits of the resurrection",
+      "cat": "held9",
+      "must_any": [
+        "1 Corinthians 15",
+        "Leviticus 23"
+      ]
+    },
+    {
+      "q": "what was the fiftieth year in the law of moses",
+      "cat": "held9",
+      "must_any": [
+        "Leviticus 25",
+        "Luke 4"
+      ]
+    },
+    {
+      "q": "tell me about the israelite king who tried to kill david",
+      "cat": "held9",
+      "must_any": [
+        "1 Samuel 18",
+        "1 Samuel 15",
+        "1 Samuel 9"
+      ]
+    },
+    {
+      "q": "which king of judah prayed and the assyrian army was struck down",
+      "cat": "held9",
+      "must_any": [
+        "2 Kings 19",
+        "2 Kings 18",
+        "Isaiah 37"
+      ]
+    },
+    {
+      "q": "which young king rediscovered the law and led a revival",
+      "cat": "held9",
+      "must_any": [
+        "2 Kings 22",
+        "2 Kings 23",
+        "2 Chronicles 34"
+      ]
+    },
+    {
+      "q": "which wicked king and queen persecuted elijah",
+      "cat": "held9",
+      "must_any": [
+        "1 Kings 21",
+        "1 Kings 16",
+        "1 Kings 18",
+        "2 Kings 9"
+      ]
+    },
+    {
+      "q": "which judge of israel used three hundred men and trumpets",
+      "cat": "held9",
+      "must_any": [
+        "Judges 7",
+        "Judges 6"
+      ]
+    },
+    {
+      "q": "who succeeded moses and led israel across the jordan",
+      "cat": "held9",
+      "must_any": [
+        "Joshua 1",
+        "Joshua 3",
+        "Deuteronomy 34"
+      ]
+    },
+    {
+      "q": "which prophet heard god calling in the night as a boy",
+      "cat": "held9",
+      "must_any": [
+        "1 Samuel 3"
+      ]
+    },
+    {
+      "q": "why did the righteous man in uz lose everything",
+      "cat": "held9",
+      "must_any": [
+        "Job 1",
+        "Job 2",
+        "Job 42"
+      ]
+    },
+    {
+      "q": "who was the encourager who introduced saul to the apostles",
+      "cat": "held9",
+      "must_any": [
+        "Acts 9",
+        "Acts 11",
+        "Acts 4:36"
+      ]
+    },
+    {
+      "q": "who was the young pastor in ephesus that paul wrote letters to",
+      "cat": "held9",
+      "must_any": [
+        "1 Timothy 4",
+        "2 Timothy 1",
+        "Acts 16"
+      ]
+    },
+    {
+      "q": "who sang hymns in the philippian jail with paul",
+      "cat": "held9",
+      "must_any": [
+        "Acts 16",
+        "Acts 15"
+      ]
+    },
+    {
+      "q": "which couple of tentmakers helped paul in corinth and ephesus",
+      "cat": "held9",
+      "must_any": [
+        "Acts 18",
+        "Romans 16"
+      ]
+    },
+    {
+      "q": "who was the eloquent man from alexandria in ephesus",
+      "cat": "held9",
+      "must_any": [
+        "Acts 18",
+        "1 Corinthians 3"
+      ]
+    },
+    {
+      "q": "who was the ruler that asked jesus how can a man be born again",
+      "cat": "held9",
+      "must_any": [
+        "John 3",
+        "John 19"
+      ]
+    },
+    {
+      "q": "which sister sat at the feet of jesus while her sister did the work",
+      "cat": "held9",
+      "must_any": [
+        "Luke 10",
+        "John 11",
+        "John 12"
+      ]
+    },
+    {
+      "q": "which foreign queen came to jerusalem to hear solomon's wisdom",
+      "cat": "held9",
+      "must_any": [
+        "1 Kings 10",
+        "Matthew 12:42",
+        "2 Chronicles 9"
+      ]
     }
   ]
 }

@@ -12362,6 +12362,938 @@
         }
       ],
       "note": null
+    },
+    {
+      "id": "seven_feasts_of_the_lord",
+      "question": "What are the seven feasts of the LORD?",
+      "alt_phrasings": [
+        "what are the biblical feasts",
+        "what are the jewish feasts in the bible",
+        "what are the feasts of israel",
+        "what are the appointed feasts in leviticus 23",
+        "list of the feasts in the bible",
+        "what are the holy days in the bible",
+        "what are the seven feasts",
+        "what are the jewish holidays in the bible",
+        "what are the jewish holidays",
+        "which festivals did god command israel to keep",
+        "what are the biblical holidays"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: God told Moses, “These are My appointed feasts, the feasts of the LORD that you are to proclaim as sacred assemblies” (Leviticus 23:2). The seven are: Passover, which “begins at twilight on the fourteenth day of the first month” (Leviticus 23:5); the Feast of Unleavened Bread, which begins on the fifteenth day and lasts seven days (Leviticus 23:6); Firstfruits, when the priest waves the first sheaf of the harvest “on the day after the Sabbath” (Leviticus 23:10-11); the Feast of Weeks, or Pentecost, fifty days later (Leviticus 23:15-16); the Feast of Trumpets, “On the first day of the seventh month you are to have a day of rest, a sacred assembly announced by trumpet blasts” (Leviticus 23:24); the Day of Atonement on the tenth day of that month (Leviticus 23:27); and the Feast of Tabernacles, which begins on the fifteenth day of the seventh month and continues for seven days (Leviticus 23:34). Paul writes of feasts, new moons and Sabbaths, “These are a shadow of the things to come, but the body that casts it belongs to Christ” (Colossians 2:16-17).\n\nPentecostal understanding: many Pentecostal teachers see the feasts as a picture of God's plan in Christ. The four spring feasts were fulfilled at His first coming: He died as our Passover lamb (1 Corinthians 5:7), was the sinless unleavened bread, rose as the Firstfruits (1 Corinthians 15:20), and poured out the Spirit at Pentecost (Acts 2). The three autumn feasts point to what is still to come: the trumpet that gathers God's people (1 Thessalonians 4:16), Israel's turning to her Messiah (Zechariah 12:10), and the kingdom, when Christ dwells with His people (Zechariah 14:16).\n\nOther views: many Christians hold that all the feasts were fulfilled in Christ, who is the body that casts the shadow, so Christians are not bound to keep them (Colossians 2:16-17; Galatians 4:9-11). Jewish people keep these feasts, with later additions, as holy days, and some Messianic Jewish believers and other Christians keep them as a witness to Christ.",
+      "citations": [
+        {
+          "reference": "Leviticus 23:1-44",
+          "role": "stated"
+        },
+        {
+          "reference": "Colossians 2:16-17",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 5:7",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 15:20",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 2:1-4",
+          "role": "stated"
+        },
+        {
+          "reference": "Zechariah 14:16",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "purim_meaning",
+      "question": "What is Purim?",
+      "alt_phrasings": [
+        "what is the feast of purim",
+        "what is purim in the bible",
+        "why do jews celebrate purim",
+        "what does purim mean",
+        "what is the story of purim",
+        "is purim in the bible",
+        "what happened with queen esther and haman at purim",
+        "what festival remembers esther and haman",
+        "what is the jewish holiday purim about",
+        "why is purim celebrated"
+      ],
+      "confidence": "stated",
+      "answer": "Purim is the Jewish feast that remembers how God saved the Jews of the Persian empire from Haman's plot to destroy them, as told in the book of Esther. Haman cast the Pur (that is, the lot) to choose the day for their destruction (Esther 3:7), but through Queen Esther and her cousin Mordecai the plot was turned against Haman (Esther 7-8). Mordecai “sent letters to all the Jews in all the provinces of King Xerxes... to establish among them an annual celebration on the fourteenth and fifteenth days of the month of Adar as the days on which the Jews gained rest from their enemies and the month in which their sorrow turned to joy and their mourning into a holiday. He wrote that these were to be days of feasting and joy, of sending gifts to one another and to the poor” (Esther 9:20-22). “Therefore these days are called Purim, from the word Pur” (Esther 9:26). Purim was not given in the law of Moses; it was set up by Mordecai and Esther (Esther 9:29-32). The Jewish people still read the book of Esther at Purim. The book never names God, yet His care for His people runs through it.",
+      "citations": [
+        {
+          "reference": "Esther 3:7",
+          "role": "stated"
+        },
+        {
+          "reference": "Esther 9:20-32",
+          "role": "stated"
+        },
+        {
+          "reference": "Esther 7:1-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Esther 4:14",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "hanukkah_bible",
+      "question": "What is Hanukkah and is it in the Bible?",
+      "alt_phrasings": [
+        "what is hanukkah",
+        "is hanukkah in the bible",
+        "what is the feast of dedication",
+        "what is the festival of lights",
+        "did jesus celebrate hanukkah",
+        "why do jews celebrate hanukkah",
+        "what is chanukah",
+        "is hanukkah a biblical holiday",
+        "was the jewish festival of lights celebrated in the time of jesus",
+        "is hanukkah mentioned in the bible",
+        "what is the feast of dedication in john 10"
+      ],
+      "confidence": "traditional",
+      "answer": "Hanukkah, the Feast of Dedication, is not in the law of Moses, but it is mentioned in the Gospels: “At that time the Feast of Dedication took place in Jerusalem. It was winter, and Jesus was walking in the temple courts in Solomon's Colonnade” (John 10:22-23). The feast remembers the cleansing and rededication of the temple in 164 BC by Judas Maccabeus after the Syrian king Antiochus Epiphanes had defiled it. That story is told in the books of the Maccabees (1 Maccabees 4:36-59), which Catholic and Orthodox Bibles include but Protestant Bibles do not. Daniel foretold such a ruler who would “desecrate the temple fortress. They will abolish the daily sacrifice and set up the abomination of desolation” (Daniel 11:31). The feast lasts eight days and is kept in the winter, around December, with the lighting of lamps, and later Jewish tradition adds the story of a small supply of oil that lasted eight days. Jesus was in the temple at the Feast of Dedication, but the Gospels do not say that He kept it in any particular way.",
+      "citations": [
+        {
+          "reference": "John 10:22-23",
+          "role": "stated"
+        },
+        {
+          "reference": "Daniel 11:31",
+          "role": "stated"
+        },
+        {
+          "reference": "Daniel 8:9-14",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "feast_of_trumpets",
+      "question": "What is the Feast of Trumpets?",
+      "alt_phrasings": [
+        "what is the feast of trumpets",
+        "what is rosh hashanah in the bible",
+        "what is the day of trumpets",
+        "what does the feast of trumpets mean",
+        "what is the jewish new year in the bible",
+        "is the feast of trumpets the rapture",
+        "what festival is announced by trumpet blasts",
+        "what is the first day of the seventh month in the bible",
+        "what is the day of blowing trumpets"
+      ],
+      "confidence": "doctrinal_view",
+      "answer": "Scripture: God told Moses, “On the first day of the seventh month you are to have a day of rest, a sacred assembly announced by trumpet blasts. You must not do any regular work, but you are to present an offering made by fire to the LORD” (Leviticus 23:24-25; see also Numbers 29:1-6). The Day of Atonement follows on the tenth day of the same month. The Jewish people call it Rosh Hashanah, the head of the year, a name that comes from later tradition. Trumpets were also blown to gather the people and to announce God's acts (Numbers 10:1-10), and the New Testament speaks of a trumpet at the end: “For the Lord Himself will descend from heaven with a loud command, with the voice of an archangel, and with the trumpet of God” (1 Thessalonians 4:16), and “in an instant, in the twinkling of an eye, at the last trumpet. For the trumpet will sound, the dead will be raised imperishable, and we will be changed” (1 Corinthians 15:52).\n\nPentecostal understanding: many Pentecostal teachers see the Feast of Trumpets as a picture of the rapture, when the trumpet of God will gather His people, and as the first of the autumn feasts that point to the end of the age.\n\nOther views: the Bible does not itself link this feast with the rapture or the return of Christ, and many Christians say so. Jewish tradition sees it as the day of remembrance and of judgment, the beginning of the days of repentance before the Day of Atonement.",
+      "citations": [
+        {
+          "reference": "Leviticus 23:23-25",
+          "role": "stated"
+        },
+        {
+          "reference": "Numbers 29:1-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Numbers 10:1-10",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Thessalonians 4:16-17",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 15:51-52",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "feast_of_firstfruits",
+      "question": "What is the Feast of Firstfruits?",
+      "alt_phrasings": [
+        "what is firstfruits in the bible",
+        "what is the feast of firstfruits",
+        "what does firstfruits mean",
+        "how is jesus the firstfruits",
+        "what are the firstfruits of the harvest",
+        "why is christ called the firstfruits",
+        "why does paul call christ the firstfruits",
+        "how is christ the firstfruits of the resurrection",
+        "what are firstfruits in the old testament"
+      ],
+      "confidence": "stated",
+      "answer": "Firstfruits was one of the feasts of the LORD. God told Israel, “When you enter the land that I am giving you and you reap its harvest, you are to bring to the priest a sheaf of the firstfruits of your harvest. And he shall wave the sheaf before the LORD so that it may be accepted on your behalf; the priest is to wave it on the day after the Sabbath” (Leviticus 23:10-11). The first and best part of the harvest was given to God, in thanks and in faith that the rest would follow. The New Testament uses the word for Christ: “But Christ has indeed been raised from the dead, the firstfruits of those who have fallen asleep” (1 Corinthians 15:20), and “each in his own turn: Christ the firstfruits; then at His coming, those who belong to Him” (1 Corinthians 15:23). Christ rose on the first day of the week, the day after the Sabbath of Passover week (Matthew 28:1), so His resurrection came when the firstfruits were waved. His rising is the pledge that all who belong to Him will also be raised. Believers also have “the firstfruits of the Spirit” (Romans 8:23).",
+      "citations": [
+        {
+          "reference": "Leviticus 23:9-14",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 15:20-23",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 8:23",
+          "role": "stated"
+        },
+        {
+          "reference": "James 1:18",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 28:1",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "year_of_jubilee",
+      "question": "What is the Year of Jubilee?",
+      "alt_phrasings": [
+        "what is the jubilee in the bible",
+        "what is the year of jubilee",
+        "what is a jubilee year",
+        "what does jubilee mean",
+        "what happened every fifty years in israel",
+        "what is the sabbath year and jubilee",
+        "what was the fiftieth year in the law of moses",
+        "what is the year of liberty in leviticus 25",
+        "what does the jubilee year mean"
+      ],
+      "confidence": "stated",
+      "answer": "The Jubilee was the fiftieth year, which came after seven cycles of seven years (Leviticus 25:8-10). It began on the Day of Atonement with the blast of a ram's horn, and God said, “you are to consecrate the fiftieth year and proclaim liberty in the land for all its inhabitants. It shall be your Jubilee, when each of you is to return to his property and to his clan” (Leviticus 25:10). In that year land that had been sold went back to the family it belonged to, Israelites who had sold themselves into service were set free, the land rested, and no one sowed or reaped (Leviticus 25:11-17, 23-28, 39-41). The land belongs to God, and the poor were not to be shut out of it for ever. The Bible does not record any occasion on which Israel kept the Jubilee. Jesus read from Isaiah in the synagogue at Nazareth, “He has sent Me to proclaim liberty to the captives... to proclaim the year of the Lord's favor” (Luke 4:18-19), and said that this was fulfilled that day (Luke 4:21). In Christ, the freedom that the Jubilee pictured has come.",
+      "citations": [
+        {
+          "reference": "Leviticus 25:8-17",
+          "role": "stated"
+        },
+        {
+          "reference": "Leviticus 25:23-28",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 61:1-2",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 4:16-21",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_king_saul",
+      "question": "Who was King Saul?",
+      "alt_phrasings": [
+        "tell me about king saul",
+        "who was king saul in the bible",
+        "who is king saul",
+        "biography of king saul",
+        "story of king saul",
+        "who was saul the first king of israel",
+        "who was the first king of israel"
+      ],
+      "confidence": "stated",
+      "answer": "Saul, the son of Kish of the tribe of Benjamin, was the first king of Israel. He was “a head taller than any of the people” (1 Samuel 9:2). The people had asked Samuel for a king, and Samuel anointed Saul privately (1 Samuel 10:1) and he was then chosen publicly (1 Samuel 10:17-24). He won victories over the Ammonites and Philistines (1 Samuel 11; 14), but he disobeyed God by offering the sacrifice himself (1 Samuel 13:8-14) and by sparing the king and the best of the animals of the Amalekites. Samuel told him, “obedience is better than sacrifice” (1 Samuel 15:22), and that the LORD had rejected him as king. “After the Spirit of the LORD had departed from Saul, a spirit of distress from the LORD began to torment him” (1 Samuel 16:14). David came to play the harp for him and killed Goliath (1 Samuel 16-17), but Saul became jealous and tried to kill David again and again (1 Samuel 18-26). His son Jonathan was David's friend (1 Samuel 18:1-4). Saul consulted a medium before his last battle (1 Samuel 28), and he and his sons died on Mount Gilboa against the Philistines (1 Samuel 31). He reigned forty years (Acts 13:21).",
+      "citations": [
+        {
+          "reference": "1 Samuel 9:1-2",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 10:1",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 15:10-23",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 16:14",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 31:1-6",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 13:21",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_hezekiah",
+      "question": "Who was King Hezekiah?",
+      "alt_phrasings": [
+        "tell me about king hezekiah",
+        "who was king hezekiah in the bible",
+        "who is king hezekiah",
+        "biography of king hezekiah",
+        "story of king hezekiah",
+        "who was hezekiah king of judah",
+        "why did god add fifteen years to hezekiah's life",
+        "tell me about hezekiah and the assyrians",
+        "which king of judah prayed when the assyrians threatened jerusalem",
+        "what did hezekiah do as king"
+      ],
+      "confidence": "stated",
+      "answer": "Hezekiah was a king of Judah, the son of Ahaz, who “trusted in the LORD, the God of Israel. No king of Judah was like him, either before him or after him” (2 Kings 18:5). He removed the high places and idols, and broke into pieces the bronze serpent that Moses had made, because the people were burning incense to it (2 Kings 18:4). He reopened and cleansed the temple and called the people to keep the Passover (2 Chronicles 29-31). When Sennacherib king of Assyria threatened Jerusalem, Hezekiah took the threatening letter to the temple and prayed, and Isaiah told him that God would defend the city (2 Kings 18:13-19:34). “That very night the angel of the LORD went out and struck down 185,000 men in the camp of the Assyrians” (2 Kings 19:35). When he was mortally ill, he prayed, and God sent word through Isaiah, “I will add fifteen years to your life” (2 Kings 20:1-6). He later showed envoys from Babylon all his treasures, and Isaiah warned that these would be carried off to Babylon (2 Kings 20:12-19). He also brought water into the city by a tunnel (2 Kings 20:20; 2 Chronicles 32:30). His son Manasseh followed him.",
+      "citations": [
+        {
+          "reference": "2 Kings 18:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Kings 19:14-37",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Kings 20:1-11",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Chronicles 29:1-11",
+          "role": "stated"
+        },
+        {
+          "reference": "Isaiah 38:1-8",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_king_josiah",
+      "question": "Who was King Josiah?",
+      "alt_phrasings": [
+        "tell me about king josiah",
+        "who was king josiah in the bible",
+        "who is king josiah",
+        "biography of king josiah",
+        "story of king josiah",
+        "who was josiah king of judah",
+        "who found the book of the law in the temple",
+        "which young king rediscovered the law",
+        "what did josiah do as king",
+        "which king found the book of the law"
+      ],
+      "confidence": "stated",
+      "answer": "Josiah became king of Judah at eight years old and reigned thirty-one years in Jerusalem (2 Kings 22:1). In the eighteenth year of his reign, while the temple was being repaired, Hilkiah the high priest said, “I have found the Book of the Law in the house of the LORD!” (2 Kings 22:8). When the king heard it read he tore his clothes and asked the prophetess Huldah, who confirmed that judgment would come, but not in his days because he had humbled himself (2 Kings 22:11-20). He read the book to all the people and made a covenant before the LORD (2 Kings 23:1-3), tore down the idols and altars, including those at Bethel (2 Kings 23:4-20), and had the Passover kept as it had not been since the days of the judges (2 Kings 23:21-23). “Neither before nor after Josiah was there any king like him, who turned to the LORD with all his heart and with all his soul and with all his strength, according to all the Law of Moses” (2 Kings 23:25). A man of God had foretold his name about three hundred years before (1 Kings 13:2). He was killed at Megiddo in battle with Pharaoh Necho (2 Kings 23:29-30).",
+      "citations": [
+        {
+          "reference": "2 Kings 22:1-13",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Kings 23:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Kings 23:21-25",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Kings 23:29-30",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Chronicles 34:1-3",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "ahab_and_jezebel",
+      "question": "Who were Ahab and Jezebel?",
+      "alt_phrasings": [
+        "who was jezebel",
+        "who was king ahab",
+        "tell me about ahab and jezebel",
+        "who was jezebel in the bible",
+        "who was ahab in the bible",
+        "what happened to jezebel",
+        "why was jezebel so evil",
+        "what did jezebel do",
+        "what does jezebel represent",
+        "which wicked king and queen persecuted elijah",
+        "who was queen jezebel"
+      ],
+      "confidence": "stated",
+      "answer": "Ahab, son of Omri, was king of Israel (the northern kingdom). “Ahab son of Omri did evil in the sight of the LORD, more than all who were before him... he even married Jezebel the daughter of Ethbaal king of the Sidonians, and he then proceeded to serve and worship Baal” (1 Kings 16:30-31). Jezebel, a Phoenician princess, brought the worship of Baal to Israel, had the LORD's prophets killed (1 Kings 18:4), and threatened Elijah after the contest on Mount Carmel (1 Kings 18:19-40; 19:1-2). When Naboth refused to sell his vineyard, Jezebel had him accused falsely and put to death so that Ahab could take it (1 Kings 21:1-16), and Elijah told them that dogs would devour them (1 Kings 21:17-24). “Surely there was never one like Ahab, who sold himself to do evil in the sight of the LORD, incited by his wife Jezebel” (1 Kings 21:25). Ahab was killed in battle at Ramoth-gilead (1 Kings 22:29-38). Jezebel was thrown from a window at Jehu's command, as Elijah had said (2 Kings 9:30-37). In Revelation, Christ rebukes a church for tolerating “that woman Jezebel,” who led His servants into immorality and idolatry (Revelation 2:20).",
+      "citations": [
+        {
+          "reference": "1 Kings 16:29-33",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Kings 18:1-4",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Kings 21:1-25",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Kings 22:34-38",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Kings 9:30-37",
+          "role": "stated"
+        },
+        {
+          "reference": "Revelation 2:20",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_gideon",
+      "question": "Who was Gideon?",
+      "alt_phrasings": [
+        "tell me about gideon",
+        "who was gideon in the bible",
+        "who is gideon",
+        "biography of gideon",
+        "story of gideon",
+        "who was gideon in the judges",
+        "what did gideon do",
+        "who defeated the midianites with 300 men",
+        "was gideon a judge",
+        "which judge used three hundred men and trumpets",
+        "who was gideon and his 300 men"
+      ],
+      "confidence": "stated",
+      "answer": "Gideon was a judge of Israel who delivered his people from the Midianites. When the angel of the LORD appeared to him, he was threshing wheat in a winepress to hide it from the Midianites, and the angel said, “The LORD is with you, O mighty man of valor” (Judges 6:11-12). Gideon tore down his father's altar to Baal (Judges 6:25-32), and asked God for signs with a fleece of wool, first wet with dew while the ground was dry, then dry while the ground was wet (Judges 6:36-40). God reduced his army from 32,000 to 300, saying, “With the three hundred men who lapped the water I will save you and deliver the Midianites into your hand” (Judges 7:7). Gideon's men surrounded the camp at night with trumpets, empty jars and torches, and the Midianites turned on one another (Judges 7:16-22). When Israel wanted him to rule, he answered, “I will not rule over you, nor will my son. The LORD shall rule over you” (Judges 8:23), but he made an ephod from the gold, which became a snare to Israel (Judges 8:27). The land had peace forty years (Judges 8:28). Hebrews lists him among those who lived by faith (Hebrews 11:32).",
+      "citations": [
+        {
+          "reference": "Judges 6:11-16",
+          "role": "stated"
+        },
+        {
+          "reference": "Judges 6:36-40",
+          "role": "stated"
+        },
+        {
+          "reference": "Judges 7:1-8",
+          "role": "stated"
+        },
+        {
+          "reference": "Judges 7:19-22",
+          "role": "stated"
+        },
+        {
+          "reference": "Judges 8:22-28",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 11:32",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_joshua",
+      "question": "Who was Joshua?",
+      "alt_phrasings": [
+        "tell me about joshua",
+        "who was joshua in the bible",
+        "who is joshua",
+        "biography of joshua",
+        "story of joshua",
+        "who was joshua in the bible",
+        "who led the israelites into the promised land",
+        "who took over from moses",
+        "who was joshua the son of nun",
+        "who was joshua after moses",
+        "who succeeded moses and led israel across the jordan",
+        "who led israel into canaan after moses"
+      ],
+      "confidence": "stated",
+      "answer": "Joshua, the son of Nun of the tribe of Ephraim, was Moses' assistant and successor. He led Israel in the battle against Amalek (Exodus 17:8-13) and stayed at the tent of meeting (Exodus 33:11). He was one of the twelve spies who explored Canaan, and with Caleb urged Israel to trust God and go in (Numbers 13-14). Moses laid hands on him as his successor (Numbers 27:18-23; Deuteronomy 34:9). After Moses died God said to him, “Have I not commanded you to be strong and courageous? Do not be afraid; do not be discouraged, for the LORD your God is with you wherever you go” (Joshua 1:9). He led Israel across the Jordan on dry ground, destroyed Jericho (Joshua 3-6), and went on to win the land. The sun stood still at Gibeon (Joshua 10:12-14), and the land was divided among the tribes. At the end he said, “As for me and my house, we will serve the LORD!” (Joshua 24:15). He died at 110 (Joshua 24:29). Joshua is the same name as Jesus in Greek.",
+      "citations": [
+        {
+          "reference": "Exodus 17:8-13",
+          "role": "stated"
+        },
+        {
+          "reference": "Numbers 13:30-14:9",
+          "role": "stated"
+        },
+        {
+          "reference": "Deuteronomy 34:9",
+          "role": "stated"
+        },
+        {
+          "reference": "Joshua 1:1-9",
+          "role": "stated"
+        },
+        {
+          "reference": "Joshua 6:1-21",
+          "role": "stated"
+        },
+        {
+          "reference": "Joshua 24:14-15",
+          "role": "stated"
+        },
+        {
+          "reference": "Joshua 24:29",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_samuel",
+      "question": "Who was Samuel the prophet?",
+      "alt_phrasings": [
+        "tell me about samuel",
+        "who was samuel in the bible",
+        "who is samuel",
+        "biography of samuel",
+        "story of samuel",
+        "who was samuel in the bible",
+        "who was samuel the prophet",
+        "who anointed saul and david",
+        "who was hannah's son",
+        "which prophet heard god calling in the night as a boy",
+        "who was the boy samuel"
+      ],
+      "confidence": "stated",
+      "answer": "Samuel was the son of Hannah and Elkanah, born in answer to Hannah's prayer, and she gave him to the LORD to serve at Shiloh with the priest Eli (1 Samuel 1:9-28; 2:11). As a boy he heard God call his name in the night, and answered, “Speak, for Your servant is listening” (1 Samuel 3:10). “Samuel grew, and the LORD was with him, and He let none of Samuel's words fall to the ground. So all Israel from Dan to Beersheba knew that Samuel was confirmed as a prophet of the LORD” (1 Samuel 3:19-20). He was the last of the judges and also a priest and prophet (1 Samuel 7:15-17). When Israel asked for a king, God told him to anoint Saul (1 Samuel 8-10), and later, when Saul disobeyed, to anoint David (1 Samuel 16:1-13). He told Saul, “obedience is better than sacrifice” (1 Samuel 15:22). He died, and all Israel mourned him (1 Samuel 25:1). Hebrews names him among the prophets who lived by faith (Hebrews 11:32).",
+      "citations": [
+        {
+          "reference": "1 Samuel 1:9-28",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 3:1-21",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 7:15-17",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 10:1",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Samuel 16:1-13",
+          "role": "stated"
+        },
+        {
+          "reference": "Hebrews 11:32",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_job",
+      "question": "Who was Job?",
+      "alt_phrasings": [
+        "tell me about job",
+        "who was job in the bible",
+        "who is job",
+        "biography of job",
+        "story of job",
+        "who was job in the bible",
+        "why did job suffer",
+        "what is the story of job",
+        "what happened to job",
+        "was job a real person",
+        "why did the righteous man in uz lose everything",
+        "who was job and why did he suffer",
+        "why did job lose everything"
+      ],
+      "confidence": "stated",
+      "answer": "Job lived in the land of Uz. “This man was blameless and upright, fearing God and shunning evil” (Job 1:1). He was very rich, with seven sons and three daughters (Job 1:2-3). Satan challenged God, saying that Job served Him only because he was blessed, and God allowed Satan to test him (Job 1:6-12; 2:1-6). Job lost his oxen, donkeys, sheep, camels, servants and all his children in one day, and then his health. He said, “Naked I came from my mother's womb, and naked I will return. The LORD gave, and the LORD has taken away. Blessed be the name of the LORD” (Job 1:21). His three friends, Eliphaz, Bildad and Zophar, told him that he must have sinned, but Job insisted that he was innocent, and he still believed: “I know that my Redeemer lives, and in the end He will stand upon the earth” (Job 19:25). God finally spoke out of the whirlwind and showed His power and wisdom, without explaining why Job had suffered (Job 38-41). God rebuked the friends, and “the LORD restored his prosperity and doubled his former possessions” (Job 42:10). James writes, “You have heard of Job's perseverance and have seen the outcome from the Lord” (James 5:11). The book shows that suffering is not always a punishment for sin.",
+      "citations": [
+        {
+          "reference": "Job 1:1-22",
+          "role": "stated"
+        },
+        {
+          "reference": "Job 2:1-10",
+          "role": "stated"
+        },
+        {
+          "reference": "Job 19:23-27",
+          "role": "stated"
+        },
+        {
+          "reference": "Job 38:1-7",
+          "role": "stated"
+        },
+        {
+          "reference": "Job 42:1-17",
+          "role": "stated"
+        },
+        {
+          "reference": "James 5:11",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_barnabas",
+      "question": "Who was Barnabas?",
+      "alt_phrasings": [
+        "tell me about barnabas",
+        "who was barnabas in the bible",
+        "who is barnabas",
+        "biography of barnabas",
+        "story of barnabas",
+        "who was barnabas in the bible",
+        "who was paul's companion barnabas",
+        "what does barnabas mean",
+        "why did paul and barnabas separate",
+        "what did barnabas do in the early church",
+        "who was the encourager who introduced saul to the apostles",
+        "who was barnabas to paul"
+      ],
+      "confidence": "stated",
+      "answer": "“Joseph, a Levite from Cyprus, whom the apostles called Barnabas” (Acts 4:36), a name that means Son of Encouragement. He sold a field he owned and laid the money at the apostles' feet (Acts 4:37). When the believers in Jerusalem feared Saul, “Barnabas brought him to the apostles and described how Saul had seen the Lord” (Acts 9:26-27). The church sent him to Antioch, where he saw the grace of God and encouraged the new believers: “Barnabas was a good man, full of the Holy Spirit and faith, and a great number of people were brought to the Lord” (Acts 11:24). He fetched Saul from Tarsus to help him (Acts 11:25-26). “While they were worshiping the Lord and fasting, the Holy Spirit said, ‘Set apart for Me Barnabas and Saul for the work to which I have called them’” (Acts 13:2-3), and the two went on the first missionary journey (Acts 13-14). Later they argued over taking John Mark, and Barnabas took Mark and sailed to Cyprus, while Paul chose Silas (Acts 15:36-41). Paul later asked for Mark's help (2 Timothy 4:11) and still spoke well of Barnabas (1 Corinthians 9:6).",
+      "citations": [
+        {
+          "reference": "Acts 4:36-37",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 9:26-27",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 11:22-26",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 13:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 15:36-41",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_timothy",
+      "question": "Who was Timothy?",
+      "alt_phrasings": [
+        "tell me about timothy",
+        "who was timothy in the bible",
+        "who is timothy",
+        "biography of timothy",
+        "story of timothy",
+        "who was timothy in the bible",
+        "who was paul's young helper timothy",
+        "who was paul's spiritual son",
+        "who were timothy's mother and grandmother",
+        "who was the young pastor in ephesus that paul wrote letters to",
+        "who was timothy to paul"
+      ],
+      "confidence": "stated",
+      "answer": "Timothy was a young man from Lystra whose mother was a Jewish believer and whose father was a Greek (Acts 16:1-3). Paul remembered “your sincere faith, which first dwelt in your grandmother Lois and your mother Eunice” (2 Timothy 1:5), and said that from infancy he had known the holy Scriptures (2 Timothy 3:15). Paul took him on his second journey and had him circumcised so that he could work among the Jews (Acts 16:3). Paul called him “my true child in the faith” (1 Timothy 1:2), and sent him to Thessalonica, Corinth and Philippi (1 Thessalonians 3:1-2; 1 Corinthians 4:17; Philippians 2:19-22). Paul left him in Ephesus to lead the church (1 Timothy 1:3), and wrote to him, “Let no one despise your youth, but set an example for the believers in speech, in conduct, in love, in faith, in purity” (1 Timothy 4:12), and to fan into flame the gift of God that was in him (2 Timothy 1:6). Timothy is named with Paul at the start of six of his letters, and Paul wrote 1 and 2 Timothy to him. Hebrews 13:23 says that he had been released.",
+      "citations": [
+        {
+          "reference": "Acts 16:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Timothy 1:3-6",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Timothy 3:14-15",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Timothy 1:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Timothy 4:12-14",
+          "role": "stated"
+        },
+        {
+          "reference": "Philippians 2:19-22",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_silas",
+      "question": "Who was Silas?",
+      "alt_phrasings": [
+        "tell me about silas",
+        "who was silas in the bible",
+        "who is silas",
+        "biography of silas",
+        "story of silas",
+        "who was silas in the bible",
+        "who was paul's companion silas",
+        "who was in prison with paul at philippi",
+        "who was silvanus",
+        "who sang hymns in the philippian jail with paul",
+        "who was in prison with paul",
+        "what did silas do with paul"
+      ],
+      "confidence": "stated",
+      "answer": "Silas was a leader in the church in Jerusalem. After the council in Jerusalem the church chose “Judas called Barsabbas and Silas, two leaders among the brothers” to go to Antioch with Paul and Barnabas, carrying the letter (Acts 15:22, 27). He was a prophet who encouraged the believers (Acts 15:32). When Paul and Barnabas parted, Paul chose Silas as his companion on the second journey (Acts 15:40). At Philippi they were beaten and thrown into prison, and “about midnight Paul and Silas were praying and singing hymns to God, and the other prisoners were listening to them” (Acts 16:25). An earthquake opened the doors, and the jailer and his household believed (Acts 16:26-34). Silas went on with Paul to Thessalonica, Berea and Corinth (Acts 17:1-15; 18:5). He was a Roman citizen like Paul (Acts 16:37-38). He is usually identified with Silvanus, the Latin form of his name, who is named with Paul in his letters to Corinth and Thessalonica (2 Corinthians 1:19; 1 Thessalonians 1:1) and who helped Peter to write his first letter (1 Peter 5:12).",
+      "citations": [
+        {
+          "reference": "Acts 15:22-32",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 15:40",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 16:19-34",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 17:1-15",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Corinthians 1:19",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Peter 5:12",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "priscilla_and_aquila",
+      "question": "Who were Priscilla and Aquila?",
+      "alt_phrasings": [
+        "who was priscilla",
+        "who was aquila",
+        "who was priscilla in the bible",
+        "who was prisca",
+        "tell me about priscilla and aquila",
+        "who were paul's tentmaker friends",
+        "who taught apollos",
+        "which couple of tentmakers helped paul in corinth and ephesus"
+      ],
+      "confidence": "stated",
+      "answer": "Priscilla (also called Prisca) and her husband Aquila were Jewish believers and tentmakers. Paul “found a Jew named Aquila, a native of Pontus, who had recently come from Italy with his wife Priscilla because Claudius had ordered all the Jews to leave Rome. Paul went to visit them, and he stayed and worked with them because they were tentmakers by trade, just as he was” (Acts 18:2-3). They went with Paul to Ephesus (Acts 18:18-19), where they heard Apollos speaking boldly in the synagogue: “they took him in and explained to him the way of God more accurately” (Acts 18:26). Paul called them “my fellow workers in Christ Jesus, who have risked their lives for me. Not only I but all the churches of the Gentiles are grateful to them” (Romans 16:3-4). A church met in their house, in Ephesus and later in Rome (1 Corinthians 16:19; Romans 16:5). Paul greeted them near the end of his life (2 Timothy 4:19). Priscilla is named first in several places, which suggests that she was well known in the church.",
+      "citations": [
+        {
+          "reference": "Acts 18:1-3",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 18:18-19",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 18:24-26",
+          "role": "stated"
+        },
+        {
+          "reference": "Romans 16:3-5",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 16:19",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Timothy 4:19",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_apollos",
+      "question": "Who was Apollos?",
+      "alt_phrasings": [
+        "tell me about apollos",
+        "who was apollos in the bible",
+        "who is apollos",
+        "biography of apollos",
+        "story of apollos",
+        "who was apollos in the bible",
+        "who was apollos in acts",
+        "who taught apollos",
+        "did apollos write hebrews",
+        "who was the eloquent man from alexandria in ephesus",
+        "what did apollos do"
+      ],
+      "confidence": "stated",
+      "answer": "Apollos was a Jew from Alexandria in Egypt. “He was an eloquent man, well versed in the Scriptures. He had been instructed in the way of the Lord and was fervent in spirit. He spoke and taught accurately about Jesus, though he knew only the baptism of John” (Acts 18:24-25). Priscilla and Aquila heard him in Ephesus and explained the way of God to him more accurately (Acts 18:26). He then went to Achaia with a letter of recommendation from the believers, and was a great help to them, publicly proving from the Scriptures that Jesus is the Christ (Acts 18:27-28). In Corinth some said, “I follow Apollos” (1 Corinthians 1:12), but Paul wrote, “I planted the seed and Apollos watered it, but God made it grow” (1 Corinthians 3:6). Paul urged him to return to Corinth, but he was not willing at that time (1 Corinthians 16:12), and Paul asked Titus to help him on his way (Titus 3:13). Martin Luther suggested that Apollos wrote the letter to the Hebrews; this is only a guess, since the Bible does not say who wrote it.",
+      "citations": [
+        {
+          "reference": "Acts 18:24-28",
+          "role": "stated"
+        },
+        {
+          "reference": "Acts 19:1",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 1:12",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 3:4-9",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Corinthians 16:12",
+          "role": "stated"
+        },
+        {
+          "reference": "Titus 3:13",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "who_was_nicodemus",
+      "question": "Who was Nicodemus?",
+      "alt_phrasings": [
+        "tell me about nicodemus",
+        "who was nicodemus in the bible",
+        "who is nicodemus",
+        "biography of nicodemus",
+        "story of nicodemus",
+        "who was nicodemus in the bible",
+        "who came to jesus by night",
+        "who was the pharisee who came to jesus at night",
+        "what happened to nicodemus",
+        "who was the ruler that asked jesus how can a man be born again",
+        "who was the nicodemus that visited jesus at night",
+        "who was the pharisee that came to jesus by night"
+      ],
+      "confidence": "stated",
+      "answer": "Nicodemus was “a man of the Pharisees... a leader of the Jews” who “came to Jesus at night” and said, “Rabbi, we know that You are a teacher who has come from God. For no one could perform the signs You are doing if God were not with him” (John 3:1-2). Jesus told him that he must be born again (John 3:3-21). Later Nicodemus spoke up in the council when his fellow Pharisees wanted to condemn Jesus without a hearing (John 7:50-52). After the crucifixion, “Nicodemus, who had previously come to Jesus at night, also brought a mixture of myrrh and aloes, about seventy-five pounds,” and helped Joseph of Arimathea to wrap and bury the body (John 19:39-40). The Bible does not tell what became of him later; church tradition says that he became a believer.",
+      "citations": [
+        {
+          "reference": "John 3:1-21",
+          "role": "stated"
+        },
+        {
+          "reference": "John 7:50-52",
+          "role": "stated"
+        },
+        {
+          "reference": "John 19:38-42",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "martha_and_mary_of_bethany",
+      "question": "Who were Martha and Mary of Bethany?",
+      "alt_phrasings": [
+        "who was martha",
+        "who was martha in the bible",
+        "who was mary of bethany",
+        "who was the sister of lazarus",
+        "tell me about martha and mary",
+        "what happened between martha and mary",
+        "why was martha upset with mary",
+        "which sister sat at the feet of jesus while her sister did the work",
+        "why did jesus say mary chose the better part",
+        "what did jesus say to martha",
+        "who was mary the sister of martha"
+      ],
+      "confidence": "stated",
+      "answer": "Martha and Mary lived in Bethany, near Jerusalem, with their brother Lazarus, and Jesus loved all three (John 11:1-5). When Jesus visited their home, Martha was busy with serving, but Mary sat at His feet and listened. “‘Martha, Martha,’ the Lord replied, ‘you are worried and upset about many things. But only one thing is necessary. Mary has chosen the good portion, and it will not be taken away from her’” (Luke 10:38-42). When Lazarus died, Martha went out to meet Jesus and said, “I know that he will rise again in the resurrection at the last day.” Jesus said to her, “I am the resurrection and the life. Whoever believes in Me will live, even though he dies,” and Martha answered, “I believe that You are the Christ, the Son of God, who was to come into the world” (John 11:20-27). Jesus then raised Lazarus (John 11:38-44). Six days before the Passover, Martha served at a dinner in Jesus' honor, and Mary anointed His feet with costly perfume (John 12:1-3). Mary of Bethany is not the same woman as Mary Magdalene; the Bible does not say that they were one person.",
+      "citations": [
+        {
+          "reference": "Luke 10:38-42",
+          "role": "stated"
+        },
+        {
+          "reference": "John 11:1-5",
+          "role": "stated"
+        },
+        {
+          "reference": "John 11:17-27",
+          "role": "stated"
+        },
+        {
+          "reference": "John 11:38-44",
+          "role": "stated"
+        },
+        {
+          "reference": "John 12:1-3",
+          "role": "stated"
+        }
+      ],
+      "note": null
+    },
+    {
+      "id": "queen_of_sheba",
+      "question": "Who was the Queen of Sheba?",
+      "alt_phrasings": [
+        "who was the queen of sheba",
+        "tell me about the queen of sheba",
+        "why did the queen of sheba visit solomon",
+        "where was sheba",
+        "who was the queen who visited king solomon",
+        "what did the queen of sheba say to solomon",
+        "was the queen of sheba from ethiopia",
+        "which foreign queen came to jerusalem to hear solomon's wisdom",
+        "when did the queen of sheba visit solomon"
+      ],
+      "confidence": "stated",
+      "answer": "The Bible does not give her name. “When the queen of Sheba heard about the fame of Solomon concerning the name of the LORD, she came to test him with difficult questions. She arrived in Jerusalem with a very large caravan, with camels bearing spices, gold in great abundance, and precious stones” (1 Kings 10:1-2). Solomon answered all her questions (1 Kings 10:3). She saw his wisdom, his house, his table, his servants and his offering at the temple, and said, “I did not believe these things until I came and saw with my own eyes. Indeed, not even half was told to me” (1 Kings 10:4-7). She blessed the LORD, gave Solomon about 120 talents of gold with spices and jewels, and returned home with all that she asked (1 Kings 10:9-13). Jesus said, “The Queen of the South will rise at the judgment with this generation and condemn it; for she came from the ends of the earth to hear the wisdom of Solomon, and now One greater than Solomon is here” (Matthew 12:42). Sheba was probably in southwest Arabia, in what is now Yemen. An Ethiopian tradition says that she was an Ethiopian queen who had a son by Solomon, but the Bible says nothing of this.",
+      "citations": [
+        {
+          "reference": "1 Kings 10:1-13",
+          "role": "stated"
+        },
+        {
+          "reference": "2 Chronicles 9:1-12",
+          "role": "stated"
+        },
+        {
+          "reference": "Matthew 12:42",
+          "role": "stated"
+        },
+        {
+          "reference": "Luke 11:31",
+          "role": "stated"
+        }
+      ],
+      "note": null
     }
   ]
 }
