@@ -50,6 +50,9 @@ const STOP: &[&str] = &[
     "it", "we", "they", "me", "my", "your", "his", "her", "our", "their", "this", "that", "these", "those", "what", "who", "whom", "whose", "which", "when", "where", "why", "how", "can", "could", "should",
     "would", "will", "about", "say", "says", "said", "tell", "me", "please", "there", "any", "some", "bible", "biblical", "scripture", "according", "mean", "means", "meaning", "have", "has", "had",
     "many", "much", "long", "old", "much", "get", "gets", "got", "become", "becomes", "if", "so", "as", "not", "no", "yes", "than", "then", "into", "up", "out",
+    // words people add to a question that do not change what it asks about
+    "give", "short", "brief", "briefly", "quick", "quickly", "simple", "simply", "explain", "describe", "summary", "summarize", "summarise", "sentence", "sentences", "just", "really", "actually",
+    "exactly", "basically", "anything", "everything", "someone", "anyone", "might", "let", "know", "want", "like",
 ];
 
 /// Words the Bible and its readers use for the same thing.
