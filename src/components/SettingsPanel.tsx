@@ -8,14 +8,13 @@ import { ThemeSettings } from "../themes/ThemeSettings";
 import { NATURAL_VOICES, ReadAloudPrefs } from "../readAloud";
 import { invoke } from "@tauri-apps/api/core";
 import { copyText } from "../clipboard";
+import { STORE_PAGE } from "../reviewAsk";
 import { VoiceDownload } from "./VoiceDownload";
 import { UpdateSettings } from "./Updates";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
 import { autoBackupOn, backupFolder, setAutoBackupOn, setBackupFolder } from "../autoBackup";
 
-/** The app's page in the Microsoft Store, where it can be rated and reviewed. */
-const STORE_PAGE = "https://apps.microsoft.com/detail/9NWNL186FS6W";
 const SHARE_TEXT = "Bible Concordance: a free Bible study app for Windows and Android that works offline, with no account and no adverts. https://bible4me.org";
 
 /** Plays a short sample in the chosen voice ("Preparing…" the first time, while the
@@ -591,8 +590,8 @@ export function SettingsPanel({
             </button>
           </div>
           <div className="note-editor-actions">
-            <button className="outline-btn" onClick={() => void openUrl(STORE_PAGE).catch(() => undefined)} title="Opens the app's page in the Microsoft Store, where you can leave a rating">
-              Rate on the Microsoft Store
+            <button className="outline-btn" onClick={() => void openUrl(STORE_PAGE).catch(() => undefined)} title="Opens the app's page in the Microsoft Store, where you can leave a rating and write a review">
+              Write a review on the Microsoft Store
             </button>
             <button
               className="outline-btn"
