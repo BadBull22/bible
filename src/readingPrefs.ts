@@ -63,7 +63,8 @@ export const DEFAULT_PREFS: ReadingPrefs = {
   lineHeight: 1.75,
   width: "normal",
   redLetter: true,
-  theme: "system",
+  // the app starts in dark mode; "Match Windows" and "Light" are the reader's to choose (Settings > Appearance)
+  theme: "dark",
   textColor: "default",
   contrast: "standard",
   uiFont: "default",
@@ -80,7 +81,7 @@ export function loadPrefs(): ReadingPrefs {
         lineHeight: clamp(Number(p.lineHeight) || DEFAULT_PREFS.lineHeight, 1.5, 2.2),
         width: p.width === "wide" ? "wide" : "normal",
         redLetter: p.redLetter !== false,
-        theme: p.theme === "light" || p.theme === "dark" ? p.theme : "system",
+        theme: p.theme === "light" || p.theme === "dark" || p.theme === "system" ? p.theme : DEFAULT_PREFS.theme,
         textColor: TEXT_COLORS.includes(p.textColor as TextColor) ? (p.textColor as TextColor) : "default",
         contrast: p.contrast === "high" ? "high" : "standard",
         uiFont: fontKey(UI_FONTS, p.uiFont),
