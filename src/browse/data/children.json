@@ -27,7 +27,7 @@
       "try_this": "Make a rain sound with your fingers on the table, getting louder. Then say “Be still!” together and stop. Notice how quiet it gets.",
       "words": ["BOAT", "LAKE", "STORM", "WIND", "WAVES", "JESUS"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "david-and-the-giant",
@@ -49,7 +49,7 @@
       "try_this": "Find five smooth stones or draw five on paper. Say the memory verse each time you pick one up.",
       "words": ["DAVID", "GOLIATH", "SHEEP", "SLING", "STONE", "TRUST", "GIANT", "LION"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "noah-and-the-big-boat",
@@ -80,7 +80,7 @@
       "try_this": "Draw a rainbow with as many colours as you can. Line up some toy animals two by two, and say together, “God keeps his promises.”",
       "words": ["NOAH", "BOAT", "RAIN", "DOVE", "LEAF", "WATER"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 3 }
+      "review": { "status": "approved", "rev": 3, "date": "2026-11-08" }
     },
     {
       "id": "baby-moses-in-the-basket",
@@ -108,7 +108,7 @@
       "try_this": "Make a little basket from paper or a small box. Put a toy baby inside, hide it, and let your child find it and say, “Safe!”",
       "words": ["MOSES", "BABY", "BASKET", "RIVER", "REEDS", "SISTER"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "the-birth-of-jesus",
@@ -139,7 +139,7 @@
       "try_this": "Use a small box as a manger and a doll or toy as the baby. Let the shepherds hurry over to find him, then tell the good news.",
       "words": ["JESUS", "MARY", "JOSEPH", "MANGER", "ANGEL", "SHEPHERD", "SAVIOR", "BABY"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 3 }
+      "review": { "status": "approved", "rev": 3, "date": "2026-11-08" }
     },
     {
       "id": "the-boy-with-the-lunch",
@@ -167,7 +167,7 @@
       "try_this": "Share a snack. Cut a little fruit or bread into small pieces, thank God for it together, then hand the pieces round.",
       "words": ["JESUS", "BOY", "LOAVES", "FISH", "BASKETS", "CROWD", "BARLEY", "ANDREW"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "zacchaeus-in-the-tree",
@@ -198,7 +198,7 @@
       "try_this": "Draw what Zacchaeus saw from the branch. Then write one thing you could give away or put right this week, and tell someone.",
       "words": ["ZACCHAEUS", "JESUS", "JERICHO", "SYCAMORE", "CROWD", "POOR", "HOUSE", "LOST", "COLLECTOR"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "god-makes-the-world",
@@ -227,7 +227,7 @@
       "words": ["LIGHT", "SKY", "STARS", "FISH", "BIRDS", "PEOPLE"],
       "doctrine": "needs_review",
       "doctrine_note": "Christians read the six days of Genesis 1 in different ways, so this page tells only what the text says and takes no side.",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "jonah-and-the-big-fish",
@@ -258,7 +258,7 @@
       "try_this": "Make a big fish from paper, with a wide mouth. Put a small paper Jonah inside, then take him out and say, “God gives second chances!”",
       "words": ["JONAH", "FISH", "SHIP", "STORM", "WIND", "PRAYED"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "daniel-and-the-lions",
@@ -283,7 +283,7 @@
       "try_this": "Sit by a window and say a short prayer, just like Daniel. Say thank you to God for three things, and count them on your fingers.",
       "words": ["DANIEL", "LIONS", "PRAYED", "KING", "ANGEL", "WINDOW"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "samuel-hears-god",
@@ -314,7 +314,7 @@
       "try_this": "Sit quietly for one whole minute. Listen to every sound around you. Then say together, “Speak, LORD, I am listening,” and be still for a moment.",
       "words": ["SAMUEL", "ELI", "VOICE", "NIGHT", "LISTEN", "PROPHET"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "moses-and-the-burning-bush",
@@ -342,7 +342,7 @@
       "try_this": "Take off your shoes for a moment and stand quietly. Think about how great God is. Then draw a bush with flames of red, orange and yellow.",
       "words": ["MOSES", "BUSH", "FIRE", "SANDALS", "HOLY", "EGYPT", "PHARAOH", "SHEEP"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "crossing-the-red-sea",
@@ -373,7 +373,7 @@
       "try_this": "Lay two long blue cloths on the floor with a path between them. Walk down the path together, saying, “God makes a way!”",
       "words": ["MOSES", "SEA", "WIND", "CLOUD", "CHARIOTS", "ISRAEL", "WATER", "PHARAOH"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "the-walls-of-jericho",
@@ -404,7 +404,7 @@
       "try_this": "March around a table together, once a day for six days, in silence. On day seven, march seven times, then shout and knock down a tower of blocks.",
       "words": ["JERICHO", "JOSHUA", "MARCH", "HORNS", "WALL", "SHOUT", "RAHAB", "PRIESTS"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "the-son-who-came-home",
@@ -435,7 +435,7 @@
       "try_this": "Act out the story. One person comes home from far away, and the others run to hug them. Then share a special snack and say together, “Lost and found!”",
       "words": ["FATHER", "PIGS", "ROBE", "RING", "FEAST", "LOST", "FOUND", "SORRY"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "jesus-walks-on-the-water",
@@ -466,7 +466,7 @@
       "try_this": "Stand on one foot and look at one spot on the wall. Then look all around and see what happens. Say, “Keep your eyes on Jesus!”",
       "words": ["JESUS", "PETER", "BOAT", "WAVES", "WIND", "WATER", "SINK", "FRIENDS"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "jesus-is-alive",
@@ -497,7 +497,7 @@
       "try_this": "Make a card that says “Jesus is alive!” and decorate it. Give it to someone this week, and tell them what Mary told his followers.",
       "words": ["JESUS", "MARY", "TOMB", "STONE", "ANGELS", "GARDENER", "TEACHER", "ALIVE", "HEAVEN", "PETER"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "the-good-samaritan",
@@ -528,7 +528,7 @@
       "try_this": "Do one kind thing for someone this week without being asked, such as helping at home or sharing something. Write it down afterwards and thank God.",
       "words": ["SAMARITAN", "JERICHO", "PRIEST", "LEVITE", "ROBBERS", "NEIGHBOR", "MERCY", "INN", "JERUSALEM"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "ruth-stays-with-naomi",
@@ -559,7 +559,7 @@
       "try_this": "Draw a little family tree: Ruth, Obed, Jesse and King David. Then add one more leaf with your own name and the words “Loved by God.”",
       "words": ["NAOMI", "RUTH", "MOAB", "ORPAH", "BETHLEHEM", "FAMINE", "BARLEY", "DAVID", "BOAZ"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     },
     {
       "id": "joseph-the-dreamer",
@@ -590,7 +590,7 @@
       "try_this": "Draw four boxes showing where Joseph lived: the pit, a house in Egypt, the prison and Pharaoh's palace. Write across the top, “God had a plan.”",
       "words": ["JOSEPH", "JACOB", "BROTHERS", "EGYPT", "PHARAOH", "DREAMS", "PRISON", "GRAIN", "FORGAVE", "FAMINE"],
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 1 }
+      "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
     }
   ]
 }

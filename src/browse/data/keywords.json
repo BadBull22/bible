@@ -10,7 +10,20 @@
     "forgiveness": ["forgive", "forgiven", "guilt", "guilty", "sorry", "mercy", "repent", "pardon", "grudge", "forgive someone", "forgive myself"],
     "healing": ["sick", "sickness", "illness", "ill", "disease", "cancer", "pain", "health", "heal", "healed", "hospital", "recovery", "pray for the sick"],
     "prayer": ["pray", "praying", "how to pray", "talk to god", "intercession", "prayers"],
-    "guidance": ["direction", "decision", "decisions", "wisdom", "which way", "path", "guide", "god's will", "choices", "what should i do"]
+    "guidance": ["direction", "decision", "decisions", "wisdom", "which way", "path", "guide", "god's will", "choices", "what should i do"],
+    "strength-and-courage": ["strong", "stronger", "courage", "brave", "bravery", "be strong", "weak", "weakness", "boldness", "power"],
+    "comfort-and-loneliness": ["lonely", "alone", "loneliness", "comfort", "comforted", "abandoned", "isolated", "left out", "nobody cares", "brokenhearted"],
+    "trust-in-god": ["trust", "trusting god", "rely on god", "depend on god", "lean on god", "faithful god", "secure"],
+    "faith-and-doubt": ["doubt", "doubting", "unbelief", "faith", "believe", "belief", "lost my faith", "struggling to believe"],
+    "joy": ["joyful", "rejoice", "happy", "happiness", "gladness", "glad", "delight", "celebrate"],
+    "thankfulness": ["thanks", "thank you god", "grateful", "gratitude", "thanksgiving", "blessed", "counting blessings"],
+    "patience-and-waiting": ["patient", "patience", "wait", "waiting", "be still", "endure", "endurance", "delay", "slow"],
+    "discouragement-and-weariness": ["discouraged", "discouragement", "tired", "weary", "exhausted", "burnout", "burned out", "depressed", "give up", "giving up", "lose heart", "downcast"],
+    "temptation-and-self-control": ["temptation", "tempted", "resist", "self control", "self-control", "discipline", "addiction", "lust", "urges", "overcome sin", "struggling with sin"],
+    "love": ["love", "god's love", "loved", "love one another", "charity", "love your neighbor", "affection", "unconditional love"],
+    "wisdom": ["wise", "wisdom", "understanding", "discernment", "good decisions", "advice", "proverbs", "knowledge", "common sense"],
+    "worship-and-praise": ["worship", "praise", "sing", "singing", "hymns", "praise god", "adoration", "dance", "lift hands"],
+    "heaven-and-eternal-life": ["heaven", "eternal life", "afterlife", "paradise", "life after death", "everlasting life", "new heaven", "resurrection", "where do we go when we die"]
   },
   "stories": {
     "the-creation": ["genesis 1", "six days", "in the beginning", "let there be light", "creation story", "how the world began"],
