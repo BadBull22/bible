@@ -2017,6 +2017,76 @@
         "1 Thessalonians 5:23",
         "Genesis 2:7"
       ]
+    },
+    {
+      "q": "what is isaiah all about",
+      "cat": "books",
+      "must_any": [
+        "Isaiah 9:6"
+      ]
+    },
+    {
+      "q": "can you give me a summary of the book of romans",
+      "cat": "books",
+      "must_any": [
+        "Romans 1:16"
+      ]
+    },
+    {
+      "q": "what is the book of revelation about",
+      "cat": "books",
+      "must_any": [
+        "Revelation 22:20"
+      ]
+    },
+    {
+      "q": "tell me about the book of ruth",
+      "cat": "books",
+      "must_any": [
+        "Ruth 1:16"
+      ]
+    },
+    {
+      "q": "what is the book of acts about",
+      "cat": "books",
+      "must_any": [
+        "Acts 1:8"
+      ]
+    },
+    {
+      "q": "what is the book of psalms",
+      "cat": "books",
+      "must_any": [
+        "Psalm 23:1"
+      ]
+    },
+    {
+      "q": "what is first corinthians about",
+      "cat": "books",
+      "must_any": [
+        "1 Corinthians 13:13"
+      ]
+    },
+    {
+      "q": "what is the book of daniel about",
+      "cat": "books",
+      "must_any": [
+        "Daniel 3:17-18"
+      ]
+    },
+    {
+      "q": "what is the book of genesis about",
+      "cat": "books",
+      "must_any": [
+        "Genesis 1:1"
+      ]
+    },
+    {
+      "q": "what is the book of jude about",
+      "cat": "books",
+      "must_any": [
+        "Jude 1:24-25"
+      ]
     }
   ]
 }
