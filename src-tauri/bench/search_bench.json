@@ -1550,6 +1550,211 @@
         "Matthew 19",
         "Mark 10"
       ]
+    },
+    {
+      "q": "agape love meaning in the bible",
+      "cat": "held4",
+      "must_any": [
+        "1 John 4:8",
+        "1 Corinthians 13"
+      ]
+    },
+    {
+      "q": "what age was jesus when he was crucified",
+      "cat": "held4",
+      "must_any": [
+        "Luke 3:23"
+      ]
+    },
+    {
+      "q": "how long did jesus stay in the grave",
+      "cat": "held4",
+      "must_any": [
+        "Matthew 12:40"
+      ]
+    },
+    {
+      "q": "what does the bible teach about a husband and wife",
+      "cat": "held4",
+      "must_any": [
+        "Ephesians 5",
+        "Genesis 2:24"
+      ]
+    },
+    {
+      "q": "why do we take the lord's supper in church",
+      "cat": "held4",
+      "must_any": [
+        "1 Corinthians 11",
+        "Luke 22:19"
+      ]
+    },
+    {
+      "q": "what makes a good pastor according to scripture",
+      "cat": "held4",
+      "must_any": [
+        "1 Timothy 3",
+        "1 Peter 5",
+        "Ephesians 4:11"
+      ]
+    },
+    {
+      "q": "why did god make us",
+      "cat": "held4",
+      "must_any": [
+        "Isaiah 43:7",
+        "Matthew 22:37",
+        "Ecclesiastes 12:13"
+      ]
+    },
+    {
+      "q": "how should i treat someone who is against me",
+      "cat": "held4",
+      "must_any": [
+        "Matthew 5:44",
+        "Matthew 5:43",
+        "Romans 12"
+      ]
+    },
+    {
+      "q": "how does god want us to treat poor people",
+      "cat": "held4",
+      "must_any": [
+        "Proverbs 14:31",
+        "Matthew 25",
+        "Proverbs 19:17"
+      ]
+    },
+    {
+      "q": "what does it mean to have faith in god",
+      "cat": "held4",
+      "must_any": [
+        "Hebrews 11:1",
+        "Hebrews 11:6"
+      ]
+    },
+    {
+      "q": "what is gods unmerited favour",
+      "cat": "held4",
+      "must_any": [
+        "Ephesians 2:8",
+        "Romans 3:24"
+      ]
+    },
+    {
+      "q": "what will it be like in heaven",
+      "cat": "held4",
+      "must_any": [
+        "Revelation 21",
+        "John 14:2",
+        "1 Corinthians 2:9"
+      ]
+    },
+    {
+      "q": "what does the bible mean by the day of the lord",
+      "cat": "held4",
+      "must_any": [
+        "Joel 2",
+        "1 Thessalonians 5",
+        "2 Peter 3:10"
+      ]
+    },
+    {
+      "q": "what town did jesus live in as a boy",
+      "cat": "held4",
+      "must_any": [
+        "Nazareth"
+      ]
+    },
+    {
+      "q": "list the names of israels 12 tribes",
+      "cat": "held4",
+      "must_any": [
+        "Reuben",
+        "Judah"
+      ]
+    },
+    {
+      "q": "why did lot's wife become salt",
+      "cat": "held4",
+      "must_any": [
+        "Genesis 19:26"
+      ]
+    },
+    {
+      "q": "why do we end prayers with amen",
+      "cat": "held4",
+      "must_any": [
+        "Amen",
+        "2 Corinthians 1:20"
+      ]
+    },
+    {
+      "q": "what do the angels in the bible look like",
+      "cat": "held4",
+      "must_any": [
+        "Isaiah 6:2",
+        "Hebrews 13:2",
+        "Ezekiel 1"
+      ]
+    },
+    {
+      "q": "tell me about the archangel michael",
+      "cat": "held4",
+      "must_any": [
+        "Daniel 10",
+        "Jude 9",
+        "Revelation 12"
+      ]
+    },
+    {
+      "q": "how many times should i fast",
+      "cat": "held4",
+      "must_any": [
+        "Matthew 6:16",
+        "Isaiah 58"
+      ]
+    },
+    {
+      "q": "does god hate pride",
+      "cat": "held4",
+      "must_any": [
+        "Proverbs 16:18",
+        "James 4:6",
+        "Proverbs 8:13"
+      ]
+    },
+    {
+      "q": "location of the garden of adam and eve",
+      "cat": "held4",
+      "must_any": [
+        "Genesis 2:8",
+        "Genesis 2:10"
+      ]
+    },
+    {
+      "q": "where did the ark land after the flood",
+      "cat": "held4",
+      "must_any": [
+        "Genesis 8:4"
+      ]
+    },
+    {
+      "q": "how can i become a christian",
+      "cat": "held4",
+      "must_any": [
+        "John 3:3",
+        "Acts 16:31",
+        "Romans 10:9"
+      ]
+    },
+    {
+      "q": "what does agape mean",
+      "cat": "held4",
+      "must_any": [
+        "1 John 4:8",
+        "1 Corinthians 13"
+      ]
     }
   ]
 }
