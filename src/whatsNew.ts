@@ -8,8 +8,11 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
-    version: "2.10.0",
+    version: "3.0.0",
     items: [
+      "Browse: 31 Bible stories, 22 “Verses for…” pages (for anxiety, fear, hope, joy, love, wisdom, heaven and more) and 20 children's pages to read together, print and colour. Find them from the opening screen and the Explore menu.",
+      "Ask: more than 400 questions now have a written answer that quotes the Bible first and says where Christians hold different views, including a short overview of each of the 66 books. Under an answer the app offers the matching stories and “Verses for…” pages.",
+      "Settings > About: “Write a review on the Microsoft Store”. After some days of use the app may also ask, once in a while, whether you would leave a review; you can answer “Don't ask again” and it never will.",
       "Bibles you add to the Library that carry Strong's numbers (the KJV from CrossWire, MyBible files whose names end in a plus, and others) now show them: click a word for its Hebrew or Greek. The Translation list says “· Strong's” beside them.",
       "Sunday service > Print the bulletin: an order of service with the notices, the songs' titles and the message, to print, save as a PDF or Word document, or copy.",
       "Presenter > Phone remote: use your phone on the same Wi-Fi as the clicker, with Next, Back, Black, the next slide and your notes. It is off until you switch it on.",

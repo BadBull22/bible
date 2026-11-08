@@ -10661,3 +10661,26 @@ body.show-body {
 .browse-topic-card li {
   margin: 0.2rem 0;
 }
+
+/* ---------- the request to review the app on the Microsoft Store ---------- */
+.review-window {
+  width: min(480px, 100%);
+}
+
+.review-text {
+  margin: 0.9rem 0 1.1rem;
+  line-height: 1.5;
+}
+
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.8rem;
+}
+
+.review-never {
+  margin-left: auto;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}

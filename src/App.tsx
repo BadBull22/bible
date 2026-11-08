@@ -25,6 +25,8 @@ import { SplashScreen } from "./components/SplashScreen";
 import { ClosingSplash } from "./components/ClosingSplash";
 import { WELCOME_COUNT_KEY, WELCOME_MAX_AUTO, WELCOME_OFF_KEY, WELCOME_SEEN_KEY, WelcomeWindow } from "./components/WelcomeWindow";
 import { WhatsNewWindow } from "./components/WhatsNewWindow";
+import { ReviewPrompt } from "./components/ReviewPrompt";
+import { afterAnswer as afterReviewAnswer, afterShown as afterReviewShown, countOpen, due as reviewDue, load as loadReviewAsk, ReviewAnswer, save as saveReviewAsk } from "./reviewAsk";
 import { WHATS_NEW, WhatsNewEntry, whatsNewFor } from "./whatsNew";
 import { runAutoBackup } from "./autoBackup";
 import { todayIso } from "./readingPlans";
@@ -746,6 +748,25 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [showSplash]);
 
+  // A polite request to review the app on the Microsoft Store: after some days of use, never on top of another window, at most three
+  // times a month apart, and never again once the reader has gone to the Store or said "don't ask again" (the rules are in reviewAsk.ts).
+  const [reviewOpen, setReviewOpen] = useState(false);
+  useEffect(() => {
+    if (showSplash || whatsNewEntry || welcomeOpen || reviewOpen) return;
+    const now = Date.now();
+    if (!reviewDue(countOpen(now), now)) return;
+    const timer = window.setTimeout(() => {
+      const t = Date.now();
+      saveReviewAsk(afterReviewShown(loadReviewAsk(t), t));
+      setReviewOpen(true);
+    }, 40_000);
+    return () => window.clearTimeout(timer);
+  }, [showSplash, whatsNewEntry, welcomeOpen, reviewOpen]);
+  function answerReview(answer: ReviewAnswer) {
+    saveReviewAsk(afterReviewAnswer(loadReviewAsk(Date.now()), answer));
+    setReviewOpen(false);
+  }
+
   // The natural read-aloud voice, started in the background once for each version of the app: its first start
   // can be slow (the new files are checked by Windows and antivirus programs), which is better done now.
   useEffect(() => {
@@ -944,6 +965,7 @@ function App() {
         />
       )}
       {whatsNewEntry && !welcomeOpen && <WhatsNewWindow entry={whatsNewEntry} onClose={() => setWhatsNewEntry(null)} />}
+      {reviewOpen && !whatsNewEntry && !welcomeOpen && <ReviewPrompt onAnswer={answerReview} />}
       {closing && (
         <ClosingSplash
           verse={farewellVerse}
