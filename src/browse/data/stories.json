@@ -95,7 +95,7 @@
       "topics": ["fear"],
       "child_page": "daniel-and-the-lions",
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "the-creation",
@@ -116,7 +116,7 @@
       "child_page": "god-makes-the-world",
       "doctrine": "needs_review",
       "doctrine_note": "Christians differ on how to read the six days of Genesis 1: some take them as ordinary days, some as long ages, and some as a way of presenting God's work, and they also differ on how the chapter relates to the age of the earth and to science. This page says only what the text says and takes no side.",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "noah-and-the-flood",
@@ -163,7 +163,7 @@
       "topics": [],
       "child_page": "baby-moses-in-the-basket",
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 3 }
+      "review": { "status": "approved", "rev": 3, "date": "2026-11-08" }
     },
     {
       "id": "crossing-the-red-sea",
@@ -189,7 +189,7 @@
       "topics": [],
       "child_page": "crossing-the-red-sea",
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "the-fall-of-jericho",
@@ -216,7 +216,7 @@
       "child_page": "the-walls-of-jericho",
       "doctrine": "needs_review",
       "doctrine_note": "Christians differ on how to understand the command to destroy Jericho and its people, and on how this passage relates to the rest of what the Bible says about God's justice and mercy. This page says only what the text says and takes no side.",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "jonah-and-the-great-fish",
@@ -266,7 +266,7 @@
       "topics": [],
       "child_page": "the-birth-of-jesus",
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 3 }
+      "review": { "status": "approved", "rev": 3, "date": "2026-11-08" }
     },
     {
       "id": "jesus-feeds-the-five-thousand",
@@ -314,7 +314,7 @@
       "topics": [],
       "child_page": "the-good-samaritan",
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "zacchaeus-meets-jesus",
@@ -338,7 +338,7 @@
       "topics": ["forgiveness"],
       "child_page": "zacchaeus-in-the-tree",
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "the-empty-tomb",
@@ -414,7 +414,7 @@
       "topics": [],
       "child_page": null,
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "the-baptism-of-jesus",
@@ -439,7 +439,7 @@
       "topics": [],
       "child_page": null,
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "the-temptation-of-jesus",
@@ -536,7 +536,7 @@
       "topics": [],
       "child_page": null,
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "the-road-to-emmaus",
@@ -560,7 +560,7 @@
       "topics": [],
       "child_page": null,
       "doctrine": "plain",
-      "review": { "status": "draft", "rev": 2 }
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-08" }
     },
     {
       "id": "nicodemus-visits-jesus",
