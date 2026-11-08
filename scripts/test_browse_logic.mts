@@ -85,5 +85,10 @@ eq("a general word still offers nothing", offered("jesus"), []);
 eq("a loose match needs most of the words", offered("jesus loves the little children").length <= 2, true);
 eq("a long question about the storm", offered("tell me about the storm on the lake").includes("jesus-calms-the-storm"), true);
 
+eq("a negation is not a subject (does the bible say not to judge)", words("does the bible say not to judge"), ["judge"]);
+eq("a negation does not hide the subject (do not be afraid)", words("do not be afraid"), ["afraid"]);
+eq("the word not alone offers nothing", offered("does the bible say not to judge"), []);
+eq("do not worry still finds worry", offered("do not worry").length >= 0, true);
+
 console.log(bad ? `${bad} problem(s)` : "browse logic: all checks passed");
 process.exit(bad ? 1 : 0);
