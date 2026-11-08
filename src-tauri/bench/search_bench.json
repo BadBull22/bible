@@ -1475,6 +1475,81 @@
       "must_any": [
         "Acts 12:4"
       ]
+    },
+    {
+      "q": "who wrote the book of Hebrews",
+      "cat": "held3",
+      "must_all": [
+        "Apollos"
+      ]
+    },
+    {
+      "q": "why did Jesus weep at Lazarus' grave",
+      "cat": "held3",
+      "must_all": [
+        "John 11:35"
+      ]
+    },
+    {
+      "q": "bible verses for when someone dies",
+      "cat": "held3",
+      "must_any": [
+        "John 14:1",
+        "1 Thessalonians 4",
+        "Psalm 34:18",
+        "Revelation 21:4"
+      ]
+    },
+    {
+      "q": "what happens when a christian dies",
+      "cat": "held3",
+      "must_any": [
+        "2 Corinthians 5:8",
+        "Philippians 1:2",
+        "Luke 23:43"
+      ]
+    },
+    {
+      "q": "why did God harden Pharaoh's heart",
+      "cat": "held3",
+      "must_any": [
+        "Exodus 9:12",
+        "Romans 9:17"
+      ]
+    },
+    {
+      "q": "what was the thorn in the flesh Paul talks about",
+      "cat": "held3",
+      "must_all": [
+        "2 Corinthians 12:7"
+      ],
+      "refs_any": [
+        "2 Corinthians 12:7"
+      ]
+    },
+    {
+      "q": "should a christian be cremated",
+      "cat": "held3",
+      "must_any": [
+        "1 Samuel 31",
+        "Genesis 3:19"
+      ]
+    },
+    {
+      "q": "how can I control my anger",
+      "cat": "held3",
+      "must_any": [
+        "James 1:19",
+        "Ephesians 4:26"
+      ]
+    },
+    {
+      "q": "what did Jesus say about divorce",
+      "cat": "held3",
+      "must_any": [
+        "Matthew 19",
+        "Mark 10"
+      ]
     }
   ]
 }

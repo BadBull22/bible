@@ -152,3 +152,31 @@ fn search_bench() {
         assert!(wrong <= max.parse::<i32>().unwrap_or(0), "{wrong} confident answers were wrong");
     }
 }
+
+/// A quick look at what the engine answers to questions that are not in the bench yet (one question per line in the file named by
+/// PROBE_FILE). It prints the layer, whether the answer is confident, the first passages and the first words; it checks nothing.
+///   PROBE_FILE=path cargo test --lib search_probe -- --ignored --nocapture
+#[test]
+#[ignore]
+fn search_probe() {
+    let Ok(path) = std::env::var("PROBE_FILE") else { return };
+    crate::register_sqlite_vec();
+    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let conn = rusqlite::Connection::open(dir.join("resources/bible.db")).expect("open bible.db");
+    let embedder = Embedder::load(&dir.join("resources/model")).expect("load embedder");
+    let firsts = FirstsData::load(&dir.join("resources/firsts.json")).expect("load firsts.json");
+    let qa = QaRuntime::load(&dir.join("resources/qa.json"), &dir.join("resources/qa_index.json")).expect("load qa runtime");
+    let commentary = rusqlite::Connection::open(dir.join("resources/commentaries.db")).ok();
+    let study = rusqlite::Connection::open(dir.join("resources/study.db")).ok();
+    for line in std::fs::read_to_string(path).expect("the probe file").lines().map(str::trim).filter(|l| !l.is_empty()) {
+        let a = ask_question_query(&conn, &embedder, commentary.as_ref(), study.as_ref(), &firsts, &qa, line, 10).expect("an answer");
+        let s = look(&a);
+        println!(
+            "PROBE {line}\n   -> {} {} | {} | {}",
+            s.layer,
+            if s.confident { "CONFIDENT" } else { "not-confident" },
+            s.refs.iter().take(4).cloned().collect::<Vec<_>>().join(", "),
+            s.text.chars().take(130).collect::<String>().replace('\n', " ")
+        );
+    }
+}
