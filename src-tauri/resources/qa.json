@@ -8698,10 +8698,15 @@
         "who was the woman who hid the spies",
         "who was the woman who hid the spies in jericho",
         "who helped the israelite spies in jericho",
-        "who was the woman who helped the spies"
+        "who was the woman who helped the spies",
+        "who did rahab marry",
+        "who was rahab's husband",
+        "was rahab an ancestor of jesus",
+        "was rahab in the line of jesus",
+        "who was boaz's mother"
       ],
       "confidence": "stated",
-      "answer": "Rahab was a prostitute in Jericho who hid the two Israelite spies on her roof and sent the king's men in the wrong direction (Joshua 2:1-7). She told the spies that the LORD had given the land to Israel and that He is God in heaven above and on earth below, and she asked that her family be spared (Joshua 2:8-13). She tied a scarlet cord in her window (Joshua 2:18-21). When the walls fell she and all her family were saved (Joshua 6:17, 22-25). She is named in the line of David and of Jesus (Matthew 1:5), is honoured for her faith (Hebrews 11:31) and for her works (James 2:25).",
+      "answer": "Rahab was a prostitute in Jericho who hid the two Israelite spies on her roof and sent the king's men in the wrong direction (Joshua 2:1-7). She told the spies that the LORD had given the land to Israel and that He is God in heaven above and on earth below, and she asked that her family be spared (Joshua 2:8-13). She tied a scarlet cord in her window (Joshua 2:18-21). When the walls fell she and all her family were saved (Joshua 6:17, 22-25). She went on to marry Salmon of the tribe of Judah and became the mother of Boaz, who married Ruth, and so an ancestor of King David and of Jesus: “Salmon was the father of Boaz by Rahab, Boaz the father of Obed by Ruth, Obed the father of Jesse” (Matthew 1:5; Ruth 4:20-22; 1 Chronicles 2:11). Salmon was the son of Nahshon, the leader of Judah (Numbers 1:7). Matthew does not add “of Jericho”, and the Bible does not say how or when Rahab and Salmon married, but the church has always understood the Rahab of Matthew 1:5 to be the woman of Jericho, as the Bible dictionaries of Easton and Smith also say. Only four generations stand between Rahab and David, which is a short span for the time, but Bible genealogies often leave out names (compare Matthew 1:8 with 1 Chronicles 3:11-12). She is honoured for her faith (Hebrews 11:31) and for her works (James 2:25).",
       "citations": [
         {
           "reference": "Joshua 2:1-21",
@@ -8721,6 +8726,18 @@
         },
         {
           "reference": "James 2:25",
+          "role": "stated"
+        },
+        {
+          "reference": "Ruth 4:20-22",
+          "role": "stated"
+        },
+        {
+          "reference": "1 Chronicles 2:11",
+          "role": "stated"
+        },
+        {
+          "reference": "Numbers 1:7",
           "role": "stated"
         }
       ],
