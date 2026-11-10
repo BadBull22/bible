@@ -196,6 +196,8 @@ struct VersionInfo {
     language: String,
     rtl: bool,
     downloaded: bool,
+    /// the words carry Strong's numbers, so a word can be tapped for the Hebrew or Greek behind it
+    tagged: bool,
 }
 
 #[tauri::command(async)]
@@ -203,10 +205,15 @@ fn versions(core: State<Core>) -> Result<Vec<VersionInfo>, String> {
     let core = core.get()?;
     let mut out: Vec<VersionInfo> = search::versions(&*core.db.lock().map_err(err)?)?
         .into_iter()
-        .map(|v| VersionInfo { code: v.code, name: v.name, license_note: v.license_note, language: "English".into(), rtl: false, downloaded: false })
+        .map(|v| {
+            let tagged = study_extra::TAGGED.contains(&v.code.as_str());
+            VersionInfo { code: v.code, name: v.name, license_note: v.license_note, language: "English".into(), rtl: false, downloaded: false, tagged }
+        })
         .collect();
-    for b in bibles::installed(&*core.bibles.lock().map_err(err)?)? {
-        out.push(VersionInfo { code: b.code, name: b.name, license_note: b.copyright, language: b.language, rtl: b.rtl, downloaded: true });
+    let more = core.bibles.lock().map_err(err)?;
+    for b in bibles::installed(&more)? {
+        let tagged = study_extra::imported_is_tagged(&more, &b.code);
+        out.push(VersionInfo { code: b.code, name: b.name, license_note: b.copyright, language: b.language, rtl: b.rtl, downloaded: true, tagged });
     }
     Ok(out)
 }
@@ -380,7 +387,14 @@ fn compare(core: State<Core>, book: String, chapter: i64, verse: i64) -> Result<
 
 #[tauri::command(async)]
 fn verse_words(core: State<Core>, version: String, book: String, chapter: i64, verse: i64) -> Result<(String, Vec<study_extra::Word>), String> {
-    study_extra::verse_words(&*core.get()?.db.lock().map_err(err)?, &version, &book, chapter, verse)
+    let core = core.get()?;
+    // a Bible the reader added from a file with Strong's numbers has its own tagged words; any other Bible shows the BSB's (and says so)
+    if !study_extra::TAGGED.contains(&version.as_str()) {
+        if let Some(words) = study_extra::imported_words(&*core.bibles.lock().map_err(err)?, &version, &book, chapter, verse) {
+            return Ok((version, words));
+        }
+    }
+    study_extra::verse_words(&*core.db.lock().map_err(err)?, &version, &book, chapter, verse)
 }
 
 #[tauri::command(async)]
@@ -390,7 +404,14 @@ fn strongs_entry(core: State<Core>, number: String) -> Result<Option<study_extra
 
 #[tauri::command(async)]
 fn strongs_uses(core: State<Core>, version: String, number: String) -> Result<Vec<study_extra::Use>, String> {
-    study_extra::strongs_uses(&*core.get()?.db.lock().map_err(err)?, &version, &number, 300)
+    let core = core.get()?;
+    if !study_extra::TAGGED.contains(&version.as_str()) {
+        let more = core.bibles.lock().map_err(err)?;
+        if study_extra::imported_is_tagged(&more, &version) {
+            return study_extra::imported_uses(&more, &version, &number, 300);
+        }
+    }
+    study_extra::strongs_uses(&*core.db.lock().map_err(err)?, &version, &number, 300)
 }
 
 #[tauri::command(async)]

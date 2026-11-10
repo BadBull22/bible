@@ -38,6 +38,11 @@ pub fn init(conn: &Connection) -> Result<(), String> {
     if !has_red {
         conn.execute_batch("ALTER TABLE verses ADD COLUMN red TEXT").map_err(err)?;
     }
+    // the words that carry Strong's numbers, of a Bible added from a file that has them (JSON [[word, "H430 H853"], ...], as in the built-in Bibles)
+    let has_words = conn.prepare("SELECT 1 FROM pragma_table_info('verses') WHERE name = 'words'").map_err(err)?.exists([]).map_err(err)?;
+    if !has_words {
+        conn.execute_batch("ALTER TABLE verses ADD COLUMN words TEXT").map_err(err)?;
+    }
     Ok(())
 }
 

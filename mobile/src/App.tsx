@@ -1431,7 +1431,7 @@ export function App() {
             <h2>Translations</h2>
             <p className="hint keep">
               Built in: {versions.filter((v) => !v.downloaded).map((v) => v.code).join(", ")}.
-              {versions.some((v) => v.downloaded) && ` Downloaded: ${versions.filter((v) => v.downloaded).map((v) => v.name).join(", ")}.`}
+              {versions.some((v) => v.downloaded) && ` Downloaded: ${versions.filter((v) => v.downloaded).map((v) => (v.tagged ? `${v.name} (Strong's)` : v.name)).join(", ")}.`}
             </p>
             <div className="actions">
               <button onClick={() => setShowTranslations(true)}>More translations (other languages)</button>

@@ -101,7 +101,7 @@ pub fn add_file(conn: &mut Connection, path: &Path, name: &str, work: &Path, bun
     let _ = std::fs::remove_dir_all(work);
     std::fs::create_dir_all(work).map_err(err)?;
     let result = read_any(path, name, work);
-    let added = result.and_then(|(code, title, language, copyright, program, verses, mut warnings, red)| {
+    let added = result.and_then(|(code, title, language, copyright, program, verses, mut warnings, red, words)| {
         if bundled.iter().any(|b| b.eq_ignore_ascii_case(&code)) {
             return Err(format!("The {code} is in the app already."));
         }
@@ -116,10 +116,12 @@ pub fn add_file(conn: &mut Connection, path: &Path, name: &str, work: &Path, bun
         let replaces = tx.query_row("SELECT 1 FROM bibles WHERE code = ?1", params![code], |_| Ok(())).is_ok();
         tx.execute("DELETE FROM verses WHERE code = ?1", params![code]).map_err(err)?;
         {
-            let mut put = tx.prepare("INSERT OR REPLACE INTO verses (code, book, chapter, verse, text, red) VALUES (?1,?2,?3,?4,?5,?6)").map_err(err)?;
+            let mut put = tx.prepare("INSERT OR REPLACE INTO verses (code, book, chapter, verse, text, red, words) VALUES (?1,?2,?3,?4,?5,?6,?7)").map_err(err)?;
             for (b, ch, v, t) in &verses {
                 let ranges = red.get(&(*b, *ch, *v)).and_then(|r| serde_json::to_string(r).ok());
-                put.execute(params![code, b, ch, v, t, ranges]).map_err(err)?;
+                // [[word, "H430 H853"], ...]: the same shape the built-in Bibles keep
+                let tagged = words.get(&(*b, *ch, *v)).and_then(|w| serde_json::to_string(&w.iter().map(|(t, n)| (t.as_str(), n.join(" "))).collect::<Vec<_>>()).ok());
+                put.execute(params![code, b, ch, v, t, ranges, tagged]).map_err(err)?;
             }
         }
         let note = if copyright.trim().is_empty() { "Your own copy".to_string() } else { format!("Your own copy · {}", copyright.trim()).chars().take(300).collect() };
@@ -138,7 +140,8 @@ pub fn add_file(conn: &mut Connection, path: &Path, name: &str, work: &Path, bun
     added
 }
 
-type Found = (String, String, String, String, String, Vec<(&'static str, i64, i64, String)>, Vec<String>, std::collections::HashMap<(&'static str, i64, i64), Vec<(usize, usize)>>);
+type Words = std::collections::HashMap<(&'static str, i64, i64), Vec<(String, Vec<String>)>>;
+type Found = (String, String, String, String, String, Vec<(&'static str, i64, i64, String)>, Vec<String>, std::collections::HashMap<(&'static str, i64, i64), Vec<(usize, usize)>>, Words);
 
 /// The Bible in the file, whatever it is packed in: (code, title, language, copyright,
 /// program, verses, warnings).
@@ -202,7 +205,9 @@ fn from_esword(path: &Path, name: &str) -> Result<Found, String> {
     let title = if m.title.trim().is_empty() { code.clone() } else { m.title.trim().to_string() };
     let verses = m.verses.into_iter().map(|(b, c, v, t)| (b, c, v, plain(&t))).filter(|v| !v.3.is_empty()).collect();
     let red = m.red.into_iter().map(|(b, c, v, r)| ((b, c, v), r)).collect();
-    Ok((code, title, language_name(&m.lang), m.copyright, m.program.to_string(), verses, m.warnings, red))
+    // the words that carry Strong's numbers (a MyBible Bible with tagging keeps them)
+    let words = m.words.into_iter().map(|(b, c, v, w)| ((b, c, v), w)).collect();
+    Ok((code, title, language_name(&m.lang), m.copyright, m.program.to_string(), verses, m.warnings, red, words))
 }
 
 fn from_sword(zip: &mut zip::ZipArchive<std::fs::File>, work: &Path) -> Result<Found, String> {
@@ -268,7 +273,7 @@ fn from_sword(zip: &mut zip::ZipArchive<std::fs::File>, work: &Path) -> Result<F
     }
     let title = conf.get("Description").unwrap_or(&conf.name).trim().to_string();
     let copyright = conf.get("DistributionLicense").or(conf.get("Copyright")).unwrap_or("").to_string();
-    Ok((code_of(&conf.name, &conf.name), title, language_name(conf.get("Lang").unwrap_or("")), copyright, "SWORD".into(), verses, warnings, Default::default()))
+    Ok((code_of(&conf.name, &conf.name), title, language_name(conf.get("Lang").unwrap_or("")), copyright, "SWORD".into(), verses, warnings, Default::default(), Default::default()))
 }
 
 #[cfg(test)]
@@ -308,6 +313,33 @@ mod tests {
     }
 
     #[test]
+    fn a_mybible_bible_with_strongs_numbers_keeps_its_tagged_words() {
+        let dir = std::env::temp_dir().join(format!("bc-phone-st-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let file = dir.join("TG.SQLite3");
+        {
+            let c = Connection::open(&file).unwrap();
+            c.execute_batch("CREATE TABLE info(name TEXT, value TEXT); CREATE TABLE verses(book_number NUMERIC, chapter NUMERIC, verse NUMERIC, text TEXT); INSERT INTO info VALUES ('description', 'Tagged'), ('language', 'en');").unwrap();
+            for v in 1..=25 {
+                let text = if v == 16 { "For<S>1063</S> God<S>2316</S> so<S>3779</S> loved<S>25</S> the world.".to_string() } else { format!("Plain verse {v}.") };
+                c.execute("INSERT INTO verses VALUES (500, 3, ?1, ?2)", params![v, text]).unwrap();
+            }
+        }
+        let mut conn = Connection::open_in_memory().unwrap();
+        crate::bibles::init(&conn).unwrap();
+        add_file(&mut conn, &file, "TG.SQLite3", &dir.join("work"), &["BSB".into()]).unwrap();
+        // the tagged verse comes back with its words and numbers; a verse with no tags has none
+        let words = crate::study_extra::imported_words(&conn, "TG", "John", 3, 16).expect("the tagged words of John 3:16");
+        assert_eq!(words.iter().map(|w| (w.text.as_str(), w.numbers.clone())).collect::<Vec<_>>()[1], ("God", vec!["G2316".to_string()]));
+        assert!(crate::study_extra::imported_words(&conn, "TG", "John", 3, 17).is_none());
+        // every verse that uses a number, found in the imported Bible
+        let uses = crate::study_extra::imported_uses(&conn, "TG", "G2316", 300).unwrap();
+        assert_eq!((uses.len(), uses[0].chapter, uses[0].verse, uses[0].words.clone()), (1, 3, 16, vec!["God".to_string()]));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn a_mybible_bible_zipped_with_its_footnotes() {
         let dir = std::env::temp_dir().join(format!("bc-phone-mb-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
@@ -341,6 +373,8 @@ mod tests {
         let ch = crate::bibles::chapter(&conn, "MB4", "John", 3).unwrap();
         assert_eq!(ch.iter().find(|v| v.verse == 16).map(|v| v.red.clone()), Some(vec![(0, 1)]));
         assert!(ch.iter().find(|v| v.verse == 17).unwrap().red.is_empty());
+        // a Bible without Strong's numbers keeps none
+        assert!(crate::study_extra::imported_words(&conn, "MB4", "John", 3, 16).is_none());
         // the same file on its own, named with an apostrophe as the NIV'78 download is
         let a = add_file(&mut conn, &bible, "MB'4.SQLite3", &dir.join("work"), &["BSB".into()]).unwrap();
         assert_eq!(a.code, "MB4");

@@ -9,6 +9,8 @@ export interface Version {
   rtl: boolean;
   /** downloaded by the reader, not built in */
   downloaded: boolean;
+  /** the words carry Strong's numbers: a word can be tapped for the Hebrew or Greek behind it */
+  tagged: boolean;
 }
 
 export interface Book {

@@ -41,6 +41,24 @@ pub fn verse_words(db: &Connection, version: &str, book: &str, chapter: i64, ver
     Ok((used.to_string(), words))
 }
 
+/// The tagged words of a verse in a Bible the reader added from a file that carries Strong's numbers (None when that Bible has none for the verse).
+pub fn imported_words(bibles: &Connection, code: &str, book: &str, chapter: i64, verse: i64) -> Option<Vec<Word>> {
+    let json: Option<String> = bibles
+        .query_row("SELECT words FROM verses WHERE code = ?1 AND book = ?2 AND chapter = ?3 AND verse = ?4", params![code, book, chapter, verse], |r| r.get(0))
+        .optional()
+        .ok()
+        .flatten()
+        .flatten();
+    let pairs: Vec<(String, String)> = serde_json::from_str(&json?).ok()?;
+    let words: Vec<Word> = pairs.into_iter().map(|(text, numbers)| Word { text, numbers: numbers.split_whitespace().map(String::from).collect() }).collect();
+    (!words.is_empty()).then_some(words)
+}
+
+/// Whether a Bible the reader added has Strong's numbers at all.
+pub fn imported_is_tagged(bibles: &Connection, code: &str) -> bool {
+    bibles.query_row("SELECT 1 FROM verses WHERE code = ?1 AND words IS NOT NULL LIMIT 1", params![code], |_| Ok(())).is_ok()
+}
+
 /// A Strong's dictionary entry, with how often the word is used in the tagged translations.
 #[derive(Serialize, Debug)]
 pub struct Entry {
@@ -126,6 +144,29 @@ pub fn strongs_uses(db: &Connection, version: &str, number: &str, limit: usize) 
             break;
         }
     }
+    Ok(out)
+}
+
+/// Every verse of a tagged Bible the reader added that has this Strong's number, in the order of the Bible (the first `limit`).
+pub fn imported_uses(bibles: &Connection, code: &str, number: &str, limit: usize) -> Result<Vec<Use>, String> {
+    let number = number.trim().to_uppercase();
+    let mut s = bibles.prepare("SELECT book, chapter, verse, words, text FROM verses WHERE code = ?1 AND words LIKE ?2").map_err(err)?;
+    let rows = s
+        .query_map(params![code, format!("%{number}%")], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, i64>(2)?, r.get::<_, String>(3)?, r.get::<_, String>(4)?)))
+        .map_err(err)?;
+    let mut out = Vec::new();
+    for row in rows {
+        let (book, chapter, verse, json, text) = row.map_err(err)?;
+        let pairs: Vec<(String, String)> = serde_json::from_str(&json).unwrap_or_default();
+        let words: Vec<String> = pairs.into_iter().filter(|(_, n)| n.split_whitespace().any(|x| x == number)).map(|(t, _)| t).collect();
+        if !words.is_empty() {
+            out.push(Use { book, chapter, verse, words, text });
+        }
+    }
+    // the Bible's own order (the table is not kept in it)
+    let order = |book: &str| bible_core::refs::OSIS.iter().position(|(_, name)| *name == book).unwrap_or(usize::MAX);
+    out.sort_by_key(|u| (order(&u.book), u.chapter, u.verse));
+    out.truncate(limit);
     Ok(out)
 }
 

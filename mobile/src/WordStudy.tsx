@@ -62,9 +62,15 @@ export function WordStudy({ book, chapter, verse, version, pack, onGo, onLibrary
         <p className="hint">This verse has no word study.</p>
       ) : (
         <>
-          <p className="hint">
-            Tap a word to see the Hebrew or Greek behind it{used !== version ? ` (word study uses the ${used} here)` : ""}. A word that stands for more than one Hebrew or Greek word shows each.
-          </p>
+          {used !== version ? (
+            <p className="hint status">
+              {version} has no word tags, so these are the words of the {used}, not of the {version}. Tap one for the Hebrew or Greek behind it.
+            </p>
+          ) : (
+            <p className="hint">
+              Tap a word to see the Hebrew or Greek behind it ({version}, with Strong's numbers). A word that stands for more than one Hebrew or Greek word shows each.
+            </p>
+          )}
           <div className="words">
             {words.map((w, i) => (
               <button key={i} onClick={() => setNumbers(w.numbers)}>
