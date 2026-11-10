@@ -439,6 +439,12 @@ fn curated_text() -> &'static Vec<String> {
     })
 }
 
+/// Makes Ask's word list ahead of the first question (the Bible's words, the names of people and places, the words of the answers).
+/// The phone's one database holds the Bible and the study tables, so it is both connections.
+pub fn warm(db: &Connection) {
+    spell::vocab(db, Some(db), curated_text());
+}
+
 /// The reply to what was typed: the answer to it as typed, or, when a question has a spelling slip ("who betryed jesus") and the
 /// question put right has an answer, that answer and the question as it was read. A question that already has its exact stored answer,
 /// or is a count, is left as typed.

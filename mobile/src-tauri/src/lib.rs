@@ -964,6 +964,8 @@ pub fn run() {
                 if let Ok(core) = handle.state::<Core>().get() {
                     if let Ok(db) = db::open_read_only(&core.bible) {
                         search::warm(&db);
+                        // Ask's word list (spelling and the names of people and places), so the first question isn't kept waiting
+                        ask::warm(&db);
                     }
                 }
                 let _ = meaning_pack::get(&dir);
