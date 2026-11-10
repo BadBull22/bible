@@ -125,11 +125,42 @@ impl QaData {
 
     /// Case/whitespace-insensitive exact match against `question` or any `alt_phrasings`
     /// entry -- the free fast path tried before spending an embed() call.
+    /// The entry whose question (or other wording) is the one typed: the same words, whatever the capital letters, spaces, curly
+    /// apostrophes or closing "?" ("who betrayed jesus" is the stored "Who betrayed Jesus?").
     pub fn find_exact(&self, query: &str) -> Option<&QaEntry> {
-        let q = query.trim().to_lowercase();
-        self.entries.iter().find(|e| {
-            e.question.trim().to_lowercase() == q || e.alt_phrasings.iter().any(|p| p.trim().to_lowercase() == q)
-        })
+        let q = question_form(query);
+        if q.is_empty() {
+            return None;
+        }
+        self.entries.iter().find(|e| question_form(&e.question) == q || e.alt_phrasings.iter().any(|p| question_form(p) == q))
+    }
+}
+
+/// A question as it is compared: lower case, single spaces, straight apostrophes, no closing "?", "." or "!".
+fn question_form(s: &str) -> String {
+    let s = s.replace(['’', '‘'], "'").to_lowercase();
+    let s = s.trim().trim_end_matches(['?', '.', '!']).trim_end();
+    s.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_same_question_is_found_whatever_its_capitals_spaces_apostrophes_or_question_mark() {
+        let qa = QaData::from_json(
+            r#"{"entries":[{"id":"a","question":"Who betrayed Jesus?","alt_phrasings":["Who was Jesus' betrayer?"],"confidence":"stated","answer":"Judas.","citations":[],"note":null},
+            {"id":"b","question":"What is the Rapture?","alt_phrasings":[],"confidence":"stated","answer":"x","citations":[],"note":null}]}"#,
+        )
+        .unwrap();
+        for q in ["Who betrayed Jesus?", "who betrayed jesus", "  WHO   betrayed Jesus ?? ", "Who betrayed Jesus.", "who was Jesus’ betrayer"] {
+            assert_eq!(qa.find_exact(q).map(|e| e.id.as_str()), Some("a"), "{q}");
+        }
+        assert_eq!(qa.find_exact("what is the rapture").map(|e| e.id.as_str()), Some("b"));
+        for not in ["Who betrayed Jesus Christ?", "betrayed", "", "?", "who betrayed"] {
+            assert!(qa.find_exact(not).is_none(), "{not}");
+        }
     }
 }
 

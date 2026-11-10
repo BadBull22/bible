@@ -362,7 +362,8 @@ fn the_phone_answers_the_desktops_people_questions_as_the_desktop_does() {
     let mut wrong = Vec::new();
     for (question, expect) in bench {
         match family(&d, &s, question) {
-            Some((answer, _)) if answer.contains(expect) => {}
+            // (a stored answer spells the names the BSB's way: Zechariah, Elizabeth)
+            Some((answer, _)) if answer.contains(expect) || (expect == "Zacharias" && answer.contains("Zechariah")) || (expect == "Elisabeth" && answer.contains("Elizabeth")) => {}
             other => wrong.push(format!("{question}: {other:?}")),
         }
     }
@@ -381,4 +382,19 @@ fn people_and_places_are_names_but_adjectives_and_titles_are_not() {
     for word in ["jewish", "prophet", "rapture", "den", "date"] {
         assert!(!bible_pocket_lib::spell::is_name(word), "{word} is not a name");
     }
+}
+
+/// Without the Advanced search upgrade a question is matched by its words alone: it need not be typed with its capital letters or its
+/// closing "?", and a spelling slip is put right (and reported) when the question put right has a stored answer.
+#[test]
+fn a_question_is_found_without_its_question_mark_and_a_spelling_slip_is_put_right() {
+    let (d, s) = open();
+    for q in ["Who betrayed Jesus?", "who betrayed Jesus", "WHO BETRAYED JESUS"] {
+        let r = ask::ask_with_correction(&d, &s, q, None).unwrap();
+        assert!(matches!(&r.answer, Some(Answer::Curated { question, .. }) if question == "Who betrayed Jesus?"), "{q}: {:?}", r.answer);
+        assert!(r.corrected.is_none(), "{q}");
+    }
+    let r = ask::ask_with_correction(&d, &s, "who betryed Jesus", None).unwrap();
+    assert!(matches!(&r.answer, Some(Answer::Curated { question, .. }) if question == "Who betrayed Jesus?"), "{:?}", r.answer);
+    assert_eq!(r.corrected.as_deref(), Some("who betrayed Jesus"));
 }
