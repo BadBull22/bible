@@ -7,7 +7,7 @@ import { exit, onBackButtonPress } from "@tauri-apps/api/app";
 // History steps are done one at a time. A layer that closes by itself takes a step back, which the browser carries out a moment later; a layer opened
 // in the same instant (following a link from a story to the Bible closes three layers and opens one) is added only after those steps are done, or the
 // steps back would run after it and undo the wrong entries.
-const layers: { close: () => void }[] = [];
+const layers: { close: () => void; rank: number }[] = [];
 let ignorePops = 0;
 const waiting: (() => void)[] = [];
 let settleTimer: number | undefined;
@@ -34,18 +34,21 @@ void onBackButtonPress(() => {
   else void exit(0);
 }).catch(() => undefined);
 
-export function useBack(active: boolean, close: () => void) {
+/** `rank`: where the layer sits in the stack whatever the order the screens draw themselves in: 0 is the bottom (a tab other than Read), 1 the rest.
+ *  A page drawn again after a link (the stories under Extras) registers its layers before the tab's own, so the tab must be put underneath. */
+export function useBack(active: boolean, close: () => void, rank = 1) {
   const closeRef = useRef(close);
   closeRef.current = close;
   useEffect(() => {
     if (!active) return;
-    const layer = { close: () => closeRef.current() };
+    const layer = { close: () => closeRef.current(), rank };
     let cancelled = false;
     let added = false;
     const add = () => {
       if (cancelled) return;
       added = true;
       layers.push(layer);
+      layers.sort((a, b) => a.rank - b.rank); // (stable: the layers of one rank keep the order they were added in)
       history.pushState({ layer: layers.length }, "");
     };
     if (ignorePops > 0) {

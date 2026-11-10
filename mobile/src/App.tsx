@@ -861,7 +861,7 @@ export function App() {
   }
 
   // --- Back closes the top layer
-  useBack(tab !== "read", () => setTab("read"));
+  useBack(tab !== "read", () => setTab("read"), 0); // a tab other than Read is always the bottom step
   useBack(topic != null, () => setTopic(null));
   useBack(picker != null, () => setPicker(null));
   useBack(article != null, () => setArticle(null));
