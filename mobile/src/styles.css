@@ -1786,3 +1786,45 @@ details.hl-all > summary {
   font-size: 0.78rem;
 }
 
+
+/* ---------- Browse: Bible stories, "Verses for...", children's pages (since 3.0.0) ---------- */
+.browse { padding-bottom: 1rem; }
+.browse .field { width: 100%; margin: 0 0 0.6rem; }
+.browse-entry h3 { margin: 0.9rem 0 0.4rem; }
+.browse-entry-grid { display: grid; gap: 0.5rem; margin-bottom: 0.8rem; }
+.browse-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.browse-card { display: block; width: 100%; text-align: left; padding: 0.7rem 0.85rem; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--raised); color: var(--text); }
+.browse-card-title { display: block; font-weight: 700; }
+.browse-card-title small { color: var(--muted); font-weight: 400; }
+.browse-card-blurb { display: block; margin-top: 0.15rem; color: var(--muted); font-size: 0.88rem; line-height: 1.4; }
+.browse-page h2 { margin: 0.2rem 0 0.3rem; }
+.browse-also { margin: 0 0 0.7rem; color: var(--muted); font-size: 0.88rem; }
+.browse-summary, .browse-retelling p { margin: 0 0 0.8rem; line-height: 1.55; }
+.browse-look { line-height: 1.55; }
+.browse-teaches, .browse-idea, .browse-differ, .browse-topic-card { margin: 0.8rem 0; padding: 0.7rem 0.85rem; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--raised); }
+.browse-differ, .browse-idea { border-left: 4px solid var(--accent); }
+.browse-idea { background: var(--accent-soft); }
+.browse-teaches ul { margin: 0.3rem 0 0; padding-left: 1.2rem; line-height: 1.5; }
+.browse-differ p, .browse-idea p { margin: 0.3rem 0 0; line-height: 1.5; }
+.browse-section { margin: 1.1rem 0 0.4rem; font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.browse-sub { margin: 0.6rem 0 0.2rem; font-weight: 600; font-size: 0.9rem; }
+.browse-passage { margin: 0 0 0.9rem; padding-bottom: 0.7rem; border-bottom: 1px solid var(--border); }
+.browse-passage-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.6rem; }
+.browse-passage-label { color: var(--muted); font-size: 0.9rem; }
+.browse-note { margin: 0.2rem 0 0.4rem; color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+.browse-text { margin-top: 0.5rem; padding: 0.6rem 0.75rem; border-left: 3px solid var(--border); font-family: var(--reading); line-height: 1.6; }
+.browse-text sup { color: var(--accent); font-size: 0.7em; font-weight: 700; }
+.browse-version { margin-top: 0.3rem; color: var(--muted); font-family: var(--sans); font-size: 0.78rem; }
+.browse-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.2rem 0 0.6rem; }
+.browse-pill { min-height: 2.3rem; padding: 0.3rem 0.9rem; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent-soft); color: var(--text); font-size: 0.88rem; }
+.browse-pill.quiet { border-color: var(--border); background: var(--raised); }
+.browse-pill:disabled { opacity: 0.5; }
+.browse-questions { padding-left: 1.2rem; }
+.browse-questions li { margin-bottom: 0.9rem; }
+.browse-q { font-weight: 600; margin-bottom: 0.3rem; line-height: 1.45; }
+.browse-a { margin-top: 0.4rem; padding: 0.5rem 0.7rem; border-radius: 0.6rem; background: var(--accent-soft); line-height: 1.5; }
+.browse-matches { margin: 0 0 0.8rem; }
+.browse-matches-label { display: block; margin-bottom: 0.2rem; color: var(--muted); font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.browse-topic-card ul { margin: 0.3rem 0 0.5rem; padding-left: 1.1rem; }
+.browse-topic-card li { margin-bottom: 0.3rem; }
+.browse-kids .browse-retelling { font-size: 1.05rem; }

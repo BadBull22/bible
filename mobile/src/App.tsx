@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { exit, onBackButtonPress } from "@tauri-apps/api/app";
+import { useBack } from "./back";
 import {
   api,
   Article,
@@ -35,6 +35,7 @@ import { SyncSettings, useAutoSync } from "./Sync";
 import { OriginalPack, OriginalSettings, useOriginalPack } from "./OriginalWords";
 import { SearchUpgradeOffer, SearchUpgradeSettings, useSearchUpgrade } from "./SearchUpgrade";
 import { AskAnswer } from "./AskAnswer";
+import { BrowseEntryPoints, BrowseMatches, BrowseScreen, type BrowseOpen } from "./Browse";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
@@ -117,42 +118,6 @@ function loadRecent(): string[] {
   } catch {
     return [];
   }
-}
-
-// --- the phone's Back button: each open layer (a sheet, a tab other than Read) is a step
-// of browser history, so Back closes the top one instead of leaving the app.
-const layers: { close: () => void }[] = [];
-let ignorePops = 0;
-window.addEventListener("popstate", () => {
-  if (ignorePops > 0) {
-    ignorePops--;
-    return;
-  }
-  layers.pop()?.close();
-});
-
-// Android hands the Back button to the app: close the top layer, or leave from the Read screen.
-void onBackButtonPress(() => {
-  if (layers.length > 0) history.back();
-  else void exit(0);
-}).catch(() => undefined);
-
-function useBack(active: boolean, close: () => void) {
-  const closeRef = useRef(close);
-  closeRef.current = close;
-  useEffect(() => {
-    if (!active) return;
-    const layer = { close: () => closeRef.current() };
-    layers.push(layer);
-    history.pushState({ layer: layers.length }, "");
-    return () => {
-      const i = layers.indexOf(layer);
-      if (i < 0) return; // closed by Back itself
-      layers.splice(i, 1);
-      ignorePops++;
-      history.back();
-    };
-  }, [active]);
 }
 
 const WHY: Record<string, string> = { story: "Well-known passage", core: "Key passage", phrase: "Exact words", topical: "Topic" };
@@ -328,6 +293,8 @@ export function App() {
   const [answer, setAnswer] = useState<Answer | null>(null);
   /** the question as it was read, when a spelling slip was put right */
   const [corrected, setCorrected] = useState<string | null>(null);
+  /** Browse (stories, "Verses for...", children's pages) open in the Search tab: the list of a kind, or one page */
+  const [browse, setBrowse] = useState<BrowseOpen | null>(null);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const searchUpgrade = useSearchUpgrade();
@@ -649,6 +616,7 @@ export function App() {
     } else {
       setTyped(text);
       setTopic(null);
+      setBrowse(null);
       setQuery(text);
       setTab("search");
     }
@@ -985,7 +953,21 @@ export function App() {
           </>
         )}
 
-        {tab === "search" && (
+        {tab === "search" && browse && (
+          <BrowseScreen
+            open={browse}
+            setOpen={setBrowse}
+            version={version}
+            onJump={go}
+            onSearch={(q) => {
+              setBrowse(null);
+              submit(q);
+            }}
+            onClose={() => setBrowse(null)}
+          />
+        )}
+
+        {tab === "search" && !browse && (
           <>
             {topic ? (
               <div className="summary">
@@ -1011,6 +993,7 @@ export function App() {
                   ))}
                 </div>
                 {!query && <p className="hint">Type a word, a phrase or a subject above — “your faith has healed you”, “gifts of the Spirit”, “forgiveness”. A reference such as “Romans 8:28” opens the passage.</p>}
+                {!query && !typed.trim() && <BrowseEntryPoints onOpen={(kind) => setBrowse({ kind, id: null })} />}
                 {!query && !typed.trim() && (
                   <section className="dictionary">
                     <h3>Bible dictionary</h3>
@@ -1050,6 +1033,7 @@ export function App() {
                     </div>
                   </section>
                 )}
+                {!query && !typed.trim() && <SearchUpgradeOffer upgrade={searchUpgrade} />}
                 {query && result && (
                   <p className="summary">
                     <strong>“{query}”</strong>: {result.exact === 0 ? "not found word for word" : `word for word in ${result.exact} verse${result.exact === 1 ? "" : "s"}`} ({version}).
@@ -1067,6 +1051,14 @@ export function App() {
                 )}
                 {query && answer && corrected && <p className="hint">Showing the answer for “{corrected}”</p>}
                 {query && answer && <AskAnswer answer={answer} books={books} onOpen={go} onArticle={openArticle} />}
+                {query && result && !searching && (
+                  <BrowseMatches
+                    query={query}
+                    also={answer && (answer.kind === "curated" || answer.kind === "related") ? [answer.question] : []}
+                    onOpen={(kind, id) => setBrowse({ kind, id })}
+                    onJump={go}
+                  />
+                )}
                 {query && result && (result.topics.length > 0 || result.articles.length > 0) && (
                   <div className="chips topics" role="group" aria-label="Topics and dictionary articles">
                     {result.topics.map((t) => (
