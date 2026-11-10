@@ -174,6 +174,9 @@ fn curated(db: &Connection, firsts: &FirstsData, e: &QaEntry, by_meaning: bool) 
         Some(tag) => e.answer.replace("{{n}}", &computed(db, firsts, tag)?.to_string()),
         None => e.answer.clone(),
     };
+    // each PUBLISHED viewpoint follows the answer under its own label, as on the desktop (build_curated_entry);
+    // a viewpoint the owner has not published stays hidden. (Until 3.0.0 the phone dropped them all.)
+    let answer = e.views.iter().filter(|v| v.publish).fold(answer, |a, v| format!("{a}\n\n{}: {}", v.label, v.text));
     Some(Answer::Curated {
         question: e.question.clone(),
         confidence: confidence_name(&e.confidence).into(),
@@ -349,6 +352,49 @@ mod tests {
         assert!(d.index.len() > 400, "qa_index");
         let norm: f32 = d.index[0].3.iter().map(|&x| (x as f32 * d.index[0].2).powi(2)).sum::<f32>().sqrt();
         assert!((norm - 1.0).abs() < 0.02, "the packed vectors keep their length ({norm})");
+    }
+
+    fn empty_firsts() -> FirstsData {
+        FirstsData::from_json(r#"{"entries":[]}"#).unwrap()
+    }
+
+    /// The answer text of a curated answer, built the phone's way.
+    fn shown(e: &QaEntry) -> String {
+        let db = Connection::open_in_memory().unwrap();
+        match curated(&db, &empty_firsts(), e, false) {
+            Some(Answer::Curated { answer, .. }) => answer,
+            _ => panic!("{} gave no curated answer", e.id),
+        }
+    }
+
+    #[test]
+    fn published_viewpoints_follow_the_answer_and_hidden_ones_stay_hidden() {
+        let qa = QaData::from_json(
+            r#"{"entries":[{"id":"t","question":"Q?","alt_phrasings":[],"confidence":"doctrinal_view","answer":"What Scripture says.","citations":[],"note":null,
+            "views":[{"label":"The Pentecostal reading","text":"First view."},{"label":"Other views","text":"Hidden view.","publish":false},{"label":"A third reading","text":"Third view."}]}]}"#,
+        )
+        .unwrap();
+        let text = shown(&qa.all()[0]);
+        assert!(text.starts_with("What Scripture says."), "{text}");
+        assert!(text.contains("\n\nThe Pentecostal reading: First view."), "{text}");
+        assert!(text.contains("\n\nA third reading: Third view."), "{text}");
+        assert!(!text.contains("Hidden view") && !text.contains("Other views"), "a view that is not published must not show: {text}");
+        // the order is the order in the data, and the Pentecostal reading comes first
+        assert!(text.find("Pentecostal").unwrap() < text.find("third reading").unwrap());
+    }
+
+    #[test]
+    fn every_published_view_in_the_real_data_reaches_the_phone() {
+        let d = loaded();
+        let mut checked = 0;
+        for e in d.qa.all().iter().filter(|e| e.computed_from.is_none()) {
+            let text = shown(e);
+            for v in &e.views {
+                assert_eq!(text.contains(&v.text), v.publish, "{}: view \"{}\" published={}", e.id, v.label, v.publish);
+                checked += 1;
+            }
+        }
+        assert!(checked >= 9, "the real data has viewpoints to check ({checked})");
     }
 
     #[test]

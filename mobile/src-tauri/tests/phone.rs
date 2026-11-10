@@ -47,30 +47,30 @@ fn searches_words_phrases_and_subjects() {
     let all = search::Scope::default();
 
     // an exact phrase: found, counted, and shown in the translation being read
-    let r = search::search(&d, &s, "your faith has healed you", "BSB", all, 200).unwrap();
+    let r = search::search(&d, &s, "your faith has healed you", "BSB", all, 200, None).unwrap();
     assert!(r.exact >= 3, "exact {}", r.exact);
     // (a hit may be a short passage that contains the verse)
     let has = |hits: &[search::Hit], book: &str, chapter: i64, verse: i64| hits.iter().any(|h| h.book == book && h.chapter == chapter && h.verse <= verse && verse <= h.verse_end);
     assert!(has(&r.hits, "Mark", 10, 52));
-    let kjv = search::search(&d, &s, "thy faith hath made thee whole", "KJV", all, 200).unwrap();
+    let kjv = search::search(&d, &s, "thy faith hath made thee whole", "KJV", all, 200, None).unwrap();
     assert!(has(&kjv.hits, "Mark", 10, 52));
     assert!(kjv.hits.iter().any(|h| h.book == "Mark" && h.chapter == 10 && h.text.contains("made thee whole")));
 
     // a subject: the central passages come back, not only verses with the word
-    let gifts = search::search(&d, &s, "gifts of the spirit", "BSB", all, 200).unwrap();
+    let gifts = search::search(&d, &s, "gifts of the spirit", "BSB", all, 200, None).unwrap();
     assert!(gifts.hits.iter().any(|h| h.book == "1 Corinthians" && h.chapter == 12), "1 Corinthians 12 for the gifts of the Spirit");
     assert!(gifts.hits[0].why.iter().any(|w| w == "core"));
 
     // kept to a testament, or to one book
-    let nt = search::search(&d, &s, "shepherd", "BSB", search::Scope { testament: Some("NT"), book: None }, 500).unwrap();
+    let nt = search::search(&d, &s, "shepherd", "BSB", search::Scope { testament: Some("NT"), book: None }, 500, None).unwrap();
     assert!(!nt.hits.is_empty() && nt.hits.iter().all(|h| !["Psalms", "Ezekiel", "Genesis"].contains(&h.book.as_str())));
-    let psalms = search::search(&d, &s, "shepherd", "BSB", search::Scope { testament: None, book: Some("Psalms") }, 500).unwrap();
+    let psalms = search::search(&d, &s, "shepherd", "BSB", search::Scope { testament: None, book: Some("Psalms") }, 500, None).unwrap();
     assert!(has(&psalms.hits, "Psalms", 23, 1) && psalms.hits.iter().all(|h| h.book == "Psalms"));
     assert!(psalms.exact < nt.exact + 100 && psalms.exact > 0);
 
     // nothing to search for, and odd punctuation, are not errors
-    assert!(search::search(&d, &s, "  ", "BSB", all, 50).unwrap().hits.is_empty());
-    search::search(&d, &s, "\"love (one) another*", "BSB", all, 50).unwrap();
+    assert!(search::search(&d, &s, "  ", "BSB", all, 50, None).unwrap().hits.is_empty());
+    search::search(&d, &s, "\"love (one) another*", "BSB", all, 50, None).unwrap();
 
     // topical headings
     let faith = search::topics(&s, "faith").unwrap();
@@ -131,7 +131,7 @@ fn plans_and_backup() {
     assert_eq!(userdata::note(&other, "Romans", 8, 28).unwrap(), "All things.");
     assert_eq!(userdata::plan_progress(&other).unwrap()[0].done_days, [1]);
 
-    // a backup from the desktop app: its extra parts are left alone, a bright colour becomes
+    // a backup from the desktop app: its extra parts are left alone, a colour the phone does not have becomes
     // the nearest of the phone's, a note's tags and range are kept, and a newer note wins
     let desktop = r#"{"format":"bible-concordance-study/1","exported_at":"2030-01-01 10:00:00",
         "bookmarks":[{"book":"John","chapter":1,"verse":1,"value":"","created_at":"2026-01-01 08:00:00","verse_text":"In the beginning"}],
@@ -144,7 +144,7 @@ fn plans_and_backup() {
     assert_eq!(n, userdata::Counts { bookmarks: 1, highlights: 1, notes: 1, plans: 1 });
     assert_eq!(userdata::note(&phone, "Romans", 8, 28).unwrap(), "Newer, from the desktop.");
     let m = userdata::chapter_marks(&phone, "John", 1).unwrap();
-    assert_eq!(m.highlights, [(1, "green".to_string())]);
+    assert_eq!(m.highlights, [(1, "lime".to_string())], "the phone has the desktop's bright colours too (since 2.9.8), so lime stays lime");
     assert_eq!(userdata::chapter_marks(&phone, "Psalms", 23).unwrap().highlights, [(1, "blue".to_string())], "a highlight already here keeps its colour");
     let p = &userdata::plan_progress(&phone).unwrap()[0];
     assert_eq!((p.started_on.as_str(), p.done_days.as_slice()), ("2026-10-01", &[1, 5][..]));
@@ -179,7 +179,7 @@ fn a_verse_looked_at_more_closely() {
     assert!(search::article(&s, -1).unwrap().is_none());
 
     // a search offers articles and topics on its subject, and topics are never articles
-    let r = search::search(&d, &s, "baptism", "BSB", search::Scope::default(), 50).unwrap();
+    let r = search::search(&d, &s, "baptism", "BSB", search::Scope::default(), 50, None).unwrap();
     assert!(!r.articles.is_empty() && r.articles.len() <= 6);
     assert!(r.topics.iter().all(|t| t.source.contains("Topical")));
 }
