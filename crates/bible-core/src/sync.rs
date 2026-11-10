@@ -145,9 +145,9 @@ pub trait Store {
     }
 }
 
-/// The records both apps keep, the same way: bookmarks, highlights, notes, reading plans, and
-/// the names of the highlight colours.
-pub const COMMON_KINDS: [&str; 6] = ["bm", "hl", "note", "plan", "pday", "hlname"];
+/// The records both apps keep, the same way: bookmarks, highlights, notes, reading plans, the
+/// names of the highlight colours, and the days chapters were read (the reading streak).
+pub const COMMON_KINDS: [&str; 7] = ["bm", "hl", "note", "plan", "pday", "hlname", "read"];
 
 /// The highlight colours both apps offer, in the desktop's order.
 pub const HIGHLIGHT_COLORS: [&str; 11] = ["yellow", "green", "blue", "pink", "orange", "lemon", "lime", "sky", "rose", "red", "violet"];
@@ -198,6 +198,10 @@ pub fn common_collect(conn: &Connection, out: &mut BTreeMap<String, Value>) -> R
         Ok((format!("pday|{}|{}", r.get::<_, String>(0)?, r.get::<_, i64>(1)?), json!({ "done_at": r.get::<_, String>(2)? })))
     })?;
     put("SELECT color, title FROM highlight_names", &|r| Ok((format!("hlname|{}", r.get::<_, String>(0)?), json!({ "title": r.get::<_, String>(1)? }))))?;
+    // the days chapters were read: one record for each chapter and day, so the reading streak is the same on every device
+    if conn.prepare("SELECT 1 FROM pragma_table_info('reading_log')").and_then(|mut st| st.exists([])).unwrap_or(false) {
+        put("SELECT book, chapter, read_on FROM reading_log", &|r| Ok((format!("read|{}|{}|{}", r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, String>(2)?), json!({}))))?;
+    }
     Ok(())
 }
 
@@ -271,6 +275,19 @@ pub fn common_apply(conn: &Connection, key: &str, v: Option<&Value>) -> Result<b
                 ),
             }
             .map_err(err)?;
+        }
+        "read" => {
+            // "John|3|2026-11-08": the book, the chapter, the day
+            let mut parts = rest(key).rsplitn(3, '|');
+            let (Some(day), Some(chapter), Some(book)) = (parts.next(), parts.next(), parts.next()) else { return Ok(true) };
+            let chapter: i64 = chapter.parse().unwrap_or(0);
+            if chapter > 0 && !book.is_empty() && day.len() == 10 {
+                match v {
+                    None => conn.execute("DELETE FROM reading_log WHERE book=?1 AND chapter=?2 AND read_on=?3", params![book, chapter, day]),
+                    Some(_) => conn.execute("INSERT OR IGNORE INTO reading_log (book, chapter, read_on) VALUES (?1,?2,?3)", params![book, chapter, day]),
+                }
+                .map_err(err)?;
+            }
         }
         _ => return Ok(false),
     }
@@ -643,11 +660,31 @@ mod tests {
              CREATE TABLE highlights (book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, color TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')), PRIMARY KEY (book, chapter, verse));
              CREATE TABLE notes (book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')), updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')), verse_end INTEGER, tags TEXT NOT NULL DEFAULT '', PRIMARY KEY (book, chapter, verse));
              CREATE TABLE plans (plan_id TEXT PRIMARY KEY, started_on TEXT NOT NULL);
-             CREATE TABLE plan_days (plan_id TEXT NOT NULL, day INTEGER NOT NULL, done_at TEXT NOT NULL DEFAULT (datetime('now','localtime')), PRIMARY KEY (plan_id, day));",
+             CREATE TABLE plan_days (plan_id TEXT NOT NULL, day INTEGER NOT NULL, done_at TEXT NOT NULL DEFAULT (datetime('now','localtime')), PRIMARY KEY (plan_id, day));
+             CREATE TABLE reading_log (book TEXT NOT NULL, chapter INTEGER NOT NULL, read_on TEXT NOT NULL, PRIMARY KEY (book, chapter, read_on));",
         )
         .unwrap();
         init(&conn).unwrap();
         conn
+    }
+
+    #[test]
+    fn the_days_chapters_were_read_are_the_same_on_every_device() {
+        let root = std::env::temp_dir().join(format!("bc-core-read-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let folder = DirFolder::new(&root.join("shared")).unwrap();
+        let (mut a, mut b) = (phone(&root, "a"), phone(&root, "b"));
+        a.execute("INSERT INTO reading_log VALUES ('John', 3, '2026-11-08'), ('1 Samuel', 17, '2026-11-09')", []).unwrap();
+        b.execute("INSERT INTO reading_log VALUES ('Psalms', 23, '2026-11-10')", []).unwrap();
+        sync(&mut a, &CommonStore, &folder, "Phone A", "phone").unwrap();
+        let r = sync(&mut b, &CommonStore, &folder, "Phone B", "phone").unwrap();
+        assert_eq!((r.sent, r.received), (1, 2), "B sends its own day and receives A's two");
+        sync(&mut a, &CommonStore, &folder, "Phone A", "phone").unwrap();
+        for c in [&a, &b] {
+            let days: i64 = c.query_row("SELECT count(DISTINCT read_on) FROM reading_log", [], |r| r.get(0)).unwrap();
+            assert_eq!(days, 3, "three different days on both devices");
+        }
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]

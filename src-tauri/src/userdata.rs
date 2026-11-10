@@ -1039,6 +1039,21 @@ pub fn sermons_all(conn: &Connection) -> Result<Vec<Sermon>, String> {
 
 // ---------------------------------------------------------------- export / import
 
+/// One chapter read on one day, for the reading streak (the phone's backup carries the same).
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ReadEntry {
+    pub book: String,
+    pub chapter: i64,
+    pub read_on: String,
+}
+
+/// Every chapter read and on which day.
+pub fn reading_all(conn: &Connection) -> Result<Vec<ReadEntry>, String> {
+    let mut s = conn.prepare("SELECT book, chapter, read_on FROM reading_log ORDER BY read_on, book, chapter").map_err(err)?;
+    let rows = s.query_map([], |r| Ok(ReadEntry { book: r.get(0)?, chapter: r.get(1)?, read_on: r.get(2)? })).map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
 #[derive(Serialize, Deserialize, Default)]
 pub struct Backup {
     pub format: String,
@@ -1051,6 +1066,9 @@ pub struct Backup {
     pub notes: Vec<StudyItem>,
     #[serde(default)]
     pub plans: Vec<PlanProgress>,
+    /// the chapters read and on which day, for the reading streak (shared with the phone); absent in backups from before 3.0.1
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reading: Vec<ReadEntry>,
     /// saved sermons (sermon builder); absent in backups from before 2.5
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub sermons: Vec<Sermon>,
@@ -1247,6 +1265,13 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
         }
         r.plans += 1;
     }
+    // the reading days of another device (the phone), added to ours: a day already here stays as it is
+    for e in &b.reading {
+        if e.book.trim().is_empty() || !is_date(&e.read_on) {
+            continue;
+        }
+        tx.execute("INSERT OR IGNORE INTO reading_log (book, chapter, read_on) VALUES (?1,?2,?3)", params![e.book, e.chapter, e.read_on]).map_err(err)?;
+    }
     for m in &b.book_bookmarks {
         let exists: bool = tx
             .query_row("SELECT 1 FROM book_bookmarks WHERE module = ?1 AND section = ?2 AND para = ?3", params![m.module, m.section, m.para], |_| Ok(true))
@@ -1345,6 +1370,31 @@ mod tests {
         (open(&dir).unwrap(), dir)
     }
 
+    #[test]
+    fn the_reading_days_travel_in_a_backup_and_are_added_not_replaced() {
+        let (c, dir) = temp_db();
+        mark_read(&c, "John", 3, "2026-11-08").unwrap();
+        mark_read(&c, "John", 4, "2026-11-09").unwrap();
+        let backup = Backup { format: BACKUP_FORMAT.into(), exported_at: "now".into(), reading: reading_all(&c).unwrap(), ..Default::default() };
+        let json = serde_json::to_string(&backup).unwrap();
+        assert!(json.contains("\"reading\""));
+        // another device (the phone) has read other days; the backup is added to them
+        let (mut c2, dir2) = temp_db();
+        mark_read(&c2, "Psalms", 23, "2026-11-10").unwrap();
+        import_backup(&mut c2, &json).unwrap();
+        let all = reading_all(&c2).unwrap();
+        assert_eq!(all.len(), 3, "{all:?}");
+        // reading the same days again changes nothing; a backup from before has no reading in it
+        import_backup(&mut c2, &json).unwrap();
+        assert_eq!(reading_all(&c2).unwrap().len(), 3);
+        let old = serde_json::to_string(&Backup { format: BACKUP_FORMAT.into(), ..Default::default() }).unwrap();
+        assert!(!old.contains("reading"));
+        import_backup(&mut c2, &old).unwrap();
+        assert_eq!(reading_all(&c2).unwrap().len(), 3);
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(dir2);
+    }
+
     fn rand_suffix() -> u128 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
     }
@@ -1423,6 +1473,7 @@ mod tests {
             highlights: list_highlights(&c).unwrap(),
             notes: list_notes(&c).unwrap(),
             plans: plan_progress(&c).unwrap(),
+            reading: reading_all(&c).unwrap(),
             sermons: sermons_all(&c).unwrap(),
             book_bookmarks: book_bookmarks(&c, None).unwrap(),
             sermon_templates: sermon_templates(&c).unwrap(),
