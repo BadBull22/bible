@@ -8,6 +8,8 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
+    // the computer's theme files (src/themes) are used from their source: their "react" is this project's (the build mirror has no node_modules beside them)
+    "paths": { "react": ["./node_modules/@types/react"] },
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
