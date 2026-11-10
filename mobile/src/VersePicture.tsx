@@ -1,14 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { api, BackgroundInfo, BackgroundThumb, phone } from "./api";
+import { api, BackgroundInfo, BackgroundThumb, phone, type Verse } from "./api";
 
 interface Props {
-  label: string;
+  book: string;
+  chapter: number;
+  /** the verse (or the first and last of the passage) the picture starts with; up to three verses in a row can be put on one picture */
+  first: number;
+  last: number;
   version: string;
+  /** the words of first..last, shown at once (the rest of the chapter is read in behind them) */
   text: string;
   say: (message: string) => void;
   fail: (e: unknown) => void;
 }
+
+/** The most verses on one picture. */
+export const MOST_VERSES = 3;
+/** The smallest the words may be drawn (on the 1080 picture): below it a passage is "too long for one picture", so the words are always legible. */
+export const MIN_SIZE = 40;
 
 interface Look {
   name: string;
@@ -33,6 +43,44 @@ const WEBSITE = "bible4me.org";
 
 /** What the verse is drawn on: a colour gradient, or a photo. */
 type Ground = { kind: "colour"; look: Look } | { kind: "photo"; image: HTMLImageElement };
+
+const MARGIN = 110;
+const SERIF = 'Georgia, "Noto Serif", serif';
+
+/** The words as large as fit above the reference (88 down to MIN_SIZE). `fits` is false when even the smallest legible size is too small for them;
+ *  the lines are then cut to what fits, ending in "...", so a long passage is never drawn off the picture. */
+function layoutWords(ctx: CanvasRenderingContext2D, text: string): { size: number; lines: string[]; fits: boolean } {
+  const width = SIZE - MARGIN * 2;
+  const words = `“${text.trim()}”`.split(/\s+/);
+  const room = SIZE - MARGIN * 2 - 140;
+  let lines: string[] = [];
+  let size = 88;
+  for (; size >= MIN_SIZE; size -= 2) {
+    ctx.font = `${size}px ${SERIF}`;
+    lines = [];
+    let line = "";
+    for (const w of words) {
+      const next = line ? `${line} ${w}` : w;
+      if (ctx.measureText(next).width > width && line) {
+        lines.push(line);
+        line = w;
+      } else line = next;
+    }
+    if (line) lines.push(line);
+    if (lines.length * size * 1.35 <= room) return { size, lines, fits: true };
+  }
+  size = MIN_SIZE;
+  const most = Math.max(1, Math.floor(room / (size * 1.35)));
+  const cut = lines.slice(0, most);
+  cut[cut.length - 1] = cut[cut.length - 1].replace(/[\s,;:.]*$/, "") + "…";
+  return { size, lines: cut, fits: false };
+}
+
+/** Would these words (with their reference) fit on one picture at a legible size? */
+export function fitsOnePicture(text: string): boolean {
+  const ctx = document.createElement("canvas").getContext("2d");
+  return ctx ? layoutWords(ctx, text).fits : true;
+}
 
 /** Draws the verse on a square picture: the words as large as fit, the reference below. */
 function draw(canvas: HTMLCanvasElement, ground: Ground, text: string, label: string, version: string) {
@@ -64,27 +112,9 @@ function draw(canvas: HTMLCanvasElement, ground: Ground, text: string, label: st
     ctx.fillRect(0, 0, SIZE, SIZE);
   }
 
-  const margin = 110;
-  const width = SIZE - margin * 2;
-  const words = `“${text.trim()}”`.split(/\s+/);
-  const serif = 'Georgia, "Noto Serif", serif';
-  // the largest size at which the verse fits in the space above the reference
-  let size = 88;
-  let lines: string[] = [];
-  for (; size >= 30; size -= 2) {
-    ctx.font = `${size}px ${serif}`;
-    lines = [];
-    let line = "";
-    for (const w of words) {
-      const next = line ? `${line} ${w}` : w;
-      if (ctx.measureText(next).width > width && line) {
-        lines.push(line);
-        line = w;
-      } else line = next;
-    }
-    if (line) lines.push(line);
-    if (lines.length * size * 1.35 <= SIZE - margin * 2 - 140) break;
-  }
+  // the largest size at which the words fit in the space above the reference
+  const { size, lines } = layoutWords(ctx, text);
+  ctx.font = `${size}px ${SERIF}`;
   const lineHeight = size * 1.35;
   const block = lines.length * lineHeight;
   let y = (SIZE - block - 120) / 2 + size;
@@ -117,8 +147,41 @@ const loadImage = (base64: string) =>
   });
 
 /** Makes a picture of a verse to share or keep: on a colour, or on a nature photo. */
-export function VersePicture({ label, version, text, say, fail }: Props) {
+export function VersePicture({ book, chapter, first, last, version, text: firstText, say, fail }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
+  // up to three verses in a row go on one picture: the passage starts as given, and "+ previous / + next verse" widen it
+  const [range, setRange] = useState<[number, number]>([first, last]);
+  const [chapterVerses, setChapterVerses] = useState<Verse[] | null>(null);
+  useEffect(() => setRange([first, last]), [first, last, book, chapter]);
+  useEffect(() => {
+    let live = true;
+    api
+      .chapter(version, book, chapter)
+      .then((v) => live && setChapterVerses(v))
+      .catch(() => live && setChapterVerses([]));
+    return () => {
+      live = false;
+    };
+  }, [version, book, chapter]);
+  const wordsOf = (a: number, b: number) =>
+    (chapterVerses ?? [])
+      .filter((v) => v.verse >= a && v.verse <= b)
+      .map((v) => v.text.trim())
+      .join(" ");
+  const text = range[0] === first && range[1] === last ? firstText : wordsOf(range[0], range[1]) || firstText;
+  const label = `${book} ${chapter}:${range[0]}${range[1] > range[0] ? `-${range[1]}` : ""}`;
+  const count = range[1] - range[0] + 1;
+  const have = (n: number) => (chapterVerses ?? []).some((v) => v.verse === n);
+  // widening is offered while there are fewer than three verses, the neighbour exists, and all the words still fit at a legible size
+  const canAdd = useMemo(() => {
+    const room = (n: number) => count < MOST_VERSES && have(n);
+    const fit = (a: number, b: number) => fitsOnePicture(wordsOf(a, b));
+    return {
+      prev: room(range[0] - 1) ? (fit(range[0] - 1, range[1]) ? "yes" : "long") : "none",
+      next: room(range[1] + 1) ? (fit(range[0], range[1] + 1) ? "yes" : "long") : "none",
+    } as { prev: "yes" | "long" | "none"; next: "yes" | "long" | "none" };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [range, chapterVerses]);
   const [mode, setMode] = useState<"colour" | "nature">("colour");
   const [look, setLook] = useState(0);
   // nature photos: how many are downloaded, the small pictures, the one chosen
@@ -188,6 +251,19 @@ export function VersePicture({ label, version, text, say, fail }: Props) {
   return (
     <>
       <canvas ref={canvas} className="picture-preview" aria-label={`Picture of ${label}`} />
+      {chapterVerses && chapterVerses.length > 0 && (
+        <div className="picture-verses" role="group" aria-label="Verses on the picture">
+          <button disabled={canAdd.prev !== "yes"} onClick={() => setRange([range[0] - 1, range[1]])}>
+            + Previous verse
+          </button>
+          <button disabled={canAdd.next !== "yes"} onClick={() => setRange([range[0], range[1] + 1])}>
+            + Next verse
+          </button>
+          {(range[0] !== first || range[1] !== last) && <button onClick={() => setRange([first, last])}>Just {first === last ? "this verse" : "the first passage"}</button>}
+        </div>
+      )}
+      {chapterVerses && (canAdd.prev === "long" || canAdd.next === "long") && <p className="hint">Too long for one picture: a longer passage would need words too small to read.</p>}
+      {count >= MOST_VERSES && <p className="hint">Up to {MOST_VERSES} verses fit on one picture.</p>}
       <div className="chips segmented" role="tablist">
         <button role="tab" aria-selected={mode === "colour"} className={mode === "colour" ? "on" : ""} onClick={() => setMode("colour")}>
           Colours

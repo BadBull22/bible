@@ -1828,3 +1828,29 @@ details.hl-all > summary {
 .browse-topic-card ul { margin: 0.3rem 0 0.5rem; padding-left: 1.1rem; }
 .browse-topic-card li { margin-bottom: 0.3rem; }
 .browse-kids .browse-retelling { font-size: 1.05rem; }
+
+/* ---------- the Search page before anything is typed: the Gospel wordmark and nothing else (since 3.0.0) ---------- */
+.gospel-home { display: flex; flex-direction: column; align-items: center; padding-top: 16vh; }
+.gospel-wordmark {
+  margin: 0;
+  font-family: "Poppins", "Product Sans", var(--sans);
+  font-weight: 400;
+  font-size: clamp(3.6rem, 20vw, 5.6rem);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  cursor: text;
+  user-select: none;
+}
+.gospel-wordmark span:nth-child(1) { color: #4285f4; }
+.gospel-wordmark span:nth-child(2) { color: #ea4335; }
+.gospel-wordmark span:nth-child(3) { color: #fbbc05; }
+.gospel-wordmark span:nth-child(4) { color: #4285f4; }
+.gospel-wordmark span:nth-child(5) { color: #34a853; }
+.gospel-wordmark span:nth-child(6) { color: #ea4335; }
+.gospel-recent { justify-content: center; margin-top: 1.6rem; }
+
+/* ---------- the verse picture: more verses on it, and Share under the verse for today (since 3.0.0) ---------- */
+.picture-verses { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0 0.3rem; }
+.picture-verses button { min-height: 2.3rem; padding: 0.3rem 0.85rem; border: 1px solid var(--border); border-radius: 999px; background: var(--raised); font-size: 0.86rem; }
+.picture-verses button:disabled { opacity: 0.45; }
+.today-actions { display: flex; gap: 1.2rem; }
