@@ -35,6 +35,9 @@ param(
     # name under the icon ("Bible v3 Test") and its own data. Use it for every test build on a phone that has the real app (a tester's phone:
     # an install over the real app would also take the tester's place in Google Play's closed test away).
     [switch]$SideBySide,
+    # where the finished file goes (default: installer\ beside the project). A build only for checking on the emulator goes elsewhere, so that no new
+    # installer shows up in installer\ before the owner asks for one.
+    [string]$OutDir = "",
     # phones are 64-bit ARM (32-bit ARM is included for older ones); the emulator on a PC is x86_64
     [string[]]$Targets = @("aarch64", "armv7"),
     [string]$Mirror = "$env:LOCALAPPDATA\bible-concordance-build\mobile-mirror",
@@ -96,6 +99,8 @@ Mirror-Dir "$root\crates" "$Mirror\crates" @("target", ".cargo")
 # Browse (since 3.0.0): the desktop's pages (JSON) and the rules that find them, used from their source (mobile\src\Browse.tsx imports ..\..\src\browse);
 # the children's pictures stay out (they are optional downloads on the phone)
 Mirror-Dir "$root\src\browse" "$Mirror\src\browse" @("pictures")
+# the themes (since 3.0.0): the desktop's own theme code, wordmark pictures, screen packages and verses of the season, used from their source
+Mirror-Dir "$root\src\themes" "$Mirror\src\themes" @()
 
 Set-Location "$Mirror\mobile"
 # the mirror has its own node_modules: install when there is none, or when the packages asked for have changed
@@ -234,10 +239,11 @@ $apk = if ($isAab) {
 if (-not $apk) { throw "Nothing was produced" }
 $version = (Get-Content "$mobile\package.json" -Raw | ConvertFrom-Json).version
 $name = "BibleConcordance_Android_$version" + $(if ($Play) { "_play" } else { "" }) + $(if ($Release) { "" } else { "_debug" }) + $(if ($TestApk) { "_test" } else { "" }) + $Suffix + $(if ($isAab) { ".aab" } else { ".apk" })
-New-Item -ItemType Directory -Force "$root\installer" | Out-Null
-Copy-Item $apk.FullName "$root\installer\$name" -Force
-Write-Host ("{0}  {1:N1} MB" -f "installer\$name", ($apk.Length / 1MB)) -ForegroundColor Green
+$outDir = if ($OutDir) { $OutDir } else { "$root\installer" }
+New-Item -ItemType Directory -Force $outDir | Out-Null
+Copy-Item $apk.FullName "$outDir\$name" -Force
+Write-Host ("{0}  {1:N1} MB" -f "$outDir\$name", ($apk.Length / 1MB)) -ForegroundColor Green
 
 if ($Install) {
-    & "$env:ANDROID_HOME\platform-tools\adb.exe" install -r "$root\installer\$name"
+    & "$env:ANDROID_HOME\platform-tools\adb.exe" install -r "$outDir\$name"
 }

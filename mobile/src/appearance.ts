@@ -25,7 +25,10 @@ export function resolvedTheme(t: Theme): "light" | "dark" | "sepia" {
 
 export function applyAppearance(a: Appearance) {
   const root = document.documentElement;
-  root.dataset.theme = resolvedTheme(a.theme);
+  const resolved = resolvedTheme(a.theme);
+  root.dataset.theme = resolved;
+  // the desktop's theme packages read data-scheme (light or dark) on elements that carry the .pv class
+  root.dataset.scheme = resolved === "dark" ? "dark" : "light";
   root.dataset.text = a.textColor;
   root.dataset.contrast = a.contrast;
   root.dataset.font = a.font;
