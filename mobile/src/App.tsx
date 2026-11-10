@@ -39,6 +39,7 @@ import { BrowseEntryPoints, BrowseMatches, BrowseScreen, type BrowseOpen } from 
 import { HomeScreen, ThemeSettings, useLook } from "./Theme";
 import { BibleMaps, MapsEntry } from "./BibleMaps";
 import { Authors, AuthorsEntry } from "./Authors";
+import { PicturesSettings } from "./Pictures";
 import { getThemeState } from "../../src/themes/themeStore";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
@@ -1429,6 +1430,8 @@ export function App() {
             <MapsEntry onOpen={() => setMapsOpen(true)} />
             <h2>Authors</h2>
             <AuthorsEntry onOpen={() => setAuthorsOpen(true)} />
+            <h2>Bible pictures</h2>
+            <PicturesSettings />
 
                 <section className="dictionary">
                     <h3>Bible dictionary</h3>

@@ -19,6 +19,17 @@ export interface Book {
   chapters: number;
 }
 
+/** Who made a story picture, where it is from and the licence (the picture pack's credits.json). */
+export interface StoryCredit {
+  title: string;
+  artist: string;
+  credit: string;
+  licence: string;
+  licence_url: string;
+  page: string;
+  collection: string;
+}
+
 export interface Verse {
   verse: number;
   text: string;
@@ -290,6 +301,11 @@ export const api = {
   originalInstall: () => invoke<void>("original_install"),
   originalRemove: () => invoke<void>("original_remove"),
   /** the words of a verse, and the credit to show with them (empty if they are not downloaded) */
+  picturesStatus: (kind: "stories" | "kids") => invoke<{ installed: boolean; size_mb: number }>("pictures_status", { kind }),
+  picturesInstall: (kind: "stories" | "kids") => invoke<void>("pictures_install", { kind }),
+  picturesRemove: (kind: "stories" | "kids") => invoke<void>("pictures_remove", { kind }),
+  storyPicture: (id: string) => invoke<{ image: string; credit: StoryCredit } | null>("story_picture", { id }),
+  kidPicture: (id: string, outline = false) => invoke<string | null>("kid_picture", { id, outline }),
   originalWords: (book: string, chapter: number, verse: number) => invoke<[OriginalWord[], string]>("original_words", { book, chapter, verse }),
   topicVerses: (id: number, version: string) => invoke<Hit[]>("topic_verses", { id, version }),
   crossRefs: (version: string, book: string, chapter: number, verse: number) => invoke<Hit[]>("cross_refs", { version, book, chapter, verse }),

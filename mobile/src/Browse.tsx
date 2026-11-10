@@ -9,6 +9,7 @@ import { useBack } from "./back";
 import { AGE_BANDS, ageLabel, parseRef, searchEntries, tagCounts, withTag, type BrowseEntry } from "../../src/browse/browseLogic";
 import { CHILDREN, ENTRIES, STORIES, TOPICS, childPage, findBrowse, story, topic } from "../../src/browse/data";
 import type { BrowseKind, ChildPage, Story, Topic } from "../../src/browse/types";
+import { KidFigure, PictureOffer, StoryFigure } from "./Pictures";
 
 export interface BrowseOpen {
   kind: BrowseKind;
@@ -162,6 +163,8 @@ function StoryView({ page, actions }: { page: Story; actions: Actions }) {
     <article className="browse-page">
       <h2>{page.title}</h2>
       {page.also && page.also.length > 0 && <p className="browse-also">Also called: {page.also.join(", ")}</p>}
+      <StoryFigure id={page.id} title={page.title} />
+      <PictureOffer kind="stories" />
       <FlagBox note={page.doctrine === "needs_review" ? page.doctrine_note : undefined} teaching={page.church_teaching} />
       {page.summary.split("\n\n").map((para, i) => (
         <p key={i} className="browse-summary">
@@ -288,6 +291,8 @@ function ChildView({ page, actions }: { page: ChildPage; actions: Actions }) {
     <article className="browse-page browse-kids">
       <h2>{page.title}</h2>
       <p className="browse-also">{ageLabel(page.age)}</p>
+      <KidFigure id={page.id} title={page.title} />
+      <PictureOffer kind="kids" />
       <FlagBox note={page.doctrine === "needs_review" ? page.doctrine_note : undefined} teaching={page.church_teaching} />
       <div className="browse-retelling">
         {page.retelling.map((para, i) => (
