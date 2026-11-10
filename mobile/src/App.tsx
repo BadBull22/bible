@@ -231,7 +231,9 @@ export function App() {
   const [target, setTarget] = useState<number | null>(null);
   const [chosen, setChosen] = useState<number | null>(null); // the verse whose actions are open
   const [picker, setPicker] = useState<null | { book: Book | null; testament: "OT" | "NT" }>(null);
-  const [today, setToday] = useState<null | { label: string; text: string; book: string; chapter: number; verse: number }>(null);
+  const [today, setToday] = useState<null | { label: string; text: string; book: string; chapter: number; verse: number; verseEnd: number }>(null);
+  /** the Share picture of the verse for today is open */
+  const [sharingToday, setSharingToday] = useState(false);
   const pane = useRef<HTMLDivElement>(null);
   const moreBox = useRef<HTMLDivElement>(null);
   /** More: tapping a heading shows (or hides) the explanations under it, up to the next heading. The headings that have some show a small (i). */
@@ -295,6 +297,10 @@ export function App() {
   const [corrected, setCorrected] = useState<string | null>(null);
   /** Browse (stories, "Verses for...", children's pages) open in the Search tab: the list of a kind, or one page */
   const [browse, setBrowse] = useState<BrowseOpen | null>(null);
+  /** the tab Browse was opened from: Search (from results) or More (the three ways in); its Back goes there */
+  const [browseIn, setBrowseIn] = useState<"search" | "more">("more");
+  /** the search box has the cursor (the Recent list shows then, and only then) */
+  const [boxFocused, setBoxFocused] = useState(false);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const searchUpgrade = useSearchUpgrade();
@@ -367,7 +373,7 @@ export function App() {
     const v = verseForToday();
     api
       .passage(version, v.book, v.chapter, v.verse, v.verseEnd)
-      .then((text) => text && setToday({ label: refLabel({ ...v, verse_end: v.verseEnd }), text, book: v.book, chapter: v.chapter, verse: v.verse }))
+      .then((text) => text && setToday({ label: refLabel({ ...v, verse_end: v.verseEnd }), text, book: v.book, chapter: v.chapter, verse: v.verse, verseEnd: v.verseEnd }))
       .catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -622,6 +628,17 @@ export function App() {
     }
   }
 
+  // clearing the search box puts the Search page back to the Gospel wordmark
+  useEffect(() => {
+    if (!typed.trim() && query) {
+      setQuery("");
+      setTopic(null);
+      setAnswer(null);
+      setCorrected(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typed]);
+
   useEffect(() => {
     if (!query) return;
     let current = true;
@@ -787,6 +804,7 @@ export function App() {
   useBack(picker != null, () => setPicker(null));
   useBack(article != null, () => setArticle(null));
   useBack(chosen != null, () => setChosen(null));
+  useBack(sharingToday, () => setSharingToday(false));
   useBack(asking != null, () => setAsking(null));
   useBack(study != null, () => setStudy(null));
   useBack(showTranslations, () => setShowTranslations(false));
@@ -814,6 +832,8 @@ export function App() {
             placeholder="John 3:16, a word, or a topic"
             aria-label="Go to a passage, or search the Bible"
             enterKeyHint={reference ? "go" : "search"}
+            onFocus={() => setBoxFocused(true)}
+            onBlur={() => window.setTimeout(() => setBoxFocused(false), 150)}
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
@@ -903,15 +923,20 @@ export function App() {
                   </button>
                 </div>
                 <p>{today.text}</p>
-                <button
-                  className="link"
-                  onClick={() => {
-                    closeToday();
-                    go(today.book, today.chapter, today.verse);
-                  }}
-                >
-                  Read the chapter ›
-                </button>
+                <div className="today-actions">
+                  <button
+                    className="link"
+                    onClick={() => {
+                      closeToday();
+                      go(today.book, today.chapter, today.verse);
+                    }}
+                  >
+                    Read the chapter ›
+                  </button>
+                  <button className="link" onClick={() => setSharingToday(true)}>
+                    Share
+                  </button>
+                </div>
               </aside>
             )}
             <div className="chapter" dir={versionName?.rtl ? "rtl" : undefined}>
@@ -953,11 +978,12 @@ export function App() {
           </>
         )}
 
-        {tab === "search" && browse && (
+        {tab === "search" && browse && browseIn === "search" && (
           <BrowseScreen
             open={browse}
             setOpen={setBrowse}
             version={version}
+            backLabel="Search"
             onJump={go}
             onSearch={(q) => {
               setBrowse(null);
@@ -967,7 +993,7 @@ export function App() {
           />
         )}
 
-        {tab === "search" && !browse && (
+        {tab === "search" && !(browse && browseIn === "search") && (
           <>
             {topic ? (
               <div className="summary">
@@ -978,62 +1004,52 @@ export function App() {
               </div>
             ) : (
               <>
-                <div className="chips" role="group" aria-label="Where to search">
-                  {(
-                    [
-                      ["all", "Whole Bible"],
-                      ["OT", "Old Testament"],
-                      ["NT", "New Testament"],
-                      ["book", place.book],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <button key={key} className={scope === key ? "on" : ""} onClick={() => setScope(key)}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                {!query && <p className="hint">Type a word, a phrase or a subject above — “your faith has healed you”, “gifts of the Spirit”, “forgiveness”. A reference such as “Romans 8:28” opens the passage.</p>}
-                {!query && !typed.trim() && <BrowseEntryPoints onOpen={(kind) => setBrowse({ kind, id: null })} />}
-                {!query && !typed.trim() && (
-                  <section className="dictionary">
-                    <h3>Bible dictionary</h3>
-                    <input className="field" value={word} onChange={(e) => setWord(e.target.value)} placeholder="A person, place or word — e.g. Passover" aria-label="Look up in the dictionary" autoCapitalize="none" autoCorrect="off" />
-                    {found && found.length === 0 && <p className="hint">No article by that name. Try the main search box for verses on it.</p>}
-                    {found && found.length > 0 && (
-                      <ul className="hits plain">
-                        {found.map((a) => (
-                          <li key={a.id} onClick={() => openArticle(a.id)}>
-                            <strong>{a.name}</strong> <small>{a.source}</small>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </section>
-                )}
-                {recent.length > 0 && !typed.trim() && (
-                  <section className="recent">
-                    <h3>
-                      Recent
-                      <button
-                        className="link"
-                        onClick={() => {
-                          setRecent([]);
-                          store(RECENT_KEY, "[]");
-                        }}
-                      >
-                        Clear
+                {query && (
+                  <div className="chips" role="group" aria-label="Where to search">
+                    {(
+                      [
+                        ["all", "Whole Bible"],
+                        ["OT", "Old Testament"],
+                        ["NT", "New Testament"],
+                        ["book", place.book],
+                      ] as const
+                    ).map(([key, label]) => (
+                      <button key={key} className={scope === key ? "on" : ""} onClick={() => setScope(key)}>
+                        {label}
                       </button>
-                    </h3>
-                    <div className="chips">
-                      {recent.map((r) => (
-                        <button key={r} onClick={() => submit(r)}>
-                          {r}
-                        </button>
-                      ))}
-                    </div>
-                  </section>
+                    ))}
+                  </div>
                 )}
-                {!query && !typed.trim() && <SearchUpgradeOffer upgrade={searchUpgrade} />}
+                {!query && (
+                  <div className="gospel-home">
+                    <h1 className="gospel-wordmark" aria-label="Gospel" onClick={() => document.querySelector<HTMLInputElement>(".search-box input")?.focus()}>
+                      {["G", "o", "s", "p", "e", "l"].map((letter, i) => (
+                        <span key={i} aria-hidden="true">
+                          {letter}
+                        </span>
+                      ))}
+                    </h1>
+                    {boxFocused && recent.length > 0 && (
+                      <div className="chips gospel-recent" role="group" aria-label="Recent searches">
+                        {recent.map((r) => (
+                          <button key={r} onMouseDown={(e) => e.preventDefault()} onClick={() => submit(r)}>
+                            {r}
+                          </button>
+                        ))}
+                        <button
+                          className="link"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setRecent([]);
+                            store(RECENT_KEY, "[]");
+                          }}
+                        >
+                          Clear recent
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {query && result && (
                   <p className="summary">
                     <strong>“{query}”</strong>: {result.exact === 0 ? "not found word for word" : `word for word in ${result.exact} verse${result.exact === 1 ? "" : "s"}`} ({version}).
@@ -1055,7 +1071,10 @@ export function App() {
                   <BrowseMatches
                     query={query}
                     also={answer && (answer.kind === "curated" || answer.kind === "related") ? [answer.question] : []}
-                    onOpen={(kind, id) => setBrowse({ kind, id })}
+                    onOpen={(kind, id) => {
+                      setBrowseIn("search");
+                      setBrowse({ kind, id });
+                    }}
                     onJump={go}
                   />
                 )}
@@ -1334,8 +1353,48 @@ export function App() {
           </>
         )}
 
-        {tab === "more" && (
+        {tab === "more" && browse && browseIn === "more" && (
+          <div className="more">
+            <BrowseScreen
+              open={browse}
+              setOpen={setBrowse}
+              version={version}
+              backLabel="More"
+              onJump={go}
+              onSearch={(q) => {
+                setBrowse(null);
+                submit(q);
+              }}
+              onClose={() => setBrowse(null)}
+            />
+          </div>
+        )}
+
+        {tab === "more" && !(browse && browseIn === "more") && (
           <div className="more" ref={moreBox} onClick={toggleExplanations}>
+            <h2>Bible stories and verses</h2>
+            <BrowseEntryPoints
+              onOpen={(kind) => {
+                setBrowseIn("more");
+                setBrowse({ kind, id: null });
+              }}
+            />
+
+                <section className="dictionary">
+                    <h3>Bible dictionary</h3>
+                    <input className="field" value={word} onChange={(e) => setWord(e.target.value)} placeholder="A person, place or word — e.g. Passover" aria-label="Look up in the dictionary" autoCapitalize="none" autoCorrect="off" />
+                    {found && found.length === 0 && <p className="hint">No article by that name. Try the main search box for verses on it.</p>}
+                    {found && found.length > 0 && (
+                      <ul className="hits plain">
+                        {found.map((a) => (
+                          <li key={a.id} onClick={() => openArticle(a.id)}>
+                            <strong>{a.name}</strong> <small>{a.source}</small>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                </section>
+
             <h2>Translations</h2>
             <p className="hint keep">
               Built in: {versions.filter((v) => !v.downloaded).map((v) => v.code).join(", ")}.
@@ -1538,6 +1597,13 @@ export function App() {
       </nav>
 
       {toast && <div className="toast" role="status">{toast}</div>}
+
+      {sharingToday && today && (
+        <Sheet tall onClose={() => setSharingToday(false)}>
+          <h3>Share the verse for today</h3>
+          <VersePicture book={today.book} chapter={today.chapter} first={today.verse} last={today.verseEnd} version={version} text={today.text} say={say} fail={fail} />
+        </Sheet>
+      )}
 
       {chosenVerse && (
         <VerseSheet
@@ -1954,7 +2020,7 @@ function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, o
           )}
         </div>
       )}
-      {view === "picture" && <VersePicture label={label} version={version} text={verse.text} say={say} fail={fail} />}
+      {view === "picture" && <VersePicture book={book} chapter={chapter} first={verse.verse} last={verse.verse} version={version} text={verse.text} say={say} fail={fail} />}
       {view === "compare" && (
         <ul className="hits plain">
           {(all ?? []).map(([code, text]) => (

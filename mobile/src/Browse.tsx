@@ -356,11 +356,10 @@ function List({ list, onOpen }: { list: BrowseEntry[]; onOpen: (e: BrowseEntry) 
   );
 }
 
-/** The three ways in, on the Search tab before anything is typed. */
+/** The three ways in, in More. */
 export function BrowseEntryPoints({ onOpen }: { onOpen: (kind: BrowseKind) => void }) {
   return (
     <section className="browse-entry">
-      <h3>Browse</h3>
       <div className="browse-entry-grid">
         {TABS.map((t) => (
           <button key={t.kind} className="browse-card" onClick={() => onOpen(t.kind)}>
@@ -375,8 +374,8 @@ export function BrowseEntryPoints({ onOpen }: { onOpen: (kind: BrowseKind) => vo
   );
 }
 
-/** Bible stories, "Verses for..." pages and children's pages, in the Search tab. The Back button steps from a page to the list, then out. */
-export function BrowseScreen({ open, setOpen, version, onJump, onSearch, onClose }: { open: BrowseOpen; setOpen: (o: BrowseOpen) => void; version: string; onJump: Actions["onJump"]; onSearch: Actions["onSearch"]; onClose: () => void }) {
+/** Bible stories, "Verses for..." pages and children's pages, opened from More (or from the offer under search results). The Back button steps from a page to the list, then out. */
+export function BrowseScreen({ open, setOpen, version, backLabel, onJump, onSearch, onClose }: { open: BrowseOpen; setOpen: (o: BrowseOpen) => void; version: string; /** where Back from the list goes ("Search" or "More") */ backLabel: string; onJump: Actions["onJump"]; onSearch: Actions["onSearch"]; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string | null>(null);
   const [moreTags, setMoreTags] = useState(false);
@@ -418,7 +417,7 @@ export function BrowseScreen({ open, setOpen, version, onJump, onSearch, onClose
   return (
     <div className="browse">
       <button className="link back" onClick={onClose}>
-        ‹ Search
+        ‹ {backLabel}
       </button>
       <div className="chips segmented" role="tablist" aria-label="What to browse">
         {TABS.map((t) => (
