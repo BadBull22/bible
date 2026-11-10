@@ -47,6 +47,28 @@ pub mod firsts;
 pub mod answer_gate;
 #[path = "../../../src-tauri/src/spell.rs"]
 pub mod spell;
+// the desktop's questions about a person's family ("who were John the Baptist's parents?"), answered from the people tables
+// the phone's database carries since 3.0.0. It fills in the two small shapes below (the desktop's models.rs is far larger).
+pub mod models {
+    use crate::qa::QaConfidence;
+
+    #[derive(Clone)]
+    pub struct AskCitation {
+        pub reference: String,
+        pub role: String,
+    }
+
+    #[derive(Clone)]
+    pub struct AskCuratedEntry {
+        pub question: String,
+        pub confidence: QaConfidence,
+        pub answer: String,
+        pub citations: Vec<AskCitation>,
+        pub note: Option<String>,
+    }
+}
+#[path = "../../../src-tauri/src/people_qa.rs"]
+pub mod people_qa;
 pub mod ask;
 
 static PHONE_DB_GZ: &[u8] = include_bytes!("../resources/phone.db.gz");
