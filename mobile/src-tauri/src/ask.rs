@@ -324,6 +324,19 @@ pub fn ask(db: &Connection, study: &Connection, query: &str, meaning: Option<&Me
     if let Some(e) = data.qa.find_exact(query) {
         return Ok(curated(db, &data.firsts, e, false));
     }
+    // ... or a question about a person's family ("who were John the Baptist's parents?"), from the people tables in the database, with the
+    // name spelled either way (Elizabeth / Elisabeth). Needs no search upgrade; when the person or the tie is not in the data it says nothing
+    // and the layers below go on.
+    if let Some(e) = crate::people_qa::answer(study, query)? {
+        return Ok(Some(Answer::Curated {
+            question: e.question,
+            confidence: confidence_name(&e.confidence).into(),
+            answer: e.answer,
+            citations: e.citations.into_iter().map(|c| Citation { reference: c.reference, role: c.role }).collect(),
+            note: e.note,
+            by_meaning: false,
+        }));
+    }
     let question = looks_like_question(query);
     // ... or, with the search upgrade, the closest questions on file (the desktop's layers: the four closest answers, each tried
     // against the gate; the closest that fails the gate is kept as the "related" answer)
@@ -340,7 +353,8 @@ pub fn ask(db: &Connection, study: &Connection, query: &str, meaning: Option<&Me
         let mut seen: HashSet<(bool, &String)> = HashSet::new();
         let candidates: Vec<(bool, &String, f32)> = scored.into_iter().filter(|(f, id, _)| seen.insert((*f, *id))).take(4).collect();
         let needed = if question { SIMILARITY } else { NOT_A_QUESTION };
-        let is_name = |w: &str| names(db).contains(&w.to_lowercase());
+        // a name is a person the people table knows (once the word list is made), or a word the Bible text only ever capitalises (places too)
+        let is_name = |w: &str| spell::is_name(w) || names(db).contains(&w.to_lowercase());
         for (rank, (from_qa, id, similarity)) in candidates.into_iter().enumerate() {
             if similarity < needed {
                 break; // sorted: the rest are further away
@@ -444,7 +458,7 @@ pub fn ask_with_correction(db: &Connection, study: &Connection, query: &str, mea
     let q = query.trim();
     let data = loaded();
     if looks_like_question(q) && data.qa.find_exact(q).is_none() && qa_parser::parse_frequency_question(q).is_none() {
-        if let Some(fixed) = spell::vocab(db, None, curated_text()).correct(q) {
+        if let Some(fixed) = spell::vocab(db, Some(study), curated_text()).correct(q) {
             let answer = ask(db, study, &fixed, meaning)?;
             if answer.is_some() {
                 return Ok(AskReply { answer, corrected: Some(fixed) });

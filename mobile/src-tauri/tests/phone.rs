@@ -2,6 +2,7 @@
 //! (`cargo test --test phone`: the unit tests of the shared desktop search need the
 //! desktop databases and are not run from here.)
 
+use bible_pocket_lib::ask::{self, Answer};
 use bible_pocket_lib::{db, search, unpack_db, userdata};
 use rusqlite::Connection;
 
@@ -299,4 +300,71 @@ fn downloads_the_backgrounds() {
     assert!(backgrounds::image(&dir, "../x").is_err());
     backgrounds::remove(&dir).unwrap();
     assert_eq!(backgrounds::count(&dir), 0);
+}
+
+/// What a family question answers with, from the real phone database (no search upgrade needed).
+fn family(d: &Connection, s: &Connection, question: &str) -> Option<(String, Vec<String>)> {
+    match ask::ask(d, s, question, None).unwrap() {
+        Some(Answer::Curated { answer, citations, by_meaning, .. }) => {
+            assert!(!by_meaning, "{question}");
+            Some((answer, citations.into_iter().map(|c| c.reference).collect()))
+        }
+        _ => None,
+    }
+}
+
+/// How an answer was made: "computed" is from the people tables, "stated" a hand-checked answer.
+fn confidence_of(d: &Connection, s: &Connection, question: &str) -> String {
+    match ask::ask(d, s, question, None).unwrap() {
+        Some(Answer::Curated { confidence, .. }) => confidence,
+        other => panic!("{question}: {other:?}"),
+    }
+}
+
+#[test]
+fn family_questions_are_answered_from_the_people_tables() {
+    let (d, s) = open();
+    for question in ["Who were John the Baptist's parents?", "who were the parents of John the Baptist", "John the Baptist parents"] {
+        let (answer, cites) = family(&d, &s, question).unwrap_or_else(|| panic!("an answer to {question}"));
+        // (the first has a hand-checked answer on file, which spells the names the BSB's way; the others come from the people tables)
+        assert!((answer.contains("Zacharias") || answer.contains("Zechariah")) && (answer.contains("Elisabeth") || answer.contains("Elizabeth")), "{answer}");
+        assert!(cites.iter().any(|c| c.starts_with("Luke 1:")), "{cites:?}");
+    }
+    // the name can be spelled either way (the BSB's Elizabeth, the KJV's Elisabeth; Zechariah, Zacharias)
+    // (people_qa reads a stored phrasing first, so these two are checked through the people tables alone)
+    let husband = bible_pocket_lib::people_qa::answer(&s, "who was Elizabeth's husband").unwrap().expect("an answer").answer;
+    assert!(husband.contains("Zacharias"), "{husband}");
+    let wife = bible_pocket_lib::people_qa::answer(&s, "Who was Zechariah's wife?").unwrap().expect("an answer").answer;
+    assert!(wife.contains("Elisabeth"), "{wife}");
+    assert_eq!(confidence_of(&d, &s, "who was Aaron's wife"), "computed", "a family question with no stored answer is made from the people tables");
+    // a person or a tie the data does not have says nothing (the other layers go on; no invented answer)
+    assert!(family(&d, &s, "who were the sons of Nobody Atall").is_none());
+    assert!(family(&d, &s, "who was Peter's wife").map_or(true, |(a, _)| !a.contains("Judas")));
+}
+
+/// The desktop's own people questions (people_qa.rs, 11 of them), answered here from the phone's table: all must be answered right.
+#[test]
+fn the_phone_answers_the_desktops_people_questions_as_the_desktop_does() {
+    let (d, s) = open();
+    let bench = [
+        ("who were the parents of John the Baptist", "Zacharias"),
+        ("who was the father of John the Baptist", "Zacharias"),
+        ("who was the mother of John the Baptist", "Elisabeth"),
+        ("who were the sons of Jacob", "Reuben"),
+        ("who were the sons of Jacob", "Benjamin"),
+        ("who was the father of Isaac", "Abraham"),
+        ("who was the mother of Isaac", "Sarah"),
+        ("who was the father of Solomon", "David"),
+        ("who was Samuel's mother", "Hannah"),
+        ("who were the brothers of Moses", "Aaron"),
+        ("who was Moses' father", "Amram"),
+    ];
+    let mut wrong = Vec::new();
+    for (question, expect) in bench {
+        match family(&d, &s, question) {
+            Some((answer, _)) if answer.contains(expect) => {}
+            other => wrong.push(format!("{question}: {other:?}")),
+        }
+    }
+    assert!(wrong.is_empty(), "{wrong:#?}");
 }

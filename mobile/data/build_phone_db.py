@@ -8,7 +8,9 @@ index, the two topical Bibles' headings and references, the two Bible dictionari
 the best cross-references for each verse, and which words are the words of Jesus (from
 src/redLetter.json, the desktop app's red-letter data). Since 0.3.0 also: Strong's numbers
 for the BSB and KJV words with the Strong's dictionary, and one small commentary (the
-Tyndale Open Study Notes, with its book introductions, from commentaries.db). Nothing else
+Tyndale Open Study Notes, with its book introductions, from commentaries.db). Since 3.0.0 also
+the family ties of the Bible's people (for the questions Ask answers about a person's family;
+`--people-only` adds them to a finished phone.db.gz without rebuilding the rest). Nothing else
 -- no other translations' tagging, other commentaries or search-by-meaning vectors -- which
 is what keeps the phone app small.
 
@@ -61,7 +63,116 @@ def ro(path: Path) -> sqlite3.Connection:
     return sqlite3.connect(f"file:{path.as_posix()}?mode=ro&immutable=1", uri=True)
 
 
+# the family ties Ask answers ("who were John the Baptist's parents?"), as the desktop's people_qa.rs reads them
+PEOPLE_TIES = ["father", "mother", "partners", "children", "siblings"]
+
+
+def add_people(out: sqlite3.Connection, comm: sqlite3.Connection) -> dict:
+    """The Bible's people with their family ties, for the questions Ask answers about a person's family. The same table
+    and column names as the desktop's commentaries.db, so the desktop's people_qa.rs runs on the phone unchanged, but only
+    what it reads: the people who have a tie (or are one's relative), their five ties, and the verses its citations show.
+
+    The verses kept are, for each person, the first three places the person is mentioned, and, for each pair of relatives, the first three
+    places both are mentioned (the places the answer's citations name). Anything else the desktop's table holds -- places, events, the
+    rest of 20,000 mentions -- is left out, which is what keeps this to a few hundred kilobytes."""
+    out.executescript(
+        """
+        CREATE TABLE entities (kind TEXT NOT NULL, id TEXT NOT NULL, name TEXT NOT NULL, gender TEXT, relations_json TEXT,
+            reference_count INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (kind, id));
+        CREATE TABLE entity_refs (kind TEXT NOT NULL, entity_id TEXT NOT NULL, book TEXT NOT NULL, book_order INTEGER NOT NULL,
+            chapter INTEGER NOT NULL, verse INTEGER NOT NULL);
+        """
+    )
+    people: dict = {}
+    for pid, name, gender, rel_json, count in comm.execute("SELECT id, name, gender, relations_json, reference_count FROM entities WHERE kind = 'person'"):
+        try:
+            rel = json.loads(rel_json) if rel_json else {}
+        except ValueError:
+            rel = {}
+        ties = {}
+        for key in PEOPLE_TIES:
+            listed = [{"id": x["id"], "name": x["name"]} for x in rel.get(key) or [] if isinstance(x, dict) and x.get("id") and x.get("name")]
+            if listed:
+                ties[key] = listed
+        people[pid] = (name, gender, ties, count)
+    keep_ids = {pid for pid, p in people.items() if p[2]}
+    for pid in list(keep_ids):
+        for listed in people[pid][2].values():
+            keep_ids.update(x["id"] for x in listed if x["id"] in people)
+
+    mentions: dict = {}  # person id -> the distinct verses, in the Bible's order
+    for eid, book, order, chapter, verse in comm.execute(
+        "SELECT entity_id, book, book_order, chapter, verse FROM entity_refs WHERE kind = 'person' ORDER BY book_order, chapter, verse"
+    ):
+        if eid in keep_ids:
+            places = mentions.setdefault(eid, [])
+            key = (order, chapter, verse, book)
+            if not places or places[-1] != key:
+                places.append(key)
+
+    kept: dict = {pid: set(places[:3]) for pid, places in mentions.items()}
+    pairs = set()
+    for pid in keep_ids:
+        ties = people[pid][2]
+        for listed in ties.values():
+            pairs.update((pid, x["id"]) for x in listed)
+        # brothers and sisters are also the other children of one's father and mother
+        for parent in ties.get("father", []) + ties.get("mother", []):
+            if parent["id"] in people:
+                pairs.update((pid, x["id"]) for x in people[parent["id"]][2].get("children", []))
+    for a, b in pairs:
+        if a in mentions and b in mentions:
+            together = sorted(set(mentions[a]) & set(mentions[b]))[:3]
+            kept[a].update(together)
+            kept[b].update(together)
+
+    out.executemany(
+        "INSERT INTO entities VALUES ('person', ?, ?, ?, ?, ?)",
+        (
+            (pid, p[0], p[1] or None, json.dumps(p[2], ensure_ascii=False, separators=(",", ":")) if p[2] else None, p[3])
+            for pid, p in people.items()
+            if pid in keep_ids
+        ),
+    )
+    out.executemany(
+        "INSERT INTO entity_refs VALUES ('person', ?, ?, ?, ?, ?)",
+        ((pid, book, order, chapter, verse) for pid, places in kept.items() for (order, chapter, verse, book) in sorted(places)),
+    )
+    out.execute("CREATE INDEX entity_refs_entity ON entity_refs(entity_id)")
+    return {
+        "people": out.execute("SELECT count(*) FROM entities").fetchone()[0],
+        "people with a tie": sum(1 for p in people.values() if p[2]),
+        "people places": out.execute("SELECT count(*) FROM entity_refs").fetchone()[0],
+    }
+
+
+def people_only() -> None:
+    """Adds (or replaces) just the people tables in the finished phone.db.gz, without rebuilding everything else:
+    python mobile/data/build_phone_db.py --people-only"""
+    work = Path(tempfile.mkdtemp(prefix="phone-db-"))
+    db_path = work / "phone.db"
+    with gzip.open(OUT, "rb") as src, open(db_path, "wb") as dst:
+        shutil.copyfileobj(src, dst, 1 << 20)
+    out = sqlite3.connect(db_path)
+    out.executescript("DROP TABLE IF EXISTS entities; DROP TABLE IF EXISTS entity_refs;")
+    counts = add_people(out, ro(COMMENTARIES))
+    out.commit()
+    assert out.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+    out.execute("VACUUM")
+    out.close()
+    gz = work / "phone.db.gz"
+    with open(db_path, "rb") as src, gzip.open(gz, "wb", compresslevel=9) as dst:
+        shutil.copyfileobj(src, dst, 1 << 20)
+    before = os.path.getsize(OUT)
+    shutil.copyfile(gz, OUT)
+    print(counts)
+    print(f"phone.db {os.path.getsize(db_path) / 1048576:.1f} MB; {OUT} {before / 1048576:.2f} MB -> {os.path.getsize(OUT) / 1048576:.2f} MB")
+    shutil.rmtree(work, ignore_errors=True)
+
+
 def main() -> None:
+    if "--people-only" in sys.argv:
+        return people_only()
     work = Path(tempfile.mkdtemp(prefix="phone-db-"))
     db_path = work / "phone.db"
     out = sqlite3.connect(db_path)
@@ -230,6 +341,8 @@ def main() -> None:
         [("commentary_name", name), ("commentary_licence", licence), ("commentary_licence_url", licence_url or ""), ("commentary_website", website or "")],
     )
 
+    people_counts = add_people(out, comm)
+
     out.execute("CREATE INDEX dict_refs_entry ON dict_refs(entry_id)")
     out.execute("CREATE INDEX dict_entries_fold ON dict_entries(headword_fold)")
     out.commit()
@@ -247,6 +360,7 @@ def main() -> None:
         "strong's entries": out.execute("SELECT count(*) FROM strongs_dict").fetchone()[0],
         "commentary notes": out.execute("SELECT count(*) FROM notes").fetchone()[0],
         "book introductions": out.execute("SELECT count(*) FROM book_intros").fetchone()[0],
+        **people_counts,
     }
     assert counts["versions"] == len(VERSIONS) and counts["books"] == 66, counts
     assert out.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
