@@ -110,6 +110,15 @@ const store = (key: string, value: string) => {
   }
 };
 
+// --- where the app opens (since 3.0.0): on the very first start, the Search page (the Gospel wordmark and the search box); from the moment
+// the reader chooses a verse, a chapter or a book, the Read screen, where they left off. An install from before this version has a saved place
+// already, so it keeps opening where the reader was.
+const CHOSE_KEY = "pocket:chose-a-place";
+const SEEN_KEY = "pocket:seen-v3";
+if (stored(CHOSE_KEY) === null && stored(SAVED_KEY) !== null && stored(SEEN_KEY) === null) store(CHOSE_KEY, "1");
+store(SEEN_KEY, "1");
+const START_TAB: Tab = stored(CHOSE_KEY) === "1" ? "read" : "search";
+
 /** What was typed into the search box lately, newest first. */
 function loadRecent(): string[] {
   try {
@@ -217,7 +226,7 @@ export function App() {
   const red = true;
   const [second, setSecond] = useState<string | null>(saved.second);
   const [reminder, setReminderTime] = useState<string | null>(saved.reminder);
-  const [tab, setTab] = useState<Tab>("read");
+  const [tab, setTab] = useState<Tab>(START_TAB);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   // a question to answer before something is deleted (the phone's own confirm box isn't shown inside the app)
@@ -487,6 +496,7 @@ export function App() {
   }, [verses, tab]);
 
   function go(book: string, chapter: number, verse: number | null = null) {
+    store(CHOSE_KEY, "1"); // a place was chosen: from now on the app opens at the Read screen
     stopListening();
     setChosen(null);
     setPicker(null);
