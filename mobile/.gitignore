@@ -12,3 +12,6 @@ src-tauri/target/
 *.jks
 *.keystore
 keystore.properties
+
+# the desktop public/bible-maps folder, copied in for development and by the build script (never kept twice in git)
+public/bible-maps/
