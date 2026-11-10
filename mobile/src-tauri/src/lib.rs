@@ -21,6 +21,7 @@ pub mod lan;
 pub mod library;
 pub mod meaning_pack;
 pub mod original_pack;
+pub mod picture_packs;
 pub mod modules;
 pub mod packs;
 pub mod search;
@@ -277,6 +278,39 @@ fn search_upgrade_install(app: AppHandle, core: State<Core>) -> Result<(), Strin
 #[tauri::command(async)]
 fn search_upgrade_remove(core: State<Core>) -> Result<(), String> {
     meaning_pack::remove(&core.get()?.dir)
+}
+
+// The picture downloads (since 3.0.0): the Bible story pictures and the children's pictures, each optional.
+#[tauri::command(async)]
+fn pictures_status(core: State<Core>, kind: String) -> Result<SearchUpgradeStatus, String> {
+    let p = picture_packs::pack(&kind).ok_or("Unknown picture pack.")?;
+    Ok(SearchUpgradeStatus { installed: picture_packs::installed(&core.get()?.dir, p), size_mb: p.size_mb })
+}
+
+/// Downloads a picture pack; "pictures-progress-<kind>" events report the percentage.
+#[tauri::command(async)]
+fn pictures_install(app: AppHandle, core: State<Core>, kind: String) -> Result<(), String> {
+    let p = picture_packs::pack(&kind).ok_or("Unknown picture pack.")?;
+    let event = format!("pictures-progress-{kind}");
+    picture_packs::install(&core.get()?.dir, p, &|pct| {
+        let _ = app.emit(&event, pct);
+    })
+}
+
+#[tauri::command(async)]
+fn pictures_remove(core: State<Core>, kind: String) -> Result<(), String> {
+    let p = picture_packs::pack(&kind).ok_or("Unknown picture pack.")?;
+    picture_packs::remove(&core.get()?.dir, p)
+}
+
+#[tauri::command(async)]
+fn story_picture(core: State<Core>, id: String) -> Result<Option<picture_packs::StoryPicture>, String> {
+    Ok(picture_packs::story_picture(&core.get()?.dir, &id))
+}
+
+#[tauri::command(async)]
+fn kid_picture(core: State<Core>, id: String, outline: bool) -> Result<Option<String>, String> {
+    Ok(picture_packs::kid_picture(&core.get()?.dir, &id, outline))
 }
 
 // The "Original words" download (since 2.9.6): the Greek and Hebrew words of a verse, one by one.
@@ -1003,6 +1037,11 @@ pub fn run() {
             ask_question,
             search_upgrade_install,
             search_upgrade_remove,
+            pictures_status,
+            pictures_install,
+            pictures_remove,
+            story_picture,
+            kid_picture,
             original_status,
             original_install,
             original_remove,
