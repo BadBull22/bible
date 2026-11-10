@@ -99,6 +99,8 @@ Mirror-Dir "$root\crates" "$Mirror\crates" @("target", ".cargo")
 # Browse (since 3.0.0): the desktop's pages (JSON) and the rules that find them, used from their source (mobile\src\Browse.tsx imports ..\..\src\browse);
 # the children's pictures stay out (they are optional downloads on the phone)
 Mirror-Dir "$root\src\browse" "$Mirror\src\browse" @("pictures")
+# the nine Bible maps (since 3.0.0): the desktop's own folder (pictures and maps.json), served by the page as bible-maps/
+Mirror-Dir "$root\public\bible-maps" "$Mirror\mobile\public\bible-maps" @()
 # the themes (since 3.0.0): the desktop's own theme code, wordmark pictures, screen packages and verses of the season, used from their source
 Mirror-Dir "$root\src\themes" "$Mirror\src\themes" @()
 

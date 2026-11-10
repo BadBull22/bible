@@ -37,6 +37,7 @@ import { SearchUpgradeOffer, SearchUpgradeSettings, useSearchUpgrade } from "./S
 import { AskAnswer } from "./AskAnswer";
 import { BrowseEntryPoints, BrowseMatches, BrowseScreen, type BrowseOpen } from "./Browse";
 import { HomeScreen, ThemeSettings, useLook } from "./Theme";
+import { BibleMaps, MapsEntry } from "./BibleMaps";
 import { getThemeState } from "../../src/themes/themeStore";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
@@ -310,6 +311,8 @@ export function App() {
   const [browse, setBrowse] = useState<BrowseOpen | null>(null);
   /** the tab Browse was opened from: Search (from results) or More (the three ways in); its Back goes there */
   const [browseIn, setBrowseIn] = useState<"search" | "more">("more");
+  /** the Bible maps are open in More */
+  const [mapsOpen, setMapsOpen] = useState(false);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const searchUpgrade = useSearchUpgrade();
@@ -1386,7 +1389,19 @@ export function App() {
           </div>
         )}
 
-        {tab === "more" && !(browse && browseIn === "more") && (
+        {tab === "more" && mapsOpen && (
+          <div className="more">
+            <BibleMaps
+              onJump={(b, c, v) => {
+                setMapsOpen(false);
+                go(b, c, v);
+              }}
+              onClose={() => setMapsOpen(false)}
+            />
+          </div>
+        )}
+
+        {tab === "more" && !mapsOpen && !(browse && browseIn === "more") && (
           <div className="more" ref={moreBox} onClick={toggleExplanations}>
             <h2>Bible stories and verses</h2>
             <BrowseEntryPoints
@@ -1395,6 +1410,8 @@ export function App() {
                 setBrowse({ kind, id: null });
               }}
             />
+            <h2>Bible maps</h2>
+            <MapsEntry onOpen={() => setMapsOpen(true)} />
 
                 <section className="dictionary">
                     <h3>Bible dictionary</h3>
