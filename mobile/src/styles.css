@@ -2031,3 +2031,34 @@ html[data-glow] .browse-teaches { box-shadow: var(--glow-card); }
 html[data-glow="theme"] .browse-teaches { border-left-color: var(--occ-accent); }
 html[data-glow="theme"] .browse-teaches > strong { color: var(--occ-accent); }
 .browse-page .inline-ref { display: inline; padding: 0; font-size: inherit; font-weight: 600; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+
+/* ---------- More, tidied (since 3.0.0): rows and folds, no paragraphs ---------- */
+.more-list { margin: 0.2rem 0 0.8rem; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--raised); overflow: hidden; }
+html[data-glow] .more-list { box-shadow: var(--glow-card); }
+.more-row { display: flex; align-items: center; gap: 0.5rem; width: 100%; min-height: 3rem; padding: 0.5rem 0.9rem; border: none; border-bottom: 1px solid var(--border); background: none; color: var(--text); text-align: left; font-size: 1rem; }
+.more-row:last-child { border-bottom: none; }
+.more-row-title { flex: 1; font-weight: 600; }
+.more-row small { color: var(--muted); }
+.dl-chev { color: var(--muted); font-size: 1.3rem; line-height: 1; }
+.dl-list { display: grid; margin: 0.3rem 0 0.2rem; }
+.dl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; width: 100%; min-height: 3.2rem; padding: 0.4rem 0; border: none; border-bottom: 1px solid var(--border); background: none; color: var(--text); text-align: left; font-size: 1rem; }
+.dl-list > .dl-row:last-child { border-bottom: none; }
+.dl-main { flex: 1; min-width: 0; display: grid; }
+.dl-main small { color: var(--muted); font-size: 0.8rem; }
+.dl-act { display: flex; align-items: center; gap: 0.5rem; }
+.dl-act button { min-height: 2.2rem; padding: 0.2rem 0.8rem; border-radius: 999px; font-size: 0.86rem; }
+.dl-ok { color: #2e9d57; font-weight: 700; }
+.dl-pct { color: var(--accent); font-weight: 700; }
+.dl-bar { flex-basis: 100%; margin: 0; }
+.dl-error { flex-basis: 100%; margin: 0; }
+.dl-link { cursor: pointer; }
+.fold.inner { margin-top: 0.6rem; }
+.fold h3 { margin: 0.9rem 0 0.3rem; font-size: 0.95rem; }
+.row-label { margin: 0.8rem 0 0.2rem; font-weight: 600; }
+.reminder-row { margin: 0.3rem 0 1rem; }
+
+/* ---------- the way back from a passage link, and the home button on the search results (since 3.0.0) ---------- */
+.came-from { display: flex; align-items: center; justify-content: space-between; padding: 0.2rem 0.8rem; border-bottom: 1px solid var(--border); background: var(--accent-soft); }
+.came-from .link { padding: 0.45rem 0.2rem; font-size: 0.95rem; }
+.came-from .remove { border: none; background: none; color: var(--muted); font-size: 1.4rem; width: 2.2rem; height: 2.2rem; }
+.top .home-btn { flex: none; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; padding: 0; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 0.6rem; background: transparent; color: #fff; }

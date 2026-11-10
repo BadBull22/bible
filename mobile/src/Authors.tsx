@@ -7,19 +7,16 @@ import { useBack } from "./back";
 
 const SECTIONS: BibleAuthor["testament"][] = ["Old Testament", "New Testament"];
 
-/** The card in More that opens the Authors page. */
+/** The row in Extras that opens the Authors page. */
 export function AuthorsEntry({ onOpen }: { onOpen: () => void }) {
   return (
-    <section className="browse-entry">
-      <div className="browse-entry-grid">
-        <button className="browse-card" onClick={onOpen}>
-          <span className="browse-card-title">
-            Authors of the Bible <small>{BIBLE_AUTHORS.length}</small>
-          </span>
-          <span className="browse-card-blurb">Who wrote each book, and whether the text names them or tradition does.</span>
-        </button>
-      </div>
-    </section>
+    <button className="more-row" onClick={onOpen}>
+      <span className="more-row-title">Authors of the Bible</span>
+      <small>{BIBLE_AUTHORS.length}</small>
+      <span className="dl-chev" aria-hidden>
+        ›
+      </span>
+    </button>
   );
 }
 
@@ -31,7 +28,7 @@ export function Authors({ onJump, onClose }: { onJump: (book: string, chapter: n
   return (
     <div className="browse">
       <button className="link back" onClick={onClose}>
-        ‹ More
+        ‹ Extras
       </button>
       <h2>The {BIBLE_AUTHORS.length} authors of the Bible</h2>
       <p className="hint">

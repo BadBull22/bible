@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { api, phone, type StoryCredit } from "./api";
+import { DownloadRow } from "./Downloads";
 
 export type PicKind = "stories" | "kids";
 
@@ -97,40 +98,15 @@ export function PictureOffer({ kind }: { kind: PicKind }) {
   );
 }
 
-/** More > Bible pictures: the two downloads. */
-export function PicturesSettings() {
+/** The two picture downloads, as rows of More > Downloads. */
+export function PictureRows() {
+  const stories = usePicturePack("stories");
+  const kids = usePicturePack("kids");
   return (
     <>
-      <p className="hint keep">Optional, so the app stays small. Everything reads as well without them.</p>
-      {(["stories", "kids"] as const).map((k) => (
-        <PackCard key={k} kind={k} />
-      ))}
+      <DownloadRow title="Story pictures" note="Paintings for the stories" pack={stories} />
+      <DownloadRow title="Children's pictures" note="Colour and outline" pack={kids} />
     </>
-  );
-}
-
-function PackCard({ kind }: { kind: PicKind }) {
-  const pack = usePicturePack(kind);
-  return (
-    <div className="card">
-      <strong>{NAME[kind].title}</strong>
-      <p className="hint">{NAME[kind].blurb}</p>
-      {pack.downloading != null ? (
-        <Progress pct={pack.downloading} />
-      ) : pack.installed ? (
-        <div className="actions">
-          <span className="hint status">Downloaded.</span>
-          <button onClick={() => void pack.remove()}>Remove it ({pack.size} MB)</button>
-        </div>
-      ) : (
-        <div className="actions">
-          <button className="primary" onClick={() => void pack.install()}>
-            Get it ({pack.size} MB)
-          </button>
-        </div>
-      )}
-      {pack.error && <p className="hint status">{pack.error}</p>}
-    </div>
   );
 }
 

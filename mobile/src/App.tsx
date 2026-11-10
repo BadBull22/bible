@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useBack } from "./back";
+import { stepBack, useBack } from "./back";
 import {
   api,
   Article,
@@ -28,18 +28,19 @@ import {
 import { applyAppearance, Contrast, DEFAULT_APPEARANCE, Font, TextColor, Theme, watchSystemTheme } from "./appearance";
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "./plans";
 import { parseReference, Reference } from "./refs";
-import { canRemind, setReminder, testReminder } from "./reminder";
+import { canRemind, setReminder } from "./reminder";
 import { Translations } from "./Translations";
 import { UpdateBanner, UpdateSettings, usePlayBuild, useUpdates } from "./Updates";
 import { SyncSettings, useAutoSync } from "./Sync";
-import { OriginalPack, OriginalSettings, useOriginalPack } from "./OriginalWords";
-import { SearchUpgradeOffer, SearchUpgradeSettings, useSearchUpgrade } from "./SearchUpgrade";
+import { OriginalPack, useOriginalPack } from "./OriginalWords";
+import { SearchUpgradeOffer, useSearchUpgrade } from "./SearchUpgrade";
 import { AskAnswer } from "./AskAnswer";
-import { BrowseEntryPoints, BrowseMatches, BrowseScreen, type BrowseOpen } from "./Browse";
+import { BrowseEntryPoints, BrowseMatches, BrowseScreen, listName, pageTitle, type BrowseOpen } from "./Browse";
 import { HomeScreen, ThemeSettings, useLook } from "./Theme";
-import { BibleMaps, MapsEntry } from "./BibleMaps";
+import { BibleMaps, MapsEntry, resumeMap } from "./BibleMaps";
 import { Authors, AuthorsEntry } from "./Authors";
-import { PicturesSettings } from "./Pictures";
+import { PictureRows } from "./Pictures";
+import { DownloadRow, LinkRow } from "./Downloads";
 import { getThemeState } from "../../src/themes/themeStore";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
@@ -312,10 +313,10 @@ export function App() {
   /** Browse (stories, "Verses for...", children's pages) open in the Search tab: the list of a kind, or one page */
   const [browse, setBrowse] = useState<BrowseOpen | null>(null);
   /** the tab Browse was opened from: Search (from results) or More (the three ways in); its Back goes there */
-  const [browseIn, setBrowseIn] = useState<"search" | "more">("more");
-  /** the Bible maps are open in More */
+  const [browseIn, setBrowseIn] = useState<"search" | "extras">("extras");
+  /** the Bible maps are open in Extras */
   const [mapsOpen, setMapsOpen] = useState(false);
-  /** the Authors page is open in More */
+  /** the Authors page is open in Extras */
   const [authorsOpen, setAuthorsOpen] = useState(false);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
@@ -514,7 +515,28 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verses, tab]);
 
-  function go(book: string, chapter: number, verse: number | null = null) {
+  /** Where a passage link came from (a Browse page, a map, the Authors page, the search results): the Read screen offers a way back to it, on the same
+   *  page and at the same place. Choosing any other place takes the way back away. */
+  const [cameFrom, setCameFrom] = useState<null | { label: string; tab: Tab; scroll: number }>(null);
+  function goFrom(label: string, book: string, chapter: number, verse: number | null = null) {
+    setCameFrom({ label, tab, scroll: pane.current?.scrollTop ?? 0 });
+    go(book, chapter, verse, true);
+  }
+  function backToWhereItWas() {
+    const c = cameFrom;
+    if (!c) return;
+    setCameFrom(null);
+    setTab(c.tab);
+    // the page is drawn again first (it scrolls itself to the top), then put back where it was
+    for (const wait of [60, 220, 500]) window.setTimeout(() => pane.current && (pane.current.scrollTop = c.scroll), wait);
+  }
+  useBack(cameFrom != null && tab === "read", backToWhereItWas);
+  useEffect(() => {
+    if (tab !== "read") setCameFrom(null);
+  }, [tab]);
+
+  function go(book: string, chapter: number, verse: number | null = null, keepFrom = false) {
+    if (!keepFrom) setCameFrom(null);
     store(CHOSE_KEY, "1"); // a place was chosen: from now on the app opens at the Read screen
     stopListening();
     setChosen(null);
@@ -638,6 +660,17 @@ export function App() {
     const list = [text, ...recent.filter((r) => r.toLowerCase() !== text.toLowerCase())].slice(0, 15);
     setRecent(list);
     store(RECENT_KEY, JSON.stringify(list));
+  }
+
+  /** The search put away: the Gospel screen is clean again (the recent searches stay as a row to press). */
+  function clearSearch() {
+    setTyped("");
+    setQuery("");
+    setTopic(null);
+    setAnswer(null);
+    setCorrected(null);
+    setBrowse(null);
+    (document.activeElement as HTMLElement | null)?.blur();
   }
 
   function submit(text = typed.trim()) {
@@ -871,6 +904,7 @@ export function App() {
   );
   // the Search page before a search is made: the Gospel wordmark with the search box under it (the top bar is not shown then)
   const homeMode = tab === "search" && !query && !browse;
+  const browseLabel = browse ? (browse.id ? pageTitle(browse.kind, browse.id) ?? listName(browse.kind) : listName(browse.kind)) : "";
   const look = themeLook;
   const readingBackground = tab === "read" && look.screenLook && getThemeState().reading !== "off" ? getThemeState().reading : undefined;
 
@@ -900,6 +934,13 @@ export function App() {
             </button>
           )}
         </form>
+        {tab === "search" && query && (
+          <button type="button" className="home-btn" onClick={clearSearch} aria-label="Clear the search and go back to the start" title="Clear the search">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="M12 3 3 11h2.5v9h5v-6h3v6h5v-9H21z" fill="currentColor" />
+            </svg>
+          </button>
+        )}
         {versionPicker}
       </header>
       {!homeMode && typed.trim() && typed.trim() !== query && (
@@ -922,6 +963,16 @@ export function App() {
       )}
       <UpdateBanner updates={updates} />
 
+      {cameFrom && tab === "read" && (
+        <div className="came-from">
+          <button className="link" onClick={() => (stepBack() ? undefined : backToWhereItWas())}>
+            ‹ Back to {cameFrom.label}
+          </button>
+          <button className="remove" onClick={() => setCameFrom(null)} aria-label="Close">
+            ×
+          </button>
+        </div>
+      )}
       <div className="main-frame" data-reading-theme={readingBackground} data-occasion={readingBackground ? look.screenLook?.slug : undefined}>
       <main ref={pane} className="pane main-pane" onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={tab === "read" ? swiped : undefined}>
         {tab === "read" && (
@@ -1020,7 +1071,7 @@ export function App() {
             setOpen={setBrowse}
             version={version}
             backLabel="Search"
-            onJump={go}
+            onJump={(b, c, v) => goFrom(browseLabel, b, c, v)}
             onSearch={(q) => {
               setBrowse(null);
               submit(q);
@@ -1037,9 +1088,19 @@ export function App() {
             select={versionPicker}
             recent={recent}
             onRecent={(q) => submit(q)}
+            onClearRecent={() => {
+              setRecent([]);
+              store(RECENT_KEY, "[]");
+            }}
             onLook={() => {
               setTab("more");
-              window.setTimeout(() => document.getElementById("theme-settings")?.scrollIntoView(), 120);
+              window.setTimeout(() => {
+                const el = document.getElementById("theme-settings") as HTMLDetailsElement | null;
+                if (el) {
+                  el.open = true;
+                  el.scrollIntoView();
+                }
+              }, 150);
             }}
             resume={{ label: `${place.book} ${place.chapter}`, go: () => setTab("read") }}
             enterHint={reference ? "go" : "search"}
@@ -1089,7 +1150,7 @@ export function App() {
                   </p>
                 )}
                 {query && answer && corrected && <p className="hint">Showing the answer for “{corrected}”</p>}
-                {query && answer && <AskAnswer answer={answer} books={books} onOpen={go} onArticle={openArticle} />}
+                {query && answer && <AskAnswer answer={answer} books={books} onOpen={(b, c, v) => goFrom("your search", b, c, v)} onArticle={openArticle} />}
                 {query && result && !searching && (
                   <BrowseMatches
                     query={query}
@@ -1098,7 +1159,7 @@ export function App() {
                       setBrowseIn("search");
                       setBrowse({ kind, id });
                     }}
-                    onJump={go}
+                    onJump={(b, c, v) => goFrom("your search", b, c, v)}
                   />
                 )}
                 {query && result && (result.topics.length > 0 || result.articles.length > 0) && (
@@ -1122,7 +1183,7 @@ export function App() {
             )}
             {searching && <p className="hint">Searching…</p>}
             {!searching && query && result && shown.length === 0 && <p className="hint">Nothing found. Try fewer or different words, or another translation.</p>}
-            <HitList hits={shown} showWhy={!topic} onOpen={go} />
+            <HitList hits={shown} showWhy={!topic} onOpen={(b, c, v) => goFrom("your search", b, c, v)} />
             {!topic && query && result && !searching && (
               <>
                 <SearchUpgradeOffer upgrade={searchUpgrade} />
@@ -1257,8 +1318,57 @@ export function App() {
           </>
         )}
 
-        {tab === "plans" && (
+        {tab === "plans" && browse && browseIn === "extras" && (
+          <BrowseScreen
+            open={browse}
+            setOpen={setBrowse}
+            version={version}
+            backLabel="Extras"
+            onJump={(b, c, v) => goFrom(browseLabel, b, c, v)}
+            onSearch={(q) => {
+              setBrowse(null);
+              submit(q);
+            }}
+            onClose={() => setBrowse(null)}
+          />
+        )}
+
+        {tab === "plans" && mapsOpen && (
+          <BibleMaps
+            onJump={(b, c, v, from) => {
+              resumeMap.id = from.id;
+              goFrom(from.title, b, c, v);
+            }}
+            onClose={() => setMapsOpen(false)}
+          />
+        )}
+
+        {tab === "plans" && authorsOpen && <Authors onJump={(b, c, v) => goFrom("Authors of the Bible", b, c, v)} onClose={() => setAuthorsOpen(false)} />}
+
+        {tab === "plans" && !mapsOpen && !authorsOpen && !(browse && browseIn === "extras") && (
           <>
+            <div className="more-list">
+              <BrowseEntryPoints
+                onOpen={(kind) => {
+                  setBrowseIn("extras");
+                  setBrowse({ kind, id: null });
+                }}
+              />
+              <MapsEntry onOpen={() => setMapsOpen(true)} />
+              <AuthorsEntry onOpen={() => setAuthorsOpen(true)} />
+            </div>
+            <input className="field" value={word} onChange={(e) => setWord(e.target.value)} placeholder="Bible dictionary: a person, place or word" aria-label="Look up in the dictionary" autoCapitalize="none" autoCorrect="off" />
+            {found && found.length === 0 && <p className="hint">No article by that name.</p>}
+            {found && found.length > 0 && (
+              <ul className="hits plain">
+                {found.map((a) => (
+                  <li key={a.id} onClick={() => openArticle(a.id)}>
+                    <strong>{a.name}</strong> <small>{a.source}</small>
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <h2>Your reading</h2>
             {stats && (
               <>
@@ -1277,8 +1387,7 @@ export function App() {
                   </div>
                 </div>
                 <p className="hint">
-                  {stats.chapters.toLocaleString()} of {ALL_CHAPTERS.toLocaleString()} chapters of the Bible read ({Math.floor((stats.chapters / ALL_CHAPTERS) * 100)}%).{" "}
-                  {stats.read_today ? "You've read today." : "A chapter counts once you reach its end."}
+                  {stats.chapters.toLocaleString()} of {ALL_CHAPTERS.toLocaleString()} chapters read ({Math.floor((stats.chapters / ALL_CHAPTERS) * 100)}%)
                 </p>
                 <div className="bar" aria-hidden>
                   <i style={{ width: `${Math.min(100, (stats.chapters / ALL_CHAPTERS) * 100)}%` }} />
@@ -1286,32 +1395,18 @@ export function App() {
               </>
             )}
 
-            <h3>Daily reminder</h3>
-            {canRemind ? (
-              <>
-                <div className="time-row">
-                  <label className="toggle" style={{ margin: 0 }}>
-                    <input type="checkbox" checked={reminder != null} onChange={(e) => void chooseReminder(e.target.checked ? "07:00" : null)} /> Remind me every day at
-                  </label>
-                  <input type="time" value={reminder ?? "07:00"} disabled={reminder == null} onChange={(e) => e.target.value && void chooseReminder(e.target.value)} aria-label="Reminder time" />
-                </div>
-                <p className="hint">A notification once a day, even when the app is closed.</p>
-                <div className="actions">
-                  <button onClick={() => void testReminder().then((ok) => say(ok ? "A test reminder will come in about a minute" : "Notifications aren't allowed for this app")).catch(fail)}>
-                    Test the reminder
-                  </button>
-                  {!playBuild && <button onClick={() => void phone.batterySettings().catch(fail)}>Let it run in the background</button>}
-                </div>
-                <p className="hint">
-                  {playBuild
-                    ? "If the test doesn't arrive, check that notifications are allowed for the app in Android's settings. The reminder may come a few minutes after the time you chose. "
-                    : "If the test doesn't arrive, allow the app to run in the background. "}
-                  On Huawei and Honor phones also open Settings → Apps → App launch → Bible
-                  Concordance, switch to <em>Manage manually</em> and turn on all three; on Samsung, Settings → Battery → Background usage limits.
-                </p>
-              </>
-            ) : (
-              <p className="hint">The daily reminder works on the phone.</p>
+            {canRemind && (
+              <div className="time-row reminder-row">
+                <label className="toggle" style={{ margin: 0 }}>
+                  <input type="checkbox" checked={reminder != null} onChange={(e) => void chooseReminder(e.target.checked ? "07:00" : null)} /> Daily reminder
+                </label>
+                <input type="time" value={reminder ?? "07:00"} disabled={reminder == null} onChange={(e) => e.target.value && void chooseReminder(e.target.value)} aria-label="Reminder time" />
+              </div>
+            )}
+            {canRemind && !playBuild && reminder != null && (
+              <button className="link" onClick={() => void phone.batterySettings().catch(fail)}>
+                Allow it to run in the background
+              </button>
             )}
 
             <h2>Reading plans</h2>
@@ -1376,143 +1471,21 @@ export function App() {
           </>
         )}
 
-        {tab === "more" && browse && browseIn === "more" && (
-          <div className="more">
-            <BrowseScreen
-              open={browse}
-              setOpen={setBrowse}
-              version={version}
-              backLabel="More"
-              onJump={go}
-              onSearch={(q) => {
-                setBrowse(null);
-                submit(q);
-              }}
-              onClose={() => setBrowse(null)}
-            />
-          </div>
-        )}
-
-        {tab === "more" && mapsOpen && (
-          <div className="more">
-            <BibleMaps
-              onJump={(b, c, v) => {
-                setMapsOpen(false);
-                go(b, c, v);
-              }}
-              onClose={() => setMapsOpen(false)}
-            />
-          </div>
-        )}
-
-        {tab === "more" && authorsOpen && (
-          <div className="more">
-            <Authors
-              onJump={(b, c, v) => {
-                setAuthorsOpen(false);
-                go(b, c, v);
-              }}
-              onClose={() => setAuthorsOpen(false)}
-            />
-          </div>
-        )}
-
-        {tab === "more" && !mapsOpen && !authorsOpen && !(browse && browseIn === "more") && (
+        {tab === "more" && (
           <div className="more" ref={moreBox} onClick={toggleExplanations}>
-            <h2>Bible stories and verses</h2>
-            <BrowseEntryPoints
-              onOpen={(kind) => {
-                setBrowseIn("more");
-                setBrowse({ kind, id: null });
-              }}
-            />
-            <h2>Bible maps</h2>
-            <MapsEntry onOpen={() => setMapsOpen(true)} />
-            <h2>Authors</h2>
-            <AuthorsEntry onOpen={() => setAuthorsOpen(true)} />
-            <h2>Bible pictures</h2>
-            <PicturesSettings />
-
-                <section className="dictionary">
-                    <h3>Bible dictionary</h3>
-                    <input className="field" value={word} onChange={(e) => setWord(e.target.value)} placeholder="A person, place or word — e.g. Passover" aria-label="Look up in the dictionary" autoCapitalize="none" autoCorrect="off" />
-                    {found && found.length === 0 && <p className="hint">No article by that name. Try the main search box for verses on it.</p>}
-                    {found && found.length > 0 && (
-                      <ul className="hits plain">
-                        {found.map((a) => (
-                          <li key={a.id} onClick={() => openArticle(a.id)}>
-                            <strong>{a.name}</strong> <small>{a.source}</small>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                </section>
-
-            <h2>Translations</h2>
-            <p className="hint keep">
-              Built in: {versions.filter((v) => !v.downloaded).map((v) => v.code).join(", ")}.
-              {versions.some((v) => v.downloaded) && ` Downloaded: ${versions.filter((v) => v.downloaded).map((v) => (v.tagged ? `${v.name} (Strong's)` : v.name)).join(", ")}.`}
-            </p>
-            <div className="actions">
-              <button onClick={() => setShowTranslations(true)}>More translations (other languages)</button>
-            </div>
-
-            <h2>Additional downloads</h2>
-            <p className="hint keep">Everything you add is available offline.</p>
-            <details className="fold">
-              <summary>Library</summary>
-              <p className="hint keep">Commentaries, dictionaries, books and devotionals: free ones from CrossWire, or files you have.</p>
-              <div className="actions">
-                <button onClick={() => setLibrary("home")}>Open the library</button>
+            <details className="fold" open>
+              <summary>Downloads</summary>
+              <div className="dl-list">
+                <LinkRow title="Bible translations" note={`${versions.length} on this phone · more languages`} onClick={() => setShowTranslations(true)} />
+                <LinkRow title="Library" note="Commentaries, dictionaries, books" onClick={() => setLibrary("home")} />
+                <DownloadRow title="Advanced search" note="Find verses by meaning" pack={searchUpgrade} />
+                <DownloadRow title="Original words" note="Hebrew and Greek" pack={originalPack} />
+                <PictureRows />
               </div>
             </details>
-            <details className="fold">
-              <summary>
-                Advanced search <em>(Recommended)</em>
-                {searchUpgrade.installed && <small>✓</small>}
-              </summary>
-              <SearchUpgradeSettings upgrade={searchUpgrade} bare />
-            </details>
-            <details className="fold">
-              <summary>
-                Original words <em>(Recommended)</em>
-                {originalPack.installed && <small>✓</small>}
-              </summary>
-              <OriginalSettings pack={originalPack} bare />
-            </details>
 
-            <h2>Name your highlights</h2>
-            <p className="hint">Give each colour a meaning (“Promises”, “Old Testament prophecy”). Names you give on the computer show here too when the two keep in step.</p>
-            <div className="hl-names">
-              {COLORS.map((c) => (
-                <label key={c} className={`hl-name hl-${c}`}>
-                  <i className={`dot hl-${c}`} />
-                  <input
-                    defaultValue={names[c] ?? ""}
-                    key={`${c}:${names[c] ?? ""}`}
-                    placeholder={COLOR_NAMES[c]}
-                    maxLength={60}
-                    onBlur={(e) => {
-                      const v = e.target.value.trim();
-                      if (v !== (names[c] ?? "")) void api.setHighlightName(c, v).then(changed).catch(fail);
-                    }}
-                  />
-                </label>
-              ))}
-            </div>
-
-            <h2>Keep in step with your computer</h2>
-            <SyncSettings onChanged={changed} />
-
-            <h2>Backup</h2>
-            <p className="hint">Your bookmarks, highlights, notes and reading plans live only on this phone. Save a backup file now and then; the same file works in the desktop app.</p>
-            <div className="actions">
-              <button onClick={saveBackup}>Save a backup</button>
-              <button onClick={restoreBackup}>Restore a backup</button>
-            </div>
-            {backupNote && <p className="hint status">{backupNote}</p>}
-
-            <h2>Appearance</h2>
+            <details className="fold" open>
+              <summary>Appearance</summary>
             <div className="row">
               <span>Text size</span>
               <div className="stepper">
@@ -1535,6 +1508,15 @@ export function App() {
               </select>
             </label>
             <label className="row">
+              <span>Font</span>
+              <select className="select-field" value={font} onChange={(e) => setFont(e.target.value as Font)}>
+                <option value="serif">Classic</option>
+                <option value="sans">Modern</option>
+              </select>
+            </label>
+              <details className="fold inner" id="theme-settings">
+                <summary>Theme and colours</summary>
+            <label className="row">
               <span>Text colour</span>
               <select className="select-field" value={textColor} onChange={(e) => setTextColor(e.target.value as TextColor)}>
                 <option value="default">Standard</option>
@@ -1550,19 +1532,12 @@ export function App() {
                 <option value="high">High</option>
               </select>
             </label>
-            <label className="row">
-              <span>Font</span>
-              <select className="select-field" value={font} onChange={(e) => setFont(e.target.value as Font)}>
-                <option value="serif">Classic</option>
-                <option value="sans">Modern</option>
-              </select>
-            </label>
-            <p className="hint">High contrast makes the grey labels and hints darker (lighter on the dark page), for reading in bright light.</p>
-            <div id="theme-settings">
-              <ThemeSettings />
-            </div>
+                <ThemeSettings />
+              </details>
+            </details>
 
-            <h2>Read aloud</h2>
+            <details className="fold">
+              <summary>Read aloud</summary>
             <div className="speed">
               <div className="speed-head">
                 <span>Speed</span>
@@ -1588,15 +1563,43 @@ export function App() {
                 ))}
                 </select>
               </label>
-            ) : (
-              <p className="hint keep">{voices ? "This phone offers one voice. More can be added in the phone's settings under Text-to-speech." : "Looking for the phone's voices…"}</p>
-            )}
+            ) : null}
             <div className="actions">
               <button onClick={() => void phone.speak("For God so loved the world, that he gave his only begotten Son.", rate, voice).catch(fail)}>Try this voice</button>
             </div>
-            <p className="hint">Tap a verse and choose Listen from here. While it reads, the bar at the bottom has a sleep timer.</p>
 
-            <UpdateSettings updates={updates} enabled={autoUpdates} onEnabled={setAutoUpdates} />
+            </details>
+
+            <details className="fold">
+              <summary>Your study</summary>
+              <h3>Highlight names</h3>
+            <div className="hl-names">
+              {COLORS.map((c) => (
+                <label key={c} className={`hl-name hl-${c}`}>
+                  <i className={`dot hl-${c}`} />
+                  <input
+                    defaultValue={names[c] ?? ""}
+                    key={`${c}:${names[c] ?? ""}`}
+                    placeholder={COLOR_NAMES[c]}
+                    maxLength={60}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (names[c] ?? "")) void api.setHighlightName(c, v).then(changed).catch(fail);
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+
+              <h3>Keep in step with your computer</h3>
+              <SyncSettings onChanged={changed} />
+              <h3>Backup</h3>
+              <div className="actions">
+                <button onClick={saveBackup}>Save a backup</button>
+                <button onClick={restoreBackup}>Restore a backup</button>
+              </div>
+              {backupNote && <p className="hint status">{backupNote}</p>}
+            </details>
 
             <details className="fold about-fold">
               <summary>
@@ -1609,6 +1612,7 @@ export function App() {
                 </li>
               ))}
             </ul>
+            <UpdateSettings updates={updates} enabled={autoUpdates} onEnabled={setAutoUpdates} />
             <p className="licence">
               Topics: Nave's Topical Bible and Torrey's New Topical Textbook. Dictionary: Easton's and Smith's Bible Dictionaries. Word study: Strong's Exhaustive Concordance; the optional Original words: STEPBible (Tyndale House, Cambridge; CC BY 4.0).
               Cross-references: OpenBible.info (CC BY 4.0).{" "}
@@ -1643,11 +1647,11 @@ export function App() {
             ["read", "Read"],
             ["search", "Search"],
             ["study", "My Study"],
-            ["plans", "Plans"],
+            ["plans", "Extras"],
             ["more", "More"],
           ] as const
         ).map(([key, label]) => (
-          <button key={key} className={tab === key ? "on" : ""} onClick={() => setTab(key)} aria-current={tab === key}>
+          <button key={key} className={tab === key ? "on" : ""} onClick={() => (key === "search" && tab === "search" ? clearSearch() : setTab(key))} aria-current={tab === key}>
             {label}
           </button>
         ))}
