@@ -42,6 +42,11 @@ pub mod qa;
 pub mod qa_parser;
 #[path = "../../../src-tauri/src/firsts.rs"]
 pub mod firsts;
+// the desktop's answer gate (the kind of question and the key words must agree) and its spelling help, used from its source
+#[path = "../../../src-tauri/src/answer_gate.rs"]
+pub mod answer_gate;
+#[path = "../../../src-tauri/src/spell.rs"]
+pub mod spell;
 pub mod ask;
 
 static PHONE_DB_GZ: &[u8] = include_bytes!("../resources/phone.db.gz");
@@ -211,12 +216,12 @@ fn search_bible(core: State<Core>, query: String, version: String, testament: Op
 
 /// An answer above the search results, when what was typed is a question the app can answer.
 #[tauri::command(async)]
-fn ask_question(core: State<Core>, query: String) -> Result<Option<ask::Answer>, String> {
+fn ask_question(core: State<Core>, query: String) -> Result<ask::AskReply, String> {
     let core = core.get()?;
     let meaning = meaning_pack::get(&core.dir);
     let d = core.db.lock().map_err(err)?;
     let s = core.study.lock().map_err(err)?;
-    ask::ask(&d, &s, &query, meaning.as_deref())
+    ask::ask_with_correction(&d, &s, &query, meaning.as_deref())
 }
 
 // ---------------------------------------------------------------- the Advanced search upgrade

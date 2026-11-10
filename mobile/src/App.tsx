@@ -326,6 +326,8 @@ export function App() {
   const [result, setResult] = useState<SearchResult | null>(null);
   // an answer above the results, when the search is a question (as the desktop's "Ask")
   const [answer, setAnswer] = useState<Answer | null>(null);
+  /** the question as it was read, when a spelling slip was put right */
+  const [corrected, setCorrected] = useState<string | null>(null);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const searchUpgrade = useSearchUpgrade();
@@ -657,9 +659,14 @@ export function App() {
     let current = true;
     setSearching(true);
     setAnswer(null);
+    setCorrected(null);
     api
       .ask(query)
-      .then((a) => current && setAnswer(a))
+      .then((r) => {
+        if (!current) return;
+        setAnswer(r.answer);
+        setCorrected(r.corrected);
+      })
       .catch(() => undefined);
     api
       .search(query, version, scope === "OT" || scope === "NT" ? scope : null, scope === "book" ? place.book : null)
@@ -1058,6 +1065,7 @@ export function App() {
                     </button>
                   </p>
                 )}
+                {query && answer && corrected && <p className="hint">Showing the answer for “{corrected}”</p>}
                 {query && answer && <AskAnswer answer={answer} books={books} onOpen={go} onArticle={openArticle} />}
                 {query && result && (result.topics.length > 0 || result.articles.length > 0) && (
                   <div className="chips topics" role="group" aria-label="Topics and dictionary articles">

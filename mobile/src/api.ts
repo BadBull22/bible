@@ -69,7 +69,22 @@ export type Answer =
       /** the closest question on file, not the words typed */
       by_meaning: boolean;
     }
-  | { kind: "dictionary"; id: number; headword: string; source: string; preview: string };
+  | { kind: "dictionary"; id: number; headword: string; source: string; preview: string }
+  | {
+      /** the closest question on file, which does not pass the gate: shown labelled, never as THE answer */
+      kind: "related";
+      question: string;
+      confidence: string;
+      answer: string;
+      citations: { reference: string; role: string }[];
+      note: string | null;
+    };
+
+/** What Ask returns: the answer, and the question as it was read when a spelling slip was put right. */
+export interface AskReply {
+  answer: Answer | null;
+  corrected: string | null;
+}
 
 export interface SearchResult {
   hits: Hit[];
@@ -263,7 +278,7 @@ export const api = {
   search: (query: string, version: string, testament: string | null, book: string | null) =>
     invoke<SearchResult>("search_bible", { query, version, testament, book, limit: 300 }),
   /** an answer when what was typed is a question the app can answer, else null */
-  ask: (query: string) => invoke<Answer | null>("ask_question", { query }),
+  ask: (query: string) => invoke<AskReply>("ask_question", { query }),
   searchUpgradeStatus: () => invoke<{ installed: boolean; size_mb: number }>("search_upgrade_status"),
   /** downloads the Advanced search upgrade ("search-upgrade-progress" events report the percentage) */
   searchUpgradeInstall: () => invoke<void>("search_upgrade_install"),
