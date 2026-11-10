@@ -29,6 +29,12 @@ param(
     # accepts the same number twice, even for an upload that was discarded, so a re-upload of the same version
     # needs a higher one here, e.g. -VersionCode 2009009. The version people see (2.9.8) does not change.
     [int]$VersionCode = 0,
+    # added to the file name, so a test build never overwrites a file already in installer\ (e.g. -Suffix "-v3test1")
+    [string]$Suffix = "",
+    # a test copy that installs NEXT TO the real app instead of over it: its own package name (com.ghostclaw.bibleconcordance.v3test), its own
+    # name under the icon ("Bible v3 Test") and its own data. Use it for every test build on a phone that has the real app (a tester's phone:
+    # an install over the real app would also take the tester's place in Google Play's closed test away).
+    [switch]$SideBySide,
     # phones are 64-bit ARM (32-bit ARM is included for older ones); the emulator on a PC is x86_64
     [string[]]$Targets = @("aarch64", "armv7"),
     [string]$Mirror = "$env:LOCALAPPDATA\bible-concordance-build\mobile-mirror",
@@ -80,12 +86,16 @@ New-Item -ItemType Directory -Force "$Mirror\src-tauri\src" | Out-Null
 # node_modules, the generated Android project and build output belong to the mirror
 Mirror-Dir $mobile "$Mirror\mobile" @("node_modules", "dist", "gen", "target", ".cargo", ".tauri", "build")
 Copy-Item "$root\src-tauri\src\sermon.rs" "$Mirror\src-tauri\src\sermon.rs" -Force
-# the desktop's "Ask a question" (since 2.9.3): its code and its data (see mobile/src-tauri/src/ask.rs)
-foreach ($f in "qa.rs", "qa_parser.rs", "firsts.rs") { Copy-Item "$root\src-tauri\src\$f" "$Mirror\src-tauri\src\$f" -Force }
+# the desktop's "Ask a question" (since 2.9.3): its code and its data (see mobile/src-tauri/src/ask.rs); since 3.0.0 also its answer gate,
+# spelling help and family questions (people_qa.rs, with the name spellings in name_aliases.json)
+foreach ($f in "qa.rs", "qa_parser.rs", "firsts.rs", "answer_gate.rs", "spell.rs", "people_qa.rs") { Copy-Item "$root\src-tauri\src\$f" "$Mirror\src-tauri\src\$f" -Force }
 New-Item -ItemType Directory -Force "$Mirror\src-tauri\resources" | Out-Null
-foreach ($f in "qa.json", "qa_index.json", "firsts.json") { Copy-Item "$root\src-tauri\resources\$f" "$Mirror\src-tauri\resources\$f" -Force }
+foreach ($f in "qa.json", "qa_index.json", "firsts.json", "name_aliases.json") { Copy-Item "$root\src-tauri\resources\$f" "$Mirror\src-tauri\resources\$f" -Force }
 # what the desktop and the phone app share (module readers, references, keeping in step)
 Mirror-Dir "$root\crates" "$Mirror\crates" @("target", ".cargo")
+# Browse (since 3.0.0): the desktop's pages (JSON) and the rules that find them, used from their source (mobile\src\Browse.tsx imports ..\..\src\browse);
+# the children's pictures stay out (they are optional downloads on the phone)
+Mirror-Dir "$root\src\browse" "$Mirror\src\browse" @("pictures")
 
 Set-Location "$Mirror\mobile"
 # the mirror has its own node_modules: install when there is none, or when the packages asked for have changed
@@ -137,6 +147,20 @@ if ($VersionCode -gt 0) {
     $features += @("--config", $override)
     Write-Host "Android versionCode set to $VersionCode" -ForegroundColor Yellow
 }
+
+# the package name and the name under the icon: the real app's, or a test copy that sits next to it (-SideBySide). Set every build, one way
+# or the other, because the generated project stays between builds. The code's own package (the namespace) never changes.
+$appId = if ($SideBySide) { "$identifier.v3test" } else { $identifier }
+$appLabel = if ($SideBySide) { "Bible v3 Test" } else { "Bible Concordance" }
+$gradleApp = "src-tauri\gen\android\app\build.gradle.kts"
+$g = Get-Content $gradleApp -Raw
+$g = [regex]::Replace($g, 'applicationId = "[^"]*"', ('applicationId = "' + $appId + '"'))
+Set-Content -Path $gradleApp -Value $g -NoNewline
+$stringsXml = "src-tauri\gen\android\app\src\main\res\values\strings.xml"
+$x = Get-Content $stringsXml -Raw
+$x = [regex]::Replace($x, '(<string name="app_name">)[^<]*(</string>)', ('${1}"' + $appLabel + '"${2}'))
+Set-Content -Path $stringsXml -Value $x -NoNewline
+Write-Host "Package name: $appId  ($appLabel)" -ForegroundColor Yellow
 
 # the app icon (three crosses, since 2026-10-20) into the Android project's launcher icons; the
 # generated project lives only here, so it is applied on every build from src-tauri\app-icon.png
@@ -209,7 +233,7 @@ $apk = if ($isAab) {
 }
 if (-not $apk) { throw "Nothing was produced" }
 $version = (Get-Content "$mobile\package.json" -Raw | ConvertFrom-Json).version
-$name = "BibleConcordance_Android_$version" + $(if ($Play) { "_play" } else { "" }) + $(if ($Release) { "" } else { "_debug" }) + $(if ($TestApk) { "_test" } else { "" }) + $(if ($isAab) { ".aab" } else { ".apk" })
+$name = "BibleConcordance_Android_$version" + $(if ($Play) { "_play" } else { "" }) + $(if ($Release) { "" } else { "_debug" }) + $(if ($TestApk) { "_test" } else { "" }) + $Suffix + $(if ($isAab) { ".aab" } else { ".apk" })
 New-Item -ItemType Directory -Force "$root\installer" | Out-Null
 Copy-Item $apk.FullName "$root\installer\$name" -Force
 Write-Host ("{0}  {1:N1} MB" -f "installer\$name", ($apk.Length / 1MB)) -ForegroundColor Green
