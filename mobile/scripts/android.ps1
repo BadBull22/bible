@@ -101,6 +101,8 @@ Mirror-Dir "$root\crates" "$Mirror\crates" @("target", ".cargo")
 Mirror-Dir "$root\src\browse" "$Mirror\src\browse" @("pictures")
 # the nine Bible maps (since 3.0.0): the desktop's own folder (pictures and maps.json), served by the page as bible-maps/
 Mirror-Dir "$root\public\bible-maps" "$Mirror\mobile\public\bible-maps" @()
+# the Authors page's list (since 3.0.0): one data file of the desktop's
+Copy-Item "$root\src\bibleAuthors.ts" "$Mirror\src\bibleAuthors.ts" -Force
 # the themes (since 3.0.0): the desktop's own theme code, wordmark pictures, screen packages and verses of the season, used from their source
 Mirror-Dir "$root\src\themes" "$Mirror\src\themes" @()
 
