@@ -36,6 +36,9 @@ interface View {
 }
 
 const FOLDER = "bible-maps/";
+
+/** The map to open again when the reader comes back from a passage link (set before the jump, used once). */
+export const resumeMap: { id: string | null } = { id: null };
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 8;
 
@@ -139,27 +142,28 @@ function MapViewer({ map }: { map: BibleMap }) {
   );
 }
 
-/** The card in More that opens the maps. */
+/** The row in Extras that opens the maps. */
 export function MapsEntry({ onOpen }: { onOpen: () => void }) {
   return (
-    <section className="browse-entry">
-      <div className="browse-entry-grid">
-        <button className="browse-card" onClick={onOpen}>
-          <span className="browse-card-title">
-            Bible maps <small>9</small>
-          </span>
-          <span className="browse-card-blurb">Where the tribes settled, the kingdoms, Jerusalem, the ministry of Jesus and Paul's journeys: zoom, drag, and see the passages each goes with.</span>
-        </button>
-      </div>
-    </section>
+    <button className="more-row" onClick={onOpen}>
+      <span className="more-row-title">Bible maps</span>
+      <small>9</small>
+      <span className="dl-chev" aria-hidden>
+        ›
+      </span>
+    </button>
   );
 }
 
-/** The maps screen (More > Bible maps). Back goes from a map to the list, then out. */
-export function BibleMaps({ onJump, onClose }: { onJump: (book: string, chapter: number, verse: number) => void; onClose: () => void }) {
+/** The maps screen (Extras > Bible maps). Back goes from a map to the list, then out. */
+export function BibleMaps({ onJump, onClose }: { onJump: (book: string, chapter: number, verse: number, from: { id: string; title: string }) => void; onClose: () => void }) {
   const [data, setData] = useState<Manifest | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(() => {
+    const id = resumeMap.id;
+    resumeMap.id = null;
+    return id;
+  });
   useBack(true, onClose);
   useBack(openId != null, () => setOpenId(null));
 
@@ -183,7 +187,7 @@ export function BibleMaps({ onJump, onClose }: { onJump: (book: string, chapter:
     return (
       <div className="bible-maps browse">
         <button className="link back" onClick={onClose}>
-          ‹ More
+          ‹ Extras
         </button>
         <h2>Bible maps</h2>
         <p className="hint">Maps that come with the app. Choose one to zoom in, drag it around and see which passages it goes with.</p>
@@ -235,7 +239,7 @@ export function BibleMaps({ onJump, onClose }: { onJump: (book: string, chapter:
           <ul className="bible-map-list">
             {map.passages.map((p) => (
               <li key={p.label}>
-                <button className="link" onClick={() => onJump(p.book, p.chapter, p.verse)}>
+                <button className="link" onClick={() => onJump(p.book, p.chapter, p.verse, { id: map.id, title: map.title })}>
                   {p.label}
                 </button>
               </li>

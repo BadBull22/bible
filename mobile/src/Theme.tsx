@@ -4,7 +4,7 @@
 // and the verses are the desktop's own files (src/themes), used from their source. A theme never changes the Bible reading font.
 
 import { useRef, type CSSProperties, type ReactNode } from "react";
-import { LOOK_GROUPS, LOOKS, lookBySlug } from "../../src/themes/occasions";
+import { LOOK_GROUPS, LOOKS } from "../../src/themes/occasions";
 import { declineSeason, effectiveLook, keepSeason, setAppColour, setBackgroundFrom, setChosen, setFlag, setReadingBackground, setWordmarkFrom, useThemeState } from "../../src/themes/themeStore";
 import { hslToRgb, isHexColour, PALETTE, STANDARD, toHex, toHsl, parseHex } from "../../src/themes/palette";
 import "../../src/themes/themes.css";
@@ -50,6 +50,7 @@ export function HomeScreen({
   select,
   recent,
   onRecent,
+  onClearRecent,
   onLook,
   resume,
   enterHint,
@@ -61,6 +62,7 @@ export function HomeScreen({
   select: ReactNode;
   recent: string[];
   onRecent: (q: string) => void;
+  onClearRecent: () => void;
   onLook: () => void;
   /** "Continue reading: John 2": back to the reader where the reader left off */
   resume: { label: string; go: () => void };
@@ -132,6 +134,9 @@ export function HomeScreen({
                 {r}
               </button>
             ))}
+            <button className="link" onClick={onClearRecent}>
+              Clear
+            </button>
           </div>
         )}
       </div>
@@ -174,11 +179,10 @@ function ColourWheel({ value, onPick }: { value: string; onPick: (hex: string) =
   );
 }
 
-/** More > Appearance: the theme, a wordmark and a background that can be picked on their own, the background behind the Bible text, the colour of
- * the app, and the two switches for seasons. */
+/** More > Appearance > Theme and colours: the theme, a wordmark and a background that can be picked on their own, the background behind the Bible text,
+ * the colour of the app, and the two switches for seasons. Rows and controls only: no paragraphs. */
 export function ThemeSettings() {
   const s = useThemeState();
-  const chosen = lookBySlug(s.chosen);
   const showing = effectiveLook(s);
   const groups = (only?: (l: (typeof LOOKS)[number]) => boolean) =>
     LOOK_GROUPS.map((g) => (
@@ -199,13 +203,6 @@ export function ThemeSettings() {
           {groups()}
         </select>
       </label>
-      <p className="hint">
-        {chosen ? chosen.blurb : "The plain coloured Gospel wordmark. Near a season the app can switch to that season's theme and ask whether to keep it."}
-        {showing.look && !chosen ? ` Showing now: ${showing.look.name}.` : ""}
-      </p>
-      <p className="hint">
-        <strong>Mix and match.</strong> Picking a theme sets both of these. Change either one to build your own.
-      </p>
       <label className="row">
         <span>Wordmark</span>
         <select className="select-field" value={s.wordmarkFrom} onChange={(e) => setWordmarkFrom(e.target.value)} aria-label="Wordmark">
@@ -222,29 +219,15 @@ export function ThemeSettings() {
           {groups()}
         </select>
       </label>
-      <p className="hint">
-        {showing.mixed
-          ? `Showing: ${showing.wordmarkLook ? `the ${showing.wordmarkLook.name} wordmark` : "the plain wordmark"} on ${showing.screenLook ? `the ${showing.screenLook.name} background` : "a plain background"}.`
-          : "The background is a theme's colours, small decorations, glow and verse of the season."}
-      </p>
       <label className="row">
         <span>Behind the Bible text</span>
         <select className="select-field" value={s.reading} onChange={(e) => setReadingBackground(e.target.value as "off" | "soft" | "full")} aria-label="Background behind the Bible text" disabled={!showing.screenLook}>
-          <option value="off">None (plain paper)</option>
-          <option value="soft">Soft (a hint of the theme)</option>
-          <option value="full">Full (the whole background)</option>
+          <option value="off">None</option>
+          <option value="soft">Soft</option>
+          <option value="full">Full</option>
         </select>
       </label>
-      <p className="hint">
-        {showing.screenLook
-          ? "Shows the background behind the Bible when you read a chapter. Your own paper colour is laid over it so that the text stays easy to read; the reading font is never changed."
-          : "Choose a background above first, then it can show behind the Bible text too."}
-      </p>
-
-      <p className="hint">
-        <strong>Colour of the app.</strong> Tints the page, the panels and the bars. It is always softened to a pastel (a deep, muted shade in the dark appearance), and the
-        text keeps the contrast it has now.
-      </p>
+      <p className="row-label">Colour of the app</p>
       <div className="app-colour" role="radiogroup" aria-label="Colour of the app">
         <button className="swatch standard" role="radio" aria-checked={s.appColour === STANDARD} onClick={() => setAppColour(STANDARD)}>
           Standard
@@ -254,15 +237,12 @@ export function ThemeSettings() {
         ))}
       </div>
       <ColourWheel value={s.appColour} onPick={setAppColour} />
-      <p className="hint">Drag round the wheel for any other colour. “Standard” goes back to the app's own colours.</p>
-
       <label className="check">
-        <input type="checkbox" checked={s.seasonal} disabled={s.keep} onChange={(e) => setFlag("seasonal", e.target.checked)} /> Switch to a seasonal theme near its season, and ask whether to keep it
+        <input type="checkbox" checked={s.seasonal} disabled={s.keep} onChange={(e) => setFlag("seasonal", e.target.checked)} /> Switch to a seasonal theme near its season
       </label>
       <label className="check">
-        <input type="checkbox" checked={s.keep} onChange={(e) => setFlag("keep", e.target.checked)} /> Keep my selection as the default and never change it
+        <input type="checkbox" checked={s.keep} onChange={(e) => setFlag("keep", e.target.checked)} /> Keep my selection, never change it
       </label>
-      <p className="hint">With this on, whatever is selected stays: no theme is switched for a season, and nothing asks. No theme ever changes your Bible reading font.</p>
     </div>
   );
 }

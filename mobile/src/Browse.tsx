@@ -3,7 +3,7 @@
 // pages always use the BSB). The data and the rules for finding a page are the desktop's own files (src/browse), used from their source.
 // Left out on the phone: printing and the activity sheet, the review mode, and the people and places box (the pictures come later, as optional downloads).
 
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api, type Verse } from "./api";
 import { useBack } from "./back";
 import { AGE_BANDS, ageLabel, parseRef, searchEntries, tagCounts, withTag, type BrowseEntry } from "../../src/browse/browseLogic";
@@ -34,6 +34,28 @@ const TABS: { kind: BrowseKind; label: string; hint: string; find: string; empty
 ];
 const LABEL: Record<BrowseKind, string> = { stories: "Bible stories", topics: "Verses for…", children: "For children" };
 const COUNT: Record<BrowseKind, number> = { stories: STORIES.length, topics: TOPICS.length, children: CHILDREN.length };
+
+/** The name of a page, for "Back to David and Goliath". */
+export function pageTitle(kind: BrowseKind, id: string): string | undefined {
+  return kind === "stories" ? story(id)?.title : kind === "topics" ? topic(id)?.title : childPage(id)?.title;
+}
+export const listName = (kind: BrowseKind): string => LABEL[kind];
+
+// What was opened on a page ("Show the words", "Show the answer") is kept while the app runs, so coming back to a page from the Bible finds it as it was left.
+const opened = new Set<string>();
+const PageKey = createContext("");
+function useOpened(key: string, start = false): [boolean, (v: boolean) => void] {
+  const full = `${useContext(PageKey)}|${key}`;
+  const [open, set] = useState(() => start || opened.has(full));
+  return [
+    open,
+    (v) => {
+      if (v) opened.add(full);
+      else opened.delete(full);
+      set(v);
+    },
+  ];
+}
 
 /** how many subject buttons show before "more" */
 const TAGS_SHOWN = 8;
@@ -106,7 +128,7 @@ function VerseText({ refText, version }: { refText: string; version: string }) {
 }
 
 function PassageBlock({ refText, label, note, actions, startOpen, bsbOnly }: { refText: string; label?: string; note?: string; actions: Actions; startOpen?: boolean; bsbOnly?: boolean }) {
-  const [open, setOpen] = useState(!!startOpen);
+  const [open, setOpen] = useOpened(`p:${refText}`, !!startOpen);
   const r = parseRef(refText);
   return (
     <div className="browse-passage">
@@ -301,7 +323,7 @@ function TopicView({ page, actions }: { page: Topic; actions: Actions }) {
 
 // ---- a children's page ------------------------------------------------------------------------------------------------
 function Question({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useOpened(`q:${q}`);
   return (
     <li>
       <div className="browse-q">{q}</div>
@@ -389,21 +411,20 @@ function List({ list, onOpen }: { list: BrowseEntry[]; onOpen: (e: BrowseEntry) 
   );
 }
 
-/** The three ways in, in More. */
+/** The three ways in, as rows of the list at the top of Extras. */
 export function BrowseEntryPoints({ onOpen }: { onOpen: (kind: BrowseKind) => void }) {
   return (
-    <section className="browse-entry">
-      <div className="browse-entry-grid">
-        {TABS.map((t) => (
-          <button key={t.kind} className="browse-card" onClick={() => onOpen(t.kind)}>
-            <span className="browse-card-title">
-              {t.label} <small>{COUNT[t.kind]}</small>
-            </span>
-            <span className="browse-card-blurb">{t.hint}</span>
-          </button>
-        ))}
-      </div>
-    </section>
+    <>
+      {TABS.map((t) => (
+        <button key={t.kind} className="more-row" onClick={() => onOpen(t.kind)}>
+          <span className="more-row-title">{t.label}</span>
+          <small>{COUNT[t.kind]}</small>
+          <span className="dl-chev" aria-hidden>
+            ›
+          </span>
+        </button>
+      ))}
+    </>
   );
 }
 
@@ -435,15 +456,17 @@ export function BrowseScreen({ open, setOpen, version, backLabel, onJump, onSear
         <button className="link back" onClick={() => setOpen({ kind: tab, id: null })}>
           ‹ {LABEL[tab]}
         </button>
-        {!present ? (
-          <p className="hint">That page is not in this version of the app.</p>
-        ) : tab === "stories" ? (
-          <StoryView page={present as Story} actions={actions} />
-        ) : tab === "topics" ? (
-          <TopicView page={present as Topic} actions={actions} />
-        ) : (
-          <ChildView page={present as ChildPage} actions={actions} />
-        )}
+        <PageKey.Provider value={`${tab}:${open.id}`}>
+          {!present ? (
+            <p className="hint">That page is not in this version of the app.</p>
+          ) : tab === "stories" ? (
+            <StoryView page={present as Story} actions={actions} />
+          ) : tab === "topics" ? (
+            <TopicView page={present as Topic} actions={actions} />
+          ) : (
+            <ChildView page={present as ChildPage} actions={actions} />
+          )}
+        </PageKey.Provider>
       </div>
     );
   }
