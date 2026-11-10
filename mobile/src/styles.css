@@ -1993,3 +1993,8 @@ html[data-glow="theme"] .browse-card { border-top: 3px solid var(--occ-accent); 
 .bible-map-heading { margin: 0.8rem 0 0.2rem; }
 .bible-map-about { margin: 0 0 0.6rem; line-height: 1.5; }
 .bible-map-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; }
+
+/* ---------- the Authors page (since 3.0.0) ---------- */
+.authors-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.authors-card { display: block; cursor: default; }
+.authors-basis { color: var(--muted); font-size: 0.78rem; }

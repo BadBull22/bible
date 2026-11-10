@@ -38,6 +38,7 @@ import { AskAnswer } from "./AskAnswer";
 import { BrowseEntryPoints, BrowseMatches, BrowseScreen, type BrowseOpen } from "./Browse";
 import { HomeScreen, ThemeSettings, useLook } from "./Theme";
 import { BibleMaps, MapsEntry } from "./BibleMaps";
+import { Authors, AuthorsEntry } from "./Authors";
 import { getThemeState } from "../../src/themes/themeStore";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
@@ -313,6 +314,8 @@ export function App() {
   const [browseIn, setBrowseIn] = useState<"search" | "more">("more");
   /** the Bible maps are open in More */
   const [mapsOpen, setMapsOpen] = useState(false);
+  /** the Authors page is open in More */
+  const [authorsOpen, setAuthorsOpen] = useState(false);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const searchUpgrade = useSearchUpgrade();
@@ -1401,7 +1404,19 @@ export function App() {
           </div>
         )}
 
-        {tab === "more" && !mapsOpen && !(browse && browseIn === "more") && (
+        {tab === "more" && authorsOpen && (
+          <div className="more">
+            <Authors
+              onJump={(b, c, v) => {
+                setAuthorsOpen(false);
+                go(b, c, v);
+              }}
+              onClose={() => setAuthorsOpen(false)}
+            />
+          </div>
+        )}
+
+        {tab === "more" && !mapsOpen && !authorsOpen && !(browse && browseIn === "more") && (
           <div className="more" ref={moreBox} onClick={toggleExplanations}>
             <h2>Bible stories and verses</h2>
             <BrowseEntryPoints
@@ -1412,6 +1427,8 @@ export function App() {
             />
             <h2>Bible maps</h2>
             <MapsEntry onOpen={() => setMapsOpen(true)} />
+            <h2>Authors</h2>
+            <AuthorsEntry onOpen={() => setAuthorsOpen(true)} />
 
                 <section className="dictionary">
                     <h3>Bible dictionary</h3>
