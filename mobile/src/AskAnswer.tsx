@@ -8,7 +8,7 @@ import { parseReference } from "./refs";
 /** How sure a hand-checked answer is (the desktop's labels). */
 const CONFIDENCE: Record<string, string> = {
   stated: "Stated in Scripture",
-  computed: "Counted from the Bible text",
+  computed: "Computed from this app's own data",
   traditional: "Traditional / scholarly view",
   commentary_opinion: "A commentator's view, not Scripture",
   doctrinal_view: "Scripture first, then the Pentecostal reading",
