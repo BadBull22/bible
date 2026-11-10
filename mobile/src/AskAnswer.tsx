@@ -50,8 +50,19 @@ export function AskAnswer({
   }
   return (
     <div className="card answer">
-      <span className={`badge conf-${answer.confidence}`}>{CONFIDENCE[answer.confidence] ?? answer.confidence}</span>
-      {answer.by_meaning && <p className="hint">The closest question on file: “{answer.question}”</p>}
+      {answer.kind === "related" ? (
+        <>
+          <span className="badge conf-commentary_opinion">Related answer: it may not answer your exact question</span>
+          <p className="hint">
+            Closest question on file: <strong>{answer.question}</strong>
+          </p>
+        </>
+      ) : (
+        <>
+          <span className={`badge conf-${answer.confidence}`}>{CONFIDENCE[answer.confidence] ?? answer.confidence}</span>
+          {answer.by_meaning && <p className="hint">The closest question on file: “{answer.question}”</p>}
+        </>
+      )}
       <p className="answer-text">{answer.answer}</p>
       {answer.note && <p className="hint">{answer.note}</p>}
       {answer.citations.length > 0 && (

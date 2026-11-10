@@ -11,6 +11,7 @@
 //! Nothing is invented: a question with none of these gets no answer card, only the search
 //! results. The data files are the desktop's, compiled into the app, so both apps answer alike.
 
+use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
 use bible_core::meaning::Meaning;
@@ -18,9 +19,11 @@ use regex::RegexBuilder;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 
+use crate::answer_gate;
 use crate::firsts::{FirstsData, FirstsEntry};
 use crate::qa::{QaConfidence, QaData, QaEntry};
 use crate::qa_parser::{self, ParsedScope};
+use crate::spell;
 
 fn err<E: ToString>(e: E) -> String {
     e.to_string()
@@ -96,6 +99,17 @@ pub enum Answer {
     },
     /// a Bible dictionary's entry (`id`: to open it whole)
     Dictionary { id: i64, headword: String, source: String, preview: String },
+    /// the closest question on file, which did NOT pass the gate (not the same kind of question, or the words that carry the
+    /// question are not in it): shown under its own label, "it may not answer your exact question", as on the desktop
+    Related { question: String, confidence: String, answer: String, citations: Vec<Citation>, note: Option<String> },
+}
+
+/// What the Ask command returns: the answer (if any) and, when the question had a spelling slip that was put right,
+/// the question as it was read ("Showing the answer for ...").
+#[derive(Serialize, Debug)]
+pub struct AskReply {
+    pub answer: Option<Answer>,
+    pub corrected: Option<String>,
 }
 
 fn confidence_name(c: &QaConfidence) -> &'static str {
@@ -271,6 +285,10 @@ fn dictionary(study: &Connection, query: &str) -> Option<Answer> {
                 .ok()
                 .flatten();
             if let Some((id, headword, source, body)) = found {
+                // an entry that only says "See COWARDICE" is not an answer: it has no passage and almost no words (the desktop's rule)
+                if body.chars().count() < 160 && !body.contains('⟦') {
+                    continue;
+                }
                 let preview: String = body.split("\n\n").take(2).collect::<Vec<_>>().join("\n\n");
                 let preview = if preview.chars().count() > 700 { format!("{}…", preview.chars().take(700).collect::<String>()) } else { preview };
                 return Some(Answer::Dictionary { id, headword, source, preview });
@@ -307,37 +325,133 @@ pub fn ask(db: &Connection, study: &Connection, query: &str, meaning: Option<&Me
         return Ok(curated(db, &data.firsts, e, false));
     }
     let question = looks_like_question(query);
-    // ... or, with the search upgrade, the closest question on file
+    // ... or, with the search upgrade, the closest questions on file (the desktop's layers: the four closest answers, each tried
+    // against the gate; the closest that fails the gate is kept as the "related" answer)
+    let mut related: Option<Answer> = None;
     if let Some(m) = meaning {
         let v = m.embedder.embed(query)?;
-        let best = data
+        let mut scored: Vec<(bool, &String, f32)> = data
             .index
             .iter()
-            .map(|(from_qa, id, scale, q)| (from_qa, id, q.iter().zip(&v).map(|(&a, b)| a as f32 * b).sum::<f32>() * scale))
-            .max_by(|a, b| a.2.total_cmp(&b.2));
-        if let Some((&from_qa, id, similarity)) = best {
-            let needed = if question { SIMILARITY } else { NOT_A_QUESTION };
-            if similarity >= needed {
-                let house_view = from_qa && data.qa.get(id).is_some_and(|e| e.confidence == QaConfidence::DoctrinalView);
-                // a dictionary entry for the exact subject beats an answer only somewhat close
-                if similarity < DICTIONARY_OVERRIDE && !house_view {
-                    if let Some(d) = dictionary(study, query) {
-                        return Ok(Some(d));
-                    }
+            .map(|(from_qa, id, scale, q)| (*from_qa, id, q.iter().zip(&v).map(|(&a, b)| a as f32 * b).sum::<f32>() * scale))
+            .collect();
+        scored.sort_by(|a, b| b.2.total_cmp(&a.2));
+        // an answer has many wordings in the index: each answer once, its best wording
+        let mut seen: HashSet<(bool, &String)> = HashSet::new();
+        let candidates: Vec<(bool, &String, f32)> = scored.into_iter().filter(|(f, id, _)| seen.insert((*f, *id))).take(4).collect();
+        let needed = if question { SIMILARITY } else { NOT_A_QUESTION };
+        let is_name = |w: &str| names(db).contains(&w.to_lowercase());
+        for (rank, (from_qa, id, similarity)) in candidates.into_iter().enumerate() {
+            if similarity < needed {
+                break; // sorted: the rest are further away
+            }
+            let house_view = from_qa && data.qa.get(id).is_some_and(|e| e.confidence == QaConfidence::DoctrinalView);
+            // a dictionary entry for the exact subject beats an answer only somewhat close
+            if rank == 0 && similarity < DICTIONARY_OVERRIDE && !house_view {
+                if let Some(d) = dictionary(study, query) {
+                    return Ok(Some(d));
                 }
-                if from_qa {
-                    if let Some(e) = data.qa.get(id) {
+            }
+            if from_qa {
+                if let Some(e) = data.qa.get(id) {
+                    let mut phrasings: Vec<&str> = vec![e.question.as_str()];
+                    phrasings.extend(e.alt_phrasings.iter().map(String::as_str));
+                    if answer_gate::agrees(query, &phrasings, similarity, &is_name) {
                         return Ok(curated(db, &data.firsts, e, true));
                     }
-                } else if let Some(e) = data.firsts.all().iter().find(|e| &e.id == id) {
+                    if related.is_none() {
+                        related = curated(db, &data.firsts, e, true).map(into_related);
+                    }
+                }
+            } else if let Some(e) = data.firsts.all().iter().find(|e| &e.id == id) {
+                if answer_gate::agrees(query, &[e.question.as_str()], similarity, &is_name) {
                     return Ok(Some(from_firsts(e)));
+                }
+                if related.is_none() {
+                    related = Some(into_related(from_firsts(e)));
                 }
             }
         }
     }
 
-    // 3. a dictionary's entry for a who/what question
-    Ok(dictionary(study, query))
+    // 3. a dictionary's entry for a who/what question; failing that, the related answer (labelled, never THE answer)
+    if let Some(d) = dictionary(study, query) {
+        return Ok(Some(d));
+    }
+    Ok(related)
+}
+
+/// A curated answer shown as "related": the same words, under the label that says it may not answer the question.
+fn into_related(a: Answer) -> Answer {
+    match a {
+        Answer::Curated { question, confidence, answer, citations, note, .. } => Answer::Related { question, confidence, answer, citations, note },
+        other => other,
+    }
+}
+
+/// The names of people and places in the BSB, which the phone has no table of: a word that is capitalised in the middle of a verse
+/// at least three times and is never written in lower case ("Lazarus", "Jerusalem"). The answer gate needs a name in a question to be in
+/// the stored question as well ("how many days was Lazarus dead" is not answered by "how many days was Jesus dead"). Titles of God and
+/// names of groups are left out: a question about "the Lord" or "the Gentiles" is not about a name.
+fn names(db: &Connection) -> &'static HashSet<String> {
+    static NAMES: OnceLock<HashSet<String>> = OnceLock::new();
+    NAMES.get_or_init(|| compute_names(db))
+}
+
+fn compute_names(db: &Connection) -> HashSet<String> {
+    const NOT_NAMES: &[&str] = &[
+        "god", "lord", "father", "son", "spirit", "holy", "word", "scripture", "scriptures", "bible", "savior", "saviour", "messiah", "almighty", "amen", "gospel",
+        "law", "kingdom", "heaven", "gentiles", "gentile", "jews", "jew", "pharisees", "pharisee", "sadducees", "christian", "christians", "church", "sabbath",
+        "passover", "temple", "israelites", "most", "high", "hallelujah", "selah", "yahweh", "king", "queen", "angel", "angels",
+    ];
+    let mut upper: HashMap<String, u32> = HashMap::new();
+    let mut lower: HashSet<String> = HashSet::new();
+    if let Ok(mut st) = db.prepare("SELECT v.text FROM verses v JOIN versions ver ON ver.id = v.version_id WHERE ver.code = 'BSB'") {
+        if let Ok(rows) = st.query_map([], |r| r.get::<_, String>(0)) {
+            for text in rows.flatten() {
+                for (i, w) in text.split(|c: char| !c.is_alphabetic()).filter(|w| !w.is_empty()).enumerate() {
+                    let first = w.chars().next().unwrap_or(' ');
+                    if first.is_lowercase() {
+                        lower.insert(w.to_lowercase());
+                    } else if i > 0 {
+                        *upper.entry(w.to_lowercase()).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+    }
+    upper.into_iter().filter(|(w, n)| *n >= 3 && w.chars().count() >= 3 && !lower.contains(w) && !NOT_NAMES.contains(&w.as_str())).map(|(w, _)| w).collect()
+}
+
+/// Every word of the hand-checked answers, for the spelling list (so doctrinal words such as "rapture" are known).
+fn curated_text() -> &'static Vec<String> {
+    static TEXT: OnceLock<Vec<String>> = OnceLock::new();
+    TEXT.get_or_init(|| {
+        let d = loaded();
+        d.qa
+            .all()
+            .iter()
+            .map(|e| format!("{} {} {}", e.question, e.alt_phrasings.join(" "), e.answer))
+            .chain(d.firsts.all().iter().map(|e| e.question.clone()))
+            .collect()
+    })
+}
+
+/// The reply to what was typed: the answer to it as typed, or, when a question has a spelling slip ("who betryed jesus") and the
+/// question put right has an answer, that answer and the question as it was read. A question that already has its exact stored answer,
+/// or is a count, is left as typed.
+pub fn ask_with_correction(db: &Connection, study: &Connection, query: &str, meaning: Option<&Meaning>) -> Result<AskReply, String> {
+    let q = query.trim();
+    let data = loaded();
+    if looks_like_question(q) && data.qa.find_exact(q).is_none() && qa_parser::parse_frequency_question(q).is_none() {
+        if let Some(fixed) = spell::vocab(db, None, curated_text()).correct(q) {
+            let answer = ask(db, study, &fixed, meaning)?;
+            if answer.is_some() {
+                return Ok(AskReply { answer, corrected: Some(fixed) });
+            }
+        }
+    }
+    Ok(AskReply { answer: ask(db, study, q, meaning)?, corrected: None })
 }
 
 #[cfg(test)]
@@ -397,6 +511,97 @@ mod tests {
         assert!(checked >= 9, "the real data has viewpoints to check ({checked})");
     }
 
+    /// A small in-memory study database with the dictionaries' tables, as the phone's study pack has them.
+    fn study_with(entries: &[(&str, &str, &str)]) -> Connection {
+        let c = Connection::open_in_memory().unwrap();
+        c.execute_batch("CREATE TABLE dictionaries(code TEXT, name TEXT); CREATE TABLE dict_entries(id INTEGER PRIMARY KEY, dict_code TEXT, headword TEXT, headword_fold TEXT, body TEXT);").unwrap();
+        c.execute("INSERT INTO dictionaries VALUES ('easton', 'Easton''s Bible Dictionary')", []).unwrap();
+        for (headword, fold, body) in entries {
+            c.execute("INSERT INTO dict_entries(dict_code, headword, headword_fold, body) VALUES ('easton', ?1, ?2, ?3)", params![headword, fold, body]).unwrap();
+        }
+        c
+    }
+
+    #[test]
+    fn a_dictionary_entry_that_only_points_elsewhere_is_not_an_answer() {
+        let long = "A long entry with real words in it. ".repeat(8);
+        let study = study_with(&[("Cowardice", "cowardice", "See FEAR"), ("Fear", "fear", &long)]);
+        assert!(dictionary(&study, "what is cowardice").is_none(), "an entry of three words is not an answer");
+        match dictionary(&study, "what is fear") {
+            Some(Answer::Dictionary { headword, .. }) => assert_eq!(headword, "Fear"),
+            other => panic!("expected the Fear entry, got {other:?}"),
+        }
+        // an entry that is short but carries a passage still counts
+        let short_with_passage = study_with(&[("Mercy", "mercy", "Mercy, \u{27e6}Psalm 23:6\u{27e7}.")]);
+        assert!(dictionary(&short_with_passage, "what is mercy").is_some());
+    }
+
+    #[test]
+    fn names_are_found_in_the_bible_text_and_titles_of_god_are_not() {
+        let db = Connection::open_in_memory().unwrap();
+        db.execute_batch("CREATE TABLE versions(id INTEGER, code TEXT); CREATE TABLE verses(version_id INTEGER, text TEXT); INSERT INTO versions VALUES (1, 'BSB'), (2, 'KJV');").unwrap();
+        for text in [
+            "Then Jesus wept for Lazarus.",
+            "So they came to Lazarus and the Lord.",
+            "And the Lord said to Lazarus, come out.",
+            "The Lord is my shepherd.",
+            "Now the Lord spoke, and God said.",
+            "You have a great high priest; lord of lords.", // "lord" also appears in lower case
+            "He saw the glory of God and the Gentiles.",
+            "They came to Jerusalem, and Jerusalem rejoiced, then Jerusalem sang.",
+        ] {
+            db.execute("INSERT INTO verses VALUES (1, ?1)", params![text]).unwrap();
+        }
+        // the KJV must not count: only the BSB is read
+        db.execute("INSERT INTO verses VALUES (2, 'Then Zebedee, Zebedee and Zebedee')", []).unwrap();
+        let n = compute_names(&db);
+        assert!(n.contains("lazarus"), "{n:?}");
+        assert!(n.contains("jerusalem"), "{n:?}");
+        assert!(!n.contains("lord") && !n.contains("god") && !n.contains("gentiles"), "titles and groups are not names: {n:?}");
+        assert!(!n.contains("zebedee"), "only the BSB counts: {n:?}");
+        assert!(!n.contains("then") && !n.contains("jesus"), "a word at the start of a verse, or one seen fewer than three times, is not a name: {n:?}");
+    }
+
+    #[test]
+    fn a_failed_curated_answer_is_shown_as_related_and_nothing_else_changes() {
+        let curated = Answer::Curated {
+            question: "Who betrayed Jesus?".into(),
+            confidence: "scripture_plain".into(),
+            answer: "Judas.".into(),
+            citations: vec![],
+            note: Some("n".into()),
+            by_meaning: true,
+        };
+        match into_related(curated) {
+            Answer::Related { question, answer, note, .. } => {
+                assert_eq!(question, "Who betrayed Jesus?");
+                assert_eq!(answer, "Judas.");
+                assert_eq!(note.as_deref(), Some("n"));
+            }
+            other => panic!("expected a related answer, got {other:?}"),
+        }
+        let dict = Answer::Dictionary { id: 1, headword: "x".into(), source: "s".into(), preview: "p".into() };
+        assert!(matches!(into_related(dict), Answer::Dictionary { .. }), "only a curated answer becomes related");
+    }
+
+    #[test]
+    fn a_spelling_slip_is_put_right_and_reported_but_a_right_question_is_left_alone() {
+        let db = Connection::open_in_memory().unwrap();
+        let study = study_with(&[]);
+        let r = ask_with_correction(&db, &study, "Who betryed Jesus?", None).unwrap();
+        assert_eq!(r.corrected.as_deref(), Some("Who betrayed Jesus?"), "the question as it was read is reported");
+        match r.answer {
+            Some(Answer::Curated { question, .. }) => assert_eq!(question, "Who betrayed Jesus?"),
+            other => panic!("expected the stored answer, got {other:?}"),
+        }
+        let plain = ask_with_correction(&db, &study, "Who betrayed Jesus?", None).unwrap();
+        assert!(plain.corrected.is_none(), "a question with nothing to put right is not reported as corrected");
+        assert!(plain.answer.is_some());
+        // a search that is not a question is never rewritten
+        let search = ask_with_correction(&db, &study, "betryed", None).unwrap();
+        assert!(search.corrected.is_none() && search.answer.is_none());
+    }
+
     #[test]
     fn questions_and_searches() {
         assert!(looks_like_question("how many days was Jesus on earth after His resurrection"));
@@ -435,6 +640,7 @@ mod tests {
                 Some(Answer::Count { total, verses, scope, .. }) => format!("count {total} in {verses} verses {scope:?}"),
                 Some(Answer::Curated { question, answer, by_meaning, .. }) => format!("curated{} [{question}] {}", if *by_meaning { " (meaning)" } else { "" }, answer.chars().take(90).collect::<String>()),
                 Some(Answer::Dictionary { headword, source, .. }) => format!("dictionary {headword} ({source})"),
+                Some(Answer::Related { question, .. }) => format!("related [{question}]"),
             };
             println!("{q} ({:?})
    with upgrade: {}
