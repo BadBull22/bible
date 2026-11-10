@@ -368,3 +368,17 @@ fn the_phone_answers_the_desktops_people_questions_as_the_desktop_does() {
     }
     assert!(wrong.is_empty(), "{wrong:#?}");
 }
+
+/// The answer gate needs to know which words are names (a question about Lazarus is not answered by one about Jesus): the people and places
+/// in the phone's database, as on the desktop (which also counts a few titles such as "Lord"). An adjective such as "Jewish" is not a name.
+#[test]
+fn people_and_places_are_names_but_adjectives_and_titles_are_not() {
+    let (d, s) = open();
+    bible_pocket_lib::spell::vocab(&d, Some(&s), &[]);
+    for name in ["lazarus", "Jerusalem", "egypt", "Nebuchadnezzar", "Zechariah"] {
+        assert!(bible_pocket_lib::spell::is_name(name), "{name} is a person or a place in the Bible");
+    }
+    for word in ["jewish", "prophet", "rapture", "den", "date"] {
+        assert!(!bible_pocket_lib::spell::is_name(word), "{word} is not a name");
+    }
+}

@@ -134,13 +134,24 @@ def add_people(out: sqlite3.Connection, comm: sqlite3.Connection) -> dict:
             if pid in keep_ids
         ),
     )
+    # the names of everyone else and of the places (a name only: no ties, no mentions): Ask needs to know that "Lazarus" and "Jerusalem" are
+    # names (a question about one must be answered by a stored question about the same one), and its spelling help knows them as right spellings
+    out.executemany(
+        "INSERT INTO entities VALUES ('person', ?, ?, ?, NULL, ?)",
+        ((pid, p[0], p[1] or None, p[3]) for pid, p in people.items() if pid not in keep_ids),
+    )
+    out.executemany(
+        "INSERT INTO entities VALUES ('place', ?, ?, NULL, NULL, ?)",
+        comm.execute("SELECT id, name, reference_count FROM entities WHERE kind = 'place'"),
+    )
     out.executemany(
         "INSERT INTO entity_refs VALUES ('person', ?, ?, ?, ?, ?)",
         ((pid, book, order, chapter, verse) for pid, places in kept.items() for (order, chapter, verse, book) in sorted(places)),
     )
     out.execute("CREATE INDEX entity_refs_entity ON entity_refs(entity_id)")
     return {
-        "people": out.execute("SELECT count(*) FROM entities").fetchone()[0],
+        "people (with ties and their relatives)": out.execute("SELECT count(*) FROM entities WHERE kind = 'person' AND relations_json IS NOT NULL").fetchone()[0],
+        "names (people and places)": out.execute("SELECT count(*) FROM entities").fetchone()[0],
         "people with a tie": sum(1 for p in people.values() if p[2]),
         "people places": out.execute("SELECT count(*) FROM entity_refs").fetchone()[0],
     }

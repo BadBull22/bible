@@ -11,7 +11,7 @@
 //! Nothing is invented: a question with none of these gets no answer card, only the search
 //! results. The data files are the desktop's, compiled into the app, so both apps answer alike.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::OnceLock;
 
 use bible_core::meaning::Meaning;
@@ -342,19 +342,11 @@ pub fn ask(db: &Connection, study: &Connection, query: &str, meaning: Option<&Me
     // against the gate; the closest that fails the gate is kept as the "related" answer)
     let mut related: Option<Answer> = None;
     if let Some(m) = meaning {
-        let v = m.embedder.embed(query)?;
-        let mut scored: Vec<(bool, &String, f32)> = data
-            .index
-            .iter()
-            .map(|(from_qa, id, scale, q)| (*from_qa, id, q.iter().zip(&v).map(|(&a, b)| a as f32 * b).sum::<f32>() * scale))
-            .collect();
-        scored.sort_by(|a, b| b.2.total_cmp(&a.2));
-        // an answer has many wordings in the index: each answer once, its best wording
-        let mut seen: HashSet<(bool, &String)> = HashSet::new();
-        let candidates: Vec<(bool, &String, f32)> = scored.into_iter().filter(|(f, id, _)| seen.insert((*f, *id))).take(4).collect();
+        let candidates = nearest(data, &m.embedder.embed(query)?, 4);
         let needed = if question { SIMILARITY } else { NOT_A_QUESTION };
-        // a name is a person the people table knows (once the word list is made), or a word the Bible text only ever capitalises (places too)
-        let is_name = |w: &str| spell::is_name(w) || names(db).contains(&w.to_lowercase());
+        // the people and places the app knows (the word list is made once, from the Bible text and the names in the database)
+        spell::vocab(db, Some(study), curated_text());
+        let is_name = |w: &str| spell::is_name(w);
         for (rank, (from_qa, id, similarity)) in candidates.into_iter().enumerate() {
             if similarity < needed {
                 break; // sorted: the rest are further away
@@ -395,46 +387,42 @@ pub fn ask(db: &Connection, study: &Connection, query: &str, meaning: Option<&Me
     Ok(related)
 }
 
+/// The packed model's meanings are not exactly the desktop's (8-bit numbers): the same question comes out up to about 0.003 nearer or
+/// further from a stored one. The desktop's cut-offs (0.6, 0.8, 0.93) are knife-edges for a question that sits on one, and a confident
+/// wrong answer costs more than an honest "related", so the phone measures every question 0.004 further from the stored ones than it is.
+const PACKED_MARGIN: f32 = 0.004;
+
+/// The `n` stored answers closest in meaning to `v` (a question's meaning), each answer once with its best wording, best first:
+/// (from qa.json?, id, how close, less PACKED_MARGIN).
+fn nearest<'a>(data: &'a Loaded, v: &[f32], n: usize) -> Vec<(bool, &'a String, f32)> {
+    let mut scored: Vec<(bool, &String, f32)> = data
+        .index
+        .iter()
+        .map(|(from_qa, id, scale, q)| (*from_qa, id, q.iter().zip(v).map(|(&a, b)| a as f32 * b).sum::<f32>() * scale - PACKED_MARGIN))
+        .collect();
+    scored.sort_by(|a, b| b.2.total_cmp(&a.2));
+    let mut seen: HashSet<(bool, &String)> = HashSet::new();
+    scored.into_iter().filter(|(f, id, _)| seen.insert((*f, *id))).take(n).collect()
+}
+
+/// The `n` stored answers closest in meaning to `query`, with how close (for the test bench's probe: why an answer was or was not chosen).
+pub fn closest(m: &Meaning, query: &str, n: usize) -> Result<Vec<(String, f32)>, String> {
+    let data = loaded();
+    Ok(nearest(data, &m.embedder.embed(query)?, n)
+        .into_iter()
+        .map(|(from_qa, id, s)| {
+            let question = if from_qa { data.qa.get(id).map(|e| e.question.clone()) } else { data.firsts.all().iter().find(|e| &e.id == id).map(|e| e.question.clone()) };
+            (question.unwrap_or_else(|| id.clone()), s)
+        })
+        .collect())
+}
+
 /// A curated answer shown as "related": the same words, under the label that says it may not answer the question.
 fn into_related(a: Answer) -> Answer {
     match a {
         Answer::Curated { question, confidence, answer, citations, note, .. } => Answer::Related { question, confidence, answer, citations, note },
         other => other,
     }
-}
-
-/// The names of people and places in the BSB, which the phone has no table of: a word that is capitalised in the middle of a verse
-/// at least three times and is never written in lower case ("Lazarus", "Jerusalem"). The answer gate needs a name in a question to be in
-/// the stored question as well ("how many days was Lazarus dead" is not answered by "how many days was Jesus dead"). Titles of God and
-/// names of groups are left out: a question about "the Lord" or "the Gentiles" is not about a name.
-fn names(db: &Connection) -> &'static HashSet<String> {
-    static NAMES: OnceLock<HashSet<String>> = OnceLock::new();
-    NAMES.get_or_init(|| compute_names(db))
-}
-
-fn compute_names(db: &Connection) -> HashSet<String> {
-    const NOT_NAMES: &[&str] = &[
-        "god", "lord", "father", "son", "spirit", "holy", "word", "scripture", "scriptures", "bible", "savior", "saviour", "messiah", "almighty", "amen", "gospel",
-        "law", "kingdom", "heaven", "gentiles", "gentile", "jews", "jew", "pharisees", "pharisee", "sadducees", "christian", "christians", "church", "sabbath",
-        "passover", "temple", "israelites", "most", "high", "hallelujah", "selah", "yahweh", "king", "queen", "angel", "angels",
-    ];
-    let mut upper: HashMap<String, u32> = HashMap::new();
-    let mut lower: HashSet<String> = HashSet::new();
-    if let Ok(mut st) = db.prepare("SELECT v.text FROM verses v JOIN versions ver ON ver.id = v.version_id WHERE ver.code = 'BSB'") {
-        if let Ok(rows) = st.query_map([], |r| r.get::<_, String>(0)) {
-            for text in rows.flatten() {
-                for (i, w) in text.split(|c: char| !c.is_alphabetic()).filter(|w| !w.is_empty()).enumerate() {
-                    let first = w.chars().next().unwrap_or(' ');
-                    if first.is_lowercase() {
-                        lower.insert(w.to_lowercase());
-                    } else if i > 0 {
-                        *upper.entry(w.to_lowercase()).or_insert(0) += 1;
-                    }
-                }
-            }
-        }
-    }
-    upper.into_iter().filter(|(w, n)| *n >= 3 && w.chars().count() >= 3 && !lower.contains(w) && !NOT_NAMES.contains(&w.as_str())).map(|(w, _)| w).collect()
 }
 
 /// Every word of the hand-checked answers, for the spelling list (so doctrinal words such as "rapture" are known).
@@ -548,32 +536,6 @@ mod tests {
         // an entry that is short but carries a passage still counts
         let short_with_passage = study_with(&[("Mercy", "mercy", "Mercy, \u{27e6}Psalm 23:6\u{27e7}.")]);
         assert!(dictionary(&short_with_passage, "what is mercy").is_some());
-    }
-
-    #[test]
-    fn names_are_found_in_the_bible_text_and_titles_of_god_are_not() {
-        let db = Connection::open_in_memory().unwrap();
-        db.execute_batch("CREATE TABLE versions(id INTEGER, code TEXT); CREATE TABLE verses(version_id INTEGER, text TEXT); INSERT INTO versions VALUES (1, 'BSB'), (2, 'KJV');").unwrap();
-        for text in [
-            "Then Jesus wept for Lazarus.",
-            "So they came to Lazarus and the Lord.",
-            "And the Lord said to Lazarus, come out.",
-            "The Lord is my shepherd.",
-            "Now the Lord spoke, and God said.",
-            "You have a great high priest; lord of lords.", // "lord" also appears in lower case
-            "He saw the glory of God and the Gentiles.",
-            "They came to Jerusalem, and Jerusalem rejoiced, then Jerusalem sang.",
-        ] {
-            db.execute("INSERT INTO verses VALUES (1, ?1)", params![text]).unwrap();
-        }
-        // the KJV must not count: only the BSB is read
-        db.execute("INSERT INTO verses VALUES (2, 'Then Zebedee, Zebedee and Zebedee')", []).unwrap();
-        let n = compute_names(&db);
-        assert!(n.contains("lazarus"), "{n:?}");
-        assert!(n.contains("jerusalem"), "{n:?}");
-        assert!(!n.contains("lord") && !n.contains("god") && !n.contains("gentiles"), "titles and groups are not names: {n:?}");
-        assert!(!n.contains("zebedee"), "only the BSB counts: {n:?}");
-        assert!(!n.contains("then") && !n.contains("jesus"), "a word at the start of a verse, or one seen fewer than three times, is not a name: {n:?}");
     }
 
     #[test]
