@@ -10,6 +10,7 @@ import { AGE_BANDS, ageLabel, parseRef, searchEntries, tagCounts, withTag, type 
 import { CHILDREN, ENTRIES, STORIES, TOPICS, childPage, findBrowse, story, topic } from "../../src/browse/data";
 import type { BrowseKind, ChildPage, Story, Topic } from "../../src/browse/types";
 import { KidFigure, PictureOffer, StoryFigure } from "./Pictures";
+import { linkRefs } from "./scriptureLinks";
 
 export interface BrowseOpen {
   kind: BrowseKind;
@@ -60,6 +61,23 @@ async function passageVerses(ref: string, code: string): Promise<{ verses: Verse
   return { verses: pick(await chapterOf("BSB", r.book, r.chapter)), code: "BSB" };
 }
 
+/** A sentence with the scripture written in it made tappable: "(1 Samuel 17:37)" and "(17:47)" open that verse in the Bible. */
+function Linked({ text, book, onJump }: { text: string; book?: string; onJump: Actions["onJump"] }) {
+  return (
+    <>
+      {linkRefs(text, book).map((p, i) =>
+        "book" in p ? (
+          <button key={i} className="link inline-ref" onClick={() => onJump(p.book, p.chapter, p.verse)} aria-label={`Open ${p.text} in the Bible`}>
+            {p.text}
+          </button>
+        ) : (
+          <span key={i}>{p.text}</span>
+        ),
+      )}
+    </>
+  );
+}
+
 function VerseText({ refText, version }: { refText: string; version: string }) {
   const [got, setGot] = useState<{ verses: Verse[]; code: string } | null>(null);
   useEffect(() => {
@@ -98,7 +116,11 @@ function PassageBlock({ refText, label, note, actions, startOpen, bsbOnly }: { r
         </button>
         {label && <span className="browse-passage-label">{label}</span>}
       </div>
-      {note && <p className="browse-note">{note}</p>}
+      {note && (
+        <p className="browse-note">
+          <Linked text={note} book={r?.book} onJump={actions.onJump} />
+        </p>
+      )}
       <button className="browse-pill quiet" aria-expanded={open} onClick={() => setOpen(!open)}>
         {open ? "Hide the words" : "Show the words"}
       </button>
@@ -159,6 +181,8 @@ function StoryView({ page, actions }: { page: Story; actions: Actions }) {
   const topics = (page.topics ?? []).map(topic).filter((t): t is Topic => !!t);
   const kids = childPage(page.child_page);
   const whole = parseRef(page.whole ?? "");
+  // a chapter and verse written alone ("(17:47)") belongs to the book of the story
+  const book = parseRef(page.context?.ref ?? page.passages[0]?.ref ?? "")?.book;
   return (
     <article className="browse-page">
       <h2>{page.title}</h2>
@@ -168,12 +192,12 @@ function StoryView({ page, actions }: { page: Story; actions: Actions }) {
       <FlagBox note={page.doctrine === "needs_review" ? page.doctrine_note : undefined} teaching={page.church_teaching} />
       {page.summary.split("\n\n").map((para, i) => (
         <p key={i} className="browse-summary">
-          {para}
+          <Linked text={para} book={book} onJump={actions.onJump} />
         </p>
       ))}
       {page.look_closer && (
         <p className="browse-look">
-          <strong>Look closer.</strong> {page.look_closer}
+          <strong>Look closer.</strong> <Linked text={page.look_closer} book={book} onJump={actions.onJump} />
         </p>
       )}
       {page.lessons && page.lessons.length > 0 && (
@@ -181,7 +205,9 @@ function StoryView({ page, actions }: { page: Story; actions: Actions }) {
           <strong>What this teaches us</strong>
           <ul>
             {page.lessons.map((l) => (
-              <li key={l}>{l}</li>
+              <li key={l}>
+                <Linked text={l} book={book} onJump={actions.onJump} />
+              </li>
             ))}
           </ul>
         </div>
@@ -243,7 +269,9 @@ function TopicView({ page, actions }: { page: Topic; actions: Actions }) {
       <h2>{page.title}</h2>
       {page.also && page.also.length > 0 && <p className="browse-also">Also: {page.also.join(", ")}</p>}
       <FlagBox note={page.doctrine === "needs_review" ? page.doctrine_note : undefined} teaching={page.church_teaching} />
-      <p className="browse-summary">{page.intro}</p>
+      <p className="browse-summary">
+        <Linked text={page.intro} onJump={actions.onJump} />
+      </p>
       {page.items.map((i) => (
         <div key={i.ref}>
           <PassageBlock refText={i.ref} note={i.note} actions={actions} />

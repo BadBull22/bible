@@ -2006,3 +2006,28 @@ html[data-glow="theme"] .browse-card { border-top: 3px solid var(--occ-accent); 
 .browse-story-picture figcaption { margin-top: 0.3rem; color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
 .browse-story-picture figcaption .link { padding: 0; font-size: inherit; }
 .browse-picture { display: block; width: 100%; max-height: 18rem; object-fit: contain; margin: 0.4rem 0 0.8rem; border-radius: 0.6rem; background: #fffdf6; }
+
+/* ---------- a clearer glow on the cards, a "What this teaches us" box that stands out, and tappable scripture in the text ---------- */
+html[data-glow] {
+  --glow-card: 0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent), 0 0 24px 4px color-mix(in srgb, var(--accent) 36%, transparent);
+}
+html[data-glow][data-theme="dark"] {
+  --glow-card: 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent), 0 0 26px 5px color-mix(in srgb, var(--accent) 34%, transparent);
+}
+html[data-glow="theme"] {
+  --glow-card: 0 0 0 1px var(--occ-accent), 0 0 26px 5px var(--occ-glow, color-mix(in srgb, var(--occ-accent) 46%, transparent));
+}
+html[data-glow] .browse-card,
+html[data-glow] .browse-passage,
+html[data-glow] .browse-topic-card,
+html[data-glow] .authors-card { box-shadow: var(--glow-card); }
+.browse-teaches {
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--border));
+  border-left: 6px solid var(--accent);
+}
+.browse-teaches > strong { display: block; margin-bottom: 0.25rem; color: var(--accent); font-size: 1.02rem; }
+html[data-glow] .browse-teaches { box-shadow: var(--glow-card); }
+html[data-glow="theme"] .browse-teaches { border-left-color: var(--occ-accent); }
+html[data-glow="theme"] .browse-teaches > strong { color: var(--occ-accent); }
+.browse-page .inline-ref { display: inline; padding: 0; font-size: inherit; font-weight: 600; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
