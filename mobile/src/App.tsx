@@ -36,6 +36,8 @@ import { OriginalPack, OriginalSettings, useOriginalPack } from "./OriginalWords
 import { SearchUpgradeOffer, SearchUpgradeSettings, useSearchUpgrade } from "./SearchUpgrade";
 import { AskAnswer } from "./AskAnswer";
 import { BrowseEntryPoints, BrowseMatches, BrowseScreen, type BrowseOpen } from "./Browse";
+import { HomeScreen, ThemeSettings, useLook } from "./Theme";
+import { getThemeState } from "../../src/themes/themeStore";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
@@ -308,8 +310,6 @@ export function App() {
   const [browse, setBrowse] = useState<BrowseOpen | null>(null);
   /** the tab Browse was opened from: Search (from results) or More (the three ways in); its Back goes there */
   const [browseIn, setBrowseIn] = useState<"search" | "more">("more");
-  /** the search box has the cursor (the Recent list shows then, and only then) */
-  const [boxFocused, setBoxFocused] = useState(false);
   const [topic, setTopic] = useState<{ topic: Topic; hits: Hit[] } | null>(null);
   const [searching, setSearching] = useState(false);
   const searchUpgrade = useSearchUpgrade();
@@ -375,6 +375,18 @@ export function App() {
     applyAppearance(a);
     return theme === "system" ? watchSystemTheme(() => applyAppearance(a)) : undefined;
   }, [theme, textColor, contrast, font]);
+
+  // --- the theme: its colours, glow and decorations come from attributes on <html> (the desktop's screen packages read them)
+  const themeLook = useLook();
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("pv");
+    if (themeLook.screenLook) root.dataset.occasion = themeLook.screenLook.slug;
+    else delete root.dataset.occasion;
+    if (themeLook.screenOn) root.dataset.glow = "theme";
+    else if (themeLook.defaultGlow) root.dataset.glow = "default";
+    else delete root.dataset.glow;
+  }, [themeLook.screenLook?.slug, themeLook.screenOn, themeLook.defaultGlow]);
 
   // --- the verse for the day, once a day when the app opens
   useEffect(() => {
@@ -826,8 +838,37 @@ export function App() {
   const secondName = versions.find((v) => v.code === second);
   const shownList = tagFilter ? list.filter((m) => m.tags.some((t) => t.toLowerCase() === tagFilter.toLowerCase())) : list;
 
+  const versionPicker = (
+    <select value={version} onChange={(e) => setVersion(e.target.value)} aria-label="Translation">
+      <optgroup label="Built in">
+        {versions
+          .filter((v) => !v.downloaded)
+          .map((v) => (
+            <option key={v.code} value={v.code}>
+              {v.code}
+            </option>
+          ))}
+      </optgroup>
+      {versions.some((v) => v.downloaded) && (
+        <optgroup label="Downloaded">
+          {versions
+            .filter((v) => v.downloaded)
+            .map((v) => (
+              <option key={v.code} value={v.code}>
+                {v.name.length > 14 ? v.code : v.name}
+              </option>
+            ))}
+        </optgroup>
+      )}
+    </select>
+  );
+  // the Search page before a search is made: the Gospel wordmark with the search box under it (the top bar is not shown then)
+  const homeMode = tab === "search" && !query && !browse;
+  const look = themeLook;
+  const readingBackground = tab === "read" && look.screenLook && getThemeState().reading !== "off" ? getThemeState().reading : undefined;
+
   return (
-    <div className="app" style={{ ["--scale" as string]: size }}>
+    <div className={"app" + (homeMode ? " home-mode" : "")} style={{ ["--scale" as string]: size }}>
       <header className="top">
         <form
           className="search-box"
@@ -842,8 +883,6 @@ export function App() {
             placeholder="John 3:16, a word, or a topic"
             aria-label="Go to a passage, or search the Bible"
             enterKeyHint={reference ? "go" : "search"}
-            onFocus={() => setBoxFocused(true)}
-            onBlur={() => window.setTimeout(() => setBoxFocused(false), 150)}
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
@@ -854,30 +893,9 @@ export function App() {
             </button>
           )}
         </form>
-        <select value={version} onChange={(e) => setVersion(e.target.value)} aria-label="Translation">
-          <optgroup label="Built in">
-            {versions
-              .filter((v) => !v.downloaded)
-              .map((v) => (
-                <option key={v.code} value={v.code}>
-                  {v.code}
-                </option>
-              ))}
-          </optgroup>
-          {versions.some((v) => v.downloaded) && (
-            <optgroup label="Downloaded">
-              {versions
-                .filter((v) => v.downloaded)
-                .map((v) => (
-                  <option key={v.code} value={v.code}>
-                    {v.name.length > 14 ? v.code : v.name}
-                  </option>
-                ))}
-            </optgroup>
-          )}
-        </select>
+        {versionPicker}
       </header>
-      {typed.trim() && typed.trim() !== query && (
+      {!homeMode && typed.trim() && typed.trim() !== query && (
         <button className="suggest" onClick={() => submit()}>
           {reference ? (
             <>
@@ -897,7 +915,8 @@ export function App() {
       )}
       <UpdateBanner updates={updates} />
 
-      <main ref={pane} className="pane" onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={tab === "read" ? swiped : undefined}>
+      <div className="main-frame" data-reading-theme={readingBackground} data-occasion={readingBackground ? look.screenLook?.slug : undefined}>
+      <main ref={pane} className="pane main-pane" onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={tab === "read" ? swiped : undefined}>
         {tab === "read" && (
           <>
             <button className="place" onClick={() => setPicker({ book: null, testament: bookInfo?.testament ?? "NT" })}>
@@ -1003,7 +1022,24 @@ export function App() {
           />
         )}
 
-        {tab === "search" && !(browse && browseIn === "search") && (
+        {homeMode && (
+          <HomeScreen
+            typed={typed}
+            setTyped={setTyped}
+            onSubmit={() => submit()}
+            select={versionPicker}
+            recent={recent}
+            onRecent={(q) => submit(q)}
+            onLook={() => {
+              setTab("more");
+              window.setTimeout(() => document.getElementById("theme-settings")?.scrollIntoView(), 120);
+            }}
+            resume={{ label: `${place.book} ${place.chapter}`, go: () => setTab("read") }}
+            enterHint={reference ? "go" : "search"}
+          />
+        )}
+
+        {tab === "search" && !homeMode && !(browse && browseIn === "search") && (
           <>
             {topic ? (
               <div className="summary">
@@ -1028,36 +1064,6 @@ export function App() {
                         {label}
                       </button>
                     ))}
-                  </div>
-                )}
-                {!query && (
-                  <div className="gospel-home">
-                    <h1 className="gospel-wordmark" aria-label="Gospel" onClick={() => document.querySelector<HTMLInputElement>(".search-box input")?.focus()}>
-                      {["G", "o", "s", "p", "e", "l"].map((letter, i) => (
-                        <span key={i} aria-hidden="true">
-                          {letter}
-                        </span>
-                      ))}
-                    </h1>
-                    {boxFocused && recent.length > 0 && (
-                      <div className="chips gospel-recent" role="group" aria-label="Recent searches">
-                        {recent.map((r) => (
-                          <button key={r} onMouseDown={(e) => e.preventDefault()} onClick={() => submit(r)}>
-                            {r}
-                          </button>
-                        ))}
-                        <button
-                          className="link"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => {
-                            setRecent([]);
-                            store(RECENT_KEY, "[]");
-                          }}
-                        >
-                          Clear recent
-                        </button>
-                      </div>
-                    )}
                   </div>
                 )}
                 {query && result && (
@@ -1483,7 +1489,7 @@ export function App() {
               </div>
             </div>
             <label className="row">
-              <span>Theme</span>
+              <span>Light or dark</span>
               <select className="select-field" value={theme} onChange={(e) => setTheme(e.target.value as Theme)}>
                 <option value="system">Same as phone</option>
                 <option value="light">Light</option>
@@ -1515,6 +1521,9 @@ export function App() {
               </select>
             </label>
             <p className="hint">High contrast makes the grey labels and hints darker (lighter on the dark page), for reading in bright light.</p>
+            <div id="theme-settings">
+              <ThemeSettings />
+            </div>
 
             <h2>Read aloud</h2>
             <div className="speed">
@@ -1573,6 +1582,7 @@ export function App() {
           </div>
         )}
       </main>
+      </div>
 
       {speaking != null && (
         <div className="playing">

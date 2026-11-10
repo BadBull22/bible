@@ -2,6 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 // @ts-expect-error no @types/node in this project
 import process from "node:process";
+// @ts-expect-error no @types/node in this project
+import { fileURLToPath } from "node:url";
+
+// the desktop's theme and Browse files (src/) are used from their source: they must find THIS project's React, not look for one beside themselves
+const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
 // set by `tauri android dev`: the address the phone reaches this computer on
 const host = process.env.TAURI_DEV_HOST;
@@ -12,7 +17,14 @@ export default defineConfig(() => ({
   plugins: [react()],
   cacheDir: process.env.LOCALAPPDATA ? `${process.env.LOCALAPPDATA}/bible-concordance-build/mobile-vite-cache` : undefined,
   clearScreen: false,
-  resolve: { preserveSymlinks: true },
+  resolve: {
+    preserveSymlinks: true,
+    dedupe: ["react", "react-dom"],
+    alias: [
+      { find: /^react$/, replacement: here("./node_modules/react") },
+      { find: /^react-dom$/, replacement: here("./node_modules/react-dom") },
+    ],
+  },
   server: {
     port: 1430,
     strictPort: true,
