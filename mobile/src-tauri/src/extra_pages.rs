@@ -25,6 +25,12 @@ const FILE: &str = "pages.json";
 pub const MAX_BYTES: u64 = 6 << 20;
 /// the most pages the file may hold
 pub const MAX_PAGES: usize = 1000;
+/// the most pictures the file may carry in each of its two lists (`pictures` for stories, `child_pictures` for children's pages), and the largest one
+/// (a painting at about 1500 pixels is 100 to 400 KB)
+pub const MAX_PICTURES: usize = 40;
+pub const MAX_PICTURE_BYTES: usize = 600_000;
+/// a children's page's picture may come with an outline to colour in (a PNG of black lines on white, 30 to 100 KB)
+pub const MAX_OUTLINE_BYTES: usize = 300_000;
 
 fn path(data: &Path) -> PathBuf {
     data.join(FOLDER).join(FILE)
@@ -73,7 +79,77 @@ pub fn check(bytes: &[u8]) -> Result<Value, String> {
     if total > MAX_PAGES {
         return Err(bad());
     }
+    for key in ["pictures", "child_pictures"] {
+        let Some(pictures) = obj.get(key) else { continue };
+        let pictures = pictures.as_object().ok_or_else(bad)?;
+        if pictures.len() > MAX_PICTURES {
+            return Err(bad());
+        }
+        for (id, pic) in pictures {
+            if !safe_id(id) || picture_of(pic).is_none() {
+                return Err(bad());
+            }
+        }
+    }
     Ok(v)
+}
+
+/// A page's picture inside the file: `{"image": "<base64 JPEG>", "outline": "<base64 PNG, optional>", "credit": {"title", "artist", "credit", "licence",
+/// "licence_url", "page", ...}}`. The picture must be a JPEG of at most `MAX_PICTURE_BYTES`, the outline (a children's page's drawing to colour in) a PNG
+/// of at most `MAX_OUTLINE_BYTES`, and the credit must say who made it, where it is from and the licence (the same fields the downloaded story pictures
+/// carry); anything else is refused. Returns the picture's base64 text and its credit.
+fn picture_of(pic: &Value) -> Option<(&str, &Value)> {
+    use base64::Engine;
+    let o = pic.as_object()?;
+    let image = o.get("image")?.as_str()?;
+    let credit = o.get("credit")?;
+    if image.len() > MAX_PICTURE_BYTES * 4 / 3 + 8 {
+        return None;
+    }
+    let head = base64::engine::general_purpose::STANDARD.decode(image).ok()?;
+    if head.len() > MAX_PICTURE_BYTES || head.len() < 4 || head[..3] != [0xFF, 0xD8, 0xFF] {
+        return None;
+    }
+    if let Some(outline) = o.get("outline") {
+        let outline = outline.as_str()?;
+        if outline.len() > MAX_OUTLINE_BYTES * 4 / 3 + 8 {
+            return None;
+        }
+        let png = base64::engine::general_purpose::STANDARD.decode(outline).ok()?;
+        if png.len() > MAX_OUTLINE_BYTES || png.len() < 8 || png[..4] != [0x89, b'P', b'N', b'G'] {
+            return None;
+        }
+    }
+    let c = credit.as_object()?;
+    for field in ["title", "artist", "credit", "licence", "licence_url", "page"] {
+        if !c.get(field).and_then(Value::as_str).is_some_and(|t| !t.trim().is_empty() && t.len() < 600) {
+            return None;
+        }
+    }
+    Some((image, credit))
+}
+
+/// The picture that came with an additional story (the file's `pictures`), with its credit, when the file on the phone has one for this page.
+/// The story-picture downloads are tried first (`picture_packs::story_picture`); this is only for pages the app was not made with.
+pub fn picture(data: &Path, id: &str) -> Option<(String, Value)> {
+    let (image, _, credit) = picture_in(data, "pictures", id)?;
+    Some((image, credit))
+}
+
+/// The picture that came with an additional children's page (the file's `child_pictures`): the picture, its outline to colour in when it has one, and
+/// the credit.
+pub fn child_picture(data: &Path, id: &str) -> Option<(String, Option<String>, Value)> {
+    picture_in(data, "child_pictures", id)
+}
+
+fn picture_in(data: &Path, list: &str, id: &str) -> Option<(String, Option<String>, Value)> {
+    if !safe_id(id) {
+        return None;
+    }
+    let v: Value = serde_json::from_str(&load(data)?).ok()?;
+    let pic = v.get(list)?.get(id)?;
+    let (image, credit) = picture_of(pic)?;
+    Some((image.to_string(), pic.get("outline").and_then(Value::as_str).map(str::to_string), credit.clone()))
 }
 
 /// Fetches the file from `url` (at most `max` bytes), checks it and keeps it. The copy already on the phone is replaced only by a file that passes.
@@ -119,10 +195,21 @@ mod tests {
         std::thread::spawn(move || {
             for stream in listener.incoming().flatten().take(8) {
                 let mut s = stream;
+                let _ = s.set_read_timeout(Some(std::time::Duration::from_secs(5)));
+                let mut request = Vec::new();
                 let mut buf = [0u8; 2048];
-                let _ = s.read(&mut buf);
+                while !request.windows(4).any(|w| w == b"\r\n\r\n") {
+                    match s.read(&mut buf) {
+                        Ok(0) | Err(_) => break,
+                        Ok(n) => request.extend_from_slice(&buf[..n]),
+                    }
+                }
                 let reply = format!("HTTP/1.1 {status} X\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len());
                 let _ = s.write_all(reply.as_bytes());
+                let _ = s.flush();
+                let _ = s.shutdown(std::net::Shutdown::Write);
+                // wait for the client to finish reading and close, so nothing is reset
+                while matches!(s.read(&mut buf), Ok(n) if n > 0) {}
             }
         });
         format!("http://127.0.0.1:{port}/extra-pages.json")
@@ -179,5 +266,83 @@ mod tests {
         assert!(check(br#"{"format":1,"topics":[{"id":"fear-not","title":"Fear not"}]}"#).is_ok());
         let many = format!(r#"{{"format":1,"stories":[{}]}}"#, (0..=MAX_PAGES).map(|i| format!(r#"{{"id":"s{i}","title":"S"}}"#)).collect::<Vec<_>>().join(","));
         assert!(check(many.as_bytes()).is_err());
+    }
+
+    // a tiny but real-looking JPEG (the start marker is all the check looks at)
+    const JPEG_B64: &str = "/9j/4AAQSkZJRgABAQAAAQABAAD/2Q==";
+    fn with_picture(credit_fields: &[(&str, &str)], image: &str) -> String {
+        let credit = credit_fields.iter().map(|(k, v)| format!("\"{k}\":\"{v}\"")).collect::<Vec<_>>().join(",");
+        format!(r#"{{"format":1,"stories":[{{"id":"a-new-story","title":"A new story"}}],"pictures":{{"a-new-story":{{"image":"{image}","credit":{{{credit}}}}}}}}}"#)
+    }
+    const CREDIT: [(&str, &str); 6] = [("title", "T"), ("artist", "A"), ("credit", "C"), ("licence", "Public domain"), ("licence_url", "https://example.org/l"), ("page", "https://example.org/p")];
+
+    #[test]
+    fn a_story_can_bring_its_picture_and_only_a_proper_one_is_taken() {
+        assert!(check(with_picture(&CREDIT, JPEG_B64).as_bytes()).is_ok());
+        // not a JPEG, not base64, a credit with a field missing, a picture for a bad name, too many
+        assert!(check(with_picture(&CREDIT, "aGVsbG8gd29ybGQ=").as_bytes()).is_err());
+        assert!(check(with_picture(&CREDIT, "not base64 !!").as_bytes()).is_err());
+        assert!(check(with_picture(&CREDIT[..5], JPEG_B64).as_bytes()).is_err());
+        assert!(check(with_picture(&CREDIT, JPEG_B64).replace("\"a-new-story\":{\"image", "\"../x\":{\"image").as_bytes()).is_err());
+        let many = format!(r#"{{"format":1,"pictures":{{{}}}}}"#, (0..=MAX_PICTURES).map(|i| format!(r#""p{i}":{{"image":"{JPEG_B64}","credit":{{"title":"T","artist":"A","credit":"C","licence":"L","licence_url":"u","page":"p"}}}}"#)).collect::<Vec<_>>().join(","));
+        assert!(check(many.as_bytes()).is_err());
+    }
+
+    // a tiny PNG header is all the check looks at
+    const PNG_B64: &str = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB";
+    fn with_child_picture(extra: &str, image: &str) -> String {
+        format!(
+            r#"{{"format":1,"children":[{{"id":"a-new-child-page","title":"A new page"}}],"child_pictures":{{"a-new-child-page":{{"image":"{image}"{extra},"credit":{{"title":"T","artist":"A","credit":"C","licence":"CC BY-SA 3.0","licence_url":"https://example.org/l","page":"https://example.org/p"}}}}}}}}"#
+        )
+    }
+
+    #[test]
+    fn a_children_page_can_bring_its_picture_and_an_outline_to_colour_in() {
+        assert!(check(with_child_picture("", JPEG_B64).as_bytes()).is_ok());
+        assert!(check(with_child_picture(&format!(r#","outline":"{PNG_B64}""#), JPEG_B64).as_bytes()).is_ok());
+        // the outline must be a PNG, and the picture a JPEG
+        assert!(check(with_child_picture(&format!(r#","outline":"{JPEG_B64}""#), JPEG_B64).as_bytes()).is_err());
+        assert!(check(with_child_picture(r#","outline":"not base64 !!""#, JPEG_B64).as_bytes()).is_err());
+        assert!(check(with_child_picture(r#","outline":5"#, JPEG_B64).as_bytes()).is_err());
+        assert!(check(with_child_picture("", PNG_B64).as_bytes()).is_err());
+        // a bad page name in the list is refused, and so are too many
+        assert!(check(with_child_picture("", JPEG_B64).replace("\"a-new-child-page\":{\"image", "\"../x\":{\"image").as_bytes()).is_err());
+        let many = format!(r#"{{"format":1,"child_pictures":{{{}}}}}"#, (0..=MAX_PICTURES).map(|i| format!(r#""p{i}":{{"image":"{JPEG_B64}","credit":{{"title":"T","artist":"A","credit":"C","licence":"L","licence_url":"u","page":"p"}}}}"#)).collect::<Vec<_>>().join(","));
+        assert!(check(many.as_bytes()).is_err());
+    }
+
+    #[test]
+    fn a_kept_children_picture_is_read_back_for_children_pages_only() {
+        let dir = temp("child-picture");
+        assert!(child_picture(&dir, "a-new-child-page").is_none(), "nothing fetched yet");
+        let body: &'static str = Box::leak(with_child_picture(&format!(r#","outline":"{PNG_B64}""#), JPEG_B64).into_boxed_str());
+        fetch_from(&dir, &serve(200, body), MAX_BYTES).unwrap();
+        let (image, outline, credit) = child_picture(&dir, "a-new-child-page").unwrap();
+        assert_eq!(image, JPEG_B64);
+        assert_eq!(outline.as_deref(), Some(PNG_B64));
+        assert_eq!(credit["licence"], "CC BY-SA 3.0");
+        // a children's page's picture is not a story's picture
+        assert!(picture(&dir, "a-new-child-page").is_none());
+        assert!(child_picture(&dir, "another-page").is_none());
+        for bad in ["", "../a-new-child-page", "A-New-Child-Page", "a/b"] {
+            assert!(child_picture(&dir, bad).is_none(), "{bad}");
+        }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_kept_picture_is_read_back_by_the_page_name_only() {
+        let dir = temp("picture");
+        assert!(picture(&dir, "a-new-story").is_none(), "nothing fetched yet");
+        let body: &'static str = Box::leak(with_picture(&CREDIT, JPEG_B64).into_boxed_str());
+        fetch_from(&dir, &serve(200, body), MAX_BYTES).unwrap();
+        let (image, credit) = picture(&dir, "a-new-story").unwrap();
+        assert_eq!(image, JPEG_B64);
+        assert_eq!(credit["artist"], "A");
+        assert!(picture(&dir, "another-story").is_none());
+        for bad in ["", "../a-new-story", "A-New-Story", "a/b"] {
+            assert!(picture(&dir, bad).is_none(), "{bad}");
+        }
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

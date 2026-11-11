@@ -9,12 +9,18 @@
 // Bibles and the people and places data) and with the phone's own check (mobile/src/extraValidate.ts). Only when all of that passes is the file written
 // (default installer/packs/extra-pages.json, which is not part of the repository). Publishing it is a separate step (it is printed at the end, not run).
 //
-// Notes: the new pages are added after the built-in ones; an id the app already has is refused here (the built-in page would stay anyway). The phone shows
-// no picture for a new page (the picture downloads are the pages the app was made with). Pictures are not required for new pages.
+// Notes: the new pages are added after the built-in ones; an id the app already has is refused here (the built-in page would stay anyway). A new story
+// MAY bring its picture: put <id>.jpg for each such story in a "pictures" folder beside stories.json, with a credits.json in the same folder ({"<id>":
+// {"title","artist","credit","licence","licence_url","page", ...}}, the same fields as src/browse/pictures/stories/credits.json; the licence must be public
+// domain or CC BY / CC BY-SA). The pictures travel inside the file (a JPEG of at most 600 KB each, at most 40) and the phone shows one under its story,
+// whether or not the story-picture download is installed. Pictures are not required for new pages.
+// A new CHILDREN'S page may bring its picture too, from a "child-pictures" folder: <id>.jpg (the picture), optionally <id>-outline.png (the same picture as
+// black lines on white, to colour in; a PNG of at most 300 KB) and a credits.json written like the one above. The phone shows the picture under the title of
+// the children's page, with a button to switch to the outline.
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseExtraPages } from "../mobile/src/extraValidate.ts";
@@ -78,7 +84,7 @@ const known = {
   stories: new Set<string>([...(JSON.parse(readFileSync(here("../src/browse/data/stories.json"), "utf-8")).pages as Any[]).map((p) => p.id), ...pages(stories).map((p) => p.id)]),
   topics: new Set<string>([...(JSON.parse(readFileSync(here("../src/browse/data/topics.json"), "utf-8")).pages as Any[]).map((p) => p.id), ...pages(topics).map((p) => p.id)]),
 };
-const theirs = { stories: new Set(pages(stories).map((p) => p.id)), topics: new Set(pages(topics).map((p) => p.id)) };
+const theirs = { stories: new Set(pages(stories).map((p) => p.id)), topics: new Set(pages(topics).map((p) => p.id)), children: new Set(pages(children).map((p) => p.id)) };
 for (const group of ["stories", "topics"] as const) {
   for (const [id, list] of Object.entries((keywords?.[group] ?? {}) as Record<string, string[]>)) {
     const where = `keywords ${group} ${id}`;
@@ -89,8 +95,53 @@ for (const group of ["stories", "topics"] as const) {
   }
 }
 
+// 3b. the pictures that come with new stories (pictures/<id>.jpg and pictures/credits.json) and with new children's pages (child-pictures/<id>.jpg, an
+// optional <id>-outline.png, and child-pictures/credits.json)
+type Picture = { image: string; outline?: string; credit: Any };
+function readPictures(folder: string, ids: Set<string>, what: string, withOutline: boolean): Record<string, Picture> {
+  const found: Record<string, Picture> = {};
+  const pdir = `${dir}/${folder}`;
+  if (!existsSync(pdir)) return found;
+  let credits: Any = {};
+  try {
+    credits = existsSync(`${pdir}/credits.json`) ? JSON.parse(readFileSync(`${pdir}/credits.json`, "utf-8")) : {};
+  } catch (e) {
+    problems.push(`${folder}/credits.json is not valid JSON: ${e}`);
+  }
+  for (const name of readdirSync(pdir).filter((n) => /\.(jpe?g)$/i.test(n))) {
+    const id = name.replace(/\.jpe?g$/i, "");
+    const where = `${folder}/${name}`;
+    if (!ids.has(id)) {
+      problems.push(`${where}: is not the id of one of the new ${what}`);
+      continue;
+    }
+    const bytes = readFileSync(`${pdir}/${name}`);
+    if (!(bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)) problems.push(`${where}: is not a JPEG`);
+    if (bytes.length > 600_000) problems.push(`${where}: is ${bytes.length} bytes (600,000 at most)`);
+    const c = credits[id];
+    if (!c) problems.push(`${where}: has no entry in ${folder}/credits.json`);
+    else {
+      for (const f of ["title", "artist", "credit", "licence", "licence_url", "page"]) if (typeof c[f] !== "string" || !c[f].trim()) problems.push(`${where}: the credit has no ${f}`);
+      if (!/public domain|CC BY/i.test(String(c.licence ?? ""))) problems.push(`${where}: the licence "${c.licence}" is not one the app may carry (public domain, CC BY, CC BY-SA)`);
+    }
+    found[id] = { image: bytes.toString("base64"), credit: c ?? {} };
+    const line = `${pdir}/${id}-outline.png`;
+    if (withOutline && existsSync(line)) {
+      const png = readFileSync(line);
+      if (!(png[0] === 0x89 && png[1] === 0x50 && png[2] === 0x4e && png[3] === 0x47)) problems.push(`${folder}/${id}-outline.png: is not a PNG`);
+      if (png.length > 300_000) problems.push(`${folder}/${id}-outline.png: is ${png.length} bytes (300,000 at most)`);
+      found[id].outline = png.toString("base64");
+    }
+  }
+  for (const id of Object.keys(credits)) if (!found[id]) problems.push(`${folder}/credits.json: has an entry for "${id}" without a ${id}.jpg`);
+  if (Object.keys(found).length > 40) problems.push(`more than 40 pictures in ${folder} (the phone takes at most 40)`);
+  return found;
+}
+const pictures = readPictures("pictures", theirs.stories, "stories", false);
+const childPictures = readPictures("child-pictures", theirs.children, "children's pages", true);
+
 // 4. the file, and the phone's own check of it
-const file = { format: 1, revision, stories: pages(stories), topics: pages(topics), children: pages(children), keywords: { stories: keywords?.stories ?? {}, topics: keywords?.topics ?? {} } };
+const file = { format: 1, revision, stories: pages(stories), topics: pages(topics), children: pages(children), keywords: { stories: keywords?.stories ?? {}, topics: keywords?.topics ?? {} }, ...(Object.keys(pictures).length ? { pictures } : {}), ...(Object.keys(childPictures).length ? { child_pictures: childPictures } : {}) };
 const text = JSON.stringify(file);
 const checked = parseExtraPages(text);
 for (const s of checked.skipped) problems.push(`the phone would leave out ${s.where}: ${s.why}`);
@@ -109,7 +160,7 @@ mkdirSync(dirname(out), { recursive: true });
 writeFileSync(out, text);
 const sha = createHash("sha256").update(text).digest("hex");
 console.log(`\nWrote ${out}`);
-console.log(`  ${file.stories.length} stories, ${file.topics.length} "Verses for..." pages, ${file.children.length} children's pages; ${(Buffer.byteLength(text) / 1024).toFixed(0)} KB; sha-256 ${sha}`);
+console.log(`  ${file.stories.length} stories, ${file.topics.length} "Verses for..." pages, ${file.children.length} children's pages, ${Object.keys(pictures).length} story pictures, ${Object.keys(childPictures).length} children's pictures (${Object.values(childPictures).filter((p) => p.outline).length} with an outline); ${(Buffer.byteLength(text) / 1024).toFixed(0)} KB; sha-256 ${sha}`);
 console.log("\nTo put it where the phone looks (NOT done by this script; do it only when you mean to publish):");
 console.log('  first time:  gh release create extra-pages "' + out + '" --repo BadBull22/bible --title "Additional stories" --notes "Additional Bible stories, verse pages and children\'s pages for the phone app." --latest=false');
 console.log('  after that:  gh release upload extra-pages "' + out + '" --repo BadBull22/bible --clobber');

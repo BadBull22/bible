@@ -429,7 +429,6 @@ function ChildView({ page, actions }: { page: ChildPage; actions: Actions }) {
       <h2>{page.title}</h2>
       <p className="browse-also">{ageLabel(page.age)}</p>
       <KidFigure id={page.id} title={page.title} />
-      <PictureOffer kind="kids" />
       <FlagBox note={page.doctrine === "needs_review" ? page.doctrine_note : undefined} teaching={page.church_teaching} />
       <div className="browse-retelling">
         {page.retelling.map((para, i) => (

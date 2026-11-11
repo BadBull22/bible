@@ -306,6 +306,8 @@ export const api = {
   picturesRemove: (kind: "stories" | "kids") => invoke<void>("pictures_remove", { kind }),
   storyPicture: (id: string) => invoke<{ image: string; credit: StoryCredit } | null>("story_picture", { id }),
   kidPicture: (id: string, outline = false) => invoke<string | null>("kid_picture", { id, outline }),
+  /** the picture (and the outline to colour in) an additional children's page brought in the fetched file */
+  kidPhoto: (id: string) => invoke<{ image: string; outline: string | null; credit: StoryCredit } | null>("kid_photo", { id }),
   /** the additional stories, topics and children's pages fetched earlier (the file's text), or null */
   extraPagesLoad: () => invoke<string | null>("extra_pages_load"),
   /** fetches the additional pages from the app's releases; the file's text, and whether it is the one already here */

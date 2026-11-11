@@ -314,6 +314,12 @@ fn kid_picture(core: State<Core>, id: String, outline: bool) -> Result<Option<St
     Ok(picture_packs::kid_picture(&core.get()?.dir, &id, outline))
 }
 
+/// The picture (and its outline) an additional children's page brought in the fetched file.
+#[tauri::command(async)]
+fn kid_photo(core: State<Core>, id: String) -> Result<Option<picture_packs::KidPhoto>, String> {
+    Ok(picture_packs::kid_photo(&core.get()?.dir, &id))
+}
+
 // Additional stories, topics and children's pages (since 3.0.0): one small data file the reader fetches, kept in the data folder, added to the lists.
 /// The additional pages fetched earlier (the file's text), or nothing.
 #[tauri::command(async)]
@@ -1056,6 +1062,7 @@ pub fn run() {
             pictures_remove,
             story_picture,
             kid_picture,
+            kid_photo,
             extra_pages_load,
             extra_pages_fetch,
             original_status,

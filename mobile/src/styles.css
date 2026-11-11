@@ -1865,6 +1865,16 @@ html[data-app-colour][data-theme="dark"]:not([data-contrast="high"]) { --border:
 .app.home-mode > header.top { display: none; }
 .pane > .home-screen { margin: -0.6rem -1rem -2rem; padding: calc(10vh + var(--sat)) 1rem 2rem; min-height: calc(100% + 2.6rem); box-sizing: border-box; }
 .home-box { display: flex; flex-direction: column; align-items: center; max-width: 34rem; margin: 0 auto; }
+/* Poppins Regular (SIL OFL 1.1, public/fonts/Poppins-OFL.txt): the letters of the themed Gospel wordmark pictures are drawn in this face, so the plain
+   coloured Gospel must use it too or its G (and every other letter) comes out in the phone's own font. Same file as the computer app's. */
+@font-face {
+  font-family: "Poppins";
+  src: url("/fonts/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
 .gospel-wordmark {
   margin: 0 0 1.1rem;
   font-family: "Poppins", "Product Sans", var(--sans);
@@ -2001,6 +2011,7 @@ html[data-glow="theme"] .browse-card { border-top: 3px solid var(--occ-accent); 
 .browse-story-picture img { display: block; width: 100%; height: auto; border-radius: 0.6rem; background: var(--raised); }
 .browse-story-picture figcaption { margin-top: 0.3rem; color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
 .browse-story-picture figcaption .link { padding: 0; font-size: inherit; }
+.picture-switch { margin: -0.3rem 0 0.8rem; }
 .browse-picture { display: block; width: 100%; max-height: 18rem; object-fit: contain; margin: 0.4rem 0 0.8rem; border-radius: 0.6rem; background: #fffdf6; }
 
 /* ---------- a clearer glow on the cards, a "What this teaches us" box that stands out, and tappable scripture in the text ---------- */
@@ -2100,6 +2111,11 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
 .theme-row { display: flex; align-items: center; gap: 0.75rem; width: 100%; min-height: 2.6rem; padding: 0.3rem 0.9rem; border: 0; border-bottom: 1px solid var(--border); background: none; text-align: left; font-size: 0.97rem; color: var(--text); }
 .theme-row[aria-checked="true"] { background: var(--accent-soft); font-weight: 700; box-shadow: inset 4px 0 0 var(--accent); }
 .theme-chip { flex: none; width: 2.4rem; height: 1.5rem; border-radius: 0.4rem; border: 1px solid var(--border); background: linear-gradient(160deg, var(--ph-a, var(--paper)), var(--ph-b, var(--paper))); }
+.wm-chip { flex: none; width: 6.2rem; height: 1.9rem; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 0.4rem; background: linear-gradient(160deg, var(--ph-a, var(--paper)), var(--ph-b, var(--paper))); }
+.wm-chip svg { max-width: 100%; max-height: 100%; height: 1.7rem; width: auto; }
+.wm-chip.plain { font-size: 0.95rem; font-weight: 700; color: var(--accent); border: 1px solid var(--border); background: none; }
+.mix-fold > summary small { display: block; margin-top: 0.1rem; font-size: 0.8rem; font-weight: 400; color: var(--muted); }
+.mix-fold > .theme-list { margin-top: 0.5rem; }
 
 /* the What's new banner: comes up once above the tab bar, and opens out into everything that is new */
 .whatsnew { position: fixed; left: 0.6rem; right: 0.6rem; bottom: calc(4.1rem + var(--sab)); z-index: 15; max-width: 42rem; margin: 0 auto; padding: 0.65rem 0.9rem 0.75rem; border: 1px solid var(--border); border-radius: 0.9rem; background: var(--raised); box-shadow: var(--glow-card, none), 0 8px 26px rgba(0, 0, 0, 0.28); animation: whatsnew-up 0.4s ease-out; }
