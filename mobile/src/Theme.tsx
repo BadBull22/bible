@@ -4,8 +4,8 @@
 // of the season on the Search page; the computer's pictures and moving decorations are not used on the phone. The theme code, the wordmark pictures,
 // the colour tokens and the verses are the computer's own files (src/themes), used from their source. A theme never changes the Bible reading font.
 
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
-import { LOOK_GROUPS, LOOKS } from "../../src/themes/occasions";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { LOOK_GROUPS, LOOKS, lookBySlug } from "../../src/themes/occasions";
 import { declineSeason, effectiveLook, keepSeason, setAppColour, setBackgroundFrom, setChosen, setFlag, setWordmarkFrom, useThemeState } from "../../src/themes/themeStore";
 import { hslToRgb, isHexColour, PALETTE, STANDARD, toHex, toHsl, parseHex } from "../../src/themes/palette";
 import { backgroundCss } from "./themeBackgrounds";
@@ -235,41 +235,85 @@ function ThemePicker() {
   );
 }
 
-/** More > Appearance > Theme and colours: the theme list (with its live preview), a wordmark and a background that can be mixed from different themes,
- * the colour of the app, and the two switches for seasons. Rows and controls only: no paragraphs. */
+/**
+ * One of the two mixing lists, built like the theme list: rows that scroll (about five show at a time), the chosen row highlighted, and a tap changes the
+ * app at once (the background behind the page, or the wordmark in the preview above), so each can be judged by looking. A background row has the theme's
+ * two colours as its chip; a wordmark row has the wordmark itself. The list is only built while its fold is open, so it opens with the chosen row in view.
+ */
+function MixList({ kind, value, onPick }: { kind: "wordmark" | "background"; value: string; onPick: (source: string) => void }) {
+  const list = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = list.current;
+    const row = box?.querySelector<HTMLElement>('[aria-checked="true"]');
+    if (box && row) box.scrollTop = Math.max(0, row.offsetTop - box.clientHeight / 2 + row.offsetHeight / 2);
+  }, []);
+  const chip = (look: (typeof LOOKS)[number] | null) =>
+    kind === "background" ? (
+      <i className={look ? "theme-chip" : "theme-chip plain"} data-chip={look ? look.slug : undefined} aria-hidden="true" />
+    ) : look?.svg ? (
+      <span className="wm-chip" aria-hidden="true" dangerouslySetInnerHTML={{ __html: look.svg }} />
+    ) : (
+      <span className="wm-chip plain" aria-hidden="true">
+        Gospel
+      </span>
+    );
+  const row = (source: string, name: string, look: (typeof LOOKS)[number] | null) => (
+    <button key={source} className="theme-row" role="radio" aria-checked={value === source} onClick={() => onPick(source)}>
+      {chip(look)}
+      <span>{name}</span>
+    </button>
+  );
+  const list_ = LOOKS.filter((l) => (kind === "wordmark" ? !!l.svg : true));
+  return (
+    <div ref={list} className="theme-list" role="radiogroup" aria-label={kind === "wordmark" ? "Wordmark" : "Background"}>
+      {row("theme", "Same as the theme", null)}
+      {row("none", kind === "wordmark" ? "The plain coloured Gospel" : "A plain background", null)}
+      {LOOK_GROUPS.map((g) => {
+        const rows = list_.filter((l) => l.group === g);
+        return rows.length ? (
+          <div key={g} role="presentation">
+            <p className="theme-group">{g}</p>
+            {rows.map((l) => row(l.slug, l.name, l))}
+          </div>
+        ) : null;
+      })}
+    </div>
+  );
+}
+
+/** More > Appearance > Theme and colours: the theme list (with its live preview), a wordmark and a background that can be mixed from different themes
+ * (two folds, one open at a time, each with the same kind of scrolling list and the same live preview), the colour of the app, and the two switches
+ * for seasons. Rows and controls only: no paragraphs. */
 export function ThemeSettings() {
   const s = useThemeState();
-  const groups = (only?: (l: (typeof LOOKS)[number]) => boolean) =>
-    LOOK_GROUPS.map((g) => (
-      <optgroup key={g} label={g}>
-        {LOOKS.filter((l) => l.group === g && (!only || only(l))).map((l) => (
-          <option key={l.slug} value={l.slug}>
-            {l.name}
-          </option>
-        ))}
-      </optgroup>
-    ));
+  const showing = effectiveLook(s);
+  const [mix, setMix] = useState<"wordmark" | "background" | null>(null);
+  const nameOf = (source: string, plain: string) => (source === "theme" ? "Same as the theme" : source === "none" ? plain : (lookBySlug(source)?.name ?? "Same as the theme"));
+  const fold = (kind: "wordmark" | "background", title: string, plain: string, value: string, onPick: (source: string) => void) => (
+    <details
+      className="fold inner mix-fold"
+      open={mix === kind}
+      onToggle={(e) => {
+        const isOpen = (e.currentTarget as HTMLDetailsElement).open;
+        setMix((cur) => (isOpen ? kind : cur === kind ? null : cur));
+      }}
+    >
+      <summary>
+        {title} <small>{nameOf(value, plain)}</small>
+      </summary>
+      {mix === kind && <MixList kind={kind} value={value} onPick={onPick} />}
+    </details>
+  );
   return (
     <div className="theme-settings">
       <ThemePicker />
       <details className="fold inner">
         <summary>Mix a wordmark and a background</summary>
-        <label className="row">
-          <span>Wordmark</span>
-          <select className="select-field" value={s.wordmarkFrom} onChange={(e) => setWordmarkFrom(e.target.value)} aria-label="Wordmark">
-            <option value="theme">Same as the theme</option>
-            <option value="none">The plain coloured Gospel</option>
-            {groups((l) => !!l.svg)}
-          </select>
-        </label>
-        <label className="row">
-          <span>Background</span>
-          <select className="select-field" value={s.backgroundFrom} onChange={(e) => setBackgroundFrom(e.target.value)} aria-label="Background">
-            <option value="theme">Same as the theme</option>
-            <option value="none">A plain background</option>
-            {groups()}
-          </select>
-        </label>
+        <div className={showing.art ? "theme-preview gospel-wordmark has-art" : "theme-preview gospel-wordmark"} aria-hidden="true">
+          <WordmarkInner look={showing} />
+        </div>
+        {fold("wordmark", "Wordmark", "The plain coloured Gospel", s.wordmarkFrom, setWordmarkFrom)}
+        {fold("background", "Background", "A plain background", s.backgroundFrom, setBackgroundFrom)}
       </details>
       <p className="row-label">Colour of the app</p>
       <div className="app-colour" role="radiogroup" aria-label="Colour of the app">

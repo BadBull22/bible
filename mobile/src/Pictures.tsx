@@ -120,6 +120,11 @@ function caption(c: StoryCredit): string {
   return `${c.title}, ${who}. ${c.licence.replace(/^Public domain artwork; scans by /, "Public domain; scan by ")}. Shown at a smaller file size, otherwise unchanged.`;
 }
 
+/** The line printed under the picture of an additional children's page: what it is, who made it, and the licence (the picture is shown as it came). */
+function kidCaption(c: StoryCredit): string {
+  return `${c.title}. ${c.credit}. ${c.licence}.`;
+}
+
 /** A drawing (SVG, base64) as a PNG (base64): chat apps and e-mail show a picture file, not a drawing. Null if it cannot be drawn. */
 async function drawingToPng(svg: string, width = 1000): Promise<string | null> {
   try {
@@ -158,7 +163,10 @@ export async function sharePicture(kind: "stories" | "topics" | "children", id: 
     if (kind === "children") {
       const svg = await api.kidPicture(id, false);
       const png = svg ? await drawingToPng(svg) : null;
-      return png ? { name: `${id}.png`, base64: png, mime: "image/png", credit: null } : null;
+      if (png) return { name: `${id}.png`, base64: png, mime: "image/png", credit: null };
+      // an additional children's page brings its own picture in the file the reader fetched
+      const photo = await api.kidPhoto(id);
+      return photo ? { name: `${id}.jpg`, base64: photo.image, mime: "image/jpeg", credit: kidCaption(photo.credit) } : null;
     }
   } catch {
     /* no picture: the page is shared without one */
@@ -173,7 +181,8 @@ export function StoryFigure({ id, title }: { id: string; title: string }) {
   useEffect(() => {
     let live = true;
     setPic(null);
-    if (pack.installed) void api.storyPicture(id).then((p) => live && setPic(p)).catch(() => undefined);
+    // also without the download: an additional story can bring its own picture in the file the reader fetched
+    void api.storyPicture(id).then((p) => live && setPic(p)).catch(() => undefined);
     return () => {
       live = false;
     };
@@ -192,18 +201,67 @@ export function StoryFigure({ id, title }: { id: string; title: string }) {
   );
 }
 
-/** A children's page picture (the colour one), when the children's pictures are downloaded. */
+/** A children's page picture, in colour or as an outline to colour in: the app's own drawing when the children's pictures are downloaded, or the picture an
+ * additional page brought in the file the reader fetched (with its credit). Without either, the offer to download the children's pictures. */
 export function KidFigure({ id, title }: { id: string; title: string }) {
   const pack = usePicturePack("kids");
-  const [svg, setSvg] = useState<string | null>(null);
+  const [drawing, setDrawing] = useState<{ colour: string; outline: string | null } | null>(null);
+  const [photo, setPhoto] = useState<{ image: string; outline: string | null; credit: StoryCredit } | null>(null);
+  const [looked, setLooked] = useState(false);
+  const [outline, setOutline] = useState(false);
   useEffect(() => {
     let live = true;
-    setSvg(null);
-    if (pack.installed) void api.kidPicture(id, false).then((p) => live && setSvg(p)).catch(() => undefined);
+    setDrawing(null);
+    setPhoto(null);
+    setLooked(false);
+    setOutline(false);
+    const own = pack.installed
+      ? Promise.all([api.kidPicture(id, false), api.kidPicture(id, true)]).then(([colour, line]) => (colour ? { colour, outline: line } : null)).catch(() => null)
+      : Promise.resolve(null);
+    const extra = api.kidPhoto(id).catch(() => null);
+    void Promise.all([own, extra]).then(([d, p]) => {
+      if (!live) return;
+      setDrawing(d);
+      setPhoto(p);
+      setLooked(true);
+    });
     return () => {
       live = false;
     };
   }, [id, pack.installed]);
-  if (!svg) return null;
-  return <img className="browse-picture" src={`data:image/svg+xml;base64,${svg}`} alt={`A picture of the story: ${title}`} />;
+  const hasOutline = !!(drawing ? drawing.outline : photo?.outline);
+  const toggle = hasOutline && (
+    <p className="picture-switch">
+      <button className="browse-pill quiet" aria-pressed={outline} onClick={() => setOutline(!outline)}>
+        {outline ? "Show it in colour" : "Outline to colour in"}
+      </button>
+    </p>
+  );
+  if (drawing) {
+    const shown = outline && drawing.outline ? drawing.outline : drawing.colour;
+    return (
+      <>
+        <img className="browse-picture" src={`data:image/svg+xml;base64,${shown}`} alt={`A picture of the story: ${title}`} />
+        {toggle}
+      </>
+    );
+  }
+  if (photo) {
+    const src = outline && photo.outline ? `data:image/png;base64,${photo.outline}` : `data:image/jpeg;base64,${photo.image}`;
+    return (
+      <>
+        <figure className="browse-story-picture">
+          <img src={src} alt={`A picture of the story: ${title}`} />
+          <figcaption>
+            {kidCaption(photo.credit)}{" "}
+            <button className="link" onClick={() => void phone.openLink(photo.credit.page).catch(() => undefined)}>
+              Source
+            </button>
+          </figcaption>
+        </figure>
+        {toggle}
+      </>
+    );
+  }
+  return looked ? <PictureOffer kind="kids" /> : null;
 }

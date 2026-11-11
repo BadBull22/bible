@@ -85,11 +85,17 @@ pub struct StoryPicture {
     pub credit: serde_json::Value,
 }
 
-/// A story's picture with its credit, when the pack is downloaded and has one for it.
+/// A story's picture with its credit: from the downloaded story pictures when they are there and have one for it, otherwise the picture an additional
+/// story brought in its file (`extra_pages::picture`).
 pub fn story_picture(data: &Path, id: &str) -> Option<StoryPicture> {
     if !safe(id) {
         return None;
     }
+    from_pack(data, id).or_else(|| crate::extra_pages::picture(data, id).map(|(image, credit)| StoryPicture { image, credit }))
+}
+
+/// The picture from the downloaded story pictures (not the ones an additional story brings with it).
+fn from_pack(data: &Path, id: &str) -> Option<StoryPicture> {
     let dir = data.join(STORIES.folder);
     let bytes = std::fs::read(dir.join(format!("{id}.jpg"))).ok()?;
     let credits: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join("credits.json")).ok()?).ok()?;
@@ -105,6 +111,24 @@ pub fn kid_picture(data: &Path, id: &str, outline: bool) -> Option<String> {
     let name = if outline { format!("{id}-line.svg") } else { format!("{id}.svg") };
     let bytes = std::fs::read(data.join(KIDS.folder).join(name)).ok()?;
     Some(base64::engine::general_purpose::STANDARD.encode(bytes))
+}
+
+/// The picture of an additional children's page, brought in the file the reader fetched (a photograph-style illustration, not the app's own drawings).
+#[derive(Serialize, Debug)]
+pub struct KidPhoto {
+    /// the picture, as base64 JPEG
+    pub image: String,
+    /// the same picture as black lines on white, to colour in (base64 PNG), when the file has one
+    pub outline: Option<String>,
+    /// who made it, where it is from, the licence
+    pub credit: serde_json::Value,
+}
+
+pub fn kid_photo(data: &Path, id: &str) -> Option<KidPhoto> {
+    if !safe(id) {
+        return None;
+    }
+    crate::extra_pages::child_picture(data, id).map(|(image, outline, credit)| KidPhoto { image, outline, credit })
 }
 
 #[cfg(test)]
