@@ -510,7 +510,7 @@ main.legal .other-device { margin-top: 36px; }
   .v3-banner { padding: 18px 16px 16px; }
 }
 /* a little banner across the corner of the Windows card, at 45 degrees */
-.choice.windows { position: relative; overflow: hidden; }
+.choice.windows, .choice.android { position: relative; overflow: hidden; }
 .v3-ribbon {
   position: absolute;
   top: 26px;
