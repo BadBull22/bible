@@ -1,0 +1,128 @@
+{
+ "format": 1,
+ "tags": [],
+ "pages": [
+  {
+   "id": "the-woman-who-touched-jesus-cloak",
+   "title": "The Woman Who Touched Jesus' Cloak",
+   "also": [
+    "the woman with the issue of blood",
+    "the bleeding woman",
+    "Jesus heals the bleeding woman",
+    "twelve years of bleeding",
+    "touching the hem of his garment"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Jesus is on his way to the house of Jairus, a synagogue leader whose young daughter is dying, and a large crowd presses around him. In that crowd is a woman who has been bleeding for twelve years. She has spent everything on doctors and only grown worse, and her illness has left her weak and shut out from others. She has heard about Jesus and tells herself that if she can only touch his clothes she will be well. She slips up behind him and touches his cloak, and the bleeding stops at once. Jesus feels that power has gone out of him and asks who touched him. His disciples are amazed that he asks, with so many people pushing close, but he keeps looking round. Trembling, the woman comes forward, kneels and tells him everything. He calls her daughter, tells her that her faith has made her well, and sends her away in peace.",
+   "look_closer": "Notice that Jesus does not let her slip away unseen. A secret healing would have left her afraid and still on the edge of the crowd. By speaking to her in front of everyone, and calling her daughter, he gives her back her place (verses 33-34).",
+   "lessons": [
+    "Desperate people are welcome. She had tried every doctor and had nothing left, and she still came to Jesus (Mark 5:25-28).",
+    "Faith can be small and quiet. She said almost nothing and only reached out to touch his cloak, and Jesus called that faith (5:27-28, 34).",
+    "Jesus notices one person in a crowd. Many pressed against him, but only one touch was a touch of faith, and he stopped to find her (5:30-32).",
+    "He heals more than her body. By calling her daughter and sending her away in peace, he gives her a place among his people again (5:33-34)."
+   ],
+   "context": {
+    "ref": "Mark 5:21-24",
+    "label": "On the way to Jairus' house"
+   },
+   "passages": [
+    {
+     "ref": "Mark 5:25-29",
+     "label": "Twelve years of illness and one touch"
+    },
+    {
+     "ref": "Mark 5:30-34",
+     "label": "Who touched me?"
+    }
+   ],
+   "whole": "Mark 5:25-34",
+   "parallels": [
+    "Matthew 9:20-22",
+    "Luke 8:43-48"
+   ],
+   "also_read": [
+    "Mark 5:35-43"
+   ],
+   "people": [
+    "jairus_711"
+   ],
+   "tags": [
+    "healing",
+    "faith",
+    "miracles",
+    "mercy"
+   ],
+   "related": [
+    "jesus-calms-the-storm",
+    "jesus-heals-the-centurions-servant"
+   ],
+   "topics": [],
+   "child_page": "the-woman-who-touched-the-cloak",
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 1,
+    "date": "2026-11-11"
+   }
+  },
+  {
+   "id": "jesus-heals-the-centurions-servant",
+   "title": "Jesus Heals the Centurion's Servant",
+   "also": [
+    "the Roman officer's servant",
+    "the Roman soldier's servant",
+    "the centurion's faith",
+    "just say the word"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "In Capernaum a Roman officer, a centurion in charge of about a hundred soldiers, has a servant he values highly who is sick and close to death. The centurion has heard about Jesus and sends a group of Jewish elders with a request that Jesus come and heal the man. The elders plead for him, saying he deserves this help because he loves their nation and paid for their synagogue. Jesus goes with them, but before he reaches the house the centurion sends friends with a message: he does not feel worthy to have Jesus under his roof, and Jesus only needs to give the word for his servant to be healed. He knows about authority, since his own soldiers obey his orders. Jesus is amazed and tells the crowd that he has not found faith like this even in Israel. When the messengers get back to the house, they find the servant well.",
+   "look_closer": "Notice who speaks. In Luke the centurion never meets Jesus himself: Jewish elders ask for him, and then friends carry his message. In Matthew's account he speaks to Jesus directly (Matthew 8:5-9).",
+   "lessons": [
+    "Jesus answers need across every boundary. A Roman officer, an outsider to Israel, asks for help, and Jesus goes with the elders at once (Luke 7:3-6).",
+    "Humility and faith go together. The centurion thinks himself unworthy of a visit, yet he trusts Jesus completely (7:6-7).",
+    "Jesus' word is enough. The healing happens at a distance, with Jesus not even entering the house, just as the centurion expected (7:7-10).",
+    "Faith surprises Jesus. He is amazed at a man from outside Israel and holds him up as an example to everyone listening (7:9)."
+   ],
+   "passages": [
+    {
+     "ref": "Luke 7:1-5",
+     "label": "The elders plead for a Roman officer"
+    },
+    {
+     "ref": "Luke 7:6-10",
+     "label": "Just say the word"
+    }
+   ],
+   "whole": "Luke 7:1-10",
+   "parallels": [
+    "Matthew 8:5-13"
+   ],
+   "also_read": [
+    "John 4:46-54"
+   ],
+   "places": [
+    "capernaum_274"
+   ],
+   "tags": [
+    "healing",
+    "faith",
+    "miracles",
+    "mercy"
+   ],
+   "related": [
+    "the-woman-who-touched-jesus-cloak",
+    "jesus-calms-the-storm"
+   ],
+   "topics": [],
+   "child_page": "the-soldier-and-his-servant",
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 1,
+    "date": "2026-11-11"
+   }
+  }
+ ]
+}

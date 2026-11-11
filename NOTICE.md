@@ -145,6 +145,17 @@ Tissot's Old Testament paintings by Phillip Medhurst and the Sweet Publishing il
 
 The children's pictures (colour and colouring-in outline, in `src/browse/pictures/kids`) are original artwork drawn for this app.
 
+### Pictures with additional stories (the fetched file)
+
+Stories, "Verses for..." pages and children's pages added after a version of the app was made reach the phone as one small file (the "Fetch additional stories" button), and the file can carry each page's picture. Each picture is shown with its credit, licence and a link to its Commons page. The Tissot paintings are public domain and the Sweet Publishing illustrations are licensed CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0/); the Sweet pictures are shown unchanged. The outline to colour in that goes with a children's picture is a drawing made from that picture (its black pen lines only) and is shared under the same CC BY-SA 3.0 licence, with the same credit.
+
+| Page | Picture | Artist | Licence | Source |
+|---|---|---|---|---|
+| The Woman Who Touched Jesus' Cloak (story) | The Woman with an Issue of Blood | James Tissot | Public domain | [source](https://commons.wikimedia.org/wiki/File:Brooklyn_Museum_-_The_Woman_with_an_Issue_of_Blood_(L%27h%C3%A9moro%C3%AFsse%29_-_James_Tissot.jpg) |
+| Jesus Heals the Centurion's Servant (story) | Lord, I Am Not Worthy | James Tissot | Public domain | [source](https://commons.wikimedia.org/wiki/File:Brooklyn_Museum_-_Lord,_I_Am_Not_Worthy_(Domine_Non_Sum_Dignus%29_-_James_Tissot_-_overall.jpg) |
+| The Woman Who Touched the Cloak (children) | Gospel of Luke, chapter 8, picture 33 | Jim Padgett, Sweet Publishing | CC BY-SA 3.0 | [source](https://commons.wikimedia.org/wiki/File:Gospel_of_Luke_Chapter_8-33_(Bible_Illustrations_by_Sweet_Media%29.jpg) |
+| The Soldier and His Servant (children) | Gospel of Luke, chapter 7, picture 2 | Jim Padgett, Sweet Publishing | CC BY-SA 3.0 | [source](https://commons.wikimedia.org/wiki/File:Gospel_of_Luke_Chapter_7-2_(Bible_Illustrations_by_Sweet_Media%29.jpg) |
+
 ### Read-aloud voice
 
 Read aloud runs in a **separate program** shipped beside the app (`resources/voice/`), which
