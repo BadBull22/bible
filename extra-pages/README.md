@@ -24,7 +24,7 @@ The builder checks every page with the same rules the built-in pages pass (`scri
 ## Batches so far
 | Batch | Contents | Published |
 |---|---|---|
-| `phone/batch-2026-11-11-two-stories` | 2 stories (The Woman Who Touched Jesus' Cloak; Jesus Heals the Centurion's Servant) and 2 children's pages (The Woman Who Touched the Cloak; The Soldier and His Servant), each with its picture, and an outline to colour in for the two children's pages. Built file: 674 KB, sha-256 `d805a1f30ce1ff381d6f92a03f4a10ba6746226bf77109b97f2c7259d30e9c4c` (revision label `2026-11-11 14:30`). | Not yet |
+| `phone/batch-2026-11-11-two-stories` | 2 stories (The Woman Who Touched Jesus' Cloak; Jesus Heals the Centurion's Servant) and 2 children's pages (The Woman Who Touched the Cloak; The Soldier and His Servant), each with its picture, and an outline to colour in for the two children's pages. Built file: 674 KB, sha-256 `d805a1f30ce1ff381d6f92a03f4a10ba6746226bf77109b97f2c7259d30e9c4c` (revision label `2026-11-11 14:30`). | Yes: GitHub release `extra-pages`, 2026-11-11 |
 
 ## Pictures and credits
 Each picture has its credit in the batch's `credits.json` (`pictures/` for stories, `child-pictures/` for children's pages); the credits are also listed in the repository's `NOTICE.md`. The Tissot paintings are public domain; the Sweet Publishing illustrations (Jim Padgett) are CC BY-SA 3.0, used unchanged, and the outline made from one is an adaptation under the same licence (`tools/make_outline.py` makes it).
