@@ -30,6 +30,8 @@ if (read(SEEN_KEY) !== WHATS_NEW_VERSION) write(SEEN_KEY, WHATS_NEW_VERSION);
 
 /** The notes, the newest first: a short title and one or two plain sentences. */
 export const WHATS_NEW: { title: string; text: string }[] = [
+  { title: "Commentaries on a verse", text: "Tap a verse, then Commentaries, to read what the commentaries you have installed say about it. All notes on the chapter are one tap further." },
+  { title: "Other links", text: "More > Downloads > Other links lists the websites where e-Sword, MySword and MyBible files can be found, each opening in your browser. What is already on your phone now sits in one closed Installed row, so what you can still download comes first." },
   { title: "Themes", text: "Pick a theme for two colours behind every page and its own Gospel wordmark. In More > Appearance > Theme and colours the list shows each theme at once, so you can judge it before you decide." },
   { title: "Share a page", text: "Every Bible story, Verses for… page and children's page has a Share button at the bottom: it sends the page, set out as it is here with the Scripture words, and the picture too when you have downloaded the pictures, by WhatsApp, e-mail or anything else your phone offers." },
   { title: "More stories", text: "\"Fetch additional stories\" at the bottom of each list brings any new stories, Verses for… pages and children's pages added since this version of the app, with no update needed." },

@@ -2049,6 +2049,13 @@ html[data-glow] .more-list { box-shadow: var(--glow-card); }
 .dl-error { flex-basis: 100%; margin: 0; }
 .dl-link { cursor: pointer; }
 .fold.inner { margin-top: 0.6rem; }
+/* the closed "Installed" row (Library, Bible translations, Downloads): what is already on the phone, out of the way of what can still be downloaded */
+.installed-fold { margin: 0.6rem 0; }
+.installed-fold > summary small { color: var(--muted); font-weight: 400; }
+.installed-fold .hits { margin: 0.2rem 0 0; }
+.installed-fold .dl-list { margin: 0.1rem 0 0; }
+/* Other links: one row per website; each opens in the phone's browser */
+.other-links .dl-row { min-height: 3.4rem; padding: 0.55rem 0; }
 .fold h3 { margin: 0.9rem 0 0.3rem; font-size: 0.95rem; }
 .row-label { margin: 0.8rem 0 0.2rem; font-weight: 600; }
 .reminder-row { margin: 0.3rem 0 1rem; }

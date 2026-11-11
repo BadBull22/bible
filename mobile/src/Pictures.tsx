@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { api, phone, type StoryCredit } from "./api";
-import { DownloadRow } from "./Downloads";
+import { DownloadRows, type DownloadItem } from "./Downloads";
 
 export type PicKind = "stories" | "kids";
 
@@ -98,15 +98,19 @@ export function PictureOffer({ kind }: { kind: PicKind }) {
   );
 }
 
-/** The two picture downloads, as rows of More > Downloads. */
-export function PictureRows() {
+/** The downloads of More > Downloads: the ones in `others` (Advanced search, Original words) and the two picture packs, the ones not yet on the phone as rows
+ * and the ones already there in one closed "Installed" row. */
+export function PictureRows({ others }: { others: DownloadItem[] }) {
   const stories = usePicturePack("stories");
   const kids = usePicturePack("kids");
   return (
-    <>
-      <DownloadRow title="Story pictures" note="Paintings for the stories" pack={stories} />
-      <DownloadRow title="Children's pictures" note="Colour and outline" pack={kids} />
-    </>
+    <DownloadRows
+      items={[
+        ...others,
+        { key: "stories", title: "Story pictures", note: "Paintings for the stories", pack: stories },
+        { key: "kids", title: "Children's pictures", note: "Colour and outline", pack: kids },
+      ]}
+    />
   );
 }
 

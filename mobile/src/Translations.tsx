@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { api, Offer, phone, Version } from "./api";
 import { todayIso } from "./plans";
+import { InstalledFold } from "./Downloads";
 
 /** The free modern English Bibles, shown first (eBible.org's ids). Only ones eBible.org marks
  * free to share; the built-in ones (BSB, KJV, ASV, WEB, YLT) are not repeated. */
@@ -33,6 +34,7 @@ export function Translations({ onChanged, ask, say }: Props) {
   // Bibles the reader added from a file (not eBible.org's)
   const [ownBibles, setOwnBibles] = useState<Version[]>([]);
   const [adding, setAdding] = useState(false);
+  const [foldOpen, setFoldOpen] = useState(false); // the closed "Installed" row, kept as the reader left it while this screen is open
   const loadOwn = () =>
     api
       .versions()
@@ -85,6 +87,10 @@ export function Translations({ onChanged, ask, say }: Props) {
         : language === "" || o.language === language) && (!wholeOnly || (o.ot_books >= 39 && o.nt_books >= 27) || q !== ""),
   );
   const installed = (offers ?? []).filter((o) => o.installed);
+  // Bibles added from a file (not in eBible.org's list)
+  const ownOnly = ownBibles.filter((v) => !(offers ?? []).some((o) => o.id === v.code));
+  // what can still be downloaded comes first: the Bibles already on the phone are in the closed "Installed" row (a search still finds them)
+  const todo = q ? shown : shown.filter((o) => !o.installed);
 
   async function install(o: Offer) {
     setBusy((b) => ({ ...b, [o.id]: 0 }));
@@ -135,66 +141,57 @@ export function Translations({ onChanged, ask, say }: Props) {
           {adding ? "Adding…" : "Choose a file…"}
         </button>
       </div>
-      {ownBibles.filter((v) => !(offers ?? []).some((o) => o.id === v.code)).length > 0 && (
+      <InstalledFold count={ownOnly.length + installed.length} open={foldOpen} onToggle={setFoldOpen}>
         <ul className="hits plain">
-          {ownBibles
-            .filter((v) => !(offers ?? []).some((o) => o.id === v.code))
-            .map((v) => (
-              <li key={v.code} className="offer">
-                <div className="hit-head">
-                  <strong>
-                    {v.name} ({v.code})
-                  </strong>
-                  <button
-                    className="remove"
-                    aria-label={`Remove ${v.name}`}
-                    onClick={() =>
-                      ask(`Remove ${v.name} from this phone? You can add it again from its file.`, "Remove", () =>
-                        void api
-                          .bibleRemove(v.code)
-                          .then(() => {
-                            void loadOwn();
-                            onChanged();
-                          })
-                          .catch((e) => setError(String(e))),
-                      )
-                    }
-                  >
-                    ×
-                  </button>
-                </div>
-                <p>Added from a file</p>
-              </li>
-            ))}
+          {ownOnly.map((v) => (
+            <li key={v.code} className="offer">
+              <div className="hit-head">
+                <strong>
+                  {v.name} ({v.code})
+                </strong>
+                <button
+                  className="remove"
+                  aria-label={`Remove ${v.name}`}
+                  onClick={() =>
+                    ask(`Remove ${v.name} from this phone? You can add it again from its file.`, "Remove", () =>
+                      void api
+                        .bibleRemove(v.code)
+                        .then(() => {
+                          void loadOwn();
+                          onChanged();
+                        })
+                        .catch((e) => setError(String(e))),
+                    )
+                  }
+                >
+                  ×
+                </button>
+              </div>
+              <p>Added from a file</p>
+            </li>
+          ))}
+          {installed.map((o) => (
+            <li key={o.id} className="offer">
+              <div className="hit-head">
+                <strong>{o.title}</strong>
+                <button className="remove" aria-label={`Remove ${o.title}`} onClick={() => remove(o)}>
+                  ×
+                </button>
+              </div>
+              <p>
+                {o.language} · {o.copyright}
+              </p>
+            </li>
+          ))}
         </ul>
-      )}
-      {installed.length > 0 && (
-        <>
-          <h3>On this phone</h3>
-          <ul className="hits plain">
-            {installed.map((o) => (
-              <li key={o.id} className="offer">
-                <div className="hit-head">
-                  <strong>{o.title}</strong>
-                  <button className="remove" aria-label={`Remove ${o.title}`} onClick={() => remove(o)}>
-                    ×
-                  </button>
-                </div>
-                <p>
-                  {o.language} · {o.copyright}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {offers && (
+      </InstalledFold>
+      {offers && RECOMMENDED.some(([id]) => offers.some((x) => x.id === id && !x.installed)) && (
         <>
           <h3>Recommended free translations</h3>
           <ul className="hits plain">
             {RECOMMENDED.map(([id, why]) => {
               const o = offers.find((x) => x.id === id);
-              if (!o) return null;
+              if (!o || o.installed) return null;
               return (
                 <li key={o.id} className="offer">
                   <div className="hit-head">
@@ -232,9 +229,9 @@ export function Translations({ onChanged, ask, say }: Props) {
         <input type="checkbox" checked={wholeOnly} onChange={(e) => setWholeOnly(e.target.checked)} /> Whole Bibles only
       </label>
       {!offers && !error && <p className="hint">Loading the list from eBible.org…</p>}
-      {offers && shown.length === 0 && <p className="hint">None found. Try another language, or untick “Whole Bibles only”.</p>}
+      {offers && todo.length === 0 && <p className="hint">{shown.length > 0 ? "Everything in this list is already on this phone." : "None found. Try another language, or untick “Whole Bibles only”."}</p>}
       <ul className="hits plain">
-        {shown.slice(0, 150).map((o) => (
+        {todo.slice(0, 150).map((o) => (
           <li key={o.id} className="offer" dir="auto">
             <div className="hit-head">
               <strong>{o.title}</strong>
@@ -253,7 +250,7 @@ export function Translations({ onChanged, ask, say }: Props) {
           </li>
         ))}
       </ul>
-      {shown.length > 150 && <p className="hint">{shown.length - 150} more: search to narrow the list.</p>}
+      {todo.length > 150 && <p className="hint">{todo.length - 150} more: search to narrow the list.</p>}
       <button className="link" onClick={() => load(true)}>
         Refresh the list
       </button>
