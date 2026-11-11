@@ -41,7 +41,7 @@ import { BibleMaps, MapsEntry, resumeMap } from "./BibleMaps";
 import { Authors, AuthorsEntry } from "./Authors";
 import { PictureRows } from "./Pictures";
 import { DownloadRow, LinkRow } from "./Downloads";
-import { getThemeState } from "../../src/themes/themeStore";
+import { useWhatsNew, WhatsNewBanner, WHATS_NEW_VERSION } from "./WhatsNew";
 import { Library } from "./Library";
 import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
@@ -905,8 +905,7 @@ export function App() {
   // the Search page before a search is made: the Gospel wordmark with the search box under it (the top bar is not shown then)
   const homeMode = tab === "search" && !query && !browse;
   const browseLabel = browse ? (browse.id ? pageTitle(browse.kind, browse.id) ?? listName(browse.kind) : listName(browse.kind)) : "";
-  const look = themeLook;
-  const readingBackground = tab === "read" && look.screenLook && getThemeState().reading !== "off" ? getThemeState().reading : undefined;
+  const whatsNew = useWhatsNew();
 
   return (
     <div className={"app" + (homeMode ? " home-mode" : "")} style={{ ["--scale" as string]: size }}>
@@ -973,7 +972,7 @@ export function App() {
           </button>
         </div>
       )}
-      <div className="main-frame" data-reading-theme={readingBackground} data-occasion={readingBackground ? look.screenLook?.slug : undefined}>
+      <div className="main-frame">
       <main ref={pane} className="pane main-pane" onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={tab === "read" ? swiped : undefined}>
         {tab === "read" && (
           <>
@@ -1516,6 +1515,7 @@ export function App() {
             </label>
               <details className="fold inner" id="theme-settings">
                 <summary>Theme and colours</summary>
+                <ThemeSettings />
             <label className="row">
               <span>Text colour</span>
               <select className="select-field" value={textColor} onChange={(e) => setTextColor(e.target.value as TextColor)}>
@@ -1532,7 +1532,6 @@ export function App() {
                 <option value="high">High</option>
               </select>
             </label>
-                <ThemeSettings />
               </details>
             </details>
 
@@ -1605,6 +1604,9 @@ export function App() {
               <summary>
                 About <small>Version {updates.current || "…"}</small>
               </summary>
+            <button className="link whatsnew-link" onClick={whatsNew.showAll}>
+              What's new in version {WHATS_NEW_VERSION.split(".")[0]}
+            </button>
             <ul className="about">
               {versions.map((v) => (
                 <li key={v.code}>
@@ -1640,6 +1642,8 @@ export function App() {
           <button onClick={stopListening}>Stop</button>
         </div>
       )}
+
+      <WhatsNewBanner {...whatsNew} />
 
       <nav className="tabs">
         {(

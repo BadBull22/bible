@@ -1,17 +1,43 @@
-// Themes on the phone (since 3.0.0), the same as on the computer: a theme is a themed "Gospel" wordmark and a background (colours, small decorations,
-// a glow, the verse of the season) that go together; they can be mixed and matched; near a season the app switches to that season's theme and asks
-// whether to keep it; and the reader may tint the whole app with a colour of their own. The theme code, the wordmark pictures, the screen packages
-// and the verses are the desktop's own files (src/themes), used from their source. A theme never changes the Bible reading font.
+// Themes on the phone (since 3.0.0): a theme is a themed "Gospel" wordmark and a background that go together; they can be mixed and matched; near a
+// season the app switches to that season's theme and asks whether to keep it; and the reader may tint the whole app with a colour of their own. The
+// phone's background is two colours that run into each other behind every page (themeBackgrounds.ts), with a glow in the theme's colour and the verse
+// of the season on the Search page; the computer's pictures and moving decorations are not used on the phone. The theme code, the wordmark pictures,
+// the colour tokens and the verses are the computer's own files (src/themes), used from their source. A theme never changes the Bible reading font.
 
-import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { LOOK_GROUPS, LOOKS } from "../../src/themes/occasions";
-import { declineSeason, effectiveLook, keepSeason, setAppColour, setBackgroundFrom, setChosen, setFlag, setReadingBackground, setWordmarkFrom, useThemeState } from "../../src/themes/themeStore";
+import { declineSeason, effectiveLook, keepSeason, setAppColour, setBackgroundFrom, setChosen, setFlag, setWordmarkFrom, useThemeState } from "../../src/themes/themeStore";
 import { hslToRgb, isHexColour, PALETTE, STANDARD, toHex, toHsl, parseHex } from "../../src/themes/palette";
+import { backgroundCss } from "./themeBackgrounds";
 import "../../src/themes/themes.css";
+
+// The phone's theme backgrounds (two colours that run into each other behind every page; see themeBackgrounds.ts), as style rules put on the page once
+if (typeof document !== "undefined" && !document.getElementById("theme-backgrounds")) {
+  const style = document.createElement("style");
+  style.id = "theme-backgrounds";
+  style.textContent = backgroundCss();
+  document.head.appendChild(style);
+}
 
 /** What the theme says to put on the app right now (the attributes the desktop's screen packages read). */
 export function useLook() {
   return effectiveLook(useThemeState());
+}
+
+/** The theme's Gospel wordmark (its own picture, or the coloured letters). */
+function WordmarkInner({ look }: { look: ReturnType<typeof useLook> }) {
+  return look.art ? (
+    // the theme's own wordmark (a trusted SVG that ships with the app); the real text "Gospel" stays in the label of the heading around it
+    <span className="wordmark-art" data-wm={look.wordmarkLook?.slug} aria-hidden="true" dangerouslySetInnerHTML={{ __html: look.art }} />
+  ) : (
+    <>
+      {["G", "o", "s", "p", "e", "l"].map((letter, i) => (
+        <span key={i} aria-hidden="true">
+          {letter}
+        </span>
+      ))}
+    </>
+  );
 }
 
 /** The one question near a season: the app has switched to the seasonal theme; keep it, or go back to the default theme? */
@@ -75,16 +101,7 @@ export function HomeScreen({
     <div className="home-screen" data-occasion={look.screenLook?.slug} data-screen={look.screenOn ? "on" : undefined} data-glow={look.defaultGlow ? "default" : undefined}>
       <div className="home-box">
         <h1 className={look.art ? "gospel-wordmark has-art" : "gospel-wordmark"} aria-label="Gospel" onClick={() => box.current?.focus()}>
-          {look.art ? (
-            // the theme's own wordmark (a trusted SVG that ships with the app); the real text "Gospel" stays in the label above
-            <span className="wordmark-art" data-wm={look.wordmarkLook?.slug} aria-hidden="true" dangerouslySetInnerHTML={{ __html: look.art }} />
-          ) : (
-            ["G", "o", "s", "p", "e", "l"].map((letter, i) => (
-              <span key={i} aria-hidden="true">
-                {letter}
-              </span>
-            ))
-          )}
+          <WordmarkInner look={look} />
         </h1>
         <form
           className="home-search-box"
@@ -179,11 +196,49 @@ function ColourWheel({ value, onPick }: { value: string; onPick: (hex: string) =
   );
 }
 
-/** More > Appearance > Theme and colours: the theme, a wordmark and a background that can be picked on their own, the background behind the Bible text,
+/**
+ * The theme list: five rows show at a time and the list scrolls; the chosen theme is highlighted, and a tap puts the theme (its two colours behind every
+ * page, and its Gospel wordmark) on the whole app at once, so each one can be judged by looking at the page behind the list and at the wordmark above it.
+ */
+function ThemePicker() {
+  const s = useThemeState();
+  const showing = effectiveLook(s);
+  const on = showing.look ? showing.look.slug : "default";
+  const list = useRef<HTMLDivElement>(null);
+  // the list opens with the chosen theme in view
+  useEffect(() => {
+    const box = list.current;
+    const row = box?.querySelector<HTMLElement>('[aria-checked="true"]');
+    if (box && row) box.scrollTop = Math.max(0, row.offsetTop - box.clientHeight / 2 + row.offsetHeight / 2);
+  }, []);
+  const row = (slug: string, name: string) => (
+    <button key={slug} className="theme-row" role="radio" aria-checked={on === slug} onClick={() => setChosen(slug)}>
+      <i className={slug === "default" ? "theme-chip plain" : "theme-chip"} data-chip={slug === "default" ? undefined : slug} aria-hidden="true" />
+      <span>{name}</span>
+    </button>
+  );
+  return (
+    <>
+      <div className={showing.art ? "theme-preview gospel-wordmark has-art" : "theme-preview gospel-wordmark"} aria-hidden="true">
+        <WordmarkInner look={showing} />
+      </div>
+      <div ref={list} className="theme-list" role="radiogroup" aria-label="Theme">
+        {row("default", "Default theme")}
+        {LOOK_GROUPS.map((g) => (
+          <div key={g} role="presentation">
+            <p className="theme-group">{g}</p>
+            {LOOKS.filter((l) => l.group === g).map((l) => row(l.slug, l.name))}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/** More > Appearance > Theme and colours: the theme list (with its live preview), a wordmark and a background that can be mixed from different themes,
  * the colour of the app, and the two switches for seasons. Rows and controls only: no paragraphs. */
 export function ThemeSettings() {
   const s = useThemeState();
-  const showing = effectiveLook(s);
   const groups = (only?: (l: (typeof LOOKS)[number]) => boolean) =>
     LOOK_GROUPS.map((g) => (
       <optgroup key={g} label={g}>
@@ -196,37 +251,26 @@ export function ThemeSettings() {
     ));
   return (
     <div className="theme-settings">
-      <label className="row">
-        <span>Theme</span>
-        <select className="select-field" value={s.chosen} onChange={(e) => setChosen(e.target.value)} aria-label="Theme selection">
-          <option value="default">Default theme</option>
-          {groups()}
-        </select>
-      </label>
-      <label className="row">
-        <span>Wordmark</span>
-        <select className="select-field" value={s.wordmarkFrom} onChange={(e) => setWordmarkFrom(e.target.value)} aria-label="Wordmark">
-          <option value="theme">Same as the theme</option>
-          <option value="none">The plain coloured Gospel</option>
-          {groups((l) => !!l.svg)}
-        </select>
-      </label>
-      <label className="row">
-        <span>Background</span>
-        <select className="select-field" value={s.backgroundFrom} onChange={(e) => setBackgroundFrom(e.target.value)} aria-label="Background">
-          <option value="theme">Same as the theme</option>
-          <option value="none">A plain background</option>
-          {groups()}
-        </select>
-      </label>
-      <label className="row">
-        <span>Behind the Bible text</span>
-        <select className="select-field" value={s.reading} onChange={(e) => setReadingBackground(e.target.value as "off" | "soft" | "full")} aria-label="Background behind the Bible text" disabled={!showing.screenLook}>
-          <option value="off">None</option>
-          <option value="soft">Soft</option>
-          <option value="full">Full</option>
-        </select>
-      </label>
+      <ThemePicker />
+      <details className="fold inner">
+        <summary>Mix a wordmark and a background</summary>
+        <label className="row">
+          <span>Wordmark</span>
+          <select className="select-field" value={s.wordmarkFrom} onChange={(e) => setWordmarkFrom(e.target.value)} aria-label="Wordmark">
+            <option value="theme">Same as the theme</option>
+            <option value="none">The plain coloured Gospel</option>
+            {groups((l) => !!l.svg)}
+          </select>
+        </label>
+        <label className="row">
+          <span>Background</span>
+          <select className="select-field" value={s.backgroundFrom} onChange={(e) => setBackgroundFrom(e.target.value)} aria-label="Background">
+            <option value="theme">Same as the theme</option>
+            <option value="none">A plain background</option>
+            {groups()}
+          </select>
+        </label>
+      </details>
       <p className="row-label">Colour of the app</p>
       <div className="app-colour" role="radiogroup" aria-label="Colour of the app">
         <button className="swatch standard" role="radio" aria-checked={s.appColour === STANDARD} onClick={() => setAppColour(STANDARD)}>

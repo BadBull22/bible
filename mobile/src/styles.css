@@ -1947,13 +1947,9 @@ html[data-glow] .field:focus,
 html[data-glow] textarea:focus { box-shadow: var(--glow-focus); }
 html[data-glow="theme"] .browse-card { border-top: 3px solid var(--occ-accent); }
 
-/* the theme's background behind the Bible text: the phone keeps the corner pictures too (the computer drops them below 700px) */
-.main-frame[data-reading-theme] { min-height: 0; flex-direction: column; min-width: 0; }
-.main-frame[data-reading-theme] > .main-pane { flex: 1; min-height: 0; }
-@media (max-width: 700px) {
-  .main-frame[data-reading-theme="full"]::before { display: block; }
-  .home-screen[data-screen="on"]::before, .home-screen[data-screen="on"]::after { display: block; }
-}
+/* the main frame: the page itself (the theme's colours are on <html>, behind every page; see the end of this file) */
+.main-frame { display: flex; flex: 1; min-height: 0; flex-direction: column; min-width: 0; }
+.main-frame > .main-pane { flex: 1; min-height: 0; }
 
 /* the colour wheel and the swatches (More > Appearance > Theme) */
 .theme-settings { margin-top: 0.8rem; padding-top: 0.6rem; border-top: 1px solid var(--border); }
@@ -2062,3 +2058,53 @@ html[data-glow] .more-list { box-shadow: var(--glow-card); }
 .came-from .link { padding: 0.45rem 0.2rem; font-size: 0.95rem; }
 .came-from .remove { border: none; background: none; color: var(--muted); font-size: 1.4rem; width: 2.2rem; height: 2.2rem; }
 .top .home-btn { flex: none; display: grid; place-items: center; width: 2.6rem; height: 2.6rem; padding: 0; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 0.6rem; background: transparent; color: #fff; }
+
+/* ---------- the theme's colours: two colours that run into each other behind EVERY page (since the second test copy of 3.0.0) ----------
+   themeBackgrounds.ts puts --ph-a and --ph-b on <html> (the pair for the light pages, or for the dark ones) when a theme is in use; the computer's pictures
+   and moving decorations are not used on the phone. The grey text and the links are a little stronger under a theme, so they stay readable on the colours
+   (mobile/scripts/test_theme_backgrounds.mts checks every pair). */
+html[data-occasion] { background: linear-gradient(160deg, var(--ph-a), var(--ph-b)) fixed no-repeat; }
+html[data-occasion] body { background: transparent; }
+html[data-occasion] .tabs { background: color-mix(in srgb, var(--raised) 80%, transparent); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+html[data-occasion] header.top { background: color-mix(in srgb, var(--navy) 72%, var(--ph-a)); }
+html[data-occasion] .place { background: var(--ph-a); }
+/* the cards let a little of the colours through, so the theme is felt inside them too (the text on them keeps its contrast: they are 88% opaque) */
+html[data-occasion] .fold,
+html[data-occasion] .card,
+html[data-occasion] .today,
+html[data-occasion] .hits li,
+html[data-occasion] .streak div { background: color-mix(in srgb, var(--raised) 88%, transparent); }
+.home-screen[data-screen="on"] { background: transparent; }
+.home-screen[data-screen="on"]::before, .home-screen[data-screen="on"]::after { display: none !important; content: none !important; animation: none !important; }
+html[data-occasion][data-scheme="light"]:not([data-theme="sepia"]):not([data-contrast="high"]) { --muted: #4b4944; }
+html[data-occasion][data-scheme="light"]:not([data-theme="sepia"]) { --accent: #234d8a; }
+html[data-occasion][data-theme="sepia"]:not([data-contrast="high"]) { --muted: #57472f; }
+html[data-occasion][data-theme="sepia"] { --accent: #704510; }
+html[data-occasion][data-theme="dark"]:not([data-contrast="high"]) { --muted: #c8c4ba; }
+html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
+
+/* the theme list (More > Appearance > Theme and colours): about five rows show, the rest scroll; the chosen one is highlighted */
+/* the preview: the theme's two colours with its Gospel wordmark on them, as the Search page will look (the whole page behind changes too) */
+.theme-preview.gospel-wordmark { margin: 0.2rem 0 0.7rem; padding: 1rem 0.5rem; border: 1px solid var(--border); border-radius: 0.8rem; background: linear-gradient(160deg, var(--ph-a, var(--paper)), var(--ph-b, var(--paper))); text-align: center; font-size: 2.2rem; }
+.theme-preview.has-art { font-size: 0; }
+.theme-preview .wordmark-art svg { width: min(12rem, 56vw); }
+.theme-list { position: relative; max-height: 13.4rem; overflow-y: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--raised); margin: 0 0 0.8rem; box-shadow: var(--glow-card, none); }
+.theme-group { margin: 0; padding: 0.45rem 0.9rem 0.25rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--raised); }
+.theme-row { display: flex; align-items: center; gap: 0.75rem; width: 100%; min-height: 2.6rem; padding: 0.3rem 0.9rem; border: 0; border-bottom: 1px solid var(--border); background: none; text-align: left; font-size: 0.97rem; color: var(--text); }
+.theme-row[aria-checked="true"] { background: var(--accent-soft); font-weight: 700; box-shadow: inset 4px 0 0 var(--accent); }
+.theme-chip { flex: none; width: 2.4rem; height: 1.5rem; border-radius: 0.4rem; border: 1px solid var(--border); background: linear-gradient(160deg, var(--ph-a, var(--paper)), var(--ph-b, var(--paper))); }
+
+/* the What's new banner: comes up once above the tab bar, and opens out into everything that is new */
+.whatsnew { position: fixed; left: 0.6rem; right: 0.6rem; bottom: calc(4.1rem + var(--sab)); z-index: 15; max-width: 42rem; margin: 0 auto; padding: 0.65rem 0.9rem 0.75rem; border: 1px solid var(--border); border-radius: 0.9rem; background: var(--raised); box-shadow: var(--glow-card, none), 0 8px 26px rgba(0, 0, 0, 0.28); animation: whatsnew-up 0.4s ease-out; }
+.whatsnew-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.whatsnew-head strong { color: var(--accent); }
+.whatsnew p { margin: 0.35rem 0 0.55rem; font-size: 0.92rem; line-height: 1.4; }
+.whatsnew .actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
+.whatsnew .actions button { min-height: 2.4rem; padding: 0 0.9rem; border: 1px solid var(--border); border-radius: 999px; background: var(--raised); }
+.whatsnew .actions button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
+.whatsnew.all { max-height: 62%; display: flex; flex-direction: column; }
+.whatsnew .whatsnew-list { margin: 0.4rem 0 0.6rem; padding-left: 1.1rem; overflow-y: auto; font-size: 0.9rem; line-height: 1.4; }
+.whatsnew .whatsnew-list li { margin-bottom: 0.45rem; }
+.whatsnew-link { display: block; margin: 0.3rem 0 0.6rem; padding: 0; }
+@keyframes whatsnew-up { from { opacity: 0; transform: translateY(1.2rem); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .whatsnew { animation: none; } }
