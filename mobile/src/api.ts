@@ -306,6 +306,10 @@ export const api = {
   picturesRemove: (kind: "stories" | "kids") => invoke<void>("pictures_remove", { kind }),
   storyPicture: (id: string) => invoke<{ image: string; credit: StoryCredit } | null>("story_picture", { id }),
   kidPicture: (id: string, outline = false) => invoke<string | null>("kid_picture", { id, outline }),
+  /** the additional stories, topics and children's pages fetched earlier (the file's text), or null */
+  extraPagesLoad: () => invoke<string | null>("extra_pages_load"),
+  /** fetches the additional pages from the app's releases; the file's text, and whether it is the one already here */
+  extraPagesFetch: () => invoke<{ text: string; unchanged: boolean }>("extra_pages_fetch"),
   originalWords: (book: string, chapter: number, verse: number) => invoke<[OriginalWord[], string]>("original_words", { book, chapter, verse }),
   topicVerses: (id: number, version: string) => invoke<Hit[]>("topic_verses", { id, version }),
   crossRefs: (version: string, book: string, chapter: number, verse: number) => invoke<Hit[]>("cross_refs", { version, book, chapter, verse }),
@@ -522,8 +526,9 @@ export const phone = {
   /** speaks with the phone's voice (`voice`: one of `voices`, or null for the default); resolves when it has finished, or was stopped */
   speak: (text: string, rate: number, voice: string | null = null) => invoke<{ finished: boolean }>("plugin:phone|speak", { text, rate, voice }),
   voices: () => invoke<{ voices: PhoneVoice[] }>("plugin:phone|voices"),
-  /** a PNG (base64) to the share sheet */
-  shareImage: (name: string, base64: string, text: string | null = null) => invoke<unknown>("plugin:phone|share_image", { name, base64, text }),
+  /** a picture (base64: a PNG, or a JPEG when `mime` is "image/jpeg") to the share sheet, with some text and an e-mail subject */
+  shareImage: (name: string, base64: string, text: string | null = null, mime: "image/png" | "image/jpeg" | null = null, title: string | null = null) =>
+    invoke<unknown>("plugin:phone|share_image", { name, base64, text, mime, title }),
   /** asks where to save a PNG (base64); `saved` is false if the reader cancelled */
   saveImage: (name: string, base64: string) => invoke<{ saved: boolean }>("plugin:phone|save_image", { name, base64 }),
   stopSpeaking: () => invoke<unknown>("plugin:phone|stop_speaking"),

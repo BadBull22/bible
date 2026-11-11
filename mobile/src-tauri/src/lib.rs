@@ -17,6 +17,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 pub mod backgrounds;
 pub mod bibles;
 pub mod db;
+pub mod extra_pages;
 pub mod lan;
 pub mod library;
 pub mod meaning_pack;
@@ -311,6 +312,19 @@ fn story_picture(core: State<Core>, id: String) -> Result<Option<picture_packs::
 #[tauri::command(async)]
 fn kid_picture(core: State<Core>, id: String, outline: bool) -> Result<Option<String>, String> {
     Ok(picture_packs::kid_picture(&core.get()?.dir, &id, outline))
+}
+
+// Additional stories, topics and children's pages (since 3.0.0): one small data file the reader fetches, kept in the data folder, added to the lists.
+/// The additional pages fetched earlier (the file's text), or nothing.
+#[tauri::command(async)]
+fn extra_pages_load(core: State<Core>) -> Result<Option<String>, String> {
+    Ok(extra_pages::load(&core.get()?.dir))
+}
+
+/// Fetches the file from the app's releases; the file is kept only when it passes the check.
+#[tauri::command(async)]
+fn extra_pages_fetch(core: State<Core>) -> Result<extra_pages::Fetched, String> {
+    extra_pages::fetch(&core.get()?.dir)
 }
 
 // The "Original words" download (since 2.9.6): the Greek and Hebrew words of a verse, one by one.
@@ -1042,6 +1056,8 @@ pub fn run() {
             pictures_remove,
             story_picture,
             kid_picture,
+            extra_pages_load,
+            extra_pages_fetch,
             original_status,
             original_install,
             original_remove,
