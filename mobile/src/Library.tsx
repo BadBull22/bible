@@ -5,6 +5,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { api, CatalogItem, CommentaryOn, LibEntry, LibInstalled, LibSection, phone, TocEntry } from "./api";
+import { InstalledFold } from "./Downloads";
+import { commentariesOnVerse } from "./commentaryFor";
 
 const KIND_LABEL: Record<string, string> = { commentary: "Commentaries", dictionary: "Dictionaries", book: "Books", devotional: "Devotionals" };
 const KIND_ONE: Record<string, string> = { commentary: "Commentary", dictionary: "Dictionary", book: "Book", devotional: "Devotional", bible: "Bible" };
@@ -63,6 +65,7 @@ export function Library({ book, chapter, start, onGo, onBibles, ask, say }: Prop
   const [mine, setMine] = useState<LibInstalled[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [foldOpen, setFoldOpen] = useState(false); // the closed "Installed" row: kept as the reader left it while the Library is open
   const load = () =>
     api
       .libraryInstalled()
@@ -127,54 +130,56 @@ export function Library({ book, chapter, start, onGo, onBibles, ask, say }: Prop
         </div>
       )}
       {mine && mine.length === 0 && <p className="hint">Nothing in your library yet.</p>}
-      {KINDS.filter(has).map((k) => (
-        <div key={k}>
-          <h3>{KIND_LABEL[k]}</h3>
-          <ul className="hits plain">
-            {(mine ?? [])
-              .filter((m) => m.kind === k)
-              .map((m) => (
-                <li key={m.name} className="offer">
-                  <div className="hit-head">
-                    <button
-                      className="link lib-open"
-                      onClick={() =>
-                        setView(
-                          k === "book"
-                            ? { at: "book", module: m.name, title: m.title }
-                            : k === "devotional"
-                              ? { at: "devotional", module: m.name, title: m.title }
-                              : k === "dictionary"
-                                ? { at: "dictionary", module: m.name }
-                                : { at: "commentary" },
-                        )
-                      }
-                    >
-                      {m.title}
-                    </button>
-                    <button
-                      className="remove"
-                      aria-label={`Remove ${m.title}`}
-                      onClick={() =>
-                        ask(`Remove ${m.title} from this phone?`, "Remove", () =>
-                          void api
-                            .libraryRemove(m.name)
-                            .then(load)
-                            .catch((e) => setError(String(e))),
-                        )
-                      }
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <p>
-                    {[m.language, m.source === "file" ? "Added from a file" : m.licence].filter(Boolean).join(" · ")}
-                  </p>
-                </li>
-              ))}
-          </ul>
-        </div>
-      ))}
+      <InstalledFold count={(mine ?? []).length} open={foldOpen} onToggle={setFoldOpen}>
+        {KINDS.filter(has).map((k) => (
+          <div key={k}>
+            <h3>{KIND_LABEL[k]}</h3>
+            <ul className="hits plain">
+              {(mine ?? [])
+                .filter((m) => m.kind === k)
+                .map((m) => (
+                  <li key={m.name} className="offer">
+                    <div className="hit-head">
+                      <button
+                        className="link lib-open"
+                        onClick={() =>
+                          setView(
+                            k === "book"
+                              ? { at: "book", module: m.name, title: m.title }
+                              : k === "devotional"
+                                ? { at: "devotional", module: m.name, title: m.title }
+                                : k === "dictionary"
+                                  ? { at: "dictionary", module: m.name }
+                                  : { at: "commentary" },
+                          )
+                        }
+                      >
+                        {m.title}
+                      </button>
+                      <button
+                        className="remove"
+                        aria-label={`Remove ${m.title}`}
+                        onClick={() =>
+                          ask(`Remove ${m.title} from this phone?`, "Remove", () =>
+                            void api
+                              .libraryRemove(m.name)
+                              .then(load)
+                              .catch((e) => setError(String(e))),
+                          )
+                        }
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <p>
+                      {[m.language, m.source === "file" ? "Added from a file" : m.licence].filter(Boolean).join(" · ")}
+                    </p>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ))}
+      </InstalledFold>
       <p className="hint">
         Only add files you have the right to use: many modules shared online are copies of copyrighted books made without permission. Modules bought for e-Sword are locked and
         can't be opened.
@@ -191,6 +196,7 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
   const [english, setEnglish] = useState(true);
   const [busy, setBusy] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
+  const [foldOpen, setFoldOpen] = useState(false);
   const load = (refresh = false) => {
     setError(null);
     api
@@ -209,6 +215,10 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
       (i) => i.kind === kind && !i.questionable && (!english || i.lang === "en" || i.lang.startsWith("en-")) && (!s || `${i.title} ${i.name} ${i.about}`.toLowerCase().includes(s)),
     );
   }, [items, kind, q, english]);
+  // what can still be downloaded first; what is already in the library is in one closed "Installed" row
+  const inLibrary = (i: CatalogItem) => i.installed && !i.note;
+  const have = shown.filter(inLibrary);
+  const todo = shown.filter((i) => !inLibrary(i));
   async function install(i: CatalogItem) {
     setBusy((b) => ({ ...b, [i.name]: 0 }));
     try {
@@ -224,6 +234,27 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
       });
     }
   }
+  const offerRow = (i: CatalogItem) => (
+    <li key={i.name} className="offer">
+      <div className="hit-head">
+        <strong>{i.title}</strong>
+      </div>
+      <p>
+        {[i.language, i.size_kb ? `${Math.max(1, Math.round(i.size_kb / 1024))} MB` : "", i.licence].filter(Boolean).join(" · ")}
+      </p>
+      {i.note ? (
+        <p className="hint">{i.note}</p>
+      ) : i.installed ? (
+        <p className="hint">In your library</p>
+      ) : i.name in busy ? (
+        <p className="hint">{busy[i.name] >= 100 ? "Putting it in place…" : `Downloading… ${busy[i.name]}%`}</p>
+      ) : (
+        <div className="actions">
+          <button onClick={() => void install(i)}>Download</button>
+        </div>
+      )}
+    </li>
+  );
   return (
     <>
       <button className="link back" onClick={onBack}>
@@ -244,29 +275,10 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
       </label>
       {error && <p className="hint status">{error}</p>}
       {!items && !error && <p className="hint">Loading the list from CrossWire…</p>}
-      <ul className="hits plain">
-        {shown.map((i) => (
-          <li key={i.name} className="offer">
-            <div className="hit-head">
-              <strong>{i.title}</strong>
-            </div>
-            <p>
-              {[i.language, i.size_kb ? `${Math.max(1, Math.round(i.size_kb / 1024))} MB` : "", i.licence].filter(Boolean).join(" · ")}
-            </p>
-            {i.note ? (
-              <p className="hint">{i.note}</p>
-            ) : i.installed ? (
-              <p className="hint">In your library</p>
-            ) : i.name in busy ? (
-              <p className="hint">{busy[i.name] >= 100 ? "Putting it in place…" : `Downloading… ${busy[i.name]}%`}</p>
-            ) : (
-              <div className="actions">
-                <button onClick={() => void install(i)}>Download</button>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
+      <InstalledFold count={have.length} open={foldOpen} onToggle={setFoldOpen}>
+        <ul className="hits plain">{have.map(offerRow)}</ul>
+      </InstalledFold>
+      <ul className="hits plain">{todo.map(offerRow)}</ul>
       {items && shown.length === 0 && <p className="hint">Nothing matches.</p>}
       {items && (
         <div className="actions">
@@ -337,6 +349,46 @@ function Commentaries({ book, chapter, onGo, head }: { book: string; chapter: nu
               <LinkedText text={text} onGo={onGo} />
             </div>
           ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+/** What the installed commentaries say on ONE verse (the verse sheet's Commentaries button): the note that speaks on it from each commentary, one
+ * commentary at a time when there are several, and a way to the whole chapter. */
+export function VerseCommentaries({ notes, book, chapter, verse, onGo, onChapter }: { notes: CommentaryOn[]; book: string; chapter: number; verse: number; onGo: Go; onChapter: () => void }) {
+  const { here } = useMemo(() => commentariesOnVerse(notes, verse), [notes, verse]);
+  const [which, setWhich] = useState<string | null>(null);
+  const shown = here.find((c) => c.module === which) ?? here[0];
+  return (
+    <>
+      {here.length > 1 && (
+        <div className="chips">
+          {here.map((c) => (
+            <button key={c.module} className={c.module === shown?.module ? "on" : undefined} onClick={() => setWhich(c.module)}>
+              {c.title}
+            </button>
+          ))}
+        </div>
+      )}
+      {here.length === 0 && (
+        <p className="hint">{notes.length === 0 ? `None of your commentaries has notes on ${book} ${chapter}.` : `None of your commentaries has a note on verse ${verse}.`}</p>
+      )}
+      {shown && (
+        <div className="commentary">
+          {here.length === 1 && <h4>{shown.title}</h4>}
+          {shown.from !== verse && <p className="hint">This note begins at verse {shown.from} and goes on to the next note.</p>}
+          {shown.texts.map((t, i) => (
+            <LinkedText key={i} text={t} onGo={onGo} />
+          ))}
+        </div>
+      )}
+      {notes.length > 0 && (
+        <div className="actions">
+          <button onClick={onChapter}>
+            All notes on {book} {chapter}
+          </button>
         </div>
       )}
     </>

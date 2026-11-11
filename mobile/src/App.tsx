@@ -11,6 +11,7 @@ import {
   colorName,
   CommentaryAbout,
   CommentaryNote,
+  CommentaryOn,
   Counts,
   Hit,
   Mark,
@@ -40,9 +41,10 @@ import { HomeScreen, ThemeSettings, useLook } from "./Theme";
 import { BibleMaps, MapsEntry, resumeMap } from "./BibleMaps";
 import { Authors, AuthorsEntry } from "./Authors";
 import { PictureRows } from "./Pictures";
-import { DownloadRow, LinkRow } from "./Downloads";
+import { LinkRow } from "./Downloads";
+import { OtherLinks } from "./OtherLinks";
 import { useWhatsNew, WhatsNewBanner, WHATS_NEW_VERSION } from "./WhatsNew";
-import { Library } from "./Library";
+import { Library, VerseCommentaries } from "./Library";
 import { VersePicture } from "./VersePicture";
 import { verseForToday } from "./votd";
 import { WordStudy } from "./WordStudy";
@@ -282,6 +284,7 @@ export function App() {
   const [study, setStudy] = useState<null | { kind: "intro"; text: string } | { kind: "notes"; notes: CommentaryNote[] }>(null);
   const [about, setAbout] = useState<CommentaryAbout | null>(null);
   const [showTranslations, setShowTranslations] = useState(false);
+  const [showLinks, setShowLinks] = useState(false); // More > Downloads > Other links
   // the Library: open (on its first page, or on the chapter's commentaries)
   const [library, setLibrary] = useState<null | "home" | "commentary">(null);
   const [hasCommentary, setHasCommentary] = useState(false);
@@ -870,6 +873,7 @@ export function App() {
   useBack(asking != null, () => setAsking(null));
   useBack(study != null, () => setStudy(null));
   useBack(showTranslations, () => setShowTranslations(false));
+  useBack(showLinks, () => setShowLinks(false));
   useBack(library !== null, () => setLibrary(null));
 
   const chosenVerse = chosen != null ? verses.find((v) => v.verse === chosen) : undefined;
@@ -1477,9 +1481,13 @@ export function App() {
               <div className="dl-list">
                 <LinkRow title="Bible translations" note={`${versions.length} on this phone · more languages`} onClick={() => setShowTranslations(true)} />
                 <LinkRow title="Library" note="Commentaries, dictionaries, books" onClick={() => setLibrary("home")} />
-                <DownloadRow title="Advanced search" note="Find verses by meaning" pack={searchUpgrade} />
-                <DownloadRow title="Original words" note="Hebrew and Greek" pack={originalPack} />
-                <PictureRows />
+                <LinkRow title="Other links" note="Where to find e-Sword, MySword and MyBible files" onClick={() => setShowLinks(true)} />
+                <PictureRows
+                  others={[
+                    { key: "search", title: "Advanced search", note: "Find verses by meaning", pack: searchUpgrade },
+                    { key: "original", title: "Original words", note: "Hebrew and Greek", pack: originalPack },
+                  ]}
+                />
               </div>
             </details>
 
@@ -1692,9 +1700,10 @@ export function App() {
           onGo={go}
           onChanged={changed}
           originalPack={originalPack}
-          onLibrary={() => {
+          hasCommentary={hasCommentary}
+          onLibrary={(to) => {
             setChosen(null);
-            setLibrary("home");
+            setLibrary(to === "commentary" ? "commentary" : "home");
           }}
           about={about}
           ask={ask}
@@ -1822,6 +1831,12 @@ export function App() {
         </Sheet>
       )}
 
+      {showLinks && (
+        <Sheet tall onClose={() => setShowLinks(false)}>
+          <OtherLinks fail={fail} />
+        </Sheet>
+      )}
+
       {article && (
         <Sheet tall onClose={() => setArticle(null)}>
           <h3>
@@ -1901,7 +1916,10 @@ interface VerseSheetProps {
   onGo: (book: string, chapter: number, verse: number | null) => void;
   onChanged: () => void;
   originalPack: OriginalPack;
-  onLibrary: () => void;
+  /** is a commentary installed? */
+  hasCommentary: boolean;
+  /** close the sheet and open the Library: on its first page, or on this chapter's commentaries */
+  onLibrary: (to?: "commentary") => void;
   about: CommentaryAbout | null;
   ask: (message: string, yes: string, then: () => void) => void;
   say: (message: string) => void;
@@ -1918,8 +1936,8 @@ const textTags = (text: string) =>
 
 /** Everything that can be done with one verse: mark it, write a note on it, pass it on,
  * hear it, and see what else Scripture says alongside it. */
-function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, onClose, onBookmark, onHighlight, onListen, onGo, onChanged, originalPack, onLibrary, about, ask, say, fail }: VerseSheetProps) {
-  const [view, setView] = useState<"main" | "note" | "refs" | "compare" | "words" | "notes" | "picture" | "tags">("main");
+function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, onClose, onBookmark, onHighlight, onListen, onGo, onChanged, originalPack, hasCommentary, onLibrary, about, ask, say, fail }: VerseSheetProps) {
+  const [view, setView] = useState<"main" | "note" | "refs" | "compare" | "words" | "notes" | "commentaries" | "picture" | "tags">("main");
   const [note, setNote] = useState("");
   const [had, setHad] = useState(false);
   const [noteTags, setNoteTags] = useState("");
@@ -1927,6 +1945,8 @@ function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, o
   const [refs, setRefs] = useState<Hit[] | null>(null);
   const [all, setAll] = useState<[string, string][] | null>(null);
   const [comments, setComments] = useState<CommentaryNote[] | null>(null);
+  // the installed commentaries' notes on this chapter (this verse's are picked from them)
+  const [libComments, setLibComments] = useState<CommentaryOn[] | null>(null);
   const label = `${book} ${chapter}:${verse.verse}`;
   const quoted = `${label} (${version}) — ${verse.text}`;
 
@@ -1947,6 +1967,7 @@ function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, o
     if (view === "refs" && !refs) api.crossRefs(version, book, chapter, verse.verse).then(setRefs).catch(fail);
     if (view === "compare" && !all) api.compare(book, chapter, verse.verse).then(setAll).catch(fail);
     if (view === "notes" && !comments) api.verseNotes(book, chapter, verse.verse).then(setComments).catch(fail);
+    if (view === "commentaries" && hasCommentary && !libComments) api.libraryCommentary(book, chapter).then(setLibComments).catch(() => setLibComments([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
@@ -1996,6 +2017,7 @@ function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, o
             <button onClick={() => setView("note")}>{had ? "Edit note" : "Add a note"}</button>
             <button onClick={() => setView("words")}>Word study</button>
             <button onClick={() => setView("notes")}>Study notes</button>
+            <button onClick={() => setView("commentaries")}>Commentaries</button>
             <button onClick={() => setView("refs")}>Cross-references</button>
             <button onClick={() => setView("compare")}>Compare translations</button>
             <button onClick={onListen}>Listen from here</button>
@@ -2085,6 +2107,19 @@ function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, o
           )}
         </div>
       )}
+      {view === "commentaries" &&
+        (!hasCommentary ? (
+          <>
+            <p className="hint">You have no commentaries yet. Download free ones, or add your own, in the Library.</p>
+            <div className="actions">
+              <button onClick={() => onLibrary()}>Open the Library</button>
+            </div>
+          </>
+        ) : !libComments ? (
+          <p className="hint">Loading…</p>
+        ) : (
+          <VerseCommentaries notes={libComments} book={book} chapter={chapter} verse={verse.verse} onGo={onGo} onChapter={() => onLibrary("commentary")} />
+        ))}
       {view === "picture" && <VersePicture book={book} chapter={chapter} first={verse.verse} last={verse.verse} version={version} text={verse.text} say={say} fail={fail} />}
       {view === "compare" && (
         <ul className="hits plain">
