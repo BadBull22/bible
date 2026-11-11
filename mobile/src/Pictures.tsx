@@ -116,6 +116,52 @@ function caption(c: StoryCredit): string {
   return `${c.title}, ${who}. ${c.licence.replace(/^Public domain artwork; scans by /, "Public domain; scan by ")}. Shown at a smaller file size, otherwise unchanged.`;
 }
 
+/** A drawing (SVG, base64) as a PNG (base64): chat apps and e-mail show a picture file, not a drawing. Null if it cannot be drawn. */
+async function drawingToPng(svg: string, width = 1000): Promise<string | null> {
+  try {
+    const img = new Image();
+    img.src = `data:image/svg+xml;base64,${svg}`;
+    await img.decode();
+    const scale = width / (img.naturalWidth || 800);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = Math.max(1, Math.round((img.naturalHeight || 600) * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png").split(",")[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** The picture of a page as a file for the share sheet (a story's painting, a children's page's colour drawing), with the line that credits it; null when the page has none or its pictures are not downloaded. */
+export interface SharePicture {
+  name: string;
+  base64: string;
+  mime: "image/jpeg" | "image/png";
+  /** the credit line to write with it (the children's drawings are the app's own and need none) */
+  credit: string | null;
+}
+export async function sharePicture(kind: "stories" | "topics" | "children", id: string): Promise<SharePicture | null> {
+  try {
+    if (kind === "stories") {
+      const p = await api.storyPicture(id);
+      return p ? { name: `${id}.jpg`, base64: p.image, mime: "image/jpeg", credit: caption(p.credit) } : null;
+    }
+    if (kind === "children") {
+      const svg = await api.kidPicture(id, false);
+      const png = svg ? await drawingToPng(svg) : null;
+      return png ? { name: `${id}.png`, base64: png, mime: "image/png", credit: null } : null;
+    }
+  } catch {
+    /* no picture: the page is shared without one */
+  }
+  return null;
+}
+
 /** A story's painting or engraving with its credit, when the story pictures are downloaded. */
 export function StoryFigure({ id, title }: { id: string; title: string }) {
   const pack = usePicturePack("stories");

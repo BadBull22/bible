@@ -45,10 +45,10 @@ fn voices<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
     app.state::<Phone<R>>().run("voices", json!({}))
 }
 
-/// Opens the share sheet with a PNG picture (base64).
+/// Opens the share sheet with a picture (base64; a PNG, or a JPEG when `mime` is "image/jpeg"), with some text and an e-mail subject if given.
 #[tauri::command(async)]
-fn share_image<R: Runtime>(app: AppHandle<R>, name: String, base64: String, text: Option<String>) -> Result<Value, String> {
-    app.state::<Phone<R>>().run("shareImage", json!({ "name": name, "base64": base64, "text": text }))
+fn share_image<R: Runtime>(app: AppHandle<R>, name: String, base64: String, text: Option<String>, mime: Option<String>, title: Option<String>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("shareImage", json!({ "name": name, "base64": base64, "text": text, "mime": mime, "title": title }))
 }
 
 /// Asks where to save a PNG picture (base64) and writes it there ({ saved: false } if cancelled).

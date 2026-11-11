@@ -31,6 +31,8 @@ if (read(SEEN_KEY) !== WHATS_NEW_VERSION) write(SEEN_KEY, WHATS_NEW_VERSION);
 /** The notes, the newest first: a short title and one or two plain sentences. */
 export const WHATS_NEW: { title: string; text: string }[] = [
   { title: "Themes", text: "Pick a theme for two colours behind every page and its own Gospel wordmark. In More > Appearance > Theme and colours the list shows each theme at once, so you can judge it before you decide." },
+  { title: "Share a page", text: "Every Bible story, Verses for… page and children's page has a Share button at the bottom: it sends the page, set out as it is here with the Scripture words, and the picture too when you have downloaded the pictures, by WhatsApp, e-mail or anything else your phone offers." },
+  { title: "More stories", text: "\"Fetch additional stories\" at the bottom of each list brings any new stories, Verses for… pages and children's pages added since this version of the app, with no update needed." },
   { title: "Extras", text: "The Plans tab is now Extras: 31 Bible stories, Verses for… pages, pages for children and the Bible maps, the Authors of the Bible and the dictionary, with the reading and the plans below. The scripture inside a story is tappable." },
   { title: "Back to where you were", text: "After following a Bible link from a story, a map or a search result, a Back bar (and the phone's Back button) takes you to the same place again." },
   { title: "A clean Search page", text: "The Gospel wordmark, your search box, Continue reading and your recent searches. The house button clears a search." },
@@ -63,7 +65,7 @@ export function WhatsNewBanner({ mode, showAll, close }: { mode: "banner" | "all
       </div>
       {mode === "banner" ? (
         <>
-          <p>Themes you can preview, Bible stories and maps, better answers in Ask, optional pictures and a tidier More.</p>
+          <p>Themes you can preview, Bible stories and maps you can share, more stories on request, better answers in Ask and a tidier More.</p>
           <div className="actions">
             <button onClick={showAll}>See everything new</button>
             <button className="primary" onClick={close}>

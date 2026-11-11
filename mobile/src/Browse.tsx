@@ -4,13 +4,15 @@
 // Left out on the phone: printing and the activity sheet, the review mode, and the people and places box (the pictures come later, as optional downloads).
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { api, type Verse } from "./api";
+import { api, phone, type Verse } from "./api";
 import { useBack } from "./back";
 import { AGE_BANDS, ageLabel, parseRef, searchEntries, tagCounts, withTag, type BrowseEntry } from "../../src/browse/browseLogic";
-import { CHILDREN, ENTRIES, STORIES, TOPICS, childPage, findBrowse, story, topic } from "../../src/browse/data";
+import { ENTRIES, childPage, findBrowse, story, topic } from "../../src/browse/data";
 import type { BrowseKind, ChildPage, Story, Topic } from "../../src/browse/types";
-import { KidFigure, PictureOffer, StoryFigure } from "./Pictures";
+import { KidFigure, PictureOffer, StoryFigure, sharePicture, usePicturePack, type SharePicture } from "./Pictures";
 import { linkRefs } from "./scriptureLinks";
+import { extraTotal, useExtraPages, useFetchExtras } from "./extraPages";
+import { childShareText, refsOf, storyShareText, topicShareText, type Words } from "./shareText";
 
 export interface BrowseOpen {
   kind: BrowseKind;
@@ -33,7 +35,8 @@ const TABS: { kind: BrowseKind; label: string; hint: string; find: string; empty
   { kind: "children", label: "For children", hint: "Stories told simply, with a memory verse, questions and a thing to try.", find: "Find a page", empty: "No children's page matches that." },
 ];
 const LABEL: Record<BrowseKind, string> = { stories: "Bible stories", topics: "Verses for…", children: "For children" };
-const COUNT: Record<BrowseKind, number> = { stories: STORIES.length, topics: TOPICS.length, children: CHILDREN.length };
+// how many pages each list holds now (the pages that came with the app and any additional ones fetched since)
+const count = (kind: BrowseKind): number => ENTRIES[kind].length;
 
 /** The name of a page, for "Back to David and Goliath". */
 export function pageTitle(kind: BrowseKind, id: string): string | undefined {
@@ -197,6 +200,88 @@ function RefLinks({ refs, actions }: { refs: string[]; actions: Actions }) {
   );
 }
 
+// ---- sharing a page ------------------------------------------------------------------------------------------------------
+/**
+ * The Share button at the bottom of a page: the phone's own share sheet (WhatsApp, e-mail, messages, anything the phone offers) with the page written out
+ * like the page in the app, and the page's picture with it when the pictures are downloaded. The words of each passage are those of the reader's Bible
+ * (the BSB for a children's page), or just the reference when they cannot be found.
+ */
+function ShareBar({ kind, page, version }: { kind: BrowseKind; page: Story | Topic | ChildPage; version: string }) {
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [pic, setPic] = useState<SharePicture | null>(null);
+  // the page's picture, looked for again when the pictures are downloaded (or removed) while the page is open
+  const stories = usePicturePack("stories").installed;
+  const kids = usePicturePack("kids").installed;
+  useEffect(() => {
+    let live = true;
+    setPic(null);
+    void sharePicture(kind, page.id).then((p) => live && setPic(p));
+    return () => {
+      live = false;
+    };
+  }, [kind, page.id, stories, kids]);
+
+  const share = async (withPicture: boolean) => {
+    setBusy(true);
+    setProblem(null);
+    try {
+      const refs = refsOf(page);
+      const code = kind === "children" ? "BSB" : version;
+      const got = await Promise.all(refs.map((r) => passageVerses(r, code)));
+      const words: Words = {};
+      refs.forEach((r, i) => {
+        if (got[i].verses.length > 0) words[r] = { verses: got[i].verses.map((v) => ({ verse: v.verse, text: v.text })), code: got[i].code };
+      });
+      // asked again now, so that a picture downloaded a moment ago is never missed
+      const picture = withPicture ? pic ?? (await sharePicture(kind, page.id)) : null;
+      const options = { pictureCredit: picture?.credit ?? null };
+      const text = kind === "stories" ? storyShareText(page as Story, words, options) : kind === "topics" ? topicShareText(page as Topic, words, options) : childShareText(page as ChildPage, words, options);
+      if (picture) await phone.shareImage(picture.name, picture.base64, text, picture.mime, page.title);
+      else await phone.share(text, page.title);
+    } catch {
+      setProblem("Couldn't open the share sheet. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="browse-share">
+      <button className="primary browse-share-btn" disabled={busy} onClick={() => void share(true)}>
+        {busy ? "Getting it ready…" : "Share"}
+      </button>
+      {pic && (
+        <button className="browse-pill quiet" disabled={busy} onClick={() => void share(false)}>
+          Share without the picture
+        </button>
+      )}
+      {problem && <p className="hint status">{problem}</p>}
+    </div>
+  );
+}
+
+/** At the bottom of a list: fetches the stories, verse pages and children's pages added after this version of the app was made. */
+function FetchExtras() {
+  const extra = useExtraPages();
+  const fetcher = useFetchExtras();
+  const have = extraTotal(extra);
+  return (
+    <div className="browse-fetch">
+      <button className="browse-pill" disabled={fetcher.busy} onClick={() => void fetcher.fetch()}>
+        {fetcher.busy ? "Fetching…" : "Fetch additional stories"}
+      </button>
+      {fetcher.message ? (
+        <p className={fetcher.failed ? "hint status dl-error" : "hint status"} role="status">
+          {fetcher.message}
+        </p>
+      ) : (
+        <p className="hint">{have > 0 ? `${have === 1 ? "1 additional page" : `${have} additional pages`} on this phone, beyond the ones that came with the app.` : "New stories, verse pages and children's pages added since this version of the app."}</p>
+      )}
+    </div>
+  );
+}
+
 // ---- a Bible story --------------------------------------------------------------------------------------------------
 function StoryView({ page, actions }: { page: Story; actions: Actions }) {
   const related = (page.related ?? []).map(story).filter((s): s is Story => !!s);
@@ -278,6 +363,7 @@ function StoryView({ page, actions }: { page: Story; actions: Actions }) {
           <Chips items={topics} kind="topics" actions={actions} />
         </>
       )}
+      <ShareBar kind="stories" page={page} version={actions.version} />
     </article>
   );
 }
@@ -317,6 +403,7 @@ function TopicView({ page, actions }: { page: Topic; actions: Actions }) {
           <Chips items={stories} kind="stories" actions={actions} />
         </>
       )}
+      <ShareBar kind="topics" page={page} version={actions.version} />
     </article>
   );
 }
@@ -376,6 +463,7 @@ function ChildView({ page, actions }: { page: ChildPage; actions: Actions }) {
           </button>
         </p>
       )}
+      <ShareBar kind="children" page={page} version={actions.version} />
     </article>
   );
 }
@@ -413,12 +501,13 @@ function List({ list, onOpen }: { list: BrowseEntry[]; onOpen: (e: BrowseEntry) 
 
 /** The three ways in, as rows of the list at the top of Extras. */
 export function BrowseEntryPoints({ onOpen }: { onOpen: (kind: BrowseKind) => void }) {
+  useExtraPages(); // the counts change when additional pages are fetched
   return (
     <>
       {TABS.map((t) => (
         <button key={t.kind} className="more-row" onClick={() => onOpen(t.kind)}>
           <span className="more-row-title">{t.label}</span>
-          <small>{COUNT[t.kind]}</small>
+          <small>{count(t.kind)}</small>
           <span className="dl-chev" aria-hidden>
             ›
           </span>
@@ -433,14 +522,15 @@ export function BrowseScreen({ open, setOpen, version, backLabel, onJump, onSear
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string | null>(null);
   const [moreTags, setMoreTags] = useState(false);
+  const extra = useExtraPages(); // the lists are changed in place when additional pages are fetched: draw again, and count the subjects again
   const tab = open.kind;
   const info = TABS.find((t) => t.kind === tab)!;
   useBack(true, onClose);
   useBack(!!open.id, () => setOpen({ kind: tab, id: null }));
 
   const entries = ENTRIES[tab];
-  const tags = useMemo(() => tagCounts(entries), [entries]);
-  const shown = useMemo(() => withTag(searchEntries(entries, query), tag), [entries, query, tag]);
+  const tags = useMemo(() => tagCounts(entries), [entries, extra]);
+  const shown = useMemo(() => withTag(searchEntries(entries, query), tag), [entries, query, tag, extra]);
   const actions: Actions = { version, onJump, onSearch, onOpen: (kind, id) => setOpen({ kind, id }) };
   // a page that is not in this version of the app (a link from an older page) says so instead of showing nothing
   const present = open.id ? (tab === "stories" ? story(open.id) : tab === "topics" ? topic(open.id) : childPage(open.id)) : undefined;
@@ -528,6 +618,7 @@ export function BrowseScreen({ open, setOpen, version, backLabel, onJump, onSear
       ) : (
         <List list={shown} onOpen={(e) => setOpen({ kind: e.kind, id: e.id })} />
       )}
+      <FetchExtras />
     </div>
   );
 }
@@ -543,13 +634,14 @@ const SHOWN = 3;
  */
 export function BrowseMatches({ query, also = [], onOpen, onJump }: { query: string; also?: string[]; onOpen: (kind: BrowseKind, id: string) => void; onJump: (book: string, chapter: number, verse: number) => void }) {
   const alsoKey = also.join("|");
+  const extra = useExtraPages();
   const found = useMemo(() => {
     const out = findBrowse(query, 4);
     for (const q of alsoKey ? alsoKey.split("|") : []) {
       for (const e of findBrowse(q, 4)) if (out.length < 4 && !out.some((o) => o.kind === e.kind && o.id === e.id)) out.push(e);
     }
     return out;
-  }, [query, alsoKey]);
+  }, [query, alsoKey, extra]);
   if (found.length === 0) return null;
   // the first subject found, if any: its verses are listed (a subject on which Christians differ lists none, only its page, which carries the neutral box)
   const subject = found.find((e) => e.kind === "topics");

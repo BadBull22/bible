@@ -49,9 +49,13 @@ class SpeakArgs {
 @InvokeArg
 class ImageArgs {
   lateinit var name: String
-  /** the picture, PNG, base64 */
+  /** the picture, base64 (a PNG unless `mime` says otherwise) */
   lateinit var base64: String
   var text: String? = null
+  /** "image/jpeg" for a photograph or painting; PNG when left out */
+  var mime: String? = null
+  /** the subject line of an e-mail */
+  var title: String? = null
 }
 
 @InvokeArg
@@ -238,9 +242,10 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
       file.writeBytes(Base64.decode(args.base64, Base64.DEFAULT))
       val uri = FileProvider.getUriForFile(activity, activity.packageName + ".phone.files", file)
       val send = Intent(Intent.ACTION_SEND).apply {
-        type = "image/png"
+        type = if (args.mime == "image/jpeg") "image/jpeg" else "image/png"
         putExtra(Intent.EXTRA_STREAM, uri)
         args.text?.let { putExtra(Intent.EXTRA_TEXT, it) }
+        args.title?.let { putExtra(Intent.EXTRA_SUBJECT, it) }
         // some apps read the picture only from the clip data
         clipData = ClipData.newRawUri(null, uri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

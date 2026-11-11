@@ -2108,3 +2108,10 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
 .whatsnew-link { display: block; margin: 0.3rem 0 0.6rem; padding: 0; }
 @keyframes whatsnew-up { from { opacity: 0; transform: translateY(1.2rem); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .whatsnew { animation: none; } }
+
+/* sharing a Browse page (the button at the bottom of a story, a verses page or a children's page) and fetching additional pages (the bottom of a list) */
+.browse-share { display: flex; flex-direction: column; align-items: stretch; gap: 0.5rem; margin: 1.4rem 0 0.6rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.browse-share-btn { width: 100%; min-height: 3.1rem; font-size: 1.05rem; font-weight: 600; }
+.browse-share .browse-pill { align-self: center; }
+.browse-fetch { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; margin: 1.2rem 0 0.6rem; padding-top: 1rem; border-top: 1px solid var(--border); text-align: center; }
+.browse-fetch .hint { margin: 0; }
