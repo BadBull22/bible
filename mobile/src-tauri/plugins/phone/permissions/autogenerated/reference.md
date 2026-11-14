@@ -17,6 +17,11 @@ Sharing text or a picture, reading aloud with the phone's voices, saving or open
 - `allow-share-image`
 - `allow-save-image`
 - `allow-install-update`
+- `allow-list-computer-pictures`
+- `allow-read-computer-picture`
+- `allow-save-computer-picture`
+- `allow-share-computer-pictures`
+- `allow-open-computer-file`
 - `allow-share-file`
 - `allow-save-backup-copy`
 - `allow-list-backup-copies`
@@ -105,6 +110,58 @@ Enables the list_backup_copies command without any pre-configured scope.
 <td>
 
 Denies the list_backup_copies command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-list-computer-pictures`
+
+</td>
+<td>
+
+Enables the list_computer_pictures command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-list-computer-pictures`
+
+</td>
+<td>
+
+Denies the list_computer_pictures command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-open-computer-file`
+
+</td>
+<td>
+
+Enables the open_computer_file command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-open-computer-file`
+
+</td>
+<td>
+
+Denies the open_computer_file command without any pre-configured scope.
 
 </td>
 </tr>
@@ -242,6 +299,32 @@ Denies the read_backup_copy command without any pre-configured scope.
 <tr>
 <td>
 
+`phone:allow-read-computer-picture`
+
+</td>
+<td>
+
+Enables the read_computer_picture command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-read-computer-picture`
+
+</td>
+<td>
+
+Denies the read_computer_picture command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `phone:allow-save-backup-copy`
 
 </td>
@@ -261,6 +344,32 @@ Enables the save_backup_copy command without any pre-configured scope.
 <td>
 
 Denies the save_backup_copy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-save-computer-picture`
+
+</td>
+<td>
+
+Enables the save_computer_picture command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-save-computer-picture`
+
+</td>
+<td>
+
+Denies the save_computer_picture command without any pre-configured scope.
 
 </td>
 </tr>
@@ -339,6 +448,32 @@ Enables the share command without any pre-configured scope.
 <td>
 
 Denies the share command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-share-computer-pictures`
+
+</td>
+<td>
+
+Enables the share_computer_pictures command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-share-computer-pictures`
+
+</td>
+<td>
+
+Denies the share_computer_pictures command without any pre-configured scope.
 
 </td>
 </tr>

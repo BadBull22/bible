@@ -517,11 +517,23 @@ export interface SyncReport {
   notes: string[];
 }
 
+/** a picture or video the computer put in the shared folder */
+export interface ComputerFile {
+  id: string;
+  name: string;
+  mime: string;
+  size: number;
+  /** ms */
+  modified: number;
+}
+
 export interface SyncStatus {
   /** the computer paired over the home Wi-Fi, or null */
   computer: string | null;
   /** the chosen folder's name, or null */
   folder: string | null;
+  /** the chosen folder's address, for the phone's folder access */
+  folder_uri: string | null;
   name: string;
   last: SyncReport | null;
   error: string | null;
@@ -562,6 +574,12 @@ export const phone = {
   openLink: (url: string) => invoke<{ opened: boolean }>("plugin:phone|open_link", { url }),
   /** asks for a folder to keep in step through: its uri, or null if cancelled */
   pickFolder: () => invoke<{ uri: string | null; name: string }>("plugin:phone|pick_folder"),
+  /** the pictures and videos the computer put in the shared folder (newest first), one's bytes, save one to the gallery, share some (ids joined with "|"), open one */
+  listComputerPictures: (uri: string) => invoke<{ found: boolean; files: ComputerFile[] }>("plugin:phone|list_computer_pictures", { uri, id: "" }),
+  readComputerPicture: (uri: string, id: string) => invoke<{ base64: string }>("plugin:phone|read_computer_picture", { uri, id }),
+  saveComputerPicture: (uri: string, id: string, name: string, mime: string) => invoke<{ saved: boolean; already: boolean; where: string }>("plugin:phone|save_computer_picture", { uri, id, name, mime }),
+  shareComputerPictures: (uri: string, ids: string[], names: string[], mime: string) => invoke<unknown>("plugin:phone|share_computer_pictures", { uri, id: ids.join("|"), name: names.join("|"), mime }),
+  openComputerFile: (uri: string, id: string, name: string, mime: string) => invoke<unknown>("plugin:phone|open_computer_file", { uri, id, name, mime }),
   /** shares a text file (a backup) through the share sheet */
   shareFile: (name: string, text: string, mime: string | null = null, title: string | null = null) => invoke<unknown>("plugin:phone|share_file", { name, text, mime, title }),
   /** writes a dated automatic backup copy (Documents/Bible Concordance backup) and keeps the newest three */

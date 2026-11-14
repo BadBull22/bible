@@ -150,6 +150,20 @@ export function SyncSettings({ onChanged }: { onChanged: () => void }) {
           <p className="hint keep">
             Keeping in step through <strong>{st.folder}</strong>
           </p>
+          {last ? (
+            last.devices.length > 0 ? (
+              <p className="hint status">
+                Connected. Found in this folder: {last.devices.map((d) => d.name).join(", ")}.
+              </p>
+            ) : (
+              <p className="hint status">
+                The phone can use this folder, but no computer has written to it yet. On the computer choose the same folder (Windows app: Settings &gt; Keep in step &gt; Choose the shared folder) and press Sync now there. Cloud folders reach the phone only after your cloud app has synced them.
+              </p>
+            )
+          ) : (
+            <p className="hint status">Press Sync now to check the folder.</p>
+          )}
+          <p className="hint">Backups and the pictures from the computer (More &gt; Downloads) also use this folder.</p>
           <div className="actions">
             <button onClick={() => void choose()} disabled={working}>
               Another folder
