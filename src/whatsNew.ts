@@ -8,6 +8,17 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: "3.1.0",
+    items: [
+      "Concordance (Reference menu): type a word and see how many times it is used in every book of the Bible, with the Old and New Testament totals. Tap a book to read its verses with the word marked. “And its forms” counts believe, believes, believed and believing together.",
+      "Content Factory (Explore menu): make verse pictures, sets of pictures from several verses (a different look on each) and short videos with music, ready to post. Put your name, a logo or a banner in a header and footer, soften a photo behind the words, and pick text colours that stay easy to read. The pictures and videos are kept in Documents > Bible Concordance > Content Factory.",
+      "Content Factory > Photos: a second set of 331 nature photos and a set of 55 Christian pictures can be downloaded if you want them; you can also add your own photos. The app writes the credit line a photo needs on the picture's footer.",
+      "Content Factory > On my phone: scan a code and your saved pictures and videos open on your phone over your home Wi-Fi, where you can save them to post. Nothing to install, nothing goes through the internet; it is off until you switch it on.",
+      "Settings > Keep in step: you can also put your finished pictures in the shared OneDrive, Google Drive or Dropbox folder, for the phone.",
+      "Your backups (My Study > Export, the weekly automatic backup) now keep the Content Factory's names, logos, header and footer and its Ready to post list, and a backup made on the phone app can be imported.",
+    ],
+  },
+  {
     version: "3.0.0",
     items: [
       "Browse: 31 Bible stories, 22 “Verses for…” pages (for anxiety, fear, hope, joy, love, wisdom, heaven and more) and 20 children's pages to read together, print and colour. Find them from the opening screen and the Explore menu.",
