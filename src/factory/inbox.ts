@@ -31,8 +31,8 @@ export interface Post {
   madeDay: number;
 }
 
-const KEY_POSTS = "factory:inbox:v1";
-const KEY_HISTORY = "factory:history:v1";
+export const KEY_POSTS = "factory:inbox:v1";
+export const KEY_HISTORY = "factory:history:v1";
 
 export function loadPosts(): Post[] {
   try {

@@ -274,8 +274,9 @@ pub fn set_plan_day(state: State<UserDataState>, plan_id: String, day: i64, done
 /// Writes "Bible study notes <date>.md" (readable) and ".json" (a backup that Import can
 /// read back) into Documents\Bible Concordance, then shows the file in Explorer.
 #[tauri::command]
-pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbState>) -> Result<ExportResult, String> {
-    let (backup, stamp) = build_backup(&user, &db)?;
+pub fn export_study(app: AppHandle, user: State<UserDataState>, db: State<DbState>, desktop: Option<serde_json::Value>) -> Result<ExportResult, String> {
+    let (mut backup, stamp) = build_backup(&user, &db)?;
+    backup.desktop = desktop.filter(|d| !d.is_null());
     let dir = app.path().document_dir().map_err(|e| e.to_string())?.join("Bible Concordance");
     let result = userdata::write_export(&dir, &stamp, &backup)?;
     let _ = tauri_plugin_opener::reveal_item_in_dir(&result.markdown_path);
@@ -300,6 +301,7 @@ fn build_backup(user: &UserDataState, db: &DbState) -> Result<(Backup, String), 
             book_bookmarks: userdata::book_bookmarks(&u, None)?,
             sermon_templates: userdata::sermon_templates(&u)?,
             sermon_preachings: userdata::preachings_all(&u)?,
+            desktop: None,
         };
         (b, stamp)
     };
@@ -362,7 +364,7 @@ pub fn auto_backup_folder(app: AppHandle) -> Result<String, String> {
 /// Nothing is written while there is nothing to back up. Only the app's own "Automatic backup ..." files
 /// are ever removed, so a folder shared with other files is safe.
 #[tauri::command(async)]
-pub fn auto_backup(app: AppHandle, user: State<UserDataState>, db: State<DbState>, folder: Option<String>, force: bool) -> Result<AutoBackupResult, String> {
+pub fn auto_backup(app: AppHandle, user: State<UserDataState>, db: State<DbState>, folder: Option<String>, force: bool, desktop: Option<serde_json::Value>) -> Result<AutoBackupResult, String> {
     let dir = match folder.as_deref().map(str::trim).filter(|f| !f.is_empty()) {
         Some(f) => std::path::PathBuf::from(f),
         None => default_auto_backup_folder(&app)?,
@@ -381,8 +383,11 @@ pub fn auto_backup(app: AppHandle, user: State<UserDataState>, db: State<DbState
             return Ok(AutoBackupResult { wrote: false, folder: shown, file: existing.first().map(|p| p.display().to_string()), kept: existing.len() });
         }
     }
-    let (backup, stamp) = build_backup(&user, &db)?;
-    let empty = backup.bookmarks.is_empty()
+    let (mut backup, stamp) = build_backup(&user, &db)?;
+    // the Content Factory's extras make a backup worth writing too (a reader who only made pictures still has work to keep)
+    backup.desktop = desktop.filter(|d| !d.is_null());
+    let empty = backup.desktop.is_none()
+        && backup.bookmarks.is_empty()
         && backup.highlights.is_empty()
         && backup.notes.is_empty()
         && backup.plans.is_empty()

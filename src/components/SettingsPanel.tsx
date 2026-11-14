@@ -14,6 +14,7 @@ import { UpdateSettings } from "./Updates";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
 import { autoBackupOn, backupFolder, setAutoBackupOn, setBackupFolder } from "../autoBackup";
+import { collectDesktopExtras } from "../backupExtras";
 
 const SHARE_TEXT = "Bible Concordance: a free Bible study app for Windows and Android that works offline, with no account and no adverts. https://bible4me.org";
 
@@ -667,7 +668,7 @@ function BackupSettings() {
     setBusy(true);
     setStatus(null);
     try {
-      const r = await api.autoBackup(custom, true);
+      const r = await api.autoBackup(custom, true, collectDesktopExtras());
       setStatus(r.file ? `Backed up: ${r.file}` : "Nothing to back up yet.");
     } catch (e) {
       setStatus(String(e));
@@ -679,7 +680,7 @@ function BackupSettings() {
   return (
     <>
       <p className="search-hint" style={{ display: "block" }}>
-        Your notes, highlights, bookmarks, reading plans and sermons are copied to a file once a week, so they are not lost if this computer breaks or the app is removed. The last eight copies are kept. To get them back, use <strong>My Study &rarr; Import backup</strong>.
+        Your notes, highlights, bookmarks, reading plans and sermons (and the names, logos and posts of the Content Factory) are copied to a file once a week, so they are not lost if this computer breaks or the app is removed. The last eight copies are kept. To get them back, use <strong>My Study &rarr; Import backup</strong>.
       </p>
       <label className="set-check">
         <input

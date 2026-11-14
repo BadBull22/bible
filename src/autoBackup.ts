@@ -2,6 +2,7 @@
 // JSON file that Export writes (and Import reads back), kept in a folder on this computer. The settings are
 // per-viewer conveniences kept in localStorage (with try/catch: storage can be unavailable).
 import { api } from "./api";
+import { collectDesktopExtras } from "./backupExtras";
 
 export const BACKUP_AUTO_KEY = "backup:auto"; // "0" = switched off; anything else (or nothing) = on
 export const BACKUP_FOLDER_KEY = "backup:folder"; // a folder the reader chose; nothing = the default folder
@@ -44,7 +45,7 @@ export function setBackupFolder(folder: string | null) {
 export async function runAutoBackup(): Promise<void> {
   if (!autoBackupOn()) return;
   try {
-    await api.autoBackup(backupFolder(), false);
+    await api.autoBackup(backupFolder(), false, collectDesktopExtras());
   } catch (e) {
     // a convenience: it tries again next time (console warnings go to the app's log)
     console.warn("automatic backup failed:", e);

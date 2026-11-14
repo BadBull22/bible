@@ -17,6 +17,8 @@ interface Props {
   onAskAssistant?: (question: string) => void;
   /** open a Browse page (a story, a "Verses for..." page or a children's page) */
   onOpenBrowse: (kind: BrowseKind, id: string) => void;
+  /** the Concordance: a count for every book (what "Word count" was, and more) */
+  onOpenConcordance: (word: string) => void;
   onClose: () => void;
 }
 
@@ -26,7 +28,7 @@ const MODES: { key: Mode; label: string; placeholder: string }[] = [
   { key: "ask", label: "Ask a question", placeholder: "e.g. how many times is love mentioned in the New Testament?" },
   { key: "topic", label: "Topics & themes", placeholder: "e.g. the sacrifice of bulls, forgiveness, the first crime" },
   { key: "phrase", label: "Exact phrase", placeholder: "e.g. sacrifice of bulls" },
-  { key: "frequency", label: "Word count", placeholder: "e.g. gold" },
+  { key: "frequency", label: "Concordance", placeholder: "e.g. gold" },
   { key: "commentary", label: "Commentaries", placeholder: "e.g. regeneration, the Sabbath" },
 ];
 
@@ -40,7 +42,7 @@ const PHRASE_LIMIT = 100;
 const TOPIC_LIMIT = 50;
 const COMMENTARY_LIMIT = 60;
 
-export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onOpenDictionary, onAskAssistant, onOpenBrowse, onClose }: Props) {
+export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpenCommentary, onOpenDictionary, onAskAssistant, onOpenBrowse, onOpenConcordance, onClose }: Props) {
   const [mode, setMode] = useState<Mode>("ask");
   const [query, setQuery] = useState(initialQuery ?? "");
   const [searchVersion, setSearchVersion] = useState(versionCode === "ENOCH1" ? "BSB" : versionCode);
@@ -157,7 +159,7 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
       <div className="search-controls">
         <div className="mode-toggle" role="tablist" aria-label="Search mode">
           {MODES.map((m) => (
-            <button key={m.key} role="tab" aria-selected={mode === m.key} className={mode === m.key ? "active" : ""} onClick={() => setMode(m.key)}>
+            <button key={m.key} role="tab" aria-selected={mode === m.key} className={mode === m.key ? "active" : ""} onClick={() => (m.key === "frequency" ? onOpenConcordance(query.trim()) : setMode(m.key))} title={m.key === "frequency" ? "How many times a word is used in each book" : undefined}>
               {m.label}
             </button>
           ))}
@@ -291,7 +293,7 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
         <p className="search-hint">
           Topics &amp; themes finds passages by meaning, not just matching words (BSB text only) — a paraphrase like
           "sacrifice of bulls" can surface "burnt offering of bulls" even without shared wording, "Daniel's prayer
-          delayed by 21 days" finds Daniel 10, and misspelt names are put right. Use Exact phrase or Word count when you
+          delayed by 21 days" finds Daniel 10, and misspelt names are put right. Use Exact phrase or the Concordance when you
           need literal matches in a specific translation.
         </p>
       )}

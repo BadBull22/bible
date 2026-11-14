@@ -1081,6 +1081,10 @@ pub struct Backup {
     /// when and where each sermon was preached; absent in backups from before 2.8
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub sermon_preachings: Vec<PreachingBackup>,
+    /// what only the computer's app keeps in its window storage (the Content Factory's names, logos and posts), carried
+    /// as it is and handed back to the screen on Import; the phone's app ignores it, and a phone file has none
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub desktop: Option<serde_json::Value>,
 }
 
 pub const BACKUP_FORMAT: &str = "bible-concordance-study/1";
@@ -1213,6 +1217,8 @@ pub struct ImportResult {
     pub bookmarks: usize,
     pub plans: usize,
     pub sermons: usize,
+    /// the computer-only extras that came with the file (see `Backup::desktop`), for the screen to put back
+    pub desktop: Option<serde_json::Value>,
 }
 
 /// Merge a JSON backup into the current data. Existing notes are only overwritten when the
@@ -1223,7 +1229,7 @@ pub fn import_backup(conn: &mut Connection, json: &str) -> Result<ImportResult, 
         return Err(format!("Unrecognised backup format \"{}\".", b.format));
     }
     let tx = conn.transaction().map_err(err)?;
-    let mut r = ImportResult { notes: 0, highlights: 0, bookmarks: 0, plans: 0, sermons: 0 };
+    let mut r = ImportResult { notes: 0, highlights: 0, bookmarks: 0, plans: 0, sermons: 0, desktop: b.desktop.clone() };
     for k in &b.bookmarks {
         r.bookmarks += tx
             .execute("INSERT OR IGNORE INTO bookmarks (book, chapter, verse, created_at) VALUES (?1,?2,?3,?4)", params![k.book, k.chapter, k.verse, k.created_at])
@@ -1395,6 +1401,36 @@ mod tests {
         let _ = std::fs::remove_dir_all(dir2);
     }
 
+    #[test]
+    fn a_phone_file_with_extra_fields_imports_and_the_computers_extras_travel_with_the_backup() {
+        // what the phone writes: the same study fields plus its own settings and Bible choice, which this app does not know
+        let phone = r#"{
+            "format": "bible-concordance-study/1", "exported_at": "2026-11-14 09:00",
+            "bookmarks": [{"book":"John","chapter":3,"verse":16,"value":"","created_at":"2026-11-01"}],
+            "highlights": [], "notes": [{"book":"Psalms","chapter":23,"verse":1,"value":"The Lord is my shepherd","created_at":"2026-11-02","updated_at":"2026-11-02"}],
+            "plans": [], "reading": [{"book":"John","chapter":3,"read_on":"2026-11-03"}],
+            "settings": {"theme":"dusk","fontSize":19,"fetchedStories":true}, "bible": {"version":"BSB","book":"John"}
+        }"#;
+        let (mut c, dir) = temp_db();
+        let r = import_backup(&mut c, phone).unwrap();
+        assert_eq!((r.bookmarks, r.notes), (1, 1));
+        assert!(r.desktop.is_none(), "a phone file carries nothing for the computer's screens");
+        assert_eq!(reading_all(&c).unwrap().len(), 1);
+
+        // the computer's own extras are written into the file, and handed back when it is imported
+        let extras = serde_json::json!({ "factory": { "settings": { "names": ["Pastor Sam"], "asked": true }, "posts": [{ "id": "p1" }] } });
+        let backup = Backup { format: BACKUP_FORMAT.into(), exported_at: "now".into(), desktop: Some(extras.clone()), ..Default::default() };
+        let json = serde_json::to_string(&backup).unwrap();
+        assert!(json.contains("\"desktop\""));
+        let (mut c2, dir2) = temp_db();
+        assert_eq!(import_backup(&mut c2, &json).unwrap().desktop, Some(extras));
+        // without extras the file has no such field at all, so it is the same file as before
+        let plain = serde_json::to_string(&Backup { format: BACKUP_FORMAT.into(), ..Default::default() }).unwrap();
+        assert!(!plain.contains("desktop"));
+        let _ = std::fs::remove_dir_all(dir);
+        let _ = std::fs::remove_dir_all(dir2);
+    }
+
     fn rand_suffix() -> u128 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
     }
@@ -1478,6 +1514,7 @@ mod tests {
             book_bookmarks: book_bookmarks(&c, None).unwrap(),
             sermon_templates: sermon_templates(&c).unwrap(),
             sermon_preachings: Vec::new(),
+            desktop: None,
         };
         let res = write_export(&dir, &stamp, &backup).unwrap();
         let md = std::fs::read_to_string(&res.markdown_path).unwrap();

@@ -183,7 +183,9 @@ const SECTIONS: Section[] = [
           </li>
           <li>
             <strong>Import backup</strong> reads that .json back in — use it to move your study to another computer. It
-            only adds; nothing you already have is deleted.
+            only adds; nothing you already have is deleted. The file also keeps the Content Factory's names, logos, header
+            and footer and its Ready to post list: on a computer where you have not set the Factory up yet they come back,
+            and on one already set up only the posts you do not have are added. A backup made on the phone can be imported too.
           </li>
         </ul>
       </>
@@ -270,8 +272,8 @@ const SECTIONS: Section[] = [
   },
   {
     id: "search",
-    title: "Search: exact phrase, word count, themes, commentaries",
-    keywords: "search panel phrase exact word count frequency topic theme commentary",
+    title: "Search: exact phrase, the Concordance, themes, commentaries",
+    keywords: "search panel phrase exact word count frequency concordance topic theme commentary",
     body: (
       <ul>
         <li>
@@ -284,12 +286,38 @@ const SECTIONS: Section[] = [
           <strong>Exact phrase</strong> — word-for-word matches in the translation you choose.
         </li>
         <li>
-          <strong>Word count</strong> — how many times a word occurs, and where.
+          <strong>Concordance</strong> — how many times a word occurs in every book of the Bible (see the next entry).
         </li>
         <li>
           <strong>Commentaries</strong> — searches the full text of all nine commentaries.
         </li>
       </ul>
+    ),
+  },
+  {
+    id: "concordance",
+    title: "Concordance: how often a word is used, book by book",
+    keywords: "concordance word count frequency how many times book old testament new testament forms believe believes believed",
+    body: (
+      <>
+        <p>
+          Open <strong>Concordance</strong> from the <em>Reference</em> menu (or the Concordance tab of Search), type a word and press <strong>Count</strong>.
+          You see how many times it is used in every book of the Bible, with the total for the Old Testament and for the New. Books that use the word most are
+          shaded most; books that never use it are greyed.
+        </p>
+        <ul>
+          <li>
+            <strong>Tap a book</strong> (or a Testament) to read its verses, with the word marked. Tap a reference to open it in the reader, and
+            <strong> ‹ All books</strong> to come back.
+          </li>
+          <li>
+            <strong>This word / And its forms</strong> — the second also counts believes, believed, believing and believer together, and lists what it counted.
+          </li>
+          <li>
+            Choose which Bible to count in; a short phrase such as <em>born again</em> works too.
+          </li>
+        </ul>
+      </>
     ),
   },
   {

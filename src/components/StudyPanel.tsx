@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api, BookBookmark, BookInfo, HIGHLIGHT_COLORS, highlightLabel, PlanProgress, StudyItem, StudyLists } from "../api";
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "../readingPlans";
 import { addToBasket, addVersesToBasket } from "../basket";
+import { applyDesktopExtras, collectDesktopExtras } from "../backupExtras";
 import { BasketButton } from "./BasketButton";
 import { CopyButton } from "./CopyButton";
 import { ChevronDownIcon, CloseIcon } from "./icons";
@@ -116,7 +117,7 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
     setError(null);
     setStatus("Exporting…");
     try {
-      const r = await api.exportStudy();
+      const r = await api.exportStudy(collectDesktopExtras());
       setStatus(`Saved ${r.notes} notes, ${r.highlights} highlights and ${r.bookmarks} bookmarks to ${r.markdown_path} (and a .json backup beside it).`);
     } catch (e) {
       setStatus(null);
@@ -130,7 +131,8 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
     reader.onload = async () => {
       try {
         const r = await api.importStudy(String(reader.result ?? ""));
-        setStatus(`Imported ${r.notes} notes, ${r.highlights} highlights, ${r.bookmarks} bookmarks, ${r.plans} reading plans and ${r.sermons} sermons. Nothing already here was deleted.`);
+        const factory = applyDesktopExtras(r.desktop);
+        setStatus(`Imported ${r.notes} notes, ${r.highlights} highlights, ${r.bookmarks} bookmarks, ${r.plans} reading plans and ${r.sermons} sermons. Nothing already here was deleted.${factory ? " " + factory : ""}`);
         reload();
         onPlansChanged();
       } catch (e) {

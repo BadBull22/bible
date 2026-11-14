@@ -275,6 +275,7 @@ pub fn run() {
             commands::strongs_occurrences,
             commands::search_keyword,
             commands::word_frequency,
+            commands::word_concordance,
             commands::cross_references_for,
             commands::get_settings,
             commands::save_api_bible_key,

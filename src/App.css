@@ -10717,3 +10717,142 @@ body.show-body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---------- the Concordance ---------- */
+.cc-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.cc-options select {
+  flex: 1 1 10rem;
+  min-width: 0;
+}
+
+.cc-forms {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.cc-forms button {
+  border: 0;
+  background: var(--paper);
+  color: var(--text);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.cc-forms button.on {
+  background: var(--accent-500);
+  color: var(--navy-900);
+  font-weight: 600;
+}
+
+.cc-formlist {
+  margin: 0.2rem 0 0.4rem;
+  font-size: 0.8rem;
+}
+
+.cc-testament {
+  margin-top: 0.9rem;
+}
+
+.cc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-bottom: 2px solid var(--accent-500);
+  background: none;
+  color: var(--ink-strong);
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.cc-head:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.cc-head span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.cc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.2rem, 1fr));
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+
+.cc-book {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: left;
+  /* the tile is shaded from the left by how busy the book is */
+  background: linear-gradient(to right, var(--accent-100) var(--cc-heat, 0%), var(--paper-raised) var(--cc-heat, 0%));
+}
+
+.cc-book:hover:not(:disabled) {
+  border-color: var(--accent-500);
+}
+
+.cc-book.none {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.cc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.cc-count {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cc-note {
+  margin-top: 0.8rem;
+  font-size: 0.82rem;
+}
+
+.cc-back {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin: 0.4rem 0 0.6rem;
+}
+
+.cc-back .link-btn {
+  font-weight: 600;
+}
+
+.cc-verses mark {
+  background: var(--accent-100);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 0.1em;
+  font-weight: 600;
+}
