@@ -588,6 +588,8 @@ struct SyncStatus {
     computer: Option<String>,
     /// the chosen folder's name, or null when not keeping in step through one
     folder: Option<String>,
+    /// the chosen folder's address (what the phone's folder access needs), or null
+    folder_uri: Option<String>,
     name: String,
     last: Option<bible_core::sync::SyncReport>,
     error: Option<String>,
@@ -598,6 +600,7 @@ fn sync_status_of(conn: &Connection) -> Result<SyncStatus, String> {
     Ok(SyncStatus {
         computer: setting(conn, "lan_token")?.and(setting(conn, "lan_name")?),
         folder: setting(conn, "uri")?.map(|u| setting(conn, "folder_name").ok().flatten().unwrap_or(u)),
+        folder_uri: setting(conn, "uri")?,
         name: setting(conn, "name")?.unwrap_or_else(|| "Phone".into()),
         last: setting(conn, "last")?.and_then(|t| serde_json::from_str(&t).ok()),
         error: setting(conn, "error")?,

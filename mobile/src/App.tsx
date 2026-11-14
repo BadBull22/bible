@@ -47,6 +47,7 @@ import { PictureRows } from "./Pictures";
 import { BackupRestore } from "./Backup";
 import { LinkRow } from "./Downloads";
 import { OtherLinks } from "./OtherLinks";
+import { ComputerPictures } from "./ComputerPictures";
 import { useWhatsNew, WhatsNewBanner, WHATS_NEW_VERSION } from "./WhatsNew";
 import { Library, VerseCommentaries } from "./Library";
 import { VersePicture } from "./VersePicture";
@@ -289,6 +290,7 @@ export function App() {
   const [about, setAbout] = useState<CommentaryAbout | null>(null);
   const [showTranslations, setShowTranslations] = useState(false);
   const [showLinks, setShowLinks] = useState(false); // More > Downloads > Other links
+  const [showComputerPics, setShowComputerPics] = useState(false); // More > Downloads > Pictures from the computer
   // the Library: open (on its first page, or on the chapter's commentaries)
   const [library, setLibrary] = useState<null | "home" | "commentary">(null);
   const [hasCommentary, setHasCommentary] = useState(false);
@@ -951,6 +953,7 @@ export function App() {
   useBack(study != null, () => setStudy(null));
   useBack(showTranslations, () => setShowTranslations(false));
   useBack(showLinks, () => setShowLinks(false));
+  useBack(showComputerPics, () => setShowComputerPics(false));
   useBack(library !== null, () => setLibrary(null));
 
   const chosenVerse = chosen != null ? verses.find((v) => v.verse === chosen) : undefined;
@@ -1559,6 +1562,7 @@ export function App() {
                 <LinkRow title="Bible translations" note={`${versions.length} on this phone · more languages`} onClick={() => setShowTranslations(true)} />
                 <LinkRow title="Library" note="Commentaries, dictionaries, books" onClick={() => setLibrary("home")} />
                 <LinkRow title="Other links" note="Where to find e-Sword, MySword and MyBible files" onClick={() => setShowLinks(true)} />
+                <LinkRow title="Pictures from the computer" note="Made in the Windows app: save and share" onClick={() => setShowComputerPics(true)} />
                 <PictureRows
                   others={[
                     { key: "search", title: "Advanced search", note: "Find verses by meaning", pack: searchUpgrade },
@@ -1910,6 +1914,12 @@ export function App() {
       {showLinks && (
         <Sheet tall onClose={() => setShowLinks(false)}>
           <OtherLinks fail={fail} />
+        </Sheet>
+      )}
+
+      {showComputerPics && (
+        <Sheet tall onClose={() => setShowComputerPics(false)}>
+          <ComputerPictures fail={fail} />
         </Sheet>
       )}
 

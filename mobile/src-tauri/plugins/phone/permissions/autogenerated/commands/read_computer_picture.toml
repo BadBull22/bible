@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-read-computer-picture"
+description = "Enables the read_computer_picture command without any pre-configured scope."
+commands.allow = ["read_computer_picture"]
+
+[[permission]]
+identifier = "deny-read-computer-picture"
+description = "Denies the read_computer_picture command without any pre-configured scope."
+commands.deny = ["read_computer_picture"]

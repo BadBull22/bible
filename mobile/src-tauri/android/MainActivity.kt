@@ -50,6 +50,8 @@ class MainActivity : TauriActivity() {
 
   override fun onWebViewCreate(webView: WebView) {
     page = webView
+    // the side-by-side TEST copy (package ends in .v3test) can be inspected from the PC (chrome://inspect, or a script); the real app never can
+    if (packageName.endsWith(".v3test")) WebView.setWebContentsDebuggingEnabled(true)
     webView.addJavascriptInterface(InsetsBridge(), "AndroidInsets")
   }
 }

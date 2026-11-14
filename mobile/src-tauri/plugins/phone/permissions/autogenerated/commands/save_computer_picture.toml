@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-save-computer-picture"
+description = "Enables the save_computer_picture command without any pre-configured scope."
+commands.allow = ["save_computer_picture"]
+
+[[permission]]
+identifier = "deny-save-computer-picture"
+description = "Denies the save_computer_picture command without any pre-configured scope."
+commands.deny = ["save_computer_picture"]

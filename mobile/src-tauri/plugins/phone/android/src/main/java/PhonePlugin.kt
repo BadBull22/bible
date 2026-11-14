@@ -6,6 +6,7 @@ import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.provider.MediaStore
@@ -98,6 +99,19 @@ class FileArgs {
 class UriArgs {
   lateinit var uri: String
 }
+
+@InvokeArg
+class PicArgs {
+  /** the chosen sync folder (its tree address) */
+  lateinit var uri: String
+  /** the picture's document id (one, or several joined with "|" for `shareComputerPictures`) */
+  lateinit var id: String
+  var name: String = "picture"
+  var mime: String? = null
+}
+
+/** The folder inside the sync folder where the computer puts the pictures and videos it made. */
+const val PICTURES_FOLDER = "pictures"
 
 /** The folder in the phone's Documents that holds the automatic backup copies, and how many dated copies are kept. */
 const val BACKUP_DIR = "Bible Concordance backup"
@@ -297,6 +311,162 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
       }
       activity.startActivity(Intent.createChooser(send, null))
       invoke.resolve(JSObject().put("shared", true))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  // ---------------------------------------------------------------- pictures and videos from the computer
+
+  /** The "pictures" folder inside the sync folder the computer fills (its document id), or null when it is not there yet. */
+  private fun picturesDir(tree: Uri): String? {
+    val sync = syncDir(tree, false) ?: return null
+    return children(tree, sync).firstOrNull { it.second == PICTURES_FOLDER && it.third == DocumentsContract.Document.MIME_TYPE_DIR }?.first
+  }
+
+  private fun safeName(name: String, fallback: String) = name.replace(Regex("[^A-Za-z0-9 ._()-]"), "-").trim().ifBlank { fallback }
+
+  /** One of those files copied into the app's cache (to read it, share it or open it); the file provider may hand it on. */
+  private fun cacheCopy(tree: Uri, id: String, name: String, keepOthers: Boolean): File {
+    val dir = File(activity.cacheDir, "shared").apply { mkdirs() }
+    if (!keepOthers) dir.listFiles()?.forEach { it.delete() }
+    val file = File(dir, safeName(name, "file"))
+    val doc = DocumentsContract.buildDocumentUriUsingTree(tree, id)
+    activity.contentResolver.openInputStream(doc)?.use { input -> file.outputStream().use { input.copyTo(it) } } ?: throw Exception("The file could not be opened.")
+    return file
+  }
+
+  /** The pictures and videos the computer put in the sync folder, newest first (at most 80):
+   * { found, files: [{ id, name, mime, size, modified }] }. `found` is false when the folder has no "pictures" folder yet. */
+  @Command
+  fun listComputerPictures(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(PicArgs::class.java)
+      val tree = Uri.parse(args.uri)
+      val dir = picturesDir(tree)
+      val list = JSArray()
+      if (dir != null) {
+        val cols = arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE, DocumentsContract.Document.COLUMN_SIZE, DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+        val rows = ArrayList<JSObject>()
+        activity.contentResolver.query(DocumentsContract.buildChildDocumentsUriUsingTree(tree, dir), cols, null, null, null)?.use { c ->
+          while (c.moveToNext()) {
+            val name = c.getString(1) ?: continue
+            val mime = c.getString(2) ?: ""
+            if (name.startsWith(".") || !(mime.startsWith("image/") || mime.startsWith("video/"))) continue
+            rows.add(JSObject().put("id", c.getString(0)).put("name", name).put("mime", mime).put("size", if (c.isNull(3)) 0L else c.getLong(3)).put("modified", if (c.isNull(4)) 0L else c.getLong(4)))
+          }
+        }
+        rows.sortByDescending { it.optLong("modified") }
+        rows.take(80).forEach { list.put(it) }
+      }
+      invoke.resolve(JSObject().put("found", dir != null).put("files", list))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** A picture's bytes as base64, to show it (pictures up to 15 MB). */
+  @Command
+  fun readComputerPicture(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(PicArgs::class.java)
+      val doc = DocumentsContract.buildDocumentUriUsingTree(Uri.parse(args.uri), args.id)
+      val bytes = activity.contentResolver.openInputStream(doc)?.use { it.readBytes() } ?: throw Exception("The picture could not be opened.")
+      if (bytes.size > 15 * 1024 * 1024) throw Exception("That picture is too large to show here. Save it instead.")
+      invoke.resolve(JSObject().put("base64", Base64.encodeToString(bytes, Base64.NO_WRAP)))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** Saves a picture or video from the computer in the phone's gallery: Pictures/Bible Concordance or Movies/Bible Concordance (Android 10 and newer,
+   * no permission); on older Android in the app's own folder. { saved, already, where } ("already": a file of that name was saved before). */
+  @Command
+  fun saveComputerPicture(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(PicArgs::class.java)
+      val tree = Uri.parse(args.uri)
+      val name = safeName(args.name, "picture")
+      val video = (args.mime ?: "").startsWith("video/")
+      val src = DocumentsContract.buildDocumentUriUsingTree(tree, args.id)
+      val folder = if (video) "Movies/Bible Concordance" else "Pictures/Bible Concordance"
+      if (Build.VERSION.SDK_INT >= 29) {
+        val resolver = activity.contentResolver
+        val coll = if (video) MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY) else MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        var already = false
+        resolver.query(coll, arrayOf(MediaStore.MediaColumns._ID), MediaStore.MediaColumns.RELATIVE_PATH + " = ? AND " + MediaStore.MediaColumns.DISPLAY_NAME + " = ?", arrayOf("$folder/", name), null)?.use { already = it.moveToFirst() }
+        if (!already) {
+          val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, args.mime ?: if (video) "video/mp4" else "image/png")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, folder)
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+          }
+          val out = resolver.insert(coll, values) ?: throw Exception("The phone would not make the file.")
+          try {
+            resolver.openInputStream(src)?.use { input -> resolver.openOutputStream(out, "w")?.use { input.copyTo(it) } } ?: throw Exception("The file could not be copied.")
+            resolver.update(out, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+          } catch (ex: Exception) {
+            resolver.delete(out, null, null)
+            throw ex
+          }
+        }
+        invoke.resolve(JSObject().put("saved", true).put("already", already).put("where", folder))
+      } else {
+        val dir = File(activity.getExternalFilesDir(if (video) Environment.DIRECTORY_MOVIES else Environment.DIRECTORY_PICTURES) ?: activity.filesDir, "Bible Concordance").apply { mkdirs() }
+        val target = File(dir, name)
+        val already = target.exists()
+        if (!already) activity.contentResolver.openInputStream(src)?.use { input -> target.outputStream().use { input.copyTo(it) } } ?: throw Exception("The file could not be copied.")
+        invoke.resolve(JSObject().put("saved", true).put("already", already).put("where", "the app's own folder"))
+      }
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** Shares one or several of those files through the share sheet (`id`: their ids joined with "|"). */
+  @Command
+  fun shareComputerPictures(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(PicArgs::class.java)
+      val tree = Uri.parse(args.uri)
+      val ids = args.id.split("|").filter { it.isNotBlank() }
+      val names = args.name.split("|")
+      if (ids.isEmpty()) throw Exception("Nothing chosen to share.")
+      val dir = File(activity.cacheDir, "shared").apply { mkdirs() }
+      dir.listFiles()?.forEach { it.delete() }
+      val uris = ArrayList<Uri>()
+      ids.forEachIndexed { i, id ->
+        val f = cacheCopy(tree, id, "${i + 1} " + safeName(names.getOrElse(i) { "picture" }, "picture"), true)
+        uris.add(FileProvider.getUriForFile(activity, activity.packageName + ".phone.files", f))
+      }
+      val mime = args.mime ?: "*/*"
+      val send = Intent(if (uris.size == 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
+        type = mime
+        if (uris.size == 1) putExtra(Intent.EXTRA_STREAM, uris[0]) else putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+        clipData = ClipData.newRawUri(null, uris[0]).also { cd -> uris.drop(1).forEach { cd.addItem(ClipData.Item(it)) } }
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      }
+      activity.startActivity(Intent.createChooser(send, null))
+      invoke.resolve(JSObject().put("shared", true))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** Opens one of those files (a video) in the phone's own viewer or player. */
+  @Command
+  fun openComputerFile(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(PicArgs::class.java)
+      val f = cacheCopy(Uri.parse(args.uri), args.id, args.name, false)
+      val uri = FileProvider.getUriForFile(activity, activity.packageName + ".phone.files", f)
+      val view = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(uri, args.mime ?: "video/mp4")
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      }
+      activity.startActivity(view)
+      invoke.resolve(JSObject().put("opened", true))
     } catch (ex: Exception) {
       invoke.reject(ex.message)
     }
