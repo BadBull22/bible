@@ -4,8 +4,8 @@
 
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { api, phone, type StoryCredit } from "./api";
-import { DownloadRows, type DownloadItem } from "./Downloads";
+import { api, phone, type BackgroundPack, type StoryCredit } from "./api";
+import { DownloadRow, DownloadRows, LinkRow, type DownloadItem, type PackLike } from "./Downloads";
 
 export type PicKind = "stories" | "kids";
 
@@ -98,20 +98,106 @@ export function PictureOffer({ kind }: { kind: PicKind }) {
   );
 }
 
+const photoListeners: Record<BackgroundPack, Set<() => void>> = { nature: new Set(), christian: new Set() };
+
+/** A set of photos to put a verse on (nature or Christian): the same download, progress and remove as the other packs. */
+export function usePhotoPack(pack: BackgroundPack): PackLike & { count: number; latest: number } {
+  const [count, setCount] = useState(0);
+  const [latest, setLatest] = useState(pack === "nature" ? 331 : 55);
+  const [known, setKnown] = useState(false);
+  const [size, setSize] = useState(pack === "nature" ? 36 : 12);
+  const [downloading, setDownloading] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const refresh = () =>
+    api
+      .backgroundsStatus(pack)
+      .then((s) => {
+        setCount(s.count);
+        setLatest(s.latest);
+        setSize(s.size_mb);
+        setKnown(true);
+      })
+      .catch(() => setKnown(true));
+  useEffect(() => {
+    void refresh();
+    photoListeners[pack].add(refresh);
+    return () => void photoListeners[pack].delete(refresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pack]);
+  return {
+    installed: known ? count > 0 : null,
+    size,
+    count,
+    latest,
+    downloading,
+    error,
+    install: async () => {
+      setError(null);
+      setDownloading(0);
+      const un = await listen<number>(pack === "nature" ? "backgrounds-progress" : "backgrounds-progress-christian", (e) => setDownloading(e.payload));
+      try {
+        await api.backgroundsInstall(pack);
+      } catch (e) {
+        setError(String(e));
+      } finally {
+        un();
+        setDownloading(null);
+        photoListeners[pack].forEach((f) => void f());
+      }
+    },
+    remove: async () => {
+      await api.backgroundsRemove(pack);
+      photoListeners[pack].forEach((f) => void f());
+    },
+  };
+}
+
+/** The Pictures screen (More > Downloads > Pictures): every picture set the app can download, in one place, each with what is in it, its size, its progress
+ * and Remove. A download that failed can be tried again with the same button. */
+export function PicturesScreen() {
+  const stories = usePicturePack("stories");
+  const kids = usePicturePack("kids");
+  const nature = usePhotoPack("nature");
+  const christian = usePhotoPack("christian");
+  const have = [stories, kids, nature, christian].filter((p) => p.installed === true).length;
+  return (
+    <>
+      <h3>Pictures</h3>
+      <p className="hint">
+        Optional pictures, downloaded once and kept on the phone, so the app itself stays small. Everything works without them. {have === 0 ? "None are downloaded yet." : `${have} of 4 downloaded.`}
+      </p>
+      <h4 className="row-label">For Bible stories and children's pages</h4>
+      <div className="dl-list">
+        <DownloadRow title="Story pictures" note="31 paintings and engravings, with their credits" pack={stories} />
+        <DownloadRow title="Children's pictures" note="A drawing for each children's page, in colour and as an outline to colour in" pack={kids} />
+      </div>
+      <h4 className="row-label">For verse pictures</h4>
+      <div className="dl-list">
+        <DownloadRow title="Nature photos" note={`${nature.latest} photos: lakes, mountains, the sea, skies, flowers, animals${nature.installed && nature.count < nature.latest ? ` (you have ${nature.count}; the verse picture screen offers the rest)` : ""}`} pack={nature} />
+        <DownloadRow title="Christian pictures" note={`${christian.latest} photos: crosses, prayer, worship, stained glass, the Bible, communion, Christmas`} pack={christian} />
+      </div>
+      <p className="hint">
+        Story and children's pictures are public domain or free to share, with their credit shown under each one. The nature photos are public domain (CC0). The Christian pictures are photographs
+        from Unsplash, used under the Unsplash License. Full credits: bible4me.org/credits.
+      </p>
+    </>
+  );
+}
+
+/** The row of More > Downloads that opens the Pictures screen. */
+export function PicturesRow({ onOpen }: { onOpen: () => void }) {
+  const stories = usePicturePack("stories");
+  const kids = usePicturePack("kids");
+  const nature = usePhotoPack("nature");
+  const christian = usePhotoPack("christian");
+  const have = [stories, kids, nature, christian].filter((p) => p.installed === true).length;
+  return <LinkRow title="Pictures" note={`Story, children's, nature and Christian pictures · ${have} of 4 downloaded`} onClick={onOpen} />;
+}
+
 /** The downloads of More > Downloads: the ones in `others` (Advanced search, Original words) and the two picture packs, the ones not yet on the phone as rows
  * and the ones already there in one closed "Installed" row. */
 export function PictureRows({ others }: { others: DownloadItem[] }) {
-  const stories = usePicturePack("stories");
-  const kids = usePicturePack("kids");
-  return (
-    <DownloadRows
-      items={[
-        ...others,
-        { key: "stories", title: "Story pictures", note: "Paintings for the stories", pack: stories },
-        { key: "kids", title: "Children's pictures", note: "Colour and outline", pack: kids },
-      ]}
-    />
-  );
+  return <DownloadRows items={others} />;
 }
 
 /** The line printed under a story picture: what it shows, who made it, the licence, and that it is shown at a smaller file size. */

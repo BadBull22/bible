@@ -43,7 +43,7 @@ import { BrowseEntryPoints, BrowseMatches, BrowseScreen, listName, pageTitle, ty
 import { HomeScreen, ThemeSettings, useLook } from "./Theme";
 import { BibleMaps, MapsEntry, resumeMap } from "./BibleMaps";
 import { Authors, AuthorsEntry } from "./Authors";
-import { PictureRows } from "./Pictures";
+import { PictureRows, PicturesRow, PicturesScreen } from "./Pictures";
 import { BackupRestore } from "./Backup";
 import { LinkRow } from "./Downloads";
 import { OtherLinks } from "./OtherLinks";
@@ -290,6 +290,7 @@ export function App() {
   const [about, setAbout] = useState<CommentaryAbout | null>(null);
   const [showTranslations, setShowTranslations] = useState(false);
   const [showLinks, setShowLinks] = useState(false); // More > Downloads > Other links
+  const [showPictures, setShowPictures] = useState(false); // More > Downloads > Pictures
   const [showComputerPics, setShowComputerPics] = useState(false); // More > Downloads > Pictures from the computer
   // the Library: open (on its first page, or on the chapter's commentaries)
   const [library, setLibrary] = useState<null | "home" | "commentary">(null);
@@ -953,6 +954,7 @@ export function App() {
   useBack(study != null, () => setStudy(null));
   useBack(showTranslations, () => setShowTranslations(false));
   useBack(showLinks, () => setShowLinks(false));
+  useBack(showPictures, () => setShowPictures(false));
   useBack(showComputerPics, () => setShowComputerPics(false));
   useBack(library !== null, () => setLibrary(null));
 
@@ -1562,6 +1564,7 @@ export function App() {
                 <LinkRow title="Bible translations" note={`${versions.length} on this phone · more languages`} onClick={() => setShowTranslations(true)} />
                 <LinkRow title="Library" note="Commentaries, dictionaries, books" onClick={() => setLibrary("home")} />
                 <LinkRow title="Other links" note="Where to find e-Sword, MySword and MyBible files" onClick={() => setShowLinks(true)} />
+                <PicturesRow onOpen={() => setShowPictures(true)} />
                 <LinkRow title="Pictures from the computer" note="Made in the Windows app: save and share" onClick={() => setShowComputerPics(true)} />
                 <PictureRows
                   others={[
@@ -1914,6 +1917,12 @@ export function App() {
       {showLinks && (
         <Sheet tall onClose={() => setShowLinks(false)}>
           <OtherLinks fail={fail} />
+        </Sheet>
+      )}
+
+      {showPictures && (
+        <Sheet tall onClose={() => setShowPictures(false)}>
+          <PicturesScreen />
         </Sheet>
       )}
 

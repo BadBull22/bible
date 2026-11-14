@@ -351,26 +351,30 @@ fn downloads_a_translation() {
     assert!(bibles::installed(&c).unwrap().is_empty());
 }
 
-/// Downloads the nature backgrounds from the GitHub release: needs the internet, so run it by
+/// Downloads both sets of background photos from the GitHub releases: needs the internet, so run it by
 /// name: `cargo test --test phone downloads_the_backgrounds -- --ignored`.
 #[test]
 #[ignore]
 fn downloads_the_backgrounds() {
     use bible_pocket_lib::backgrounds;
-    let dir = std::env::temp_dir().join("bible-pocket-backgrounds-test");
-    let _ = std::fs::remove_dir_all(&dir);
-    std::fs::create_dir_all(&dir).unwrap();
-    assert_eq!(backgrounds::count(&dir), 0);
-    let n = backgrounds::install(&dir, &|_| {}).unwrap();
-    assert_eq!(n, 100);
-    let thumbs = backgrounds::thumbs(&dir).unwrap();
-    assert_eq!(thumbs.len(), 100);
-    assert!(thumbs.iter().any(|t| t.theme == "sunset") && thumbs.iter().any(|t| t.theme == "sheep"));
-    let (b64, info) = backgrounds::image(&dir, &thumbs[0].id).unwrap();
-    assert!(b64.len() > 20_000 && info.licence == "CC0", "{}", info.licence);
-    assert!(backgrounds::image(&dir, "../x").is_err());
-    backgrounds::remove(&dir).unwrap();
-    assert_eq!(backgrounds::count(&dir), 0);
+    for (pack, want) in [(&backgrounds::NATURE, 331usize), (&backgrounds::CHRISTIAN, 55usize)] {
+        let dir = std::env::temp_dir().join(format!("bible-pocket-backgrounds-test-{}", pack.name));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        assert_eq!(backgrounds::count(&dir, pack), 0);
+        let n = backgrounds::install(&dir, pack, &|_| {}).unwrap();
+        assert_eq!(n, want, "{}", pack.name);
+        let thumbs = backgrounds::thumbs(&dir, pack).unwrap();
+        assert_eq!(thumbs.len(), want);
+        let (b64, info) = backgrounds::image(&dir, pack, &thumbs[0].id).unwrap();
+        assert!(b64.len() > 20_000, "{}", pack.name);
+        assert!(!info.licence.is_empty() && !info.source.is_empty());
+        assert!(backgrounds::image(&dir, pack, "../x").is_err());
+        backgrounds::remove(&dir, pack).unwrap();
+        assert_eq!(backgrounds::count(&dir, pack), 0);
+    }
+    assert!(backgrounds::pack_of(Some("other")).is_err());
+    assert_eq!(backgrounds::pack_of(None).unwrap().name, "nature");
 }
 
 /// What a family question answers with, from the real phone database (no search upgrade needed).
