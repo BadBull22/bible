@@ -494,7 +494,7 @@ const SECTIONS: Section[] = [
           </li>
           <li>
             <strong>Pictures, video, music and links:</strong> <em>+ Picture, video or link</em> adds a picture or any file from your computer
-            (a copy is kept with the app), one of 100 nature photos (downloaded once, about 8 MB), a Bible picture you've downloaded, or a
+            (a copy is kept with the app), one of the 331 nature photos (downloaded once, about 36 MB), a Bible picture you've downloaded, or a
             web link such as a YouTube video or a song. They appear in the printed and Word copy, in Preach (a link or file opens with a
             click) and on the slides.
           </li>
@@ -834,6 +834,102 @@ const SECTIONS: Section[] = [
           If the phone cannot open the page: allow the app on <em>private</em> networks if Windows asks, and note that church or
           guest Wi-Fi often stops devices from seeing each other. Turn on the phone's hotspot and join this computer to it instead.
           Try it once at home, and again in the church before a service.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "content-factory",
+    title: "Content Factory: pictures and videos to post",
+    keywords: "content factory picture pictures video videos post share facebook whatsapp instagram tiktok youtube story reel status social media verse image caption music name logo week series season advent christmas lent passover pentecost harvest mp4 slideshow voice narrate",
+    body: (
+      <>
+        <p>
+          <strong>Explore → Content Factory</strong> makes pictures, picture sets and short videos from the Bible, ready to post. Type a
+          verse (John 3:16, Psalm 23:1-3) in the box at the top, or press <strong>Today's verse</strong> or <strong>This week</strong>, then press
+          <strong> Make</strong>. Your picture stays in view in the middle while you change it. The pictures and a caption
+          are kept in Documents → Bible Concordance → Content Factory. Only Bibles that are free to share are offered for pictures.
+        </p>
+        <p>
+          <strong>The screen:</strong> the <strong>tool bar</strong> (Text, Look, Photos, Sizes, Header, Footer, Video, Post) opens a panel beside the picture, so you
+          see every change at once. Press the open tool again, or the small arrow in the panel, to hide the panel and give the picture all the room. The
+          four little squares at the bottom of the tool bar <strong>move the tool bar</strong> to the left, right, top or bottom (Alt+D moves it on).
+          <strong> Text</strong> changes the words, where they sit and the letters; <strong>Look</strong> picks a style and colours;
+          <strong> Photos</strong> puts a picture behind the words; <strong>Sizes</strong> is where you will post it (Square, Portrait, Story/Reel/Status, Wide);
+          <strong> Header</strong> and <strong>Footer</strong> are set up the same way (see below); <strong>Video</strong> sets the video and its music;
+          <strong> Post</strong> has the caption, Copy and Share and the sites. <strong>Save</strong>, <strong>Copy picture</strong> and
+          <strong> Make video</strong> are always under the picture. The keyboard button at the top lists the shortcuts (Ctrl+S saves, the arrow keys
+          move through a set).
+        </p>
+        <p>
+          <strong>The header and the footer</strong> have the same choices, each in its own tool (Alt+5 and Alt+6): a <strong>picture</strong> (a logo, or a wide banner)
+          and some <strong>text</strong>, a <strong>strip</strong> behind them (none, black, soft or a colour of your own), a <strong>size</strong> and where the text
+          <strong> sits</strong> (left, middle, right). A logo on a plain <strong>white or black background</strong> can have the background taken off: choose the logo and it is
+          done for you (the picture is checked for a plain edge); “Take off the logo's background” turns it on or off, “How much” sets how
+          far from the background colour still counts as background, and “Inside the letters too” also clears the holes in letters. Text on a banner is drawn
+          over it. Each can be switched off without losing its settings, and left off one picture. The <strong>footer bar</strong> is the strip across the
+          bottom of every picture and video: it always holds the credit a photo's licence asks for, <strong>your name</strong> (asked once; you can keep a short
+          list: you, a youth group, a guest speaker, and choose one for each picture) and the small <strong>bible4me.org</strong> (which helps others find the free
+          app; you can change or remove it under “More” in the Footer tool), and whatever you add to it, so none of it sits on the words or the photo. It is a slim
+          black strip unless you choose otherwise. In Story, Reel and TikTok sizes it sits a little higher, so the apps' own buttons do not cover it.
+        </p>
+        <p>
+          <strong>Placing things on the picture:</strong> the words, the header's and footer's logos and the header's and footer's text can be moved by hand.
+          Point at one (a dashed line shows), press and drag; it snaps to the middle lines (a pink line shows), and in Story and Reel sizes a red stripe shows the parts the
+          apps cover. Click it to choose it, then drag a <strong>corner</strong> to make it bigger or smaller (for the words, the letters get bigger or smaller, around the middle
+          of the words; for the header's or footer's text, the letters; for a logo, the logo). With one chosen, the <strong>arrow keys</strong> nudge it (hold Shift for bigger steps),
+          <strong> +</strong> and <strong>−</strong> make it bigger or smaller, and Esc lets go. A logo or text moved like this stands on the picture instead of in the strip. What you do goes to the picture
+          on show only, or to all the pictures of a set (“Changes below go to”). In the Header or Footer tool, <strong>Save header as default</strong> (or
+          <strong> footer</strong>) makes every picture, now and later, have the logo and the text where they are on this one, so a set of pictures looks the same;
+          <strong> Use the default here</strong> gives a picture the default places again, and <strong>Back in the strip</strong> puts them back in the strip. In the Text tool,
+          <strong> Back to the usual place</strong> returns the words, and the size of the words can also be set with the slider (up to two and a half times the size that fits).
+        </p>
+        <p>
+          <strong>Words that stand out from a photo:</strong> a photo is darkened a little by itself (40%, and more toward the bottom). When a photo is behind the words, the
+          <strong> Photo: darken and soften</strong> button above the picture (also in the Look and Photos tools) has <strong>Darken</strong>, <strong>Soften</strong> (blurs the photo so it does not clash
+          with the words) and <strong>Make the words easy to read</strong>, which looks at the part of the photo under the words and sets both for you. <strong>Text colours:</strong> click a text on the
+          picture (the words, the header's text or the footer's text) and use the little palette on the left of the picture: a colour for the words, <strong>Ref</strong> for the reference line,
+          colours taken from the picture itself, <strong>Other…</strong> for any colour, and <strong>Automatic</strong> to let the app choose white or dark. The footer's colour is for all its small texts
+          (your name, the credit, the website); the header's and footer's colours are the same on every picture, the words' colour follows “Changes below go to”.
+        </p>
+        <p>
+          <strong>A set of pictures</strong> (This week, a series, a Bible story) gives each picture its own look by default; in the Look tool choose
+          <strong> The same look on all</strong> if you prefer. <strong>Changes below go to</strong> says whether a change (the letters, the size, a look, a photo) goes to the
+          picture on show only or to all of them, and <strong>A different nature photo on each picture</strong> (Photos tool) puts a different photo behind each.
+        </p>
+        <p>
+          <strong>The shelf along the bottom</strong> keeps what has been made. It is one slim line until you open it (the arrow at its left, or Alt+L).
+          <strong> Ready to post</strong> is the factory working for you: <strong>Make my week</strong> makes a post for each of the next seven days
+          (a verse a day, "Verses for…", a Bible story, a children's memory verse, a Bible fact, the verses of the season), and <strong>More</strong> has
+          "A series for…" (Advent, Christmas, Lent, Resurrection Sunday, Passover, Pentecost, Harvest and more) and what “Make my week” includes.
+          The pictures show as small icons (or a list), and you can show one kind of post or the ones posted or skipped. <strong>Click a picture</strong> to see it large:
+          then <strong>Edit in the studio</strong>, <strong>Copy picture</strong>, <strong>Copy caption</strong>, <strong>Save pictures</strong>, open a site to post on,
+          or mark it <strong>Posted</strong> or <strong>Skip</strong>. <strong> Saved by me</strong> shows the pictures and videos you saved earlier, to share or copy again. <strong>Gallery</strong> (at the top, or
+          “Open in a window” on the shelf) opens everything you saved as little pictures in <strong>a window of its own</strong>, one tile for each project (a week of
+          verses is one tile), which you can move to another screen or close; click a tile to see them large, step through them, and share, copy or open a site to post on.
+          What was made lately is not made again.
+        </p>
+        <p>
+          <strong>Changing a picture:</strong> edit the words, the layout, the letters, the size, the darkening and the colours; in the Photos tool put a picture
+          behind the words: one of the 331 nature photos, one of the 55 Christian pictures (crosses, prayer, worship, stained glass, the Bible, Christmas; each is a small optional
+          download of its own, from Unsplash, free to use), a Bible painting that goes with the passage, a photograph found online (Wikimedia Commons:
+          only public domain, CC0, CC BY and CC BY-SA, with the credit put on the picture for you), or one of your own. <strong>Mine</strong> keeps a folder of your own
+          pictures (Documents → Bible Concordance → Content Factory → My pictures): <strong>Add pictures…</strong> takes photos you downloaded (from Unsplash,
+          Pexels or Pixabay, which allow free use, or any you took yourself) and makes large ones a sensible size; click one to put it behind the words. Check the
+          photo's page says it is free to use, and avoid recognisable faces and anything marked as computer-made.
+        </p>
+        <p>
+          <strong>Videos:</strong> make a video from a picture or a whole set, with a slow zoom and soft fades. Add <strong>soft music</strong> that the app
+          composes itself (six feelings; "Another version" gives a different one), a piece from your <strong>music library</strong> (put your own
+          songs in the "Southern Cross Music" folder and they are credited to the artist automatically; "Get free recordings" adds piano and band
+          recordings that are free to use), or your own music file. Tick <strong>Read the words aloud</strong> and the natural voice reads each picture while the
+          music goes quieter. Not every video needs a voice: pictures and music alone work well.
+        </p>
+        <p>
+          <strong>Posting:</strong> the app never posts by itself and needs no account. After saving, <strong>Share…</strong> opens the Windows Share window
+          (WhatsApp, Mail and more), <strong>Copy file</strong> lets you paste the picture or video into a message or an upload box, and <strong>Copy picture</strong> and
+          <strong> Copy caption</strong> do the same for the picture and its words. Pictures and videos made here can also be used on slides: in the
+          sermon builder or the notices, choose <strong>Add a picture, video, music…</strong> and open the <strong>Content Factory</strong> tab.
         </p>
       </>
     ),

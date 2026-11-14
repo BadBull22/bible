@@ -15,7 +15,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Source = "computer" | "nature" | "bible" | "link";
+type Source = "computer" | "nature" | "christian" | "bible" | "factory" | "link";
 
 type Background = { id: string; theme: string; title: string; author: string; licence: string; source: string };
 
@@ -38,8 +38,8 @@ function useBlobUrl(load: () => Promise<ArrayBuffer>, key: string) {
   return url;
 }
 
-function NatureThumb({ b, onPick }: { b: Background; onPick: () => void }) {
-  const url = useBlobUrl(() => api.sermonBackgroundBytes(b.id, false), b.id);
+function NatureThumb({ b, onPick, pack }: { b: Background; onPick: () => void; pack?: "christian" }) {
+  const url = useBlobUrl(() => api.sermonBackgroundBytes(b.id, false, pack), `${pack ?? "nature"}:${b.id}`);
   return (
     <button className="mp-thumb" onClick={onPick} title={`${b.theme} — ${b.author}`}>
       {url ? <img src={url} alt={b.theme} /> : <span className="picture-thumb-empty" />}
@@ -65,6 +65,14 @@ export function MediaPicker({ only, start, onAdd, onClose }: Props) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nature, setNature] = useState<Background[] | null>(null);
+  // the Christian pictures: a pack of their own, downloaded on request
+  const [christian, setChristian] = useState<Background[] | null>(null);
+  const [chInfo, setChInfo] = useState<[number, number]>([55, 12]);
+  // how many photos the latest pack holds, and its size: an older pack offers the newer one
+  const [latest, setLatest] = useState<[number, number]>([300, 25]);
+  useEffect(() => {
+    api.sermonBackgroundsInfo().then(setLatest).catch(() => undefined);
+  }, []);
   const [progress, setProgress] = useState<number | null>(null);
   const [collections, setCollections] = useState<PictureCollection[]>([]);
   const [collection, setCollection] = useState("");
@@ -77,6 +85,8 @@ export function MediaPicker({ only, start, onAdd, onClose }: Props) {
 
   useEffect(() => {
     api.sermonBackgrounds().then(setNature).catch(() => setNature([]));
+    api.sermonBackgrounds("christian").then(setChristian).catch(() => setChristian([]));
+    api.sermonBackgroundsInfo("christian").then(setChInfo).catch(() => undefined);
     api
       .picturesCollections()
       .then((c) => {
@@ -86,10 +96,12 @@ export function MediaPicker({ only, start, onAdd, onClose }: Props) {
       })
       .catch(() => undefined);
     const un = listen<number>("backgrounds-progress", (e) => setProgress(e.payload));
+    const un2 = listen<number>("christian-progress", (e) => setProgress(e.payload));
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => {
       void un.then((f) => f());
+      void un2.then((f) => f());
       window.removeEventListener("keydown", onKey);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -127,12 +139,36 @@ export function MediaPicker({ only, start, onAdd, onClose }: Props) {
     void run(`Adding ${list.length === 1 ? list[0].name : `${list.length} files`}…`, () => addFiles(list));
   };
 
+  // what the Content Factory has made: pictures, videos and music, to use on a slide
+  const [made, setMade] = useState<{ path: string; name: string; folder: string; size: number; modified: number }[] | null>(null);
+  useEffect(() => {
+    if (source !== "factory" || made) return;
+    api.factoryFiles().then(setMade).catch(() => setMade([]));
+  }, [source, made]);
+  const madeList = (made ?? []).filter((f) => only !== "picture" || f.folder === "Pictures");
+  async function addMade(f: { path: string; name: string }) {
+    await run(`Adding ${f.name}…`, async () => addFiles([new File([await api.factoryFileBytes(f.path)], f.name)]));
+  }
+
   async function downloadNature() {
     setError(null);
     setProgress(0);
     try {
       await api.sermonBackgroundsDownload();
       setNature(await api.sermonBackgrounds());
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setProgress(null);
+    }
+  }
+
+  async function downloadChristian() {
+    setError(null);
+    setProgress(0);
+    try {
+      await api.sermonBackgroundsDownload("christian");
+      setChristian(await api.sermonBackgrounds("christian"));
     } catch (e) {
       setError(String(e));
     } finally {
@@ -147,7 +183,9 @@ export function MediaPicker({ only, start, onAdd, onClose }: Props) {
   const SOURCES: [Source, string][] = [
     ["computer", "From this computer"],
     ["nature", "Nature photos"],
+    ["christian", "Christian pictures"],
     ["bible", "Bible pictures"],
+    ["factory", "Content Factory"],
     ...(only === "picture" ? [] : ([["link", "A web link (YouTube, music…)"]] as [Source, string][])),
   ];
 
@@ -213,12 +251,21 @@ export function MediaPicker({ only, start, onAdd, onClose }: Props) {
               <p className="muted">Loading…</p>
             ) : nature.length === 0 ? (
               <div className="mp-drop">
-                <p>100 photographs of lakes, rivers, mountains, the sea, sunrises, fire and animals — free to use (public domain and CC0, from Wikimedia Commons).</p>
+                <p>{latest[0]} photographs of lakes, rivers, mountains, the sea, skies, forests, flowers, fire and animals — free to use (public domain and CC0, from Wikimedia Commons).</p>
                 <button className="pill-btn" onClick={downloadNature} disabled={progress !== null}>
-                  {progress !== null ? `Downloading… ${progress}%` : "Download them (about 8 MB, once)"}
+                  {progress !== null ? `Downloading… ${progress}%` : `Download them (about ${latest[1]} MB, once)`}
                 </button>
               </div>
             ) : (
+              <>
+                {nature.length < latest[0] && (
+                  <p className="muted">
+                    You have {nature.length} of the {latest[0]} nature photos.{" "}
+                    <button className="link-btn" onClick={downloadNature} disabled={progress !== null}>
+                      {progress !== null ? `Downloading… ${progress}%` : `Get all ${latest[0]} (about ${latest[1]} MB)`}
+                    </button>
+                  </p>
+                )}
               <div className="mp-grid">
                 {nature.map((b) => (
                   <NatureThumb
@@ -229,6 +276,30 @@ export function MediaPicker({ only, start, onAdd, onClose }: Props) {
                         await addBytes(await api.sermonBackgroundBytes(b.id, true), `${b.id}.jpg`, b.theme.charAt(0).toUpperCase() + b.theme.slice(1), `${b.author.replace(/<[^>]+>/g, "")}, ${b.licence}`),
                       ])
                     }
+                  />
+                ))}
+              </div>
+              </>
+            ))}
+
+          {source === "christian" &&
+            (christian === null ? (
+              <p className="muted">Loading…</p>
+            ) : christian.length === 0 ? (
+              <div className="mp-drop">
+                <p>{chInfo[0]} photographs for the church: crosses, prayer, worship, stained glass, the Bible, communion and Christmas. They come from Unsplash and are free to use.</p>
+                <button className="pill-btn" onClick={downloadChristian} disabled={progress !== null}>
+                  {progress !== null ? `Downloading… ${progress}%` : `Download them (about ${chInfo[1]} MB, once)`}
+                </button>
+              </div>
+            ) : (
+              <div className="mp-grid">
+                {christian.map((b) => (
+                  <NatureThumb
+                    key={b.id}
+                    b={b}
+                    pack="christian"
+                    onPick={() => void run("Adding the picture…", async () => [await addBytes(await api.sermonBackgroundBytes(b.id, true, "christian"), `${b.id}.jpg`, b.title, `${b.author}, Unsplash`)])}
                   />
                 ))}
               </div>
@@ -260,6 +331,28 @@ export function MediaPicker({ only, start, onAdd, onClose }: Props) {
                 </div>
                 {more > gallery.length && <p className="muted">The first {gallery.length} of {more}. Find others by passage in Explore → Bible pictures.</p>}
               </>
+            ))}
+
+          {source === "factory" &&
+            (made === null ? (
+              <p className="muted">Loading…</p>
+            ) : madeList.length === 0 ? (
+              <div className="mp-drop">
+                <p>Nothing has been made in the Content Factory yet. Make a picture, a set or a video there (Explore, then Content Factory) and it appears here, to use on a slide.</p>
+              </div>
+            ) : (
+              <ul className="mp-factory">
+                {madeList.map((f) => (
+                  <li key={f.path}>
+                    <span className="mp-factory-kind">{f.folder === "Pictures" ? "Picture" : f.folder === "Videos" ? "Video" : "Music"}</span>
+                    <span className="mp-factory-name">{f.name}</span>
+                    <span className="muted">{new Date(f.modified * 1000).toLocaleDateString()} · {(f.size / 1_000_000).toFixed(1)} MB</span>
+                    <button className="outline-btn" onClick={() => void addMade(f)} disabled={!!busy}>
+                      Add
+                    </button>
+                  </li>
+                ))}
+              </ul>
             ))}
 
           {source === "link" && (

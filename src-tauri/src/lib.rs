@@ -34,6 +34,8 @@ mod study;
 mod themes;
 mod study_commands;
 mod browse_review;
+mod factory;
+mod factory_share;
 mod sync;
 mod update;
 mod userdata;
@@ -361,6 +363,7 @@ pub fn run() {
             sermon_media::sermon_media_open,
             sermon_media::sermon_media_path,
             sermon_media::sermon_backgrounds,
+            sermon_media::sermon_backgrounds_info,
             sermon_media::sermon_background_bytes,
             sermon_media::sermon_backgrounds_download,
             preaching::spurgeon_sermons_titled,
@@ -379,6 +382,20 @@ pub fn run() {
             study_commands::passage_text,
             browse_review::browse_review_load,
             browse_review::browse_review_save,
+            factory::factory_save,
+            factory::factory_reveal,
+            factory::factory_open_folder,
+            factory::factory_library_list,
+            factory::factory_library_read,
+            factory::factory_library_folder,
+            factory::factory_library_download,
+            factory::factory_files,
+            factory::factory_file_bytes,
+            factory::factory_gallery_open,
+            factory::factory_pictures_list,
+            factory::factory_pictures_folder,
+            factory_share::factory_copy_files,
+            factory_share::factory_share,
             study_commands::save_study_sheet,
             study_commands::basket_list,
             study_commands::basket_add,

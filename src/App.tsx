@@ -45,6 +45,7 @@ import { OriginalSearchPanel } from "./components/OriginalSearchPanel";
 import { UpdateBanner } from "./components/Updates";
 import { SermonBuilder } from "./components/SermonBuilder";
 import { ServiceHome } from "./components/ServiceHome";
+import { ContentFactory } from "./components/ContentFactory";
 import { useBasket } from "./basket";
 import { ReadAloudBar } from "./components/ReadAloudBar";
 import { splitSentences } from "./readHighlight";
@@ -115,6 +116,8 @@ const ENOCH_BOOK = "Enoch";
 const SERMON_BUILDER = "@sermon";
 // The Sunday service page (notices, music, sermon) is the same kind of stand-in.
 const SERVICE = "@service";
+// The Content Factory (pictures and videos to post) is the same kind of stand-in.
+const FACTORY = "@factory";
 
 // Resizable layout: sidebar and side-panel widths are per-viewer conveniences kept in
 // localStorage (with try/catch: storage can be unavailable) and clamped to sane bounds.
@@ -940,6 +943,7 @@ function App() {
     { id: "timeline", group: "Explore", label: "Timeline", sub: "Lifespans, events and the Adams chart", icon: <TimelineIcon size={22} />, onOpen: () => setPanel({ kind: "timeline" }) },
     { id: "dictionary", group: "Explore", label: "Dictionary", sub: "Easton, Smith, Nave and Torrey", icon: <DictionaryIcon size={22} />, onOpen: () => setPanel({ kind: "dictionary" }) },
     { id: "pictures", group: "Explore", label: "Pictures", sub: "Paintings and engravings for passages", icon: <PictureIcon size={22} />, onOpen: () => setPanel({ kind: "pictures" }) },
+    { id: "factory", group: "Explore", label: "Content Factory", sub: "Pictures and short videos to post", icon: <PictureIcon size={22} />, onOpen: () => { setSermonOpen(undefined); setReadingBook(FACTORY); } },
     { id: "original", group: "Explore", label: "Hebrew & Greek search", sub: "Search the original words", icon: <InterlinearIcon size={22} />, onOpen: () => setPanel({ kind: "original" }) },
     { id: "settings", group: "App", label: "Settings", sub: "Appearance, reading, voice and backup", icon: <SettingsIcon size={22} />, onOpen: () => setPanel({ kind: "settings" }) },
   ];
@@ -1101,6 +1105,7 @@ function App() {
               { key: "timeline", label: "Timeline", icon: <TimelineIcon size={14} />, onClick: () => setPanel({ kind: "timeline" }) },
               { key: "dictionary", label: "Dictionary", icon: <DictionaryIcon size={14} />, onClick: () => setPanel({ kind: "dictionary" }) },
               { key: "pictures", label: "Pictures", icon: <PictureIcon size={14} />, onClick: () => setPanel({ kind: "pictures" }) },
+              { key: "factory", label: "Content Factory", icon: <PictureIcon size={14} />, onClick: () => { setSermonOpen(undefined); setReadingBook(FACTORY); } },
               { key: "original", label: "Hebrew & Greek search", icon: <InterlinearIcon size={14} />, onClick: () => setPanel({ kind: "original" }) },
             ]}
           />
@@ -1117,7 +1122,7 @@ function App() {
           )}
         </header>
         <div className="app-body" style={panelWidth ? ({ "--panel-width": `${panelWidth}px` } as React.CSSProperties) : undefined}>
-          {sidebarOpen && !focusMode && readingBook !== SERMON_BUILDER && readingBook !== SERVICE && (
+          {sidebarOpen && !focusMode && readingBook !== SERMON_BUILDER && readingBook !== SERVICE && readingBook !== FACTORY && (
             <>
               <Sidebar
                 books={books}
@@ -1144,8 +1149,10 @@ function App() {
           )}
           {/* the frame does not scroll: it carries the theme's background and corner pictures behind the text, which stay in place while the pane inside scrolls */}
           <div className="main-frame" data-reading-theme={readingTheme} data-occasion={readingTheme ? readingLook.screenLook?.slug : undefined}>
-          <main className={"main-pane" + (readingBook === SERMON_BUILDER || readingBook === SERVICE ? " builder-pane" : "")}>
-            {readingBook === SERVICE ? (
+          <main className={"main-pane" + (readingBook === SERMON_BUILDER || readingBook === SERVICE || readingBook === FACTORY ? " builder-pane" : "")}>
+            {readingBook === FACTORY ? (
+              <ContentFactory books={books} versions={versions} chapterCounts={chapterCounts} onClose={() => setReadingBook(null)} />
+            ) : readingBook === SERVICE ? (
               <ServiceHome
                 versions={versions}
                 books={books}

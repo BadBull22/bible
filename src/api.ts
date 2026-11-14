@@ -1178,6 +1178,8 @@ export const api = {
   logPath: () => invoke<string | null>("log_path"),
   openLogFolder: () => invoke<void>("open_log_folder"),
   voiceStatus: () => invoke<VoiceStatus>("voice_status"),
+  /** the natural voice speaks `text`: WAV audio */
+  voiceSpeak: (text: string, voice: string, speed: number) => invoke<ArrayBuffer>("voice_speak", { text, voice, speed }),
   /** progress arrives as "voice-progress" events, "voice-changed" when it's ready */
   voiceDownload: () => invoke<void>("voice_download"),
   voiceCancelDownload: () => invoke<void>("voice_cancel_download"),
@@ -1237,13 +1239,38 @@ export const api = {
   /** keeps a copy of a file for a sermon (its bytes and own name) */
   sermonMediaAdd: (bytes: Uint8Array, fileName: string) =>
     invoke<{ file: string; size: number }>("sermon_media_add", bytes, { headers: { "x-file-name": encodeURIComponent(fileName) } }),
+  /** Content Factory: keeps a picture, video, piece of music or caption in Documents\Bible Concordance\Content Factory\<folder>; returns where it went */
+  factorySave: (bytes: Uint8Array, folder: "Pictures" | "Videos" | "Music" | "Captions" | "My pictures", name: string) =>
+    invoke<string>("factory_save", bytes, { headers: { "x-folder": folder, "x-name": encodeURIComponent(name) } }),
+  factoryReveal: (path: string) => invoke<void>("factory_reveal", { path }),
+  /** puts saved files on the clipboard as files (they paste into WhatsApp Web, an e-mail, an upload box) */
+  factoryCopyFiles: (paths: string[]) => invoke<void>("factory_copy_files", { paths }),
+  /** opens the Windows Share window for saved files */
+  factoryShare: (paths: string[], title: string, text: string) => invoke<void>("factory_share", { paths, title, text }),
+  factoryOpenFolder: () => invoke<string>("factory_open_folder"),
+  /** opens (or brings forward) the gallery of saved pictures and videos in a window of its own */
+  factoryGalleryOpen: () => invoke<void>("factory_gallery_open"),
+  /** the reader's own pictures (Documents\\Bible Concordance\\Content Factory\\My pictures), by name */
+  factoryPicturesList: () => invoke<{ path: string; name: string; size: number; modified: number }[]>("factory_pictures_list"),
+  factoryPicturesFolder: () => invoke<string>("factory_pictures_folder"),
+  /** what the factory has saved (newest first), for the sermon builder and the slides to use */
+  factoryFiles: () => invoke<{ path: string; name: string; folder: "Pictures" | "Videos" | "Music"; size: number; modified: number }[]>("factory_files"),
+  factoryFileBytes: (path: string) => invoke<ArrayBuffer>("factory_file_bytes", { path }),
+  /** the music library folder: the Southern Cross Music songs (credited by themselves), free recordings and the reader's own */
+  factoryLibraryList: () => invoke<{ id: string; title: string; artist: string; credit: string; link: string; group: string }[]>("factory_library_list"),
+  factoryLibraryRead: (id: string) => invoke<ArrayBuffer>("factory_library_read", { id }),
+  factoryLibraryFolder: () => invoke<string>("factory_library_folder"),
+  factoryLibraryDownload: (t: { url: string; file: string; title: string; artist: string; credit: string; link: string }) => invoke<string>("factory_library_download", t),
   sermonMediaBytes: (file: string) => invoke<ArrayBuffer>("sermon_media_bytes", { file }),
   sermonMediaOpen: (file: string) => invoke<void>("sermon_media_open", { file }),
   sermonMediaPath: (file: string) => invoke<string>("sermon_media_path", { file }),
   /** the nature photos, if downloaded */
-  sermonBackgrounds: () => invoke<{ id: string; theme: string; title: string; author: string; licence: string; source: string }[]>("sermon_backgrounds"),
-  sermonBackgroundBytes: (id: string, full: boolean) => invoke<ArrayBuffer>("sermon_background_bytes", { id, full }),
-  sermonBackgroundsDownload: () => invoke<number>("sermon_backgrounds_download"),
+  /** the photos of a pack that has been downloaded: the nature photos, or with `"christian"` the Christian pictures */
+  sermonBackgrounds: (pack?: "christian") => invoke<{ id: string; theme: string; title: string; author: string; licence: string; source: string }[]>("sermon_backgrounds", { pack }),
+  sermonBackgroundBytes: (id: string, full: boolean, pack?: "christian") => invoke<ArrayBuffer>("sermon_background_bytes", { id, full, pack }),
+  sermonBackgroundsDownload: (pack?: "christian") => invoke<number>("sermon_backgrounds_download", { pack }),
+  /** [how many photos the latest pack holds, its size in MB] */
+  sermonBackgroundsInfo: (pack?: "christian") => invoke<[number, number]>("sermon_backgrounds_info", { pack }),
   /** Spurgeon's sermons on a passage (verse 0: the whole chapter) */
   spurgeonSermonsOn: (book: string, chapter: number, verse: number, verseEnd: number) =>
     invoke<SpurgeonSermon[]>("spurgeon_sermons_on", { book, chapter, verse, verseEnd }),

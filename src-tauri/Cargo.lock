@@ -332,6 +332,8 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "unicode-normalization",
+ "windows",
+ "windows-collections",
  "zip 8.6.0",
 ]
 

@@ -10684,3 +10684,36 @@ body.show-body {
   font-size: 0.82rem;
   color: var(--text-muted);
 }
+
+/* the media picker's "Content Factory" tab: what the factory made, one line each */
+.mp-factory {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mp-factory li {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr auto auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.mp-factory-kind {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.mp-factory-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
