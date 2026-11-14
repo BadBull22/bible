@@ -185,14 +185,14 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
   const [mode, setMode] = useState<"colour" | "nature">("colour");
   const [look, setLook] = useState(0);
   // nature photos: how many are downloaded, the small pictures, the one chosen
-  const [status, setStatus] = useState<{ count: number; size_mb: number } | null>(null);
+  const [status, setStatus] = useState<{ count: number; size_mb: number; latest: number } | null>(null);
   const [thumbs, setThumbs] = useState<BackgroundThumb[] | null>(null);
   const [photo, setPhoto] = useState<{ image: HTMLImageElement; info: BackgroundInfo } | null>(null);
   const [downloading, setDownloading] = useState<number | null>(null);
   const name = `${label.replace(/[^A-Za-z0-9 ]/g, " ").replace(/\s+/g, " ").trim()}.png`;
 
   useEffect(() => {
-    api.backgroundsStatus().then(setStatus).catch(() => setStatus({ count: 0, size_mb: 8 }));
+    api.backgroundsStatus().then(setStatus).catch(() => setStatus({ count: 0, size_mb: 36, latest: 331 }));
     const un = listen<number>("backgrounds-progress", (e) => setDownloading(e.payload));
     return () => {
       void un.then((f) => f());
@@ -237,7 +237,7 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
     setDownloading(0);
     try {
       const n = await api.backgroundsInstall();
-      setStatus((s) => ({ count: n, size_mb: s?.size_mb ?? 6 }));
+      setStatus((s) => ({ count: n, size_mb: s?.size_mb ?? 36, latest: s?.latest ?? 331 }));
       say(`${n} nature backgrounds ready`);
     } catch (e) {
       fail(e);
@@ -288,7 +288,7 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
       {mode === "nature" && status && status.count === 0 && (
         <div className="card">
           <p className="hint">
-            100 nature photos — lakes, mountains, the sea, sunrises, forests, animals — to put a verse on. A one-time download of about {status.size_mb} MB; after that they work
+            {status.latest} nature photos — lakes, mountains, the sea, skies, forests, flowers, animals — to put a verse on. A one-time download of about {status.size_mb} MB; after that they work
             offline.
           </p>
           {downloading == null ? (
@@ -302,6 +302,18 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
       )}
       {mode === "nature" && status && status.count > 0 && (
         <>
+          {status.count < status.latest && (
+            <p className="hint">
+              You have {status.count} of the {status.latest} nature photos.{" "}
+              {downloading == null ? (
+                <button className="link" onClick={() => void download()}>
+                  Get all {status.latest} (about {status.size_mb} MB)
+                </button>
+              ) : (
+                <span>Downloading… {downloading}%</span>
+              )}
+            </p>
+          )}
           <div className="actions">
             <button onClick={random}>🔀 Random photo</button>
           </div>
