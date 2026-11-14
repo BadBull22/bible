@@ -131,6 +131,29 @@ export interface CrossReference {
   votes: number;
 }
 
+/** How many times a word is used in one book (a tile of the Concordance's book grid). */
+export interface ConcordanceBook {
+  book: string;
+  /** "OT" or "NT" */
+  testament: string;
+  order_index: number;
+  verses: number;
+  occurrences: number;
+}
+
+/** The Concordance's answer: a count for every book of the Bible, without the verses. */
+export interface ConcordanceResult {
+  total_occurrences: number;
+  total_verses: number;
+  books: ConcordanceBook[];
+  /** the regular expression that matched, to mark the word in a verse */
+  pattern: string;
+  /** the words looked for, when "and its forms" was chosen */
+  forms: string[];
+  /** the forms that are really in the text, with how many times each (only when "and its forms" was chosen) */
+  found: { word: string; count: number }[];
+}
+
 export interface WordFrequencyResult {
   total_occurrences: number;
   verses: SearchHit[];
@@ -520,6 +543,8 @@ export interface ImportResult {
   bookmarks: number;
   plans: number;
   sermons: number;
+  /** what the computer's own screens kept in the file (the Content Factory), for them to put back */
+  desktop?: unknown;
 }
 
 /** A passage the sermon search found. `why`: core | phrase | words | some | topical. */
@@ -1046,8 +1071,10 @@ export const api = {
   searchKeyword: (version_code: string, query: string, limit: number) =>
     invoke<SearchHit[]>("search_keyword", { versionCode: version_code, query, limit }),
   semanticSearch: (query: string, limit: number) => invoke<SearchHit[]>("semantic_search", { query, limit }),
-  wordFrequency: (version_code: string, word: string, scope: FrequencyScope | null = null) =>
-    invoke<WordFrequencyResult>("word_frequency", { versionCode: version_code, word, scope }),
+  wordFrequency: (version_code: string, word: string, scope: FrequencyScope | null = null, forms = false) =>
+    invoke<WordFrequencyResult>("word_frequency", { versionCode: version_code, word, scope, forms }),
+  /** how many times a word (or a word and its forms) is used in each book */
+  wordConcordance: (version_code: string, word: string, forms = false) => invoke<ConcordanceResult>("word_concordance", { versionCode: version_code, word, forms }),
   crossReferencesFor: (book: string, chapter: number, verse: number) =>
     invoke<CrossReference[]>("cross_references_for", { book, chapter, verse }),
   getSettings: () => invoke<AppSettings>("get_settings"),
@@ -1162,7 +1189,7 @@ export const api = {
   startPlan: (plan_id: string, started_on: string) => invoke<void>("start_plan", { planId: plan_id, startedOn: started_on }),
   stopPlan: (plan_id: string) => invoke<void>("stop_plan", { planId: plan_id }),
   setPlanDay: (plan_id: string, day: number, done: boolean) => invoke<void>("set_plan_day", { planId: plan_id, day, done }),
-  exportStudy: () => invoke<ExportResult>("export_study"),
+  exportStudy: (desktop: unknown = null) => invoke<ExportResult>("export_study", { desktop }),
   importStudy: (json: string) => invoke<ImportResult>("import_study", { json }),
   /** a chapter was read to its end on this day (yyyy-mm-dd) */
   markRead: (book: string, chapter: number, day: string) => invoke<void>("mark_read", { book, chapter, day }),
@@ -1170,7 +1197,7 @@ export const api = {
   /** where automatic backups go when no other folder was chosen */
   autoBackupFolder: () => invoke<string>("auto_backup_folder"),
   /** writes a backup into the folder (the default one when null) unless one from the last week is there; `force` writes one anyway */
-  autoBackup: (folder: string | null, force: boolean) => invoke<AutoBackupResult>("auto_backup", { folder, force }),
+  autoBackup: (folder: string | null, force: boolean, desktop: unknown = null) => invoke<AutoBackupResult>("auto_backup", { folder, force, desktop }),
   /** tells the app the page has started: if it never does, the app says the window did not open */
   appReady: () => invoke<void>("app_ready"),
   /** the last lines of the app's error log */

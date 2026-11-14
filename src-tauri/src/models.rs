@@ -146,6 +146,39 @@ pub struct WordFrequencyResult {
     pub scope_label: Option<String>,
 }
 
+/// How many times a word is used in one book (a row of the Concordance's book grid).
+#[derive(Serialize, Clone)]
+pub struct ConcordanceBook {
+    pub book: String,
+    /// "OT" or "NT"
+    pub testament: String,
+    pub order_index: i64,
+    /// verses of the book that use the word
+    pub verses: i64,
+    /// times the word is used in the book
+    pub occurrences: i64,
+}
+
+/// The Concordance's answer: a count for every book, without the verses (a verse list comes from `word_frequency`, one book at a time).
+#[derive(Serialize, Clone)]
+pub struct ConcordanceResult {
+    pub total_occurrences: i64,
+    pub total_verses: i64,
+    pub books: Vec<ConcordanceBook>,
+    /// the pattern that matched (a regular expression that works the same in the page), so the page can mark the word in a verse
+    pub pattern: String,
+    /// the words that were looked for, when "and its forms" was chosen (believe, believes, believed, believing)
+    pub forms: Vec<String>,
+    /// the forms that are really in the text, with how many times each, the most used first (only when "and its forms" was chosen)
+    pub found: Vec<FormCount>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct FormCount {
+    pub word: String,
+    pub count: i64,
+}
+
 /// An optional restriction on a `word_frequency` query -- `None` (the default, omitted
 /// entirely) searches the whole Bible, matching today's existing behavior exactly.
 #[derive(Serialize, Deserialize, Clone)]

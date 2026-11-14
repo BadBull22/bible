@@ -18,6 +18,7 @@ import { OfflineAiPanel } from "./components/OfflineAiPanel";
 import { ai } from "./offlineAi";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { FirstsPanel } from "./components/FirstsPanel";
+import { ConcordancePanel } from "./components/ConcordancePanel";
 import { CommentaryPanel } from "./components/CommentaryPanel";
 import { EntitiesPanel } from "./components/EntitiesPanel";
 import { ResizeHandle } from "./components/ResizeHandle";
@@ -54,7 +55,7 @@ import { SelectionMenu, SelectionPayload } from "./components/SelectionMenu";
 import { applyPrefs, loadPrefs, ReadingPrefs, savePrefs, watchSystemTheme } from "./readingPrefs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { ShortcutTarget } from "./shortcuts";
-import { SheetIcon, BackIcon, BasketIcon, BookIcon, TagIcon, DictionaryIcon, InterlinearIcon, LibraryIcon, PictureIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
+import { ConcordanceIcon, SheetIcon, BackIcon, BasketIcon, BookIcon, TagIcon, DictionaryIcon, InterlinearIcon, LibraryIcon, PictureIcon, FocusIcon, HomeIcon, MapIcon, MenuIcon, NotebookIcon, PrintIcon, SearchIcon, SettingsIcon, StarIcon, TimelineIcon, TreeIcon, UsersIcon } from "./components/icons";
 import { TopMenu } from "./components/TopMenu";
 import "./App.css";
 
@@ -84,6 +85,7 @@ type SidePanel =
   | { kind: "settings"; focus?: "online" | "appearance" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
+  | { kind: "concordance"; word?: string }
   | { kind: "map"; atlas?: boolean }
   | { kind: "timeline"; focusPersonId?: string }
   // commentary / entities follow the reader's current book+chapter (so paging keeps them in sync)
@@ -934,6 +936,7 @@ function App() {
     { id: "basket", group: "Study", label: "Basket", sub: "Verses and notes you have gathered", icon: <BasketIcon size={22} />, onOpen: () => setPanel({ kind: "basket" }) },
     { id: "library", group: "Study", label: "Library", sub: "Add Bibles, books and maps", icon: <LibraryIcon size={22} />, onOpen: () => setPanel({ kind: "library" }) },
     { id: "entities", group: "Reference", label: "People & Places", sub: "Who and where, with the Bible's own text", icon: <UsersIcon size={22} />, onOpen: () => setPanel({ kind: "entities" }) },
+    { id: "concordance", group: "Reference", label: "Concordance", sub: "How often a word is used, in every book", icon: <ConcordanceIcon size={22} />, onOpen: () => setPanel({ kind: "concordance" }) },
     { id: "firsts", group: "Reference", label: "Firsts & Milestones", sub: "Firsts, facts, promises and prophecies", icon: <StarIcon size={22} />, onOpen: () => setPanel({ kind: "firsts" }) },
     { id: "genealogy", group: "Reference", label: "Genealogies", sub: "Family lines from Adam to Jesus", icon: <TreeIcon size={22} />, onOpen: () => setPanel({ kind: "genealogy" }) },
     { id: "browse-stories", group: "Explore", label: "Bible stories", sub: "Short retellings with the passages to read", icon: <BookIcon size={22} />, onOpen: () => setPanel({ kind: "browse", tab: "stories" }) },
@@ -1089,6 +1092,7 @@ function App() {
             label="Reference"
             icon={<UsersIcon size={15} />}
             items={[
+              { key: "concordance", label: "Concordance", icon: <ConcordanceIcon size={14} />, onClick: () => setPanel({ kind: "concordance" }) },
               { key: "entities", label: "People & Places", icon: <UsersIcon size={14} />, onClick: () => setPanel({ kind: "entities" }) },
               { key: "firsts", label: "Firsts & Milestones", icon: <StarIcon size={14} />, onClick: () => setPanel({ kind: "firsts" }) },
               { key: "genealogy", label: "Genealogies", icon: <TreeIcon size={14} />, onClick: () => setPanel({ kind: "genealogy" }) },
@@ -1327,6 +1331,7 @@ function App() {
               onOpenDictionary={(q) => setPanel({ kind: "dictionary", initialQuery: q })}
               onAskAssistant={aiOn ? (q) => setPanel({ kind: "ai", question: q }) : undefined}
               onOpenBrowse={(kind, id) => setPanel({ kind: "browse", tab: kind, page: id })}
+              onOpenConcordance={(w) => setPanel({ kind: "concordance", word: w })}
               onClose={() => setPanel(null)}
             />
           )}
@@ -1469,6 +1474,7 @@ function App() {
             </Suspense>
           )}
           {panel?.kind === "firsts" && <FirstsPanel onClose={() => setPanel(null)} onJump={jumpTo} />}
+          {panel?.kind === "concordance" && <ConcordancePanel key={panel.word ?? ""} versions={versions} versionCode={versionCode} initialWord={panel.word} onJump={jumpTo} onClose={() => setPanel(null)} />}
           {panel?.kind === "map" && (
             <Suspense fallback={<PanelFallback />}>
               <MapPanel

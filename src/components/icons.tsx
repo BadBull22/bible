@@ -187,6 +187,18 @@ export const TreeIcon = (p: IconProps) => (
   </svg>
 );
 
+/** a list with a count beside each line: the Concordance */
+export const ConcordanceIcon = (p: IconProps) => (
+  <svg {...base(p.size, p.className)}>
+    <path d="M9 6h11" />
+    <path d="M9 12h11" />
+    <path d="M9 18h11" />
+    <path d="M3.5 5.5h2v1h-2z" />
+    <path d="M3.5 11.5h2v1h-2z" />
+    <path d="M3.5 17.5h2v1h-2z" />
+  </svg>
+);
+
 export const StarIcon = (p: IconProps) => (
   <svg {...base(p.size, p.className)}>
     <path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" />

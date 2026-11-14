@@ -451,13 +451,78 @@ fn resolve_book_name(conn: &rusqlite::Connection, raw: &str) -> Result<String, S
     Err(format!("I don't recognize the book \"{}\".", raw.trim()))
 }
 
+/// The ways a word is written, for "this word and its forms": believe, believes, believed, believing, believer(s), also the old -eth and -est;
+/// a word ending in -e loses it before -ing and -ed, one ending in -y turns to -ies and -ied. Plain rules, no word list: a word of three letters or
+/// fewer has no forms (it would find too many things).
+pub fn word_forms(word: &str) -> Vec<String> {
+    let w = word.trim().to_lowercase();
+    if w.chars().count() <= 3 || !w.chars().all(|c| c.is_alphabetic()) {
+        return vec![w];
+    }
+    let mut out = vec![w.clone()];
+    let mut add = |s: String| {
+        if !out.contains(&s) {
+            out.push(s);
+        }
+    };
+    if let Some(stem) = w.strip_suffix('e') {
+        for suf in ["s", "d", "r", "rs", "st", "th"] {
+            add(format!("{w}{suf}"));
+        }
+        for suf in ["ing", "er", "ers", "ed"] {
+            add(format!("{stem}{suf}"));
+        }
+    } else if w.ends_with('y') && !w.chars().rev().nth(1).is_some_and(|c| "aeiou".contains(c)) {
+        // a consonant before the y: cry, cries, cried; (pray, play, obey keep the y and take the plain endings below)
+        let stem = &w[..w.len() - 1];
+        for suf in ["ies", "ied", "ier", "iest", "ying", "yer"] {
+            add(format!("{stem}{suf}"));
+        }
+        add(format!("{w}s"));
+    } else {
+        for suf in ["s", "es", "ed", "ing", "er", "ers", "eth", "est"] {
+            add(format!("{w}{suf}"));
+        }
+        // a short word ending in a vowel and a consonant doubles the consonant: run, running; sin, sinned, sinner
+        let cs: Vec<char> = w.chars().collect();
+        let n = cs.len();
+        if n <= 4 && !"aeiouwxy".contains(cs[n - 1]) && "aeiou".contains(cs[n - 2]) && !"aeiou".contains(cs[n - 3]) {
+            let d = cs[n - 1];
+            for suf in ["ed", "ing", "er", "ers"] {
+                add(format!("{w}{d}{suf}"));
+            }
+        }
+    }
+    out
+}
+
+/// What a search for a word looks for: the full-text query that picks the candidate verses, and the pattern that counts the real matches.
+fn word_matcher(word: &str, forms: bool) -> Result<(String, regex::Regex, String, Vec<String>), String> {
+    let list = if forms { word_forms(word) } else { vec![word.trim().to_string()] };
+    let fts = list.iter().map(|f| format!("\"{}\"", f.replace('"', "\"\""))).collect::<Vec<_>>().join(" OR ");
+    let alt = list.iter().map(|f| regex::escape(f)).collect::<Vec<_>>().join("|");
+    let pattern = if list.len() == 1 { format!(r"\b{alt}\b") } else { format!(r"\b(?:{alt})\b") };
+    let re = RegexBuilder::new(&pattern).case_insensitive(true).build().map_err(|e| e.to_string())?;
+    Ok((fts, re, pattern, if forms { list } else { Vec::new() }))
+}
+
 fn word_frequency_query(
     conn: &rusqlite::Connection,
     version_code: &str,
     word: &str,
     scope: Option<&FrequencyScope>,
 ) -> Result<WordFrequencyResult, String> {
-    let fts_query = format!("\"{}\"", word.replace('"', "\"\""));
+    word_frequency_forms(conn, version_code, word, scope, false)
+}
+
+fn word_frequency_forms(
+    conn: &rusqlite::Connection,
+    version_code: &str,
+    word: &str,
+    scope: Option<&FrequencyScope>,
+    forms: bool,
+) -> Result<WordFrequencyResult, String> {
+    let (fts_query, re, _pattern, _list) = word_matcher(word, forms)?;
     let (testament_filter, book_filter): (Option<&str>, Option<&str>) = match scope {
         None => (None, None),
         Some(FrequencyScope::Testament { testament }) => (Some(testament.as_str()), None),
@@ -484,9 +549,6 @@ fn word_frequency_query(
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
 
-    let pattern = format!(r"\b{}\b", regex::escape(word));
-    let re = RegexBuilder::new(&pattern).case_insensitive(true).build().map_err(|e| e.to_string())?;
-
     let mut total = 0i64;
     let mut verses = Vec::new();
     for hit in candidates {
@@ -505,6 +567,56 @@ fn word_frequency_query(
     Ok(WordFrequencyResult { total_occurrences: total, verses, scope_label })
 }
 
+/// The Concordance: a count for every book of the Bible, for a word or for a word and its forms. No verses (a book's verses come from
+/// `word_frequency` with that book as the scope, when the reader taps it).
+fn concordance_query(conn: &rusqlite::Connection, version_code: &str, word: &str, forms: bool) -> Result<ConcordanceResult, String> {
+    let (fts_query, re, pattern, list) = word_matcher(word, forms)?;
+    let mut books: Vec<ConcordanceBook> = {
+        let mut stmt = conn.prepare("SELECT name, testament, order_index FROM books WHERE testament IN ('OT', 'NT') ORDER BY order_index").map_err(|e| e.to_string())?;
+        let rows = stmt
+            .query_map([], |r| Ok(ConcordanceBook { book: r.get(0)?, testament: r.get(1)?, order_index: r.get(2)?, verses: 0, occurrences: 0 }))
+            .map_err(|e| e.to_string())?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?
+    };
+    let mut stmt = conn
+        .prepare(
+            "SELECT b.name, v.text
+             FROM verses_fts f
+             JOIN verses v ON v.id = f.rowid
+             JOIN versions ver ON v.version_id = ver.id
+             JOIN books b ON v.book_id = b.id
+             WHERE verses_fts MATCH ?1 AND ver.code = ?2",
+        )
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map(params![fts_query, version_code], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
+        .map_err(|e| e.to_string())?;
+    let index: std::collections::HashMap<String, usize> = books.iter().enumerate().map(|(i, b)| (b.book.clone(), i)).collect();
+    let (mut total, mut total_verses) = (0i64, 0i64);
+    let mut found: std::collections::HashMap<String, i64> = std::collections::HashMap::new();
+    for row in rows {
+        let (book, text) = row.map_err(|e| e.to_string())?;
+        let n = re.find_iter(&text).count() as i64;
+        if n == 0 {
+            continue;
+        }
+        if forms {
+            for m in re.find_iter(&text) {
+                *found.entry(m.as_str().to_lowercase()).or_insert(0) += 1;
+            }
+        }
+        if let Some(&i) = index.get(&book) {
+            books[i].occurrences += n;
+            books[i].verses += 1;
+            total += n;
+            total_verses += 1;
+        }
+    }
+    let mut found: Vec<FormCount> = found.into_iter().map(|(word, count)| FormCount { word, count }).collect();
+    found.sort_by(|a, b| b.count.cmp(&a.count).then(a.word.cmp(&b.word)));
+    Ok(ConcordanceResult { total_occurrences: total, total_verses, books, pattern, forms: list, found })
+}
+
 /// "how many times is X used" queries. FTS5 pre-filters candidate verses; the actual
 /// count comes from a case-insensitive word-boundary regex over that smaller set, so
 /// the number is exact rather than an FTS relevance approximation.
@@ -514,9 +626,21 @@ pub fn word_frequency(
     version_code: String,
     word: String,
     scope: Option<FrequencyScope>,
+    forms: Option<bool>,
 ) -> Result<WordFrequencyResult, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
-    word_frequency_query(&conn, &version_code, &word, scope.as_ref())
+    word_frequency_forms(&conn, &version_code, &word, scope.as_ref(), forms.unwrap_or(false))
+}
+
+/// The Concordance: how many times a word (or a word and its forms) is used in each book of the chosen Bible.
+#[tauri::command]
+pub fn word_concordance(state: State<DbState>, version_code: String, word: String, forms: Option<bool>) -> Result<ConcordanceResult, String> {
+    let word = word.trim().to_string();
+    if word.is_empty() {
+        return Err("Type a word.".into());
+    }
+    let conn = state.0.lock().map_err(|e| e.to_string())?;
+    concordance_query(&conn, &version_code, &word, forms.unwrap_or(false))
 }
 
 #[tauri::command]
@@ -1494,3 +1618,69 @@ mod finds_what_the_reader_remembers {
         }
     }
 }
+
+#[cfg(test)]
+mod concordance_tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn the_forms_of_a_word() {
+        let f = word_forms("believe");
+        for want in ["believe", "believes", "believed", "believing", "believer", "believers"] {
+            assert!(f.contains(&want.to_string()), "believe -> {want}: {f:?}");
+        }
+        let f = word_forms("love");
+        for want in ["love", "loves", "loved", "loving", "lover", "lovers"] {
+            assert!(f.contains(&want.to_string()), "love -> {want}");
+        }
+        let f = word_forms("pray");
+        assert!(f.contains(&"prays".to_string()) && f.contains(&"prayed".to_string()) && f.contains(&"praying".to_string()), "pray: {f:?}");
+        let f = word_forms("carry");
+        assert!(f.contains(&"carries".to_string()) && f.contains(&"carried".to_string()) && f.contains(&"carrying".to_string()), "carry: {f:?}");
+        let f = word_forms("stop");
+        assert!(f.contains(&"stopped".to_string()) && f.contains(&"stopping".to_string()) && f.contains(&"stops".to_string()), "stop doubles its p: {f:?}");
+        assert_eq!(word_forms("sin"), vec!["sin".to_string()], "sin is only three letters: no forms");
+        // a word of three letters or fewer has no forms; a phrase with a space neither
+        assert_eq!(word_forms("god"), vec!["god".to_string()]);
+        assert_eq!(word_forms("the lord"), vec!["the lord".to_string()]);
+        assert_eq!(word_forms("  Gold ")[0], "gold");
+        assert!(!word_forms("faith").contains(&"faithly".to_string()), "no invented words");
+    }
+
+    #[test]
+    fn the_concordance_adds_up() {
+        crate::register_sqlite_vec();
+        let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let conn = rusqlite::Connection::open(dir.join("resources/bible.db")).expect("open bible.db");
+        for word in ["gold", "faith", "Jerusalem"] {
+            let c = concordance_query(&conn, "BSB", word, false).unwrap();
+            let f = word_frequency_query(&conn, "BSB", word, None).unwrap();
+            assert_eq!(c.total_occurrences, f.total_occurrences, "{word}: the same count as the word count");
+            assert_eq!(c.total_verses as usize, f.verses.len(), "{word}: the same verses");
+            assert_eq!(c.books.iter().map(|b| b.occurrences).sum::<i64>(), c.total_occurrences, "{word}: the books add up");
+            assert_eq!(c.books.len(), 66, "{word}: every book is listed");
+            assert!(c.books.windows(2).all(|w| w[0].order_index < w[1].order_index), "{word}: in the order of the Bible");
+            assert!(c.total_occurrences > 0, "{word} is in the Bible");
+            // a book's own list agrees with its count
+            let top = c.books.iter().max_by_key(|b| b.occurrences).unwrap();
+            let in_book = word_frequency_query(&conn, "BSB", word, Some(&FrequencyScope::Book { book: top.book.clone() })).unwrap();
+            assert_eq!(in_book.total_occurrences, top.occurrences, "{word} in {}", top.book);
+            assert_eq!(in_book.verses.len() as i64, top.verses);
+        }
+        // the forms find more than the word alone, and the page can mark them with the pattern it is given
+        let one = concordance_query(&conn, "BSB", "believe", false).unwrap();
+        let all = concordance_query(&conn, "BSB", "believe", true).unwrap();
+        assert!(all.total_occurrences * 2 > one.total_occurrences * 3, "believe: {} and its forms {}", one.total_occurrences, all.total_occurrences);
+        assert!(all.forms.contains(&"believing".to_string()) && all.pattern.starts_with(r"\b(?:"));
+        assert!(all.found.iter().any(|f| f.word == "believing") && all.found.iter().all(|f| all.forms.contains(&f.word)), "only forms that are in the text are listed: {:?}", all.found);
+        assert_eq!(all.found.iter().map(|f| f.count).sum::<i64>(), all.total_occurrences);
+        assert!(one.found.is_empty(), "no list without forms");
+        let f = word_frequency_forms(&conn, "BSB", "believe", None, true).unwrap();
+        assert_eq!(f.total_occurrences, all.total_occurrences);
+        // a word that is not there
+        let none = concordance_query(&conn, "BSB", "zzzzqqq", false).unwrap();
+        assert_eq!(none.total_occurrences, 0);
+    }
+}
+

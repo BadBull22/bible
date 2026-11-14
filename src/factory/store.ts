@@ -5,7 +5,8 @@
 import { DEFAULT_RECIPES, type RecipeId } from "./autopilot";
 import { DEFAULT_CUT, FooterSettings, NO_BAND, SITE_MARK, SizeId, type BandConfig, type LogoCut } from "./types";
 
-const KEY = "factory:settings:v1";
+export const SETTINGS_KEY = "factory:settings:v1";
+const KEY = SETTINGS_KEY;
 
 export interface FactorySettings {
   /** the list of names a picture can carry (the first listed with `defaultName`) */
