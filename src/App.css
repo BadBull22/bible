@@ -10639,6 +10639,19 @@ body.show-body {
 .browse-story-picture {
   margin: 0.4rem 0 0.9rem;
 }
+.browse-picture-credit {
+  margin: -0.5rem 0 0.8rem;
+  font-size: 0.72rem;
+}
+.browse-fetch {
+  margin: 1.1rem 0 0.4rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+}
+.browse-fetch p {
+  margin: 0.4rem 0 0;
+  font-size: 0.82rem;
+}
 .browse-story-picture img {
   display: block;
   width: 100%;

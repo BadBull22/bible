@@ -3,6 +3,7 @@ import { AGE_BANDS, ageLabel, flaggedFirst, searchEntries, tagCounts, withTag, B
 import { CHILDREN, ENTRIES, STORIES, TOPICS, childPage, story, topic } from "../browse/data";
 import { REVIEW_ON, reviewKey, reviewedCount, useReviewMarks } from "../browse/review";
 import type { BrowseKind } from "../browse/types";
+import { extraTotal, useExtraPages, useFetchExtras } from "../browse/extraPages";
 import { BrowseActions, ChildView, StoryView, TopicView } from "./BrowsePages";
 import { BackIcon, CloseIcon } from "./icons";
 
@@ -53,9 +54,11 @@ export function BrowsePanel({ initial, versionCode, onJump, onOpenDictionary, on
   const [filter, setFilter] = useState<"all" | "open" | "flagged">("all");
   const [moreTags, setMoreTags] = useState(false);
   const marks = useReviewMarks();
+  // the lists are changed in place when additional pages are fetched: draw again, and count the subjects again
+  const extra = useExtraPages();
 
   const entries = ENTRIES[tab];
-  const tags = useMemo(() => tagCounts(entries), [entries]);
+  const tags = useMemo(() => tagCounts(entries), [entries, extra]);
   const shown = useMemo(() => {
     let list = withTag(searchEntries(entries, query), tag);
     if (REVIEW_ON && filter === "flagged") list = list.filter((e) => e.flagged);
@@ -68,7 +71,7 @@ export function BrowsePanel({ initial, versionCode, onJump, onOpenDictionary, on
     }
     // while reviewing, the pages that need the most care come first
     return REVIEW_ON && !query.trim() ? flaggedFirst(list) : list;
-  }, [entries, query, tag, filter, marks]);
+  }, [entries, query, tag, filter, marks, extra]);
 
   const actions: BrowseActions = {
     versionCode,
@@ -179,9 +182,33 @@ export function BrowsePanel({ initial, versionCode, onJump, onOpenDictionary, on
                 );
               })
             : <List list={shown} onOpen={(e) => setOpen({ kind: e.kind, id: e.id })} />}
+          <FetchExtras />
         </>
       )}
     </aside>
+  );
+}
+
+/** At the bottom of a list: fetches the stories, verse pages and children's pages added after this version of the app was made. */
+function FetchExtras() {
+  const extra = useExtraPages();
+  const fetcher = useFetchExtras();
+  const have = extraTotal(extra);
+  return (
+    <div className="browse-fetch">
+      <button className="outline-btn" disabled={fetcher.busy} onClick={() => void fetcher.fetch()}>
+        {fetcher.busy ? "Fetching…" : "Fetch additional stories"}
+      </button>
+      {fetcher.message ? (
+        <p className={fetcher.failed ? "status-error" : "muted"} role="status">
+          {fetcher.message}
+        </p>
+      ) : (
+        <p className="muted">
+          {have > 0 ? `${have === 1 ? "1 additional page" : `${have} additional pages`} on this computer, beyond the ones that came with the app.` : "New stories, verse pages and children's pages added since this version of the app."}
+        </p>
+      )}
+    </div>
   );
 }
 

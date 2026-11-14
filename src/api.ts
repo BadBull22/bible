@@ -1280,6 +1280,9 @@ export const api = {
   /** opens the Windows Share window for saved files */
   factoryShare: (paths: string[], title: string, text: string) => invoke<void>("factory_share", { paths, title, text }),
   factoryOpenFolder: () => invoke<string>("factory_open_folder"),
+  /** the additional stories, "Verses for..." pages and children's pages: the file kept from an earlier fetch, and the Fetch button */
+  extraPagesLoad: () => invoke<string | null>("extra_pages_load"),
+  extraPagesFetch: () => invoke<{ text: string; unchanged: boolean }>("extra_pages_fetch"),
   /** the pictures and videos on a phone over the home Wi-Fi (a page the computer serves while it is on) */
   factoryPhoneStart: () => invoke<RemoteInfo>("factory_phone_start"),
   factoryPhoneInfo: () => invoke<RemoteInfo | null>("factory_phone_info"),

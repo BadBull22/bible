@@ -30,6 +30,7 @@ import { ReviewPrompt } from "./components/ReviewPrompt";
 import { afterAnswer as afterReviewAnswer, afterShown as afterReviewShown, countOpen, due as reviewDue, load as loadReviewAsk, ReviewAnswer, save as saveReviewAsk } from "./reviewAsk";
 import { WHATS_NEW, WhatsNewEntry, whatsNewFor } from "./whatsNew";
 import { runAutoBackup } from "./autoBackup";
+import { loadExtraPages } from "./browse/extraPages";
 import { todayIso } from "./readingPlans";
 import { getVersion } from "@tauri-apps/api/app";
 import { InterlinearPanel } from "./components/InterlinearPanel";
@@ -779,6 +780,11 @@ function App() {
     const timer = window.setTimeout(() => ReadAloud.warmUpOnce(appVersion), 8000);
     return () => window.clearTimeout(timer);
   }, [showSplash, appVersion]);
+
+  // The additional stories fetched earlier (Browse > Fetch additional stories), added to the lists at start-up.
+  useEffect(() => {
+    void loadExtraPages();
+  }, []);
 
   // A backup of the reader's notes once a week (unless it is switched off in Settings), a while after start-up.
   useEffect(() => {

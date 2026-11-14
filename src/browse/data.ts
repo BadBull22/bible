@@ -73,7 +73,7 @@ export const findBrowse = (query: string, limit = 4): BrowseEntry[] => findNamed
 // ---- additional pages ------------------------------------------------------------------------------------------------
 // The pages above ship inside the app and never change. The phone can add more after them (its "Fetch additional stories" button, mobile/src/extraPages.ts):
 // pages that were already checked, placed after the shipped ones. A page whose id is already used by a shipped page is not added (the shipped one stays).
-// Called again, it replaces the pages added before (a new fetch brings the whole list, a corrected page included). The desktop app never calls it.
+// Called again, it replaces the pages added before (a new fetch brings the whole list, a corrected page included). Both apps call it (src/browse/extraPages.ts, mobile/src/extraPages.ts).
 const SHIPPED = { stories: STORIES.length, topics: TOPICS.length, children: CHILDREN.length };
 
 export interface ExtraBrowsePages {
