@@ -107,6 +107,77 @@ fn marks_of(c: &Connection) -> (Vec<i64>, Vec<(i64, String)>, Vec<i64>) {
     (m.bookmarks, m.highlights, m.notes)
 }
 
+/// A Bible the reader added, as the added-Bibles database holds it (a few verses is enough for a test).
+fn added_bible(code: &str) -> Connection {
+    let more = Connection::open_in_memory().unwrap();
+    bible_pocket_lib::bibles::init(&more).unwrap();
+    more.execute("INSERT INTO bibles (code, name, language, copyright, rtl) VALUES (?1, 'Test Bible', 'English', 'Public domain', 0)", [code]).unwrap();
+    for (b, c, v, t) in [("Genesis", 1, 1, "In the beginning, test."), ("John", 3, 16, "For God so loved the world, test."), ("Psalms", 23, 1, "The Lord is my shepherd, test.")] {
+        more.execute("INSERT INTO verses (code, book, chapter, verse, text) VALUES (?1,?2,?3,?4,?5)", rusqlite::params![code, b, c, v, t]).unwrap();
+    }
+    more.execute("UPDATE verses SET red = '[[0,3]]' WHERE book = 'John'", []).unwrap();
+    more
+}
+
+#[test]
+fn the_backup_carries_the_settings_and_a_default_bible_the_reader_added() {
+    use bible_pocket_lib::bibles;
+    let mut phone = Connection::open_in_memory().unwrap();
+    userdata::init(&phone).unwrap();
+    userdata::set_note(&phone, "John", 3, 16, "A note.").unwrap();
+    let more = added_bible("TST");
+    let exported = bibles::export(&more, "TST").unwrap().unwrap();
+    assert_eq!(exported.verses.len(), 3);
+    assert_eq!(exported.verses[0][0], "Genesis", "in the order of the Bible");
+    assert!(bibles::export(&more, "NOPE").unwrap().is_none());
+
+    let settings = serde_json::json!({ "state": { "version": "TST", "theme": "dark" }, "reminder": "07:30" });
+    let (json, counts) = userdata::backup_json_with(&phone, Some(settings.clone()), Some(exported.clone())).unwrap();
+    assert_eq!(counts.notes, 1);
+    assert!(json.contains("\"settings\"") && json.contains("\"bible\"") && json.contains("Test Bible"));
+
+    // onto a new phone: the study data, the settings and the Bible come back
+    let mut fresh = Connection::open_in_memory().unwrap();
+    userdata::init(&fresh).unwrap();
+    let (n, got_settings, got_bible) = userdata::restore_parts(&mut fresh, &json).unwrap();
+    assert_eq!(n.notes, 1);
+    assert_eq!(got_settings, Some(settings));
+    let got_bible = got_bible.unwrap();
+    let mut empty = Connection::open_in_memory().unwrap();
+    bibles::init(&empty).unwrap();
+    assert_eq!(bibles::import_backup(&mut empty, &got_bible, &["BSB".to_string(), "KJV".to_string()]).unwrap(), 3);
+    assert_eq!(bibles::passage(&empty, "TST", "John", 3, 16, 16), "For God so loved the world, test.");
+    assert_eq!(bibles::chapter(&empty, "TST", "John", 3).unwrap()[0].red, vec![(0, 3)], "the words of Jesus came too");
+    // again: it is already here, nothing doubles
+    assert_eq!(bibles::import_backup(&mut empty, &got_bible, &[]).unwrap(), 0);
+    // a Bible that comes with the app is never added from a file
+    let mut other = Connection::open_in_memory().unwrap();
+    bibles::init(&other).unwrap();
+    assert_eq!(bibles::import_backup(&mut other, &got_bible, &["TST".to_string()]).unwrap(), 0);
+    assert!(bibles::installed(&other).unwrap().is_empty());
+
+    // what is not Bible text is refused or left out
+    let mut bad = got_bible.clone();
+    bad.code = "../x".into();
+    assert!(bibles::import_backup(&mut other, &bad, &[]).is_err());
+    let mut bad = got_bible.clone();
+    bad.verses = vec![vec!["Nonsense".into(), 1.into(), 1.into(), "x".into()], vec!["John".into(), 0.into(), 1.into(), "x".into()]];
+    assert!(bibles::import_backup(&mut other, &bad, &[]).is_err(), "no verse the phone can read");
+    assert!(bibles::installed(&other).unwrap().is_empty(), "nothing half-added");
+    let mut mixed = got_bible.clone();
+    mixed.verses.push(vec!["Mark".into(), 1.into(), 1.into(), "".into()]);
+    assert_eq!(bibles::import_backup(&mut other, &mixed, &[]).unwrap(), 3, "an empty verse is left out");
+
+    // a backup with neither part is the same file as before: the older phone and the computer read it
+    let (plain, _) = userdata::backup_json(&phone).unwrap();
+    assert!(!plain.contains("\"settings\"") && !plain.contains("\"bible\""));
+    assert_eq!(userdata::restore_parts(&mut fresh, &plain).unwrap().1, None);
+    // and a file from the computer (sermons and more, no phone parts) still restores
+    let desktop = r#"{"format":"bible-concordance-study/1","bookmarks":[],"highlights":[],"notes":[],"plans":[],"sermons":[{"id":1}],"desktop":{"factory":{}}}"#;
+    let (_, s, b) = userdata::restore_parts(&mut fresh, desktop).unwrap();
+    assert!(s.is_none() && b.is_none());
+}
+
 #[test]
 fn plans_and_backup() {
     let mut phone = Connection::open_in_memory().unwrap();

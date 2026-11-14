@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Google's automatic backup (Android 11 and older): ONLY the small folder that holds the newest backup file (see lib.rs STASH_DIR). The big downloads
+     (Bibles, libraries, picture packs) must never be named here: over 25 MB Google makes no backup at all. -->
+<full-backup-content>
+    <include domain="file" path="backup-stash" />
+</full-backup-content>

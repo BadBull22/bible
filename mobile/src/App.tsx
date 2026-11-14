@@ -26,6 +26,9 @@ import {
   Verse,
   Version,
 } from "./api";
+import { mergeSettings, STATE_KEY, THEME_KEY } from "./backupSettings";
+import { backUpNow, lastBackupAt, makeBackup, readSettings, useAutoBackup } from "./autoBackup";
+import { backupFileName } from "./backupPlan";
 import { applyAppearance, Contrast, DEFAULT_APPEARANCE, Font, TextColor, Theme, watchSystemTheme } from "./appearance";
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "./plans";
 import { parseReference, Reference } from "./refs";
@@ -41,6 +44,7 @@ import { HomeScreen, ThemeSettings, useLook } from "./Theme";
 import { BibleMaps, MapsEntry, resumeMap } from "./BibleMaps";
 import { Authors, AuthorsEntry } from "./Authors";
 import { PictureRows } from "./Pictures";
+import { BackupRestore } from "./Backup";
 import { LinkRow } from "./Downloads";
 import { OtherLinks } from "./OtherLinks";
 import { useWhatsNew, WhatsNewBanner, WHATS_NEW_VERSION } from "./WhatsNew";
@@ -839,25 +843,98 @@ export function App() {
   }, [word]);
 
   // --- backup
-  async function saveBackup() {
+  /** the line the Backup screen shows, and the buttons' work */
+  const [backupStamp, setBackupStamp] = useState(0);
+  useAutoBackup(version, marksVersion, () => setBackupStamp((n) => n + 1));
+
+  /** Back up now: today's copy in Documents (and the one for Google's backup). */
+  async function backUpNowClick() {
     setBackupNote(null);
     try {
-      const [json, counts] = await api.backup();
-      const r = await phone.saveText(`Bible Concordance backup ${todayIso()}.json`, json);
-      setBackupNote(r.saved ? `Saved: ${countsText(counts)}. Keep the file somewhere safe; it can also be restored in the desktop app (My Study → Import backup).` : "Nothing was saved.");
+      const r = await backUpNow(version, true);
+      setBackupStamp((n) => n + 1);
+      setBackupNote(r ? `Backed up: ${countsText(r.counts)}, your settings${r.bible ? ` and the Bible ${r.bible}` : ""}. The copy is in ${r.where}.` : "Nothing to back up yet.");
     } catch (e) {
       setBackupNote(String(e));
     }
   }
 
+  /** Save a backup file where the reader chooses. */
+  async function saveBackup() {
+    setBackupNote(null);
+    try {
+      const { json, counts, bible } = await makeBackup(version);
+      const r = await phone.saveText(backupFileName(todayIso()), json);
+      setBackupNote(
+        r.saved
+          ? `Saved: ${countsText(counts)}, your settings${bible ? ` and the Bible ${bible}` : ""}. Keep the file somewhere safe; it can also be restored in the desktop app (My Study → Restore).`
+          : "Nothing was saved.",
+      );
+    } catch (e) {
+      setBackupNote(String(e));
+    }
+  }
+
+  /** Share a backup: built now, so it has today's data, and handed to the share sheet (e-mail, WhatsApp, Drive...). */
+  async function shareBackup() {
+    setBackupNote(null);
+    try {
+      const { json, bible } = await makeBackup(version);
+      await phone.shareFile(backupFileName(todayIso()), json, "application/json", "Bible Concordance backup");
+      setBackupNote(`This file holds your notes, highlights, bookmarks and settings${bible ? ` and your Bible ${bible}` : ""}. Keep it private.`);
+    } catch (e) {
+      setBackupNote(String(e));
+    }
+  }
+
+  /** Puts a backup's text back (after the reader agrees), and says what came back. */
+  async function applyRestore(text: string, label: string) {
+    if (!window.confirm(`Restore from ${label}?\n\nWhat is in it and not here is added. Nothing you have now is removed, and your settings in the file are put back.`)) return;
+    const out = await api.restore(text);
+    changed();
+    const merged = mergeSettings(readSettings(), out.settings);
+    const parts = [`${countsText(out.counts)} were new`];
+    if (out.bible?.added) parts.push(`the Bible ${out.bible.name} was added`);
+    if (merged.applied.length) {
+      // the preferences are put back and the app starts again so that every screen shows them
+      try {
+        if (merged.state != null) localStorage.setItem(STATE_KEY, merged.state);
+        if (merged.theme != null) localStorage.setItem(THEME_KEY, merged.theme);
+      } catch {
+        /* a convenience only */
+      }
+      parts.push("your settings were put back");
+    }
+    setBackupNote(`Restored: ${parts.join("; ")}. Nothing already here was removed.${merged.applied.length ? " The app is starting again…" : ""}`);
+    if (merged.applied.length) window.setTimeout(() => window.location.reload(), 1800);
+  }
+
+  /** Restore from a file the reader chooses. */
   async function restoreBackup() {
     setBackupNote(null);
     try {
       const r = await phone.openText();
       if (r.text == null) return;
-      const n = await api.restore(r.text);
-      changed();
-      setBackupNote(`Restored: ${countsText(n)} were new. Nothing already here was removed.`);
+      await applyRestore(r.text, "that file");
+    } catch (e) {
+      setBackupNote(String(e));
+    }
+  }
+
+  /** Restore latest: the newest copy this app made; when there is none (a new phone, or the app was reinstalled) the reader is asked for a file. */
+  async function restoreLatest() {
+    setBackupNote(null);
+    try {
+      const copies = (await phone.listBackupCopies()).copies;
+      if (copies.length === 0) {
+        // Google's backup may have brought one to a new phone
+        const stashed = await api.stashedBackup().catch(() => null);
+        if (stashed) return await applyRestore(stashed, "the backup that came with this phone's Google backup");
+        setBackupNote("No backup was found on this phone yet. Choose a backup file (for example one from your e-mail, WhatsApp or the computer).");
+        return await restoreBackup();
+      }
+      const newest = copies[0];
+      await applyRestore((await phone.readBackupCopy(newest.uri)).text, `the automatic backup ${newest.name}`);
     } catch (e) {
       setBackupNote(String(e));
     }
@@ -1491,6 +1568,11 @@ export function App() {
               </div>
             </details>
 
+            <details className="fold" id="backup-settings">
+              <summary>Backup and restore</summary>
+              <BackupRestore onBackUp={backUpNowClick} onSave={saveBackup} onShare={shareBackup} onRestoreLatest={restoreLatest} onRestore={restoreBackup} lastAt={lastBackupAt()} stamp={backupStamp} note={backupNote} />
+            </details>
+
             <details className="fold" open>
               <summary>Appearance</summary>
             <div className="row">
@@ -1600,12 +1682,6 @@ export function App() {
 
               <h3>Keep in step with your computer</h3>
               <SyncSettings onChanged={changed} />
-              <h3>Backup</h3>
-              <div className="actions">
-                <button onClick={saveBackup}>Save a backup</button>
-                <button onClick={restoreBackup}>Restore a backup</button>
-              </div>
-              {backupNote && <p className="hint status">{backupNote}</p>}
             </details>
 
             <details className="fold about-fold">

@@ -341,6 +341,90 @@ pub fn find_offer(conn: &Connection, today: &str, id: &str) -> Result<Offer, Str
     catalog(conn, today, false)?.into_iter().find(|o| o.id == id).ok_or_else(|| "That translation isn't in eBible.org's list any more.".to_string())
 }
 
+// ---------------------------------------------------------------- a Bible inside a backup file
+
+/// One Bible's text inside a backup file: only a Bible the reader added (never one that comes with the app), so that it is not lost with the phone. The
+/// computer's app ignores this part of the file.
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, PartialEq)]
+pub struct BibleBackup {
+    pub code: String,
+    pub name: String,
+    #[serde(default)]
+    pub language: String,
+    #[serde(default)]
+    pub copyright: String,
+    #[serde(default)]
+    pub rtl: bool,
+    /// `[book, chapter, verse, text]`, and for a Bible that has them a fifth entry (the words of Jesus, as JSON) and a sixth (the words that carry Strong's
+    /// numbers, as JSON)
+    pub verses: Vec<Vec<serde_json::Value>>,
+}
+
+/// The most verses, and the longest verse, a backup may bring (a whole Bible is about 31,000 verses).
+const MAX_BACKUP_VERSES: usize = 40_000;
+const MAX_VERSE_CHARS: usize = 6_000;
+
+/// The whole text of one added Bible for a backup file (nothing when it is not here).
+pub fn export(conn: &Connection, code: &str) -> Result<Option<BibleBackup>, String> {
+    let head: Option<(String, String, String, i64)> = conn
+        .query_row("SELECT name, language, copyright, rtl FROM bibles WHERE code = ?1", params![code], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))
+        .optional()
+        .map_err(err)?;
+    let Some((name, language, copyright, rtl)) = head else { return Ok(None) };
+    let mut s = conn.prepare("SELECT book, chapter, verse, text, red, words FROM verses WHERE code = ?1").map_err(err)?;
+    let rows = s
+        .query_map(params![code], |r| {
+            let (red, words): (Option<String>, Option<String>) = (r.get(4)?, r.get(5)?);
+            let mut row: Vec<serde_json::Value> = vec![r.get::<_, String>(0)?.into(), r.get::<_, i64>(1)?.into(), r.get::<_, i64>(2)?.into(), r.get::<_, String>(3)?.into()];
+            if red.is_some() || words.is_some() {
+                row.push(red.map(serde_json::Value::from).unwrap_or(serde_json::Value::Null));
+                if let Some(w) = words {
+                    row.push(w.into());
+                }
+            }
+            Ok(row)
+        })
+        .map_err(err)?;
+    let mut verses: Vec<Vec<serde_json::Value>> = rows.collect::<Result<_, _>>().map_err(err)?;
+    // in the order of the Bible, so the file reads like one
+    let order = |b: &serde_json::Value| CODES.iter().position(|(_, _, n)| Some(*n) == b.as_str()).unwrap_or(99);
+    verses.sort_by_key(|v| (order(&v[0]), v[1].as_i64().unwrap_or(0), v[2].as_i64().unwrap_or(0)));
+    Ok(Some(BibleBackup { code: code.to_string(), name, language, copyright, rtl: rtl != 0, verses }))
+}
+
+/// Puts a Bible from a backup file among the added Bibles, when its code is not already here and is not one that comes with the app (`bundled`).
+/// Every value is checked: a file from anywhere cannot put anything but Bible text in. Returns how many verses were added (0 when it was skipped).
+pub fn import_backup(conn: &mut Connection, b: &BibleBackup, bundled: &[String]) -> Result<usize, String> {
+    let code_ok = !b.code.is_empty() && b.code.len() <= 40 && b.code.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+    if !code_ok || b.name.trim().is_empty() || b.name.len() > 200 || b.language.len() > 100 || b.copyright.len() > 2_000 || b.verses.is_empty() || b.verses.len() > MAX_BACKUP_VERSES {
+        return Err("The Bible in that backup isn't one this version can read.".into());
+    }
+    if bundled.iter().any(|c| c == &b.code) || is_installed(conn, &b.code) {
+        return Ok(0);
+    }
+    let tx = conn.transaction().map_err(err)?;
+    tx.execute("INSERT INTO bibles (code, name, language, copyright, rtl) VALUES (?1,?2,?3,?4,?5)", params![b.code, b.name.trim(), b.language, b.copyright, i64::from(b.rtl)]).map_err(err)?;
+    let mut n = 0;
+    {
+        let mut ins = tx.prepare("INSERT OR IGNORE INTO verses (code, book, chapter, verse, text, red, words) VALUES (?1,?2,?3,?4,?5,?6,?7)").map_err(err)?;
+        for row in &b.verses {
+            let (Some(book), Some(chapter), Some(verse), Some(text)) = (row.first().and_then(|v| v.as_str()), row.get(1).and_then(|v| v.as_i64()), row.get(2).and_then(|v| v.as_i64()), row.get(3).and_then(|v| v.as_str())) else {
+                continue;
+            };
+            if CODES.iter().all(|(_, _, name)| *name != book) || !(1..=200).contains(&chapter) || !(1..=300).contains(&verse) || text.trim().is_empty() || text.chars().count() > MAX_VERSE_CHARS {
+                continue;
+            }
+            let extra = |i: usize| row.get(i).and_then(|v| v.as_str()).filter(|t| t.len() <= 40_000).map(str::to_string);
+            n += ins.execute(params![b.code, book, chapter, verse, text, extra(4), extra(5)]).map_err(err)?;
+        }
+    }
+    if n == 0 {
+        return Err("The Bible in that backup has no verses this version can read.".into());
+    }
+    tx.commit().map_err(err)?;
+    Ok(n)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

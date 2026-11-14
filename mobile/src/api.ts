@@ -250,6 +250,19 @@ export interface PlanProgress {
   done_days: number[];
 }
 
+export interface BackupOut {
+  json: string;
+  counts: Counts;
+  /** the name of the added Bible the file also holds */
+  bible: string | null;
+}
+
+export interface RestoreOut {
+  counts: Counts;
+  settings: unknown;
+  bible: { code: string; name: string; added: boolean } | null;
+}
+
 export interface Counts {
   bookmarks: number;
   highlights: number;
@@ -332,10 +345,13 @@ export const api = {
   startPlan: (planId: string, startedOn: string) => invoke<void>("start_plan", { planId, startedOn }),
   stopPlan: (planId: string) => invoke<void>("stop_plan", { planId }),
   setPlanDay: (planId: string, day: number, done: boolean) => invoke<void>("set_plan_day", { planId, day, done }),
-  /** the text of a backup file, and how much it holds */
-  backup: () => invoke<[string, Counts]>("backup"),
-  /** adds a backup's contents to what is here; returns how much was new */
-  restore: (json: string) => invoke<Counts>("restore", { json }),
+  /** the text of a backup file and how much it holds; `settings` (the preferences, see backupSettings.ts) and the code of the Bible read by default go into the file, which also holds that Bible's text when the reader added it */
+  backup: (settings: unknown = null, bible: string | null = null) => invoke<BackupOut>("backup", { settings, bible }),
+  /** keeps the newest backup in the small folder Google's automatic backup copies; `stashedBackup` reads it back (a new phone's restore) */
+  stashBackup: (json: string) => invoke<void>("stash_backup", { json }),
+  stashedBackup: () => invoke<string | null>("stashed_backup"),
+  /** adds a backup's contents to what is here (and a Bible it holds, if that is not here); the file's preferences come back for the page to check and apply */
+  restore: (json: string) => invoke<RestoreOut>("restore", { json }),
 
   /** the verse's tagged words, and the translation they come from (the BSB when `version` isn't tagged) */
   verseWords: (version: string, book: string, chapter: number, verse: number) => invoke<[string, Word[]]>("verse_words", { version, book, chapter, verse }),
@@ -546,6 +562,13 @@ export const phone = {
   openLink: (url: string) => invoke<{ opened: boolean }>("plugin:phone|open_link", { url }),
   /** asks for a folder to keep in step through: its uri, or null if cancelled */
   pickFolder: () => invoke<{ uri: string | null; name: string }>("plugin:phone|pick_folder"),
+  /** shares a text file (a backup) through the share sheet */
+  shareFile: (name: string, text: string, mime: string | null = null, title: string | null = null) => invoke<unknown>("plugin:phone|share_file", { name, text, mime, title }),
+  /** writes a dated automatic backup copy (Documents/Bible Concordance backup) and keeps the newest three */
+  saveBackupCopy: (name: string, text: string) => invoke<{ saved: boolean; where: string }>("plugin:phone|save_backup_copy", { name, text }),
+  /** the backup copies this app made, newest first */
+  listBackupCopies: () => invoke<{ copies: { name: string; modified: number; uri: string }[] }>("plugin:phone|list_backup_copies"),
+  readBackupCopy: (uri: string) => invoke<{ text: string }>("plugin:phone|read_backup_copy", { uri }),
   /** hands a downloaded update to Android's installer; `allow`: the reader must first let this app install apps */
   installUpdate: (path: string) => invoke<{ started: boolean; allow: boolean }>("plugin:phone|install_update", { path }),
 };

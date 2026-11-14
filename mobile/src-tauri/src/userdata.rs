@@ -378,6 +378,12 @@ pub struct Backup {
     /// the phone's reading log (chapters read, and when); the desktop app ignores it
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub reading: Vec<ReadEntry>,
+    /// the phone's own preferences (a fixed list of them: theme, fonts, the Bible read, the reminder...), made and checked by the page; the desktop app ignores it
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub settings: Option<serde_json::Value>,
+    /// the reader's default Bible, when it is one they added (not one that comes with the app); the desktop app ignores it
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bible: Option<crate::bibles::BibleBackup>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -397,6 +403,11 @@ pub struct Counts {
 }
 
 pub fn backup(conn: &Connection) -> Result<Backup, String> {
+    backup_with(conn, None, None)
+}
+
+/// The backup, with the phone's preferences and the reader's added default Bible when there are some.
+pub fn backup_with(conn: &Connection, settings: Option<serde_json::Value>, bible: Option<crate::bibles::BibleBackup>) -> Result<Backup, String> {
     let items = |sql: &str| -> Result<Vec<StudyItem>, String> {
         let mut s = conn.prepare(sql).map_err(err)?;
         let rows = s
@@ -428,22 +439,46 @@ pub fn backup(conn: &Connection) -> Result<Backup, String> {
             let rows = s.query_map([], |r| Ok(ReadEntry { book: r.get(0)?, chapter: r.get(1)?, read_on: r.get(2)? })).map_err(err)?;
             rows.collect::<Result<_, _>>().map_err(err)?
         },
+        settings: settings.filter(|s| !s.is_null()),
+        bible,
     })
 }
 
 pub fn backup_json(conn: &Connection) -> Result<(String, Counts), String> {
-    let b = backup(conn)?;
+    backup_json_with(conn, None, None)
+}
+
+/// The text of a backup file and how much it holds, with the preferences and the added Bible when given.
+pub fn backup_json_with(conn: &Connection, settings: Option<serde_json::Value>, bible: Option<crate::bibles::BibleBackup>) -> Result<(String, Counts), String> {
+    let b = backup_with(conn, settings, bible)?;
     let counts = Counts { bookmarks: b.bookmarks.len(), highlights: b.highlights.len(), notes: b.notes.len(), plans: b.plans.len() };
     Ok((serde_json::to_string_pretty(&b).map_err(err)?, counts))
+}
+
+fn parse_backup(json: &str) -> Result<Backup, String> {
+    let b: Backup = serde_json::from_str(json.trim_start_matches('\u{feff}')).map_err(|_| "That file isn't a Bible Concordance backup.".to_string())?;
+    if b.format != BACKUP_FORMAT {
+        return Err("That file isn't a Bible Concordance backup this version can read.".into());
+    }
+    Ok(b)
 }
 
 /// Adds a backup's contents to what is here. Returns how many of each were new (or, for a
 /// note, newer).
 pub fn restore(conn: &mut Connection, json: &str) -> Result<Counts, String> {
-    let b: Backup = serde_json::from_str(json.trim_start_matches('\u{feff}')).map_err(|_| "That file isn't a Bible Concordance backup.".to_string())?;
-    if b.format != BACKUP_FORMAT {
-        return Err("That file isn't a Bible Concordance backup this version can read.".into());
-    }
+    let b = parse_backup(json)?;
+    apply_backup(conn, &b)
+}
+
+/// Like `restore`, and also hands back the file's preferences and added Bible (not applied here: the page applies the preferences after checking each
+/// value, and the Bible goes into the added-Bibles database).
+pub fn restore_parts(conn: &mut Connection, json: &str) -> Result<(Counts, Option<serde_json::Value>, Option<crate::bibles::BibleBackup>), String> {
+    let b = parse_backup(json)?;
+    let counts = apply_backup(conn, &b)?;
+    Ok((counts, b.settings, b.bible))
+}
+
+fn apply_backup(conn: &mut Connection, b: &Backup) -> Result<Counts, String> {
     let now = |s: &str| if s.is_empty() { None } else { Some(s.to_string()) };
     let tx = conn.transaction().map_err(err)?;
     let mut n = Counts::default();

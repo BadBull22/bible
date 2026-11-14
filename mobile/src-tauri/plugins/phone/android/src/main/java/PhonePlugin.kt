@@ -2,11 +2,13 @@ package com.ghostclaw.phone
 
 import android.app.Activity
 import android.content.ClipData
+import android.content.ContentValues
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.provider.Settings
 import android.speech.tts.TextToSpeech
@@ -82,6 +84,24 @@ class FolderWriteArgs {
   lateinit var name: String
   lateinit var text: String
 }
+
+@InvokeArg
+class FileArgs {
+  lateinit var name: String
+  lateinit var text: String
+  /** "application/json" when left out */
+  var mime: String? = null
+  var title: String? = null
+}
+
+@InvokeArg
+class UriArgs {
+  lateinit var uri: String
+}
+
+/** The folder in the phone's Documents that holds the automatic backup copies, and how many dated copies are kept. */
+const val BACKUP_DIR = "Bible Concordance backup"
+const val BACKUP_KEEP = 3
 
 /** The folder inside the chosen one that holds the sync files (as on the computers). */
 const val SYNC_FOLDER = "Bible Concordance sync"
@@ -252,6 +272,112 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
       }
       activity.startActivity(Intent.createChooser(send, null))
       invoke.resolve(JSObject().put("shared", true))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** Shares a text file (a backup) through the share sheet: written to the app's cache and handed over by its FileProvider. */
+  @Command
+  fun shareFile(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(FileArgs::class.java)
+      val dir = File(activity.cacheDir, "shared").apply { mkdirs() }
+      dir.listFiles()?.forEach { it.delete() }
+      val safe = args.name.replace(Regex("[^A-Za-z0-9 ._-]"), "").ifBlank { "backup.json" }
+      val file = File(dir, safe)
+      file.writeText(args.text, Charsets.UTF_8)
+      val uri = FileProvider.getUriForFile(activity, activity.packageName + ".phone.files", file)
+      val send = Intent(Intent.ACTION_SEND).apply {
+        type = args.mime ?: "application/json"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        args.title?.let { putExtra(Intent.EXTRA_SUBJECT, it) }
+        clipData = ClipData.newRawUri(null, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      }
+      activity.startActivity(Intent.createChooser(send, null))
+      invoke.resolve(JSObject().put("shared", true))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  // ---------------------------------------------------------------- the automatic backup copies
+
+  /** The backup copies this app made (name, when, address), newest name first. On Android 10 and newer they are in Documents/Bible Concordance backup
+   * (the app can always see the files it made itself, with no permission); on older Android they are in the app's own folder. */
+  private fun backupCopies(): List<Triple<String, Long, String>> {
+    val out = ArrayList<Triple<String, Long, String>>()
+    if (Build.VERSION.SDK_INT >= 29) {
+      val coll = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+      val cols = arrayOf(MediaStore.Files.FileColumns._ID, MediaStore.Files.FileColumns.DISPLAY_NAME, MediaStore.Files.FileColumns.DATE_MODIFIED)
+      activity.contentResolver.query(coll, cols, MediaStore.Files.FileColumns.RELATIVE_PATH + " = ? AND " + MediaStore.Files.FileColumns.DISPLAY_NAME + " LIKE ?", arrayOf("Documents/$BACKUP_DIR/", "Bible Concordance backup %.json"), null)?.use { c ->
+        while (c.moveToNext()) {
+          val uri = Uri.withAppendedPath(coll, c.getLong(0).toString())
+          out.add(Triple(c.getString(1), c.getLong(2) * 1000, uri.toString()))
+        }
+      }
+    } else {
+      File(activity.getExternalFilesDir(null) ?: activity.filesDir, BACKUP_DIR).listFiles()?.filter { it.isFile && it.name.endsWith(".json") }?.forEach {
+        out.add(Triple(it.name, it.lastModified(), Uri.fromFile(it).toString()))
+      }
+    }
+    return out.sortedByDescending { it.first }
+  }
+
+  /** Writes a dated backup copy (a day's file is replaced by the same day's newer one) and keeps only the newest three. */
+  @Command
+  fun saveBackupCopy(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(FileArgs::class.java)
+      val name = args.name.replace(Regex("[^A-Za-z0-9 ._-]"), "").ifBlank { "Bible Concordance backup.json" }
+      val bytes = args.text.toByteArray(Charsets.UTF_8)
+      val where: String
+      if (Build.VERSION.SDK_INT >= 29) {
+        val resolver = activity.contentResolver
+        val coll = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val existing = backupCopies().firstOrNull { it.first == name }?.third?.let { Uri.parse(it) }
+        val uri = existing ?: resolver.insert(coll, ContentValues().apply {
+          put(MediaStore.Files.FileColumns.DISPLAY_NAME, name)
+          put(MediaStore.Files.FileColumns.MIME_TYPE, "application/json")
+          put(MediaStore.Files.FileColumns.RELATIVE_PATH, "Documents/$BACKUP_DIR/")
+        }) ?: throw Exception("The phone would not make the backup file.")
+        resolver.openOutputStream(uri, "wt")?.use { it.write(bytes) } ?: throw Exception("The phone would not open the backup file.")
+        backupCopies().drop(BACKUP_KEEP).forEach { resolver.delete(Uri.parse(it.third), null, null) }
+        where = "Documents/$BACKUP_DIR"
+      } else {
+        val dir = File(activity.getExternalFilesDir(null) ?: activity.filesDir, BACKUP_DIR).apply { mkdirs() }
+        File(dir, name).writeBytes(bytes)
+        backupCopies().drop(BACKUP_KEEP).forEach { File(Uri.parse(it.third).path ?: "").delete() }
+        where = "the app's own folder"
+      }
+      invoke.resolve(JSObject().put("saved", true).put("where", where))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** The backup copies this app made, newest first: { copies: [{ name, modified, uri }] }. */
+  @Command
+  fun listBackupCopies(invoke: Invoke) {
+    try {
+      val list = JSArray()
+      backupCopies().forEach { list.put(JSObject().put("name", it.first).put("modified", it.second).put("uri", it.third)) }
+      invoke.resolve(JSObject().put("copies", list))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** The text of one of the backup copies (an address `listBackupCopies` gave). */
+  @Command
+  fun readBackupCopy(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(UriArgs::class.java)
+      if (backupCopies().none { it.third == args.uri }) throw Exception("That is not one of this app's backup copies.")
+      val uri = Uri.parse(args.uri)
+      val bytes = if (uri.scheme == "file") File(uri.path ?: "").readBytes() else activity.contentResolver.openInputStream(uri)?.use { it.readBytes() } ?: throw Exception("The backup copy could not be opened.")
+      invoke.resolve(JSObject().put("text", String(bytes, Charsets.UTF_8)))
     } catch (ex: Exception) {
       invoke.reject(ex.message)
     }
