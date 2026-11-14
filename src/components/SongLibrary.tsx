@@ -5,6 +5,7 @@ import type { SlideSpec } from "../sermonOutputs";
 import { parseSong, parseSongFile, SongData, songSlides, songText } from "../songs";
 import { CloseIcon } from "./icons";
 import { backdrop } from "../backdrop";
+import { confirmAsk } from "../confirm";
 
 /** A song as kept in the database, with its sections and order. */
 export function songOf(row: SongRow): SongData {
@@ -259,7 +260,7 @@ export function SongPicker({ onUse, onClose, showNow = false }: { onUse: (slides
     });
   const setOrder = (i: number, order: number[]) => setPicked((p) => p.map((x, k) => (k === i ? { ...x, order } : x)));
   const remove = async (s: { id: number; title: string }) => {
-    if (!window.confirm(`Remove “${s.title}” from your saved songs? (Lists that already use it keep their slides.)`)) return;
+    if (!(await confirmAsk(`Remove “${s.title}” from your saved songs? (Lists that already use it keep their slides.)`))) return;
     await api.songDelete(s.id).catch((e) => setError(String(e)));
     setPicked((p) => p.filter((x) => x.song.id !== s.id));
     void reload();
@@ -337,7 +338,7 @@ export function SongPicker({ onUse, onClose, showNow = false }: { onUse: (slides
     }
   };
   const deleteList = async (d: Deck) => {
-    if (!window.confirm(`Delete the saved list “${d.title}”? Your songs stay.`)) return;
+    if (!(await confirmAsk(`Delete the saved list “${d.title}”? Your songs stay.`))) return;
     await api.deckDelete(d.id).catch((e) => setError(String(e)));
     if (listId === d.id) setListId(0);
     void loadLists();

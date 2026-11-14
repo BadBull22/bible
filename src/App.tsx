@@ -1375,6 +1375,7 @@ function App() {
               onOpenHelp={() => setPanel({ kind: "help" })}
               onOpenWelcome={() => setWelcomeOpen(true)}
               onOpenWhatsNew={() => setWhatsNewEntry(whatsNewFor(appVersion) ?? WHATS_NEW[0] ?? null)}
+              onStudyChanged={() => setStudyVersion((n) => n + 1)}
               focus={panel.focus}
               onClose={() => setPanel(null)}
             />

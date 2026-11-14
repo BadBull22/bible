@@ -353,6 +353,72 @@ fn auto_backups_in(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
     found
 }
 
+/// The largest backup file read back (a backup with logos and pictures in it is a few megabytes).
+const MAX_BACKUP_BYTES: u64 = 100 * 1024 * 1024;
+
+#[derive(Serialize, Debug, PartialEq)]
+pub struct BackupFile {
+    pub path: String,
+    pub name: String,
+    /// when the file was last written (ms since 1970)
+    pub modified: u64,
+    pub text: String,
+}
+
+/// Every backup file a reader may have: the automatic ones in `dirs` and the ones Export made ("Bible study notes ... .json") in `exports`.
+fn backup_candidates(dirs: &[std::path::PathBuf], exports: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut all: Vec<std::path::PathBuf> = dirs.iter().flat_map(|d| auto_backups_in(d)).collect();
+    if let Ok(rd) = std::fs::read_dir(exports) {
+        for p in rd.filter_map(Result::ok).map(|e| e.path()) {
+            let name = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            if p.is_file() && p.extension().is_some_and(|x| x == "json") && name.starts_with("Bible study notes ") {
+                all.push(p);
+            }
+        }
+    }
+    all
+}
+
+fn read_backup(path: &std::path::Path) -> Result<BackupFile, String> {
+    let meta = std::fs::metadata(path).map_err(|_| "That file can't be read.".to_string())?;
+    if !meta.is_file() || meta.len() > MAX_BACKUP_BYTES || !path.extension().is_some_and(|x| x.eq_ignore_ascii_case("json")) {
+        return Err("That isn't a backup file this app can read (it should be a .json file made by Back up).".into());
+    }
+    let text = std::fs::read_to_string(path).map_err(|_| "That file can't be read as a backup.".to_string())?;
+    let modified = meta.modified().ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_millis() as u64).unwrap_or(0);
+    Ok(BackupFile { path: path.display().to_string(), name: path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(), modified, text })
+}
+
+/// The newest backup there is (by the time it was written), looked for in the reader's backup folder, the usual automatic folder and
+/// Documents\Bible Concordance (where Export puts its files); None when there is none, and then the screen asks for a file.
+#[tauri::command(async)]
+pub fn backup_latest(app: AppHandle, folder: Option<String>) -> Result<Option<BackupFile>, String> {
+    let mut dirs = Vec::new();
+    if let Some(f) = folder.as_deref().map(str::trim).filter(|f| !f.is_empty()) {
+        dirs.push(std::path::PathBuf::from(f));
+    }
+    dirs.push(default_auto_backup_folder(&app)?);
+    let exports = app.path().document_dir().map_err(|e| e.to_string())?.join("Bible Concordance");
+    let mut files: Vec<(std::time::SystemTime, std::path::PathBuf)> = backup_candidates(&dirs, &exports)
+        .into_iter()
+        .filter_map(|p| std::fs::metadata(&p).ok().and_then(|m| m.modified().ok()).map(|t| (t, p)))
+        .collect();
+    files.sort_by(|a, b| b.0.cmp(&a.0));
+    // the newest that can be read (a half-written or unreadable file is passed over)
+    for (_, p) in files {
+        if let Ok(b) = read_backup(&p) {
+            return Ok(Some(b));
+        }
+    }
+    Ok(None)
+}
+
+/// A backup file the reader chose (a .json file only).
+#[tauri::command(async)]
+pub fn backup_read(path: String) -> Result<BackupFile, String> {
+    read_backup(std::path::Path::new(&path))
+}
+
 /// Where automatic backups go unless the reader chose another folder.
 #[tauri::command]
 pub fn auto_backup_folder(app: AppHandle) -> Result<String, String> {
@@ -621,3 +687,52 @@ pub async fn sync_now(app: AppHandle) -> Result<crate::sync::SyncReport, String>
     .map_err(|e| e.to_string())?
 }
 
+
+#[cfg(test)]
+mod backup_tests {
+    use super::*;
+
+    fn temp(name: &str) -> std::path::PathBuf {
+        let dir = std::env::temp_dir().join(format!("bc-restore-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn the_backups_there_are_come_from_the_automatic_folders_and_from_export_and_nothing_else() {
+        let (auto, docs) = (temp("auto"), temp("docs"));
+        std::fs::write(auto.join("Automatic backup 2026-11-10 0900.json"), "{}").unwrap();
+        std::fs::write(auto.join("Automatic backup 2026-11-12 0900.json"), "{}").unwrap();
+        std::fs::write(auto.join("notes.json"), "{}").unwrap();
+        std::fs::write(auto.join("Automatic backup 2026-11-13 0900.txt"), "{}").unwrap();
+        std::fs::write(docs.join("Bible study notes 2026-11-14 1200.json"), "{}").unwrap();
+        std::fs::write(docs.join("Bible study notes 2026-11-14 1200.md"), "x").unwrap();
+        std::fs::write(docs.join("Something else.json"), "{}").unwrap();
+        let mut names: Vec<String> = backup_candidates(&[auto.clone()], &docs).iter().map(|p| p.file_name().unwrap().to_string_lossy().to_string()).collect();
+        names.sort();
+        assert_eq!(names, vec!["Automatic backup 2026-11-10 0900.json", "Automatic backup 2026-11-12 0900.json", "Bible study notes 2026-11-14 1200.json"]);
+        // a folder that is not there has none
+        assert!(backup_candidates(&[temp("none").join("missing")], &temp("none2").join("missing")).is_empty());
+        let _ = std::fs::remove_dir_all(&auto);
+        let _ = std::fs::remove_dir_all(&docs);
+    }
+
+    #[test]
+    fn a_backup_file_is_read_only_when_it_is_a_json_file_of_a_sensible_size() {
+        let dir = temp("read");
+        let ok = dir.join("a.json");
+        std::fs::write(&ok, r#"{"format":"bible-concordance-study/1"}"#).unwrap();
+        let b = read_backup(&ok).unwrap();
+        assert_eq!(b.name, "a.json");
+        assert!(b.text.contains("bible-concordance-study/1"));
+        assert!(b.modified > 0);
+        std::fs::write(dir.join("a.txt"), "x").unwrap();
+        assert!(read_backup(&dir.join("a.txt")).is_err(), "not a .json file");
+        assert!(read_backup(&dir).is_err(), "a folder");
+        assert!(read_backup(&dir.join("missing.json")).is_err());
+        std::fs::write(dir.join("bad.json"), [0xff, 0xfe, 0x00, 0x9f]).unwrap();
+        assert!(read_backup(&dir.join("bad.json")).is_err(), "not text");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}

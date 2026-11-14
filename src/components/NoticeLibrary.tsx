@@ -8,6 +8,7 @@ import type { SlideSpec } from "../sermonOutputs";
 import { deckBody, parseDeck } from "../service";
 import { CloseIcon } from "./icons";
 import { backdrop } from "../backdrop";
+import { confirmAsk } from "../confirm";
 
 interface Notice {
   id: number;
@@ -189,7 +190,7 @@ export function NoticeSidebar({ onAdd, reload }: { onAdd: (slides: SlideSpec[], 
     await api.deckOrder("notice", next.map((n) => n.id)).catch((e) => setError(String(e)));
   };
   const remove = async (n: Notice) => {
-    if (!window.confirm(`Take “${n.title}” out of your notices? (Notices that already use it keep their slides.)`)) return;
+    if (!(await confirmAsk(`Take “${n.title}” out of your notices? (Notices that already use it keep their slides.)`))) return;
     await api.deckDelete(n.id).catch((e) => setError(String(e)));
     void load();
   };

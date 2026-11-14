@@ -537,6 +537,14 @@ export interface UpdateInfo {
   date: string | null;
 }
 
+export interface BackupFile {
+  path: string;
+  name: string;
+  /** when the file was written (ms) */
+  modified: number;
+  text: string;
+}
+
 export interface ImportResult {
   notes: number;
   highlights: number;
@@ -1194,6 +1202,10 @@ export const api = {
   startPlan: (plan_id: string, started_on: string) => invoke<void>("start_plan", { planId: plan_id, startedOn: started_on }),
   stopPlan: (plan_id: string) => invoke<void>("stop_plan", { planId: plan_id }),
   setPlanDay: (plan_id: string, day: number, done: boolean) => invoke<void>("set_plan_day", { planId: plan_id, day, done }),
+  /** the newest backup there is (automatic or from Back up), or null when there is none */
+  backupLatest: (folder: string | null) => invoke<BackupFile | null>("backup_latest", { folder }),
+  /** a backup file the reader chose */
+  backupRead: (path: string) => invoke<BackupFile>("backup_read", { path }),
   exportStudy: (desktop: unknown = null) => invoke<ExportResult>("export_study", { desktop }),
   importStudy: (json: string) => invoke<ImportResult>("import_study", { json }),
   /** a chapter was read to its end on this day (yyyy-mm-dd) */

@@ -344,6 +344,8 @@ pub fn run() {
             study_commands::sync_set_folder,
             study_commands::sync_set_name,
             study_commands::sync_set_share_pictures,
+            study_commands::backup_latest,
+            study_commands::backup_read,
             study_commands::sync_now,
             lan::lan_status,
             lan::lan_enable,

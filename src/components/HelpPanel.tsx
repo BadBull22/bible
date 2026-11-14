@@ -167,8 +167,8 @@ const SECTIONS: Section[] = [
   },
   {
     id: "my-study",
-    title: "My Study: your notes, plans, export and backup",
-    keywords: "my study notes highlights bookmarks reading plan export import backup documents markdown json new pc tags tag",
+    title: "My Study: your notes, plans, backup and restore",
+    keywords: "my study notes highlights bookmarks reading plan export import backup restore documents markdown json new pc tags tag",
     body: (
       <>
         <p>
@@ -178,14 +178,19 @@ const SECTIONS: Section[] = [
         </p>
         <ul>
           <li>
-            <strong>Export</strong> saves everything into <em>Documents\Bible Concordance</em> as a readable file (.md — opens
+            <strong>Back up</strong> saves everything into <em>Documents\Bible Concordance</em> as a readable file (.md — opens
             in Word or Notepad) plus a <em>.json</em> backup, and opens the folder.
           </li>
           <li>
-            <strong>Import backup</strong> reads that .json back in — use it to move your study to another computer. It
+            <strong>Restore</strong> reads that .json (or one of the weekly automatic backups) back in — use it to move your study to another computer. It
             only adds; nothing you already have is deleted. The file also keeps the Content Factory's names, logos, header
             and footer and its Ready to post list: on a computer where you have not set the Factory up yet they come back,
             and on one already set up only the posts you do not have are added. A backup made on the phone can be imported too.
+          </li>
+          <li>
+            <strong>Settings → Backup and restore</strong> has the same, in more detail: <strong>Back up now</strong>, <strong>Restore latest</strong> (it puts back the newest backup it can find, in
+            your backup folder, the usual folder or Documents → Bible Concordance, and asks you to choose a file only if there is none), <strong>Restore from a file…</strong> (for an
+            older backup, or one copied from another computer), the weekly automatic backup and the folder it uses. Before anything is changed it asks you to confirm.
           </li>
         </ul>
       </>
