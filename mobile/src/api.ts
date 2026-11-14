@@ -359,7 +359,7 @@ export const api = {
   markRead: (book: string, chapter: number, day: string) => invoke<void>("mark_read", { book, chapter, day }),
 
   /** how many nature backgrounds are downloaded (0: none yet), and the download's size */
-  backgroundsStatus: () => invoke<{ count: number; size_mb: number }>("backgrounds_status"),
+  backgroundsStatus: () => invoke<{ count: number; size_mb: number; latest: number }>("backgrounds_status"),
   /** downloads them ("backgrounds-progress" events report the percentage); returns how many */
   backgroundsInstall: () => invoke<number>("backgrounds_install"),
   backgroundsThumbs: () => invoke<BackgroundThumb[]>("backgrounds_thumbs"),

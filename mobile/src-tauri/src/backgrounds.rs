@@ -1,4 +1,4 @@
-//! Nature photos to put a verse on (since 0.3.0): 100 public-domain / CC0 photos from
+//! Nature photos to put a verse on (since 0.3.0; version 2 has more): public-domain / CC0 photos from
 //! Wikimedia Commons (lakes, mountains, the sea, sunrises, animals, ...), downloaded once
 //! from the app's GitHub releases and kept in the app's data folder. Made by
 //! `data/build_backgrounds.py`; the zip holds `backgrounds.json`, `full/<id>.jpg` and
@@ -15,10 +15,12 @@ fn err<E: ToString>(e: E) -> String {
 }
 
 /// Where the backgrounds are downloaded from, and the SHA-256 the file must have.
-pub const URL: &str = "https://github.com/BadBull22/bible/releases/download/backgrounds-v1/nature-backgrounds-v1.zip";
-pub const SHA256: &str = "86917e58634e3f109f0f9fca1e010b81e51b1fd92ed940d1823a41f459aaef77";
+pub const URL: &str = "https://github.com/BadBull22/bible/releases/download/backgrounds-v2/nature-backgrounds-v2.zip";
+pub const SHA256: &str = "ed2e3a9ae422172f2e4d94e7b33cb5e58d0a55b7e11529cf1b238311c61d688e";
 /// About how big the download is, for the button.
-pub const SIZE_MB: u32 = 8;
+pub const SIZE_MB: u32 = 36;
+/// How many photos the latest pack holds (someone with the first 100 is offered the rest).
+pub const LATEST_COUNT: usize = 331;
 
 fn folder(data: &Path) -> PathBuf {
     data.join("backgrounds")

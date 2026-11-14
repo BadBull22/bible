@@ -868,11 +868,13 @@ fn bible_remove(core: State<Core>, code: String) -> Result<(), String> {
 struct BackgroundsStatus {
     count: usize,
     size_mb: u32,
+    /// how many photos the latest pack holds
+    latest: usize,
 }
 
 #[tauri::command(async)]
 fn backgrounds_status(core: State<Core>) -> Result<BackgroundsStatus, String> {
-    Ok(BackgroundsStatus { count: backgrounds::count(&core.get()?.dir), size_mb: backgrounds::SIZE_MB })
+    Ok(BackgroundsStatus { count: backgrounds::count(&core.get()?.dir), size_mb: backgrounds::SIZE_MB, latest: backgrounds::LATEST_COUNT })
 }
 
 /// Downloads the backgrounds; "backgrounds-progress" events report the percentage.

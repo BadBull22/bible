@@ -37,10 +37,12 @@ Since 0.3.0:
   (`reading_log` in `my-study.db`; in the backup as `reading`, which the desktop ignores).
 - **Verse pictures** (tap a verse): the verse on one of six colour gradients or on a nature
   photo, shared or saved as a PNG (`src/VersePicture.tsx`; `shareImage`/`saveImage` in the
-  plugin, with a FileProvider in its manifest). The 100 nature photos (CC0, Wikimedia
-  Commons) are a one-time download from the GitHub release `backgrounds-v1`
-  (`src-tauri/src/backgrounds.rs`, checked by SHA-256; made by `data/backgrounds_candidates.py`
-  and `data/build_backgrounds.py` from `data/backgrounds.json`).
+  plugin, with a FileProvider in its manifest). The 331 nature photos (CC0, Wikimedia
+  Commons) are a one-time download of about 36 MB from the GitHub release `backgrounds-v2`
+  (`src-tauri/src/backgrounds.rs`, checked by SHA-256; the first 100 are the older `backgrounds-v1`
+  pack and keep their numbers; found with `data/backgrounds_candidates.py` and `data/backgrounds_more.py`,
+  chosen by eye from contact sheets, built by `data/build_backgrounds.py` from `data/backgrounds.json`).
+  Someone who has the first 100 is offered the rest.
 - **Read aloud**: choose among the phone's English voices, a Slow speed, a sleep timer.
 - **Word study** (tap a verse, then Words): the English words with their Strong's numbers (BSB and KJV; a word that stands
   for more than one Hebrew or Greek word shows a tab for each), the Hebrew/Greek entry, how often it is used, every verse

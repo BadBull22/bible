@@ -5,14 +5,14 @@
 Reads mobile/data/backgrounds.json (the photos chosen from backgrounds_candidates.py's
 contact sheets: theme, Commons title and page, licence, author -- all CC0 or public domain),
 downloads each at 1400 px wide, crops the middle square, and writes
-<out dir>/nature-backgrounds-v1.zip:
+<out dir>/nature-backgrounds-v2.zip:
 
     backgrounds.json   [{id, theme, title, author, licence, source}]
     full/<id>.jpg      720 x 720
     thumb/<id>.jpg     180 x 180
 
 It prints the zip's size and SHA-256: put both in mobile/src-tauri/src/backgrounds.rs (SIZE_MB,
-SHA256), and upload the zip to the GitHub release `backgrounds-v1` (never marked latest).
+SHA256), and upload the zip to the GitHub release `backgrounds-v2` (never marked latest; keep backgrounds-v1, older apps still use it).
 """
 import hashlib
 import html
@@ -62,15 +62,23 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     chosen = json.loads((HERE / "backgrounds.json").read_text(encoding="utf-8"))
     listing = []
-    zpath = out_dir / "nature-backgrounds-v1.zip"
-    with zipfile.ZipFile(zpath, "w", zipfile.ZIP_STORED) as z:
-        for i, c in enumerate(chosen, 1):
-            name = c["title"].removeprefix("File:")
-            url = "https://commons.wikimedia.org/wiki/Special:FilePath/" + urllib.parse.quote(name) + "?width=1400"
-            im = ImageOps.exif_transpose(Image.open(BytesIO(fetch(url)))).convert("RGB")
+    zpath = out_dir / "nature-backgrounds-v2.zip"
+
+    def prepare(item):
+        # the photos are fetched several at a time (Commons makes each size on first request, which is slow one by one)
+        i, c = item
+        name = c["title"].removeprefix("File:")
+        url = "https://commons.wikimedia.org/wiki/Special:FilePath/" + urllib.parse.quote(name) + "?width=1400"
+        im = ImageOps.exif_transpose(Image.open(BytesIO(fetch(url)))).convert("RGB")
+        return i, c, name, jpeg(square(im, FULL), 60), jpeg(square(im, THUMB), 62)
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    with zipfile.ZipFile(zpath, "w", zipfile.ZIP_STORED) as z, ThreadPoolExecutor(8) as pool:
+        for i, c, name, full_jpg, thumb_jpg in pool.map(prepare, enumerate(chosen, 1)):
             pid = f"{i:03d}"
-            z.writestr(f"full/{pid}.jpg", jpeg(square(im, FULL), 60))
-            z.writestr(f"thumb/{pid}.jpg", jpeg(square(im, THUMB), 62))
+            z.writestr(f"full/{pid}.jpg", full_jpg)
+            z.writestr(f"thumb/{pid}.jpg", thumb_jpg)
             listing.append(
                 {
                     "id": pid,

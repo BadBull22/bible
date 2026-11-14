@@ -65,6 +65,21 @@ their own computer (`userdata.db` in the app's data folder) and are never sent a
 Built with Tauri, Rust, React, SQLite (FTS5, sqlite-vec), candle and Cytoscape, all under
 permissive open-source licences (MIT / Apache 2.0).
 
+The Content Factory puts its short videos into an MP4 file with **Mediabunny** (Vanilagy,
+https://mediabunny.dev, licence MPL-2.0), used unmodified. Its soft background music is composed by the
+app itself, from fixed musical rules, as it is needed: no recording is used.
+
+The Content Factory's optional "Free recordings" (downloaded only when the reader asks, each saved with its credit): piano
+recordings from the Open Goldberg Variations by Kimiko Ishizaka (CC0, https://archive.org/details/The_Open_Goldberg_Variations-11823),
+and carols and hymns by the US Army Band and the US Navy Band (works of the US government, public domain, Wikimedia Commons).
+Photographs found online from the Content Factory come from Wikimedia Commons with a public domain, CC0, CC BY or CC BY-SA licence and
+are shown with their credit. The seasonal verse lists are Scripture references only. Songs a reader puts in their own music folder are
+theirs; those in a "Southern Cross Music" folder are credited to that artist.
+
+The 331 nature photographs offered as backgrounds (both apps; one download, about 36 MB, the release `backgrounds-v2`) are all CC0 (public domain dedication) on Wikimedia Commons. Each is listed with its title, photographer and Commons page in the pack's own `backgrounds.json`, which the apps keep.
+
+The 55 Christian pictures offered as backgrounds (an optional download of about 12 MB, the release `backgrounds-christian-v1`; crosses, prayer, worship, stained glass, the Bible, communion and Christmas) are photographs from Unsplash, used under the Unsplash License (free to use, including commercially, without asking permission or giving credit). Each is listed with its title, photographer's name (from the file name Unsplash gave it) and its Unsplash page, `https://unsplash.com/photos/<code>`, in the pack's own `backgrounds.json`, which the app keeps. They were chosen by hand; none is sold or offered as a stand-alone download. If Unsplash or a photographer asks for any to be taken out, they are removed from the pack.
+
 ### Library (downloaded on request)
 
 The Library screen downloads modules from the **CrossWire Bible Society**'s free SWORD
