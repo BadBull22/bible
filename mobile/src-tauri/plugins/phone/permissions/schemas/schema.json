@@ -319,6 +319,18 @@
           "markdownDescription": "Denies the install_update command without any pre-configured scope."
         },
         {
+          "description": "Enables the list_backup_copies command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-list-backup-copies",
+          "markdownDescription": "Enables the list_backup_copies command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the list_backup_copies command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-list-backup-copies",
+          "markdownDescription": "Denies the list_backup_copies command without any pre-configured scope."
+        },
+        {
           "description": "Enables the open_file command without any pre-configured scope.",
           "type": "string",
           "const": "allow-open-file",
@@ -367,6 +379,30 @@
           "markdownDescription": "Denies the pick_folder command without any pre-configured scope."
         },
         {
+          "description": "Enables the read_backup_copy command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-read-backup-copy",
+          "markdownDescription": "Enables the read_backup_copy command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the read_backup_copy command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-read-backup-copy",
+          "markdownDescription": "Denies the read_backup_copy command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the save_backup_copy command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-save-backup-copy",
+          "markdownDescription": "Enables the save_backup_copy command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save_backup_copy command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-save-backup-copy",
+          "markdownDescription": "Denies the save_backup_copy command without any pre-configured scope."
+        },
+        {
           "description": "Enables the save_image command without any pre-configured scope.",
           "type": "string",
           "const": "allow-save-image",
@@ -401,6 +437,18 @@
           "type": "string",
           "const": "deny-share",
           "markdownDescription": "Denies the share command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the share_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-share-file",
+          "markdownDescription": "Enables the share_file command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the share_file command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-share-file",
+          "markdownDescription": "Denies the share_file command without any pre-configured scope."
         },
         {
           "description": "Enables the share_image command without any pre-configured scope.",
@@ -451,10 +499,10 @@
           "markdownDescription": "Denies the voices command without any pre-configured scope."
         },
         {
-          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`",
+          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`"
+          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`"
         }
       ]
     }
