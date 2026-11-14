@@ -15,6 +15,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
 import { autoBackupOn, backupFolder, setAutoBackupOn, setBackupFolder } from "../autoBackup";
 import { collectDesktopExtras } from "../backupExtras";
+import { restoreFromChosenFile, restoreLatest } from "../restoreRun";
 
 const SHARE_TEXT = "Bible Concordance: a free Bible study app for Windows and Android that works offline, with no account and no adverts. https://bible4me.org";
 
@@ -139,6 +140,8 @@ interface Props {
   onOpenWelcome: () => void;
   /** open the "What's new in this version" window */
   onOpenWhatsNew: () => void;
+  /** a restore brought data in: the screens that show it draw again */
+  onStudyChanged: () => void;
   /** open scrolled to this section (used by Getting started's "Show me") */
   focus?: "online" | "appearance";
   onClose: () => void;
@@ -245,6 +248,7 @@ export function SettingsPanel({
   onOpenHelp,
   onOpenWelcome,
   onOpenWhatsNew,
+  onStudyChanged,
   focus,
   onClose,
 }: Props) {
@@ -511,8 +515,8 @@ export function SettingsPanel({
         <SyncSettings />
       </Group>
 
-      <Group {...g("backup")} title="Back up your notes" hints={false}>
-        <BackupSettings />
+      <Group {...g("backup")} title="Backup and restore" hints={false}>
+        <BackupSettings onRestored={onStudyChanged} />
       </Group>
 
       <Group {...g("updates")} title="Updates" hints={false}>
@@ -639,17 +643,23 @@ export function SettingsPanel({
   );
 }
 
-/** The weekly automatic backup: on or off, the folder, and "Back up now". */
-function BackupSettings() {
+/** Backup and restore: back up now, restore the latest (or a file), the weekly automatic backup and where it goes. */
+function BackupSettings({ onRestored }: { onRestored: () => void }) {
   const [on, setOn] = useState(autoBackupOn);
   const [custom, setCustom] = useState<string | null>(backupFolder);
   const [defaultFolder, setDefaultFolder] = useState("");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     api.autoBackupFolder().then(setDefaultFolder).catch(() => setDefaultFolder(""));
   }, []);
   const folder = custom ?? defaultFolder;
+
+  const say = (text: string | null, bad = false) => {
+    setStatus(text);
+    setFailed(bad);
+  };
 
   async function chooseFolder() {
     try {
@@ -657,21 +667,38 @@ function BackupSettings() {
       if (typeof picked === "string" && picked) {
         setBackupFolder(picked);
         setCustom(picked);
-        setStatus(null);
+        say(null);
       }
     } catch (e) {
-      setStatus(String(e));
+      say(String(e), true);
     }
   }
 
   async function backUpNow() {
     setBusy(true);
-    setStatus(null);
+    say(null);
     try {
       const r = await api.autoBackup(custom, true, collectDesktopExtras());
-      setStatus(r.file ? `Backed up: ${r.file}` : "Nothing to back up yet.");
+      say(r.file ? `Backed up: ${r.file}` : "Nothing to back up yet.");
     } catch (e) {
-      setStatus(String(e));
+      say(String(e), true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** `how` asks the reader and restores; the line it returns (nothing when the reader said no) is shown. */
+  async function restore(how: () => Promise<string | null>) {
+    setBusy(true);
+    say(null);
+    try {
+      const line = await how();
+      if (line) {
+        say(line);
+        onRestored();
+      }
+    } catch (e) {
+      say(String(e), true);
     } finally {
       setBusy(false);
     }
@@ -680,8 +707,26 @@ function BackupSettings() {
   return (
     <>
       <p className="search-hint" style={{ display: "block" }}>
-        Your notes, highlights, bookmarks, reading plans and sermons (and the names, logos and posts of the Content Factory) are copied to a file once a week, so they are not lost if this computer breaks or the app is removed. The last eight copies are kept. To get them back, use <strong>My Study &rarr; Import backup</strong>.
+        <strong>Back up</strong> copies your notes, highlights, bookmarks, reading plans and sermons (and the names, logos and posts of the Content Factory) to a file, so they are not lost if this computer breaks or the app is removed.
+        It happens by itself once a week, and the last eight copies are kept. <strong>Restore</strong> puts a backup back: it only adds what is missing and never deletes anything you have now.
       </p>
+      <div className="note-editor-actions">
+        <button className="pill-btn" disabled={busy} onClick={() => void backUpNow()} title="Make a backup file now">
+          {busy ? "Working…" : "Back up now"}
+        </button>
+        <button className="pill-btn" disabled={busy} onClick={() => void restore(restoreLatest)} title="Put back the newest backup there is (it asks you to choose a file only if none is found)">
+          Restore latest
+        </button>
+        <button className="outline-btn" disabled={busy} onClick={() => void restore(() => restoreFromChosenFile(folder))} title="Choose a backup file, for example an older one, or one copied from another computer">
+          Restore from a file…
+        </button>
+      </div>
+      {status && (
+        <p className={failed ? "status-error" : "muted"} role="status">
+          {status}
+        </p>
+      )}
+      <h5 className="sync-sub">Automatic backup</h5>
       <label className="set-check">
         <input
           type="checkbox"
@@ -693,6 +738,9 @@ function BackupSettings() {
         />{" "}
         Back up automatically once a week
       </label>
+      <p className="muted" style={{ marginBottom: 0 }}>
+        Backups are kept in:
+      </p>
       {folder && <p className="log-path">{folder}</p>}
       <div className="note-editor-actions">
         <button className="outline-btn" onClick={() => void chooseFolder()}>
@@ -704,17 +752,17 @@ function BackupSettings() {
             onClick={() => {
               setBackupFolder(null);
               setCustom(null);
-              setStatus(null);
+              say(null);
             }}
           >
             Use the usual folder
           </button>
         )}
-        <button className="outline-btn" disabled={busy} onClick={() => void backUpNow()}>
-          {busy ? "Backing up…" : "Back up now"}
-        </button>
       </div>
-      {status && <p className="muted">{status}</p>}
+      <p className="search-hint" style={{ display: "block" }}>
+        <em>Restore latest</em> looks in this folder, the usual folder and the files <em>Back up</em> made in My Study (Documents → Bible Concordance), and uses the newest. A backup made on the phone app can be restored too.
+        The same buttons are in <strong>My Study</strong>.
+      </p>
     </>
   );
 }

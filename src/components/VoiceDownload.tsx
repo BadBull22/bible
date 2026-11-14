@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { api, VoiceStatus } from "../api";
+import { confirmAsk } from "../confirm";
 
 const mb = (bytes: number) => `${Math.round(bytes / 1e6)} MB`;
 
@@ -42,8 +43,8 @@ export function VoiceDownload({ onChange }: { onChange?: (available: boolean) =>
         The natural voice is installed.{" "}
         <button
           className="link-btn"
-          onClick={() => {
-            if (window.confirm("Remove the natural voice? Listen will use the computer's built-in voice until you download it again.")) {
+          onClick={async () => {
+            if (await confirmAsk("Remove the natural voice? Listen will use the computer's built-in voice until you download it again.")) {
               api.voiceRemove().then(refresh).catch((e) => setError(String(e)));
             }
           }}

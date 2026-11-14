@@ -3,9 +3,11 @@ import { api, BookBookmark, BookInfo, HIGHLIGHT_COLORS, highlightLabel, PlanProg
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "../readingPlans";
 import { addToBasket, addVersesToBasket } from "../basket";
 import { applyDesktopExtras, collectDesktopExtras } from "../backupExtras";
+import { broughtText } from "../restore";
 import { BasketButton } from "./BasketButton";
 import { CopyButton } from "./CopyButton";
 import { ChevronDownIcon, CloseIcon } from "./icons";
+import { confirmAsk } from "../confirm";
 
 type Tab = "notes" | "highlights" | "bookmarks" | "plans";
 
@@ -115,10 +117,10 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
 
   async function doExport() {
     setError(null);
-    setStatus("Exporting…");
+    setStatus("Backing up…");
     try {
       const r = await api.exportStudy(collectDesktopExtras());
-      setStatus(`Saved ${r.notes} notes, ${r.highlights} highlights and ${r.bookmarks} bookmarks to ${r.markdown_path} (and a .json backup beside it).`);
+      setStatus(`Backed up ${r.notes} notes, ${r.highlights} highlights and ${r.bookmarks} bookmarks to ${r.markdown_path} (and a .json backup beside it).`);
     } catch (e) {
       setStatus(null);
       setError(String(e));
@@ -131,8 +133,7 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
     reader.onload = async () => {
       try {
         const r = await api.importStudy(String(reader.result ?? ""));
-        const factory = applyDesktopExtras(r.desktop);
-        setStatus(`Imported ${r.notes} notes, ${r.highlights} highlights, ${r.bookmarks} bookmarks, ${r.plans} reading plans and ${r.sermons} sermons. Nothing already here was deleted.${factory ? " " + factory : ""}`);
+        setStatus(broughtText(r, applyDesktopExtras(r.desktop)));
         reload();
         onPlansChanged();
       } catch (e) {
@@ -149,7 +150,7 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
     onPlansChanged();
   }
   async function stopPlan(id: string) {
-    if (!window.confirm("Stop this reading plan? Your ticked-off days for it will be cleared.")) return;
+    if (!(await confirmAsk("Stop this reading plan? Your ticked-off days for it will be cleared."))) return;
     await api.stopPlan(id).catch((e) => setError(String(e)));
     reload();
     onPlansChanged();
@@ -184,11 +185,11 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
         ))}
       </div>
       <div className="study-actions">
-        <button className="text-btn" onClick={doExport} title="Save everything as a readable Markdown file plus a JSON backup in Documents\Bible Concordance">
-          Export
+        <button className="text-btn" onClick={doExport} title="Back up: save everything as a readable Markdown file plus a JSON backup in Documents\Bible Concordance">
+          Back up
         </button>
-        <button className="text-btn" onClick={() => fileRef.current?.click()} title="Restore from a .json backup made with Export (merges; deletes nothing)">
-          Import backup
+        <button className="text-btn" onClick={() => fileRef.current?.click()} title="Restore: choose a .json backup (made by Back up, or the weekly automatic one). It only adds what is missing and deletes nothing. Settings > Backup and restore has more.">
+          Restore
         </button>
         <input
           ref={fileRef}

@@ -16,7 +16,9 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       "Content Factory > On my phone: scan a code and your saved pictures and videos open on your phone over your home Wi-Fi, where you can save them to post. Nothing to install, nothing goes through the internet; it is off until you switch it on.",
       "Settings > Keep in step: you can also put your finished pictures in the shared OneDrive, Google Drive or Dropbox folder, for the phone.",
       "Browse: a “Fetch additional stories” button at the bottom of Bible stories, Verses for… and For children brings in new stories and pages (with their pictures) added since this version of the app, without a new version. They are kept on your computer and work offline.",
-      "Your backups (My Study > Export, the weekly automatic backup) now keep the Content Factory's names, logos, header and footer and its Ready to post list, and a backup made on the phone app can be imported.",
+      "Settings > Backup and restore: Back up now, Restore latest (it uses the newest backup it finds, and asks you to choose a file only if there is none) and Restore from a file…. My Study's Export and Import buttons are now called Back up and Restore.",
+      "Fixed: the questions that guard a deletion (remove a saved song, a notice or a service list, stop a reading plan, remove the natural voice) did not wait for your answer; they now do.",
+      "Your backups (My Study > Back up, the weekly automatic backup) now keep the Content Factory's names, logos, header and footer and its Ready to post list, and a backup made on the phone app can be imported.",
     ],
   },
   {

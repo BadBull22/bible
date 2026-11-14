@@ -9,6 +9,7 @@ import { Bulletin } from "./Bulletin";
 import { DeckBuilder } from "./DeckBuilder";
 import { PrintIcon } from "./icons";
 import { Presenter } from "./SlideShow";
+import { confirmAsk } from "../confirm";
 
 interface Props {
   versions: Version[];
@@ -95,7 +96,7 @@ export function ServiceHome({ versions, books, versionCode, onOpenSermon, onClos
     }
   };
   const remove = async (k: DeckKind, id: number, title: string) => {
-    if (!window.confirm(`Delete “${title}”? Its slides are lost.`)) return;
+    if (!(await confirmAsk(`Delete “${title}”? Its slides are lost.`))) return;
     await api.deckDelete(id).catch((e) => setError(String(e)));
     if (choice[k] === id) pick(k, undefined);
     load();
