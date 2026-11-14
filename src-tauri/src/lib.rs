@@ -36,6 +36,7 @@ mod study_commands;
 mod browse_review;
 mod factory;
 mod factory_share;
+mod factory_phone;
 mod sync;
 mod update;
 mod userdata;
@@ -216,6 +217,7 @@ pub fn run() {
             // the phone over the home Wi-Fi, if the reader turned it on
             app.manage(lan::LanState::default());
             app.manage(remote::RemoteState::default());
+            app.manage(factory_phone::PhoneShareState::default());
             lan::start_if_on(app.handle());
             app.manage(voice::VoiceState::default());
 
@@ -340,6 +342,7 @@ pub fn run() {
             study_commands::sync_status,
             study_commands::sync_set_folder,
             study_commands::sync_set_name,
+            study_commands::sync_set_share_pictures,
             study_commands::sync_now,
             lan::lan_status,
             lan::lan_enable,
@@ -395,6 +398,9 @@ pub fn run() {
             factory::factory_gallery_open,
             factory::factory_pictures_list,
             factory::factory_pictures_folder,
+            factory_phone::factory_phone_start,
+            factory_phone::factory_phone_stop,
+            factory_phone::factory_phone_info,
             factory_share::factory_copy_files,
             factory_share::factory_share,
             study_commands::save_study_sheet,

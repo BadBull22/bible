@@ -48,7 +48,7 @@ pub struct RemoteInfo {
     pub qr_svg: String,
 }
 
-fn info(url: &str) -> Result<RemoteInfo, String> {
+pub(crate) fn info(url: &str) -> Result<RemoteInfo, String> {
     use qrcode::render::svg;
     let qr = qrcode::QrCode::new(url.as_bytes()).map_err(err)?;
     let qr_svg = qr
@@ -62,7 +62,7 @@ fn info(url: &str) -> Result<RemoteInfo, String> {
 }
 
 /// A code nobody can guess: 12 hex digits from SQLite's own random source.
-fn new_code() -> Result<String, String> {
+pub(crate) fn new_code() -> Result<String, String> {
     let c = rusqlite::Connection::open_in_memory().map_err(err)?;
     c.query_row("SELECT lower(hex(randomblob(6)))", [], |r| r.get(0)).map_err(err)
 }

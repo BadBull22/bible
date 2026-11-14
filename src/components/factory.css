@@ -68,6 +68,16 @@
   background: var(--accent-100);
 }
 
+.fx-btn.on {
+  border-color: var(--accent-500);
+  background: var(--accent-100);
+}
+
+/* the phone dialog sits over the whole studio */
+.fx-phone-overlay {
+  z-index: 200;
+}
+
 .fx-btn:disabled {
   opacity: 0.5;
   cursor: default;

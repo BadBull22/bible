@@ -56,6 +56,57 @@ pub fn sync_media(local: &Path, folder: &Path) -> Result<usize, String> {
     core::sync_media(local, folder)
 }
 
+/// The most files put in the shared folder, newest first, and the largest video put there (a minute of 1080p video is about 50 MB).
+const SHARE_PICTURES_MAX: usize = 200;
+const SHARE_VIDEO_MAX_BYTES: u64 = 120 * 1024 * 1024;
+
+/// The pictures (and, if asked, the videos) the Content Factory has saved, copied into `<folder>/Bible Concordance sync/pictures`, so a phone that
+/// keeps in step through the same folder can show and save them. One way only, computer to folder: a file already there with the same size is left, nothing
+/// in the folder is ever changed or deleted, and a file is copied under a temporary name first so a half-copied one is never taken for whole.
+/// Returns how many were copied.
+pub fn share_pictures(factory_root: &Path, folder: &Path, videos: bool) -> Result<usize, String> {
+    let shared = folder.join(core::SUBFOLDER).join("pictures");
+    let mut found: Vec<(std::time::SystemTime, std::path::PathBuf, u64)> = Vec::new();
+    let mut wanted = vec![("Pictures", &["png", "jpg", "jpeg"][..])];
+    if videos {
+        wanted.push(("Videos", &["mp4"][..]));
+    }
+    for (sub, endings) in wanted {
+        let Ok(entries) = std::fs::read_dir(factory_root.join(sub)) else { continue };
+        for e in entries.flatten() {
+            let path = e.path();
+            let name = e.file_name().to_string_lossy().to_string();
+            let Ok(meta) = e.metadata() else { continue };
+            let ok = name.rsplit_once('.').map(|(_, x)| endings.contains(&x.to_ascii_lowercase().as_str())).unwrap_or(false);
+            if !meta.is_file() || name.starts_with('.') || !ok || (sub == "Videos" && meta.len() > SHARE_VIDEO_MAX_BYTES) {
+                continue;
+            }
+            found.push((meta.modified().unwrap_or(std::time::UNIX_EPOCH), path, meta.len()));
+        }
+    }
+    found.sort_by(|a, b| b.0.cmp(&a.0));
+    found.truncate(SHARE_PICTURES_MAX);
+    if found.is_empty() {
+        return Ok(0);
+    }
+    std::fs::create_dir_all(&shared).map_err(err)?;
+    let mut n = 0;
+    for (_, path, len) in found {
+        let Some(name) = path.file_name().map(|n| n.to_string_lossy().to_string()) else { continue };
+        let to = shared.join(&name);
+        if std::fs::metadata(&to).map(|m| m.len() == len).unwrap_or(false) {
+            continue;
+        }
+        let tmp = shared.join(format!(".{name}.part"));
+        if std::fs::copy(&path, &tmp).is_ok() && std::fs::rename(&tmp, &to).is_ok() {
+            n += 1;
+        } else {
+            let _ = std::fs::remove_file(&tmp);
+        }
+    }
+    Ok(n)
+}
+
 /// What a computer keeps in step.
 pub struct Desktop;
 
@@ -475,6 +526,41 @@ mod tests {
         assert_eq!(core::sync_media(&b, &folder).unwrap(), 1);
         assert_eq!(std::fs::read(b.join("abc.jpg")).unwrap(), b"picture");
         assert_eq!(core::sync_media(&a, &folder).unwrap(), 0);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn made_pictures_are_put_in_the_shared_folder_one_way_and_only_what_was_asked() {
+        let root = std::env::temp_dir().join(format!("bc-sync-p-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let (factory, folder) = (root.join("Content Factory"), root.join("shared"));
+        for d in ["Pictures", "Videos", "Music", "My pictures"] {
+            std::fs::create_dir_all(factory.join(d)).unwrap();
+        }
+        std::fs::write(factory.join("Pictures").join("John 3-16.png"), b"png").unwrap();
+        std::fs::write(factory.join("Pictures").join("notes.txt"), b"words").unwrap();
+        std::fs::write(factory.join("Videos").join("clip.mp4"), b"video").unwrap();
+        std::fs::write(factory.join("Music").join("song.mp3"), b"music").unwrap();
+        std::fs::write(factory.join("My pictures").join("mine.jpg"), b"photo").unwrap();
+        let there = folder.join(core::SUBFOLDER).join("pictures");
+
+        // pictures only: just the picture, not the text, the video, the music or the reader's own photos
+        assert_eq!(share_pictures(&factory, &folder, false).unwrap(), 1);
+        assert_eq!(std::fs::read_dir(&there).unwrap().count(), 1);
+        assert_eq!(std::fs::read(there.join("John 3-16.png")).unwrap(), b"png");
+        // again: nothing new; with videos: the video is added
+        assert_eq!(share_pictures(&factory, &folder, false).unwrap(), 0);
+        assert_eq!(share_pictures(&factory, &folder, true).unwrap(), 1);
+        assert_eq!(std::fs::read(there.join("clip.mp4")).unwrap(), b"video");
+        // what is in the folder is never changed or deleted: a file taken away here stays there, and a stray one is left alone
+        std::fs::write(there.join("from the phone.png"), b"p").unwrap();
+        std::fs::remove_file(factory.join("Pictures").join("John 3-16.png")).unwrap();
+        assert_eq!(share_pictures(&factory, &folder, true).unwrap(), 0);
+        assert!(there.join("John 3-16.png").exists() && there.join("from the phone.png").exists());
+        // a computer that has made nothing yet shares nothing and leaves no folder
+        let empty = root.join("empty");
+        assert_eq!(share_pictures(&root.join("Nothing here"), &empty, true).unwrap(), 0);
+        assert!(!empty.exists());
         let _ = std::fs::remove_dir_all(&root);
     }
 }

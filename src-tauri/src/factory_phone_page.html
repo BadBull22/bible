@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pictures from the computer</title>
+<style>
+  :root { color-scheme: dark; --bg: #0d1220; --card: #18203a; --fg: #eef1fa; --muted: #9aa6c7; --accent: #4f86cf; --warn: #c0562f; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--fg); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { padding: 10px; max-width: 900px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  h1 { font-size: 1.15rem; margin: 0; }
+  button, a.btn { font: inherit; color: var(--fg); background: #26325a; border: 0; border-radius: 12px; padding: 10px 14px; min-height: 44px; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation; }
+  button:active, a.btn:active { filter: brightness(1.3); }
+  button.go, a.btn.go { background: var(--accent); }
+  #tabs { display: flex; gap: 8px; margin-bottom: 10px; }
+  #tabs button { flex: 1; }
+  #tabs button.on { background: var(--accent); }
+  #grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (min-width: 560px) { #grid { grid-template-columns: repeat(3, 1fr); } }
+  .tile { background: var(--card); border: 0; border-radius: 12px; padding: 0; overflow: hidden; position: relative; min-height: 0; aspect-ratio: 1; display: block; width: 100%; }
+  .tile img, .tile video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  .tile .tag { position: absolute; left: 6px; bottom: 6px; background: rgba(0, 0, 0, 0.65); border-radius: 8px; padding: 2px 8px; font-size: 0.8rem; }
+  #empty, #lost, #hint { color: var(--muted); text-align: center; padding: 14px 4px; }
+  #lost { background: var(--warn); color: #fff; border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; }
+  #viewer { position: fixed; inset: 0; background: rgba(5, 8, 16, 0.96); display: flex; flex-direction: column; gap: 10px; padding: 10px; z-index: 5; }
+  #viewer[hidden] { display: none; }
+  #stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+  #stage img, #stage video { max-width: 100%; max-height: 100%; border-radius: 6px; }
+  #bar { display: flex; gap: 8px; flex-wrap: wrap; }
+  #bar > * { flex: 1 1 30%; }
+  #name { color: var(--muted); font-size: 0.85rem; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+</head>
+<body>
+<header><h1>Pictures from the computer</h1><button id="refresh" type="button">Refresh</button></header>
+<div id="lost" hidden>Lost the connection to the computer. Check you are on the same Wi-Fi.</div>
+<div id="tabs" hidden><button type="button" id="t-pic" class="on">Pictures</button><button type="button" id="t-vid">Videos</button></div>
+<div id="grid"></div>
+<p id="empty" hidden>Nothing saved yet. Make a picture in the Content Factory and it will be here.</p>
+<p id="hint" hidden>Tap a picture, then <strong>Save to my phone</strong>. If that does nothing, press and hold the picture and choose Save.</p>
+<div id="viewer" hidden>
+  <div id="stage"></div>
+  <div id="name"></div>
+  <div id="bar">
+    <a class="btn go" id="save" download>Save to my phone</a>
+    <button type="button" id="share" hidden>Share…</button>
+    <button type="button" id="close">Back</button>
+  </div>
+</div>
+<script>
+(function () {
+  var base = location.pathname.replace(/\/+$/, "");
+  var $ = function (id) { return document.getElementById(id); };
+  var items = [], tab = "Pictures", open = false, lastKey = "";
+  function url(it, dl) { return base + "/f/" + it.kind + "/" + encodeURIComponent(it.name) + (dl ? "?dl=1" : ""); }
+  function title(it) { return it.name.replace(/\.[^.]+$/, ""); }
+  function lost(on) { $("lost").hidden = !on; }
+  function draw() {
+    var pics = items.filter(function (i) { return i.kind === "Pictures"; });
+    var vids = items.filter(function (i) { return i.kind === "Videos"; });
+    $("tabs").hidden = !(pics.length && vids.length);
+    if (!vids.length) tab = "Pictures"; else if (!pics.length) tab = "Videos";
+    $("t-pic").className = tab === "Pictures" ? "on" : ""; $("t-vid").className = tab === "Videos" ? "on" : "";
+    var shown = tab === "Pictures" ? pics : vids;
+    $("empty").hidden = items.length > 0; $("hint").hidden = items.length === 0;
+    var key = tab + "|" + shown.map(function (i) { return i.name + i.modified; }).join("|");
+    if (key === lastKey) return;
+    lastKey = key;
+    var grid = $("grid"); grid.textContent = "";
+    shown.forEach(function (it) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "tile"; b.setAttribute("aria-label", title(it));
+      var m;
+      if (it.kind === "Videos") { m = document.createElement("video"); m.preload = "metadata"; m.muted = true; m.playsInline = true; m.src = url(it) + "#t=0.1"; var t = document.createElement("span"); t.className = "tag"; t.textContent = "Video"; b.appendChild(m); b.appendChild(t); }
+      else { m = document.createElement("img"); m.loading = "lazy"; m.alt = title(it); m.src = url(it); b.appendChild(m); }
+      b.onclick = function () { show(it); };
+      grid.appendChild(b);
+    });
+  }
+  function show(it) {
+    open = true; $("viewer").hidden = false; $("name").textContent = title(it);
+    var st = $("stage"); st.textContent = "";
+    var m;
+    if (it.kind === "Videos") { m = document.createElement("video"); m.controls = true; m.playsInline = true; m.src = url(it); }
+    else { m = document.createElement("img"); m.alt = title(it); m.src = url(it); }
+    st.appendChild(m);
+    var a = $("save"); a.href = url(it, true); a.setAttribute("download", it.name);
+    var sh = $("share"); sh.hidden = !(navigator.canShare && navigator.share);
+    sh.onclick = function () {
+      fetch(url(it)).then(function (r) { return r.blob(); }).then(function (blob) {
+        var f = new File([blob], it.name, { type: blob.type });
+        if (navigator.canShare({ files: [f] })) return navigator.share({ files: [f], title: title(it) });
+      }).catch(function () {});
+    };
+  }
+  function hide() { open = false; $("viewer").hidden = true; $("stage").textContent = ""; }
+  function load() {
+    fetch(base + "/list", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (list) { lost(false); items = list; if (!open) draw(); })
+      .catch(function () { lost(true); });
+  }
+  $("close").onclick = hide;
+  $("refresh").onclick = load;
+  $("t-pic").onclick = function () { tab = "Pictures"; lastKey = ""; draw(); };
+  $("t-vid").onclick = function () { tab = "Videos"; lastKey = ""; draw(); };
+  setInterval(load, 8000); load();
+})();
+</script>
+</body>
+</html>

@@ -516,6 +516,8 @@ pub struct SyncStatus {
     name: String,
     last: Option<crate::sync::SyncReport>,
     error: Option<String>,
+    /// the Content Factory's finished pictures are also put in the shared folder, for the phone: "pictures", "all" (with videos), or nothing
+    share_pictures: Option<String>,
 }
 
 /// This computer's name as Windows knows it ("STUDY-PC" -> "Study-pc"), until the reader
@@ -536,6 +538,7 @@ fn sync_status_of(conn: &Connection) -> Result<SyncStatus, String> {
         name: setting(conn, "name")?.unwrap_or_else(computer_name),
         last: setting(conn, "last")?.and_then(|t| serde_json::from_str(&t).ok()),
         error: setting(conn, "error")?,
+        share_pictures: setting(conn, "share_pictures")?.filter(|m| m == "pictures" || m == "all"),
     })
 }
 
@@ -559,6 +562,15 @@ pub fn sync_set_folder(state: State<UserDataState>, folder: Option<String>) -> R
     sync_status_of(&conn)
 }
 
+/// Whether the Content Factory's finished pictures (and videos) are also put in the shared folder at each sync, for the phone to show: "pictures", "all", or none.
+#[tauri::command]
+pub fn sync_set_share_pictures(state: State<UserDataState>, mode: Option<String>) -> Result<SyncStatus, String> {
+    let conn = user_conn(&state)?;
+    let mode = mode.filter(|m| m == "pictures" || m == "all");
+    crate::sync::set_setting(&conn, "share_pictures", mode.as_deref())?;
+    sync_status_of(&conn)
+}
+
 #[tauri::command]
 pub fn sync_set_name(state: State<UserDataState>, name: String) -> Result<SyncStatus, String> {
     let conn = user_conn(&state)?;
@@ -573,7 +585,7 @@ pub fn sync_set_name(state: State<UserDataState>, name: String) -> Result<SyncSt
 pub async fn sync_now(app: AppHandle) -> Result<crate::sync::SyncReport, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let state = app.state::<UserDataState>();
-        let (folder, result) = {
+        let (folder, share, result) = {
             let mut conn = state.0.lock().map_err(|e| e.to_string())?;
             let folder = crate::sync::setting(&conn, "folder")?.ok_or("Choose the shared folder first.")?;
             let name = crate::sync::setting(&conn, "name")?.unwrap_or_else(computer_name);
@@ -585,11 +597,20 @@ pub async fn sync_now(app: AppHandle) -> Result<crate::sync::SyncReport, String>
             if let Err(e) = &r {
                 crate::sync::set_setting(&conn, "error", Some(e))?;
             }
-            (folder, r)
+            let share = crate::sync::setting(&conn, "share_pictures")?;
+            (folder, share, r)
         };
         let mut report = result?;
         if let Ok(data) = app.path().app_data_dir() {
             report.media = crate::sync::sync_media(&crate::sermon_media::media_dir(&data), std::path::Path::new(&folder)).unwrap_or(0);
+        }
+        // the finished pictures for the phone, if the reader asked (a failure here is a note, not a failed sync)
+        if let Some(mode) = share.as_deref().filter(|m| *m == "pictures" || *m == "all") {
+            match crate::factory::root(&app).and_then(|root| crate::sync::share_pictures(&root, std::path::Path::new(&folder), mode == "all")) {
+                Ok(0) => {}
+                Ok(n) => report.notes.push(format!("{n} Content Factory file{} put in the shared folder for the phone.", if n == 1 { "" } else { "s" })),
+                Err(e) => report.notes.push(format!("The Content Factory's pictures could not be put in the shared folder: {e}")),
+            }
         }
         let conn = state.0.lock().map_err(|e| e.to_string())?;
         crate::sync::set_setting(&conn, "last", Some(&serde_json::to_string(&report).map_err(|e| e.to_string())?))?;

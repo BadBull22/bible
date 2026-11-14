@@ -56,6 +56,12 @@ const PATHS: Record<string, ReactNode> = {
       <path d="m16 10 5-3v10l-5-3" />
     </>
   ),
+  phone: (
+    <>
+      <rect x="7" y="2.5" width="10" height="19" rx="2.2" />
+      <path d="M11 18.5h2" />
+    </>
+  ),
   post: (
     <>
       <path d="M21 3 10 14" />
