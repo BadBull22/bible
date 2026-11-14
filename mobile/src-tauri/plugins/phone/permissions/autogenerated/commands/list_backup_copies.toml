@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-list-backup-copies"
+description = "Enables the list_backup_copies command without any pre-configured scope."
+commands.allow = ["list_backup_copies"]
+
+[[permission]]
+identifier = "deny-list-backup-copies"
+description = "Denies the list_backup_copies command without any pre-configured scope."
+commands.deny = ["list_backup_copies"]

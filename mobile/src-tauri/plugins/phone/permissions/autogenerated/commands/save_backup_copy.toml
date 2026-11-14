@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-save-backup-copy"
+description = "Enables the save_backup_copy command without any pre-configured scope."
+commands.allow = ["save_backup_copy"]
+
+[[permission]]
+identifier = "deny-save-backup-copy"
+description = "Denies the save_backup_copy command without any pre-configured scope."
+commands.deny = ["save_backup_copy"]
