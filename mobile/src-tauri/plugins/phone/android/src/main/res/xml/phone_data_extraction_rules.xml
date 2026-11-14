@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 and newer: Google's cloud backup takes ONLY the small folder with the newest backup file; moving to a new phone by cable or Wi-Fi
+     (device-transfer, no size limit) is left as Android's default, which moves everything. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="backup-stash" />
+    </cloud-backup>
+</data-extraction-rules>

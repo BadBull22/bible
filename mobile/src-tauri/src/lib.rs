@@ -967,16 +967,78 @@ fn set_plan_day(core: State<Core>, plan_id: String, day: i64, done: bool) -> Res
     userdata::set_plan_day(&*core.get()?.user.lock().map_err(err)?, &plan_id, day, done)
 }
 
-/// Everything the reader has made, as the text of a backup file, and how much it holds.
-#[tauri::command(async)]
-fn backup(core: State<Core>) -> Result<(String, userdata::Counts), String> {
-    userdata::backup_json(&*core.get()?.user.lock().map_err(err)?)
+/// A backup file as the page needs it.
+#[derive(serde::Serialize)]
+struct BackupOut {
+    json: String,
+    counts: userdata::Counts,
+    /// the name of the Bible the file also holds (a Bible the reader added and reads by default), if any
+    bible: Option<String>,
 }
 
-/// Adds a backup file's contents to what is here (nothing is deleted).
+/// Everything the reader has made, as the text of a backup file, and how much it holds. `settings` is the phone's preferences (made and checked by the
+/// page); `bible` is the code of the Bible the reader reads by default: when it is one they added (not one that comes with the app) its whole text goes in.
 #[tauri::command(async)]
-fn restore(core: State<Core>, json: String) -> Result<userdata::Counts, String> {
-    userdata::restore(&mut *core.get()?.user.lock().map_err(err)?, &json)
+fn backup(core: State<Core>, settings: Option<serde_json::Value>, bible: Option<String>) -> Result<BackupOut, String> {
+    let core = core.get()?;
+    let added = match bible.as_deref().filter(|c| !c.is_empty() && !core.is_bundled(c)) {
+        Some(code) => bibles::export(&*core.bibles.lock().map_err(err)?, code)?,
+        None => None,
+    };
+    let name = added.as_ref().map(|b| b.name.clone());
+    let (json, counts) = userdata::backup_json_with(&*core.user.lock().map_err(err)?, settings, added)?;
+    Ok(BackupOut { json, counts, bible: name })
+}
+
+/// The folder in the app's own data that Android's automatic backup (Google) copies: ONLY this small folder, never the big downloads (see the backup rules).
+pub const STASH_DIR: &str = "backup-stash";
+
+/// Keeps the newest backup file in the folder Google's backup copies (a new phone signed in to the same Google account gets it back at install).
+#[tauri::command(async)]
+fn stash_backup(core: State<Core>, json: String) -> Result<(), String> {
+    let dir = core.get()?.dir.join(STASH_DIR);
+    std::fs::create_dir_all(&dir).map_err(err)?;
+    let part = dir.join("latest.json.part");
+    std::fs::write(&part, json).map_err(err)?;
+    std::fs::rename(&part, dir.join("latest.json")).map_err(err)
+}
+
+/// The backup kept for Google's backup, if there is one (its text), for the restore a new phone offers.
+#[tauri::command(async)]
+fn stashed_backup(core: State<Core>) -> Result<Option<String>, String> {
+    Ok(std::fs::read_to_string(core.get()?.dir.join(STASH_DIR).join("latest.json")).ok())
+}
+
+/// What a restore did.
+#[derive(serde::Serialize)]
+struct RestoreOut {
+    counts: userdata::Counts,
+    /// the file's preferences, for the page to check and apply
+    settings: Option<serde_json::Value>,
+    /// the Bible the file held, added now (`added` false: it was already here, or comes with the app)
+    bible: Option<RestoredBible>,
+}
+
+#[derive(serde::Serialize)]
+struct RestoredBible {
+    code: String,
+    name: String,
+    added: bool,
+}
+
+/// Adds a backup file's contents to what is here (nothing is deleted); a Bible in the file that is not here yet is added.
+#[tauri::command(async)]
+fn restore(core: State<Core>, json: String) -> Result<RestoreOut, String> {
+    let core = core.get()?;
+    let (counts, settings, bible) = userdata::restore_parts(&mut *core.user.lock().map_err(err)?, &json)?;
+    let bible = match bible {
+        Some(b) => {
+            let added = bibles::import_backup(&mut *core.bibles.lock().map_err(err)?, &b, &core.bundled)? > 0;
+            Some(RestoredBible { code: b.code, name: b.name, added })
+        }
+        None => None,
+    };
+    Ok(RestoreOut { counts, settings, bible })
 }
 
 // ---------------------------------------------------------------- a newer version of the app
@@ -1088,6 +1150,8 @@ pub fn run() {
             set_plan_day,
             backup,
             restore,
+            stash_backup,
+            stashed_backup,
             verse_words,
             strongs_entry,
             strongs_uses,

@@ -57,6 +57,30 @@ fn save_image<R: Runtime>(app: AppHandle<R>, name: String, base64: String) -> Re
     app.state::<Phone<R>>().run("saveImage", json!({ "name": name, "base64": base64 }))
 }
 
+/// Shares a text file (a backup) through the share sheet.
+#[tauri::command(async)]
+fn share_file<R: Runtime>(app: AppHandle<R>, name: String, text: String, mime: Option<String>, title: Option<String>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("shareFile", json!({ "name": name, "text": text, "mime": mime, "title": title }))
+}
+
+/// Writes a dated automatic backup copy (Documents/Bible Concordance backup on Android 10 and newer) and keeps the newest three: { saved, where }.
+#[tauri::command(async)]
+fn save_backup_copy<R: Runtime>(app: AppHandle<R>, name: String, text: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("saveBackupCopy", json!({ "name": name, "text": text }))
+}
+
+/// The backup copies this app made, newest first: { copies: [{ name, modified, uri }] }.
+#[tauri::command(async)]
+fn list_backup_copies<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("listBackupCopies", json!({}))
+}
+
+/// The text of one of those copies: { text }.
+#[tauri::command(async)]
+fn read_backup_copy<R: Runtime>(app: AppHandle<R>, uri: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("readBackupCopy", json!({ "uri": uri }))
+}
+
 /// Hands a downloaded update (an APK in the app's cache, see the app's `update.rs`) to
 /// Android's installer, which asks the reader. { started: true }, or { allow: true } when
 /// the reader must first let this app install apps (their settings are opened for it).
@@ -140,7 +164,7 @@ pub fn updates_dir<R: Runtime>(app: &AppHandle<R>) -> Result<std::path::PathBuf,
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("phone")
-        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, open_link, voices, share_image, save_image, install_update])
+        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, open_link, voices, share_image, save_image, install_update, share_file, save_backup_copy, list_backup_copies, read_backup_copy])
         .setup(|app, _api| {
             #[cfg(target_os = "android")]
             app.manage(Phone { handle: _api.register_android_plugin("com.ghostclaw.phone", "PhonePlugin")? });

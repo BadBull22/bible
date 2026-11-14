@@ -134,6 +134,10 @@ if ($Play) {
     if ($at -lt 0) { throw "No <application> in $manifest" }
     $m = $m.Insert($at, $block + [Environment]::NewLine + "    ")
 }
+# --- Google's automatic backup: it takes ONLY the small backup-stash folder (rules in the phone plugin's res/xml). Set every build, one way: the generated
+# manifest stays between builds.
+$m = [regex]::Replace($m, '\s+android:(allowBackup|fullBackupContent|dataExtractionRules)="[^"]*"', '')
+$m = ([regex]'<application').Replace($m, '<application android:allowBackup="true" android:fullBackupContent="@xml/phone_backup_rules" android:dataExtractionRules="@xml/phone_data_extraction_rules"', 1)
 Set-Content -Path $manifest -Value $m -NoNewline
 $features = if ($Play) { @("--features", "play") } else { @() }
 
