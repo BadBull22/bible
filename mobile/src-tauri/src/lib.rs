@@ -875,32 +875,35 @@ struct BackgroundsStatus {
     latest: usize,
 }
 
+/// How many photos of a set are downloaded (`pack`: "nature", the default, or "christian").
 #[tauri::command(async)]
-fn backgrounds_status(core: State<Core>) -> Result<BackgroundsStatus, String> {
-    Ok(BackgroundsStatus { count: backgrounds::count(&core.get()?.dir), size_mb: backgrounds::SIZE_MB, latest: backgrounds::LATEST_COUNT })
+fn backgrounds_status(core: State<Core>, pack: Option<String>) -> Result<BackgroundsStatus, String> {
+    let p = backgrounds::pack_of(pack.as_deref())?;
+    Ok(BackgroundsStatus { count: backgrounds::count(&core.get()?.dir, p), size_mb: p.size_mb, latest: p.count })
 }
 
-/// Downloads the backgrounds; "backgrounds-progress" events report the percentage.
+/// Downloads a set; "backgrounds-progress" (nature) or "backgrounds-progress-christian" events report the percentage.
 #[tauri::command(async)]
-fn backgrounds_install(app: AppHandle, core: State<Core>) -> Result<usize, String> {
-    backgrounds::install(&core.get()?.dir, &|pct| {
-        let _ = app.emit("backgrounds-progress", pct);
+fn backgrounds_install(app: AppHandle, core: State<Core>, pack: Option<String>) -> Result<usize, String> {
+    let p = backgrounds::pack_of(pack.as_deref())?;
+    backgrounds::install(&core.get()?.dir, p, &|pct| {
+        let _ = app.emit(p.event, pct);
     })
 }
 
 #[tauri::command(async)]
-fn backgrounds_thumbs(core: State<Core>) -> Result<Vec<backgrounds::Thumb>, String> {
-    backgrounds::thumbs(&core.get()?.dir)
+fn backgrounds_thumbs(core: State<Core>, pack: Option<String>) -> Result<Vec<backgrounds::Thumb>, String> {
+    backgrounds::thumbs(&core.get()?.dir, backgrounds::pack_of(pack.as_deref())?)
 }
 
 #[tauri::command(async)]
-fn background_image(core: State<Core>, id: String) -> Result<(String, backgrounds::Background), String> {
-    backgrounds::image(&core.get()?.dir, &id)
+fn background_image(core: State<Core>, id: String, pack: Option<String>) -> Result<(String, backgrounds::Background), String> {
+    backgrounds::image(&core.get()?.dir, backgrounds::pack_of(pack.as_deref())?, &id)
 }
 
 #[tauri::command(async)]
-fn backgrounds_remove(core: State<Core>) -> Result<(), String> {
-    backgrounds::remove(&core.get()?.dir)
+fn backgrounds_remove(core: State<Core>, pack: Option<String>) -> Result<(), String> {
+    backgrounds::remove(&core.get()?.dir, backgrounds::pack_of(pack.as_deref())?)
 }
 
 // ---------------------------------------------------------------- tags and the reading streak

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { api, BackgroundInfo, BackgroundThumb, phone, type Verse } from "./api";
+import { api, BackgroundInfo, BackgroundThumb, phone, type BackgroundPack, type Verse } from "./api";
 
 interface Props {
   book: string;
@@ -182,45 +182,64 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
     } as { prev: "yes" | "long" | "none"; next: "yes" | "long" | "none" };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range, chapterVerses]);
-  const [mode, setMode] = useState<"colour" | "nature">("colour");
+  const [mode, setMode] = useState<"colour" | "nature" | "christian">("colour");
   const [look, setLook] = useState(0);
-  // nature photos: how many are downloaded, the small pictures, the one chosen
-  const [status, setStatus] = useState<{ count: number; size_mb: number; latest: number } | null>(null);
-  const [thumbs, setThumbs] = useState<BackgroundThumb[] | null>(null);
+  // photos (nature, or the Christian pictures): how many of each set are downloaded, the small pictures, the one chosen
+  const pack: BackgroundPack = mode === "christian" ? "christian" : "nature";
+  const [statuses, setStatuses] = useState<Record<BackgroundPack, { count: number; size_mb: number; latest: number } | null>>({ nature: null, christian: null });
+  const [thumbsBy, setThumbsBy] = useState<Record<BackgroundPack, BackgroundThumb[] | null>>({ nature: null, christian: null });
+  const status = statuses[pack];
+  const thumbs = thumbsBy[pack];
+  const isPhoto = mode !== "colour";
   const [photo, setPhoto] = useState<{ image: HTMLImageElement; info: BackgroundInfo } | null>(null);
   const [downloading, setDownloading] = useState<number | null>(null);
   const name = `${label.replace(/[^A-Za-z0-9 ]/g, " ").replace(/\s+/g, " ").trim()}.png`;
 
   useEffect(() => {
-    api.backgroundsStatus().then(setStatus).catch(() => setStatus({ count: 0, size_mb: 36, latest: 331 }));
-    const un = listen<number>("backgrounds-progress", (e) => setDownloading(e.payload));
+    const load = (p: BackgroundPack, fallback: { count: number; size_mb: number; latest: number }) =>
+      api.backgroundsStatus(p).then((s) => setStatuses((x) => ({ ...x, [p]: s }))).catch(() => setStatuses((x) => ({ ...x, [p]: fallback })));
+    void load("nature", { count: 0, size_mb: 36, latest: 331 });
+    void load("christian", { count: 0, size_mb: 12, latest: 55 });
+    const un = [listen<number>("backgrounds-progress", (e) => setDownloading(e.payload)), listen<number>("backgrounds-progress-christian", (e) => setDownloading(e.payload))];
     return () => {
-      void un.then((f) => f());
+      un.forEach((u) => void u.then((f) => f()));
     };
   }, []);
 
+  // the photo shown belongs to one set: changing set starts again with a photo of the new one
+  const autoPicked = useRef(false);
   useEffect(() => {
-    if (mode === "nature" && status && status.count > 0 && !thumbs) {
+    setPhoto(null);
+    autoPicked.current = false;
+  }, [pack]);
+
+  useEffect(() => {
+    if (isPhoto && status && status.count > 0 && !thumbs) {
       api
-        .backgroundsThumbs()
+        .backgroundsThumbs(pack)
         .then((t) => {
-          setThumbs(t);
-          if (!photo && t.length > 0) void choose(t[Math.floor(Math.random() * t.length)].id);
+          setThumbsBy((x) => ({ ...x, [pack]: t }));
+          autoPicked.current = true;
+          if (t.length > 0) void choose(t[Math.floor(Math.random() * t.length)].id);
         })
         .catch(fail);
+    } else if (isPhoto && thumbs && thumbs.length > 0 && !photo && !autoPicked.current) {
+      autoPicked.current = true;
+      void choose(thumbs[Math.floor(Math.random() * thumbs.length)].id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, status]);
+  }, [mode, status, thumbs, photo]);
 
   useEffect(() => {
     if (!canvas.current) return;
-    if (mode === "nature" && photo) draw(canvas.current, { kind: "photo", image: photo.image }, text, label, version);
+    if (isPhoto && photo) draw(canvas.current, { kind: "photo", image: photo.image }, text, label, version);
     else draw(canvas.current, { kind: "colour", look: LOOKS[look] }, text, label, version);
   }, [mode, look, photo, text, label, version]);
 
   async function choose(id: string) {
+    const asked = pack;
     try {
-      const [b64, info] = await api.backgroundImage(id);
+      const [b64, info] = await api.backgroundImage(id, asked);
       setPhoto({ image: await loadImage(b64), info });
     } catch (e) {
       fail(e);
@@ -236,9 +255,11 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
   async function download() {
     setDownloading(0);
     try {
-      const n = await api.backgroundsInstall();
-      setStatus((s) => ({ count: n, size_mb: s?.size_mb ?? 36, latest: s?.latest ?? 331 }));
-      say(`${n} nature backgrounds ready`);
+      const n = await api.backgroundsInstall(pack);
+      setStatuses((x) => ({ ...x, [pack]: { count: n, size_mb: x[pack]?.size_mb ?? 36, latest: x[pack]?.latest ?? 331 } }));
+      // a set that was only partly there has more pictures now
+      setThumbsBy((x) => ({ ...x, [pack]: null }));
+      say(`${n} ${pack === "christian" ? "Christian pictures" : "nature backgrounds"} ready`);
     } catch (e) {
       fail(e);
     } finally {
@@ -271,6 +292,9 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
         <button role="tab" aria-selected={mode === "nature"} className={mode === "nature" ? "on" : ""} onClick={() => setMode("nature")}>
           Nature
         </button>
+        <button role="tab" aria-selected={mode === "christian"} className={mode === "christian" ? "on" : ""} onClick={() => setMode("christian")}>
+          Christian
+        </button>
       </div>
       {mode === "colour" && (
         <div className="swatches" role="group" aria-label="Background">
@@ -285,26 +309,26 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
           ))}
         </div>
       )}
-      {mode === "nature" && status && status.count === 0 && (
+      {isPhoto && status && status.count === 0 && (
         <div className="card">
           <p className="hint">
-            {status.latest} nature photos — lakes, mountains, the sea, skies, forests, flowers, animals — to put a verse on. A one-time download of about {status.size_mb} MB; after that they work
+            {mode === "christian" ? `${status.latest} Christian pictures — crosses, prayer, worship, stained glass, the Bible, communion, Christmas — to put a verse on.` : `${status.latest} nature photos — lakes, mountains, the sea, skies, forests, flowers, animals — to put a verse on.`} A one-time download of about {status.size_mb} MB; after that they work
             offline.
           </p>
           {downloading == null ? (
             <button className="primary" onClick={() => void download()}>
-              Get nature backgrounds
+              {mode === "christian" ? "Get Christian pictures" : "Get nature backgrounds"}
             </button>
           ) : (
             <p className="hint">Downloading… {downloading}%</p>
           )}
         </div>
       )}
-      {mode === "nature" && status && status.count > 0 && (
+      {isPhoto && status && status.count > 0 && (
         <>
           {status.count < status.latest && (
             <p className="hint">
-              You have {status.count} of the {status.latest} nature photos.{" "}
+              You have {status.count} of the {status.latest} {mode === "christian" ? "Christian pictures" : "nature photos"}.{" "}
               {downloading == null ? (
                 <button className="link" onClick={() => void download()}>
                   Get all {status.latest} (about {status.size_mb} MB)
@@ -317,14 +341,15 @@ export function VersePicture({ book, chapter, first, last, version, text: firstT
           <div className="actions">
             <button onClick={random}>🔀 Random photo</button>
           </div>
-          <div className="photo-grid" role="group" aria-label="Nature photos">
+          <div className="photo-grid" role="group" aria-label={mode === "christian" ? "Christian pictures" : "Nature photos"}>
             {(thumbs ?? []).map((t) => (
               <button key={t.id} className={photo?.info.id === t.id ? "on" : ""} onClick={() => void choose(t.id)} aria-label={t.theme}>
                 <img src={`data:image/jpeg;base64,${t.thumb}`} alt="" loading="lazy" />
               </button>
             ))}
           </div>
-          {photo && <p className="attribution">Photo: {photo.info.title} — {photo.info.author || "unknown"}, {photo.info.licence} (Wikimedia Commons). Free to use and share.</p>}
+          {photo && mode === "nature" && <p className="attribution">Photo: {photo.info.title} — {photo.info.author || "unknown"}, {photo.info.licence} (Wikimedia Commons). Free to use and share.</p>}
+          {photo && mode === "christian" && <p className="attribution">Photo: {photo.info.title} — {photo.info.author || "unknown"} (Unsplash, {photo.info.licence}).</p>}
         </>
       )}
       <div className="actions">

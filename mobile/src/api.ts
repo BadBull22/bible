@@ -221,6 +221,9 @@ export interface ReadingStats {
   books: [string, number][];
 }
 
+/** the two sets of photos to put a verse on */
+export type BackgroundPack = "nature" | "christian";
+
 export interface BackgroundThumb {
   id: string;
   theme: string;
@@ -374,14 +377,14 @@ export const api = {
 
   markRead: (book: string, chapter: number, day: string) => invoke<void>("mark_read", { book, chapter, day }),
 
-  /** how many nature backgrounds are downloaded (0: none yet), and the download's size */
-  backgroundsStatus: () => invoke<{ count: number; size_mb: number; latest: number }>("backgrounds_status"),
-  /** downloads them ("backgrounds-progress" events report the percentage); returns how many */
-  backgroundsInstall: () => invoke<number>("backgrounds_install"),
-  backgroundsThumbs: () => invoke<BackgroundThumb[]>("backgrounds_thumbs"),
+  /** how many photos of a set are downloaded (0: none yet), and the download's size; `pack` is "nature" (the default) or "christian" */
+  backgroundsStatus: (pack: BackgroundPack = "nature") => invoke<{ count: number; size_mb: number; latest: number }>("backgrounds_status", { pack }),
+  /** downloads a set ("backgrounds-progress", or "backgrounds-progress-christian", events report the percentage); returns how many */
+  backgroundsInstall: (pack: BackgroundPack = "nature") => invoke<number>("backgrounds_install", { pack }),
+  backgroundsThumbs: (pack: BackgroundPack = "nature") => invoke<BackgroundThumb[]>("backgrounds_thumbs", { pack }),
   /** one background, full size: [JPEG base64, where it is from] */
-  backgroundImage: (id: string) => invoke<[string, BackgroundInfo]>("background_image", { id }),
-  backgroundsRemove: () => invoke<void>("backgrounds_remove"),
+  backgroundImage: (id: string, pack: BackgroundPack = "nature") => invoke<[string, BackgroundInfo]>("background_image", { id, pack }),
+  backgroundsRemove: (pack: BackgroundPack = "nature") => invoke<void>("backgrounds_remove", { pack }),
   readingStats: (today: string) => invoke<ReadingStats>("reading_stats", { today }),
 
   /** the newer version of the app on offer, if there is one (asks bible4me.org) */
