@@ -7,7 +7,7 @@ import { REVIEW_ON, ReviewEntry, setReview, useReviewMarks, reviewKey } from "..
 import type { BrowseKind, ChildPage, Story, Topic } from "../browse/types";
 import { BrowseSheet } from "./BrowseSheet";
 import { BrowsePrint } from "./BrowsePrint";
-import { kidPicture } from "../browse/pictures";
+import { kidPicture, kidPictureCredit } from "../browse/pictures";
 import { pictureCaption, storyPicture } from "../browse/storyPictures";
 import { useBrowsePrint } from "../browse/printBridge";
 
@@ -412,6 +412,7 @@ export function ChildView({ page, actions }: { page: ChildPage; actions: BrowseA
   const kidActions: BrowseActions = { ...actions, versionCode: "BSB" };
   const [sheet, setSheet] = useState(false);
   const picture = kidPicture(page.id);
+  const credit = kidPictureCredit(page.id);
   useBrowsePrint(() => setSheet(true));
   if (sheet) {
     return (
@@ -429,6 +430,14 @@ export function ChildView({ page, actions }: { page: ChildPage; actions: BrowseA
       <h2>{page.title}</h2>
       <p className="browse-also">{ageLabel(page.age)}</p>
       {picture && <img className="browse-picture" src={picture} alt={`A picture of the story: ${page.title}`} />}
+      {picture && credit && (
+        <p className="browse-picture-credit muted">
+          {credit.title}, {credit.artist}. {credit.licence}.{" "}
+          <a href={credit.page} target="_blank" rel="noreferrer">
+            Source
+          </a>
+        </p>
+      )}
       <FlagBox note={page.doctrine === "needs_review" ? page.doctrine_note : undefined} teaching={page.church_teaching} />
       <div className="browse-retelling">
         {page.retelling.map((para, i) => (

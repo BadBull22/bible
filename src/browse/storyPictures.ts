@@ -13,11 +13,23 @@ export interface StoryPictureCredit {
   licence: string;
   licence_url: string;
   page: string;
-  collection: string;
+  /** the built-in pictures name their collection; a picture that came in an additional-pages file does not */
+  collection?: string;
 }
 
 /** the address of a story's picture and who it is by, or null when the story has none */
 export function storyPicture(id: string): { url: string; credit: StoryPictureCredit } | null {
+  const own = builtIn(id);
+  return own ?? EXTRA[id] ?? null;
+}
+
+// pictures that came with additional stories (the file fetched with "Fetch additional stories", see extraPages.ts): the built-in picture of a page always wins
+let EXTRA: Record<string, { url: string; credit: StoryPictureCredit }> = {};
+export function setExtraStoryPictures(pictures: Record<string, { url: string; credit: StoryPictureCredit }>): void {
+  EXTRA = pictures;
+}
+
+function builtIn(id: string): { url: string; credit: StoryPictureCredit } | null {
   const key = Object.keys(urls).find((k) => k.replace(/^\.\/pictures\/stories\//, "").replace(/\.(jpe?g|png)$/, "") === id);
   const credit = (credits as Record<string, StoryPictureCredit>)[id];
   return key && credit ? { url: urls[key], credit } : null;

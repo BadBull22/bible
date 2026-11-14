@@ -37,6 +37,7 @@ mod browse_review;
 mod factory;
 mod factory_share;
 mod factory_phone;
+mod extra_pages;
 mod sync;
 mod update;
 mod userdata;
@@ -398,6 +399,8 @@ pub fn run() {
             factory::factory_gallery_open,
             factory::factory_pictures_list,
             factory::factory_pictures_folder,
+            extra_pages::extra_pages_load,
+            extra_pages::extra_pages_fetch,
             factory_phone::factory_phone_start,
             factory_phone::factory_phone_stop,
             factory_phone::factory_phone_info,

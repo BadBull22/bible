@@ -779,6 +779,10 @@ const SECTIONS: Section[] = [
             Type a story or a subject in the search box (or the Search panel) and the matching Browse pages are offered under the box as <strong>Stories and topics</strong>; you do not need the page's own words ("I am afraid" finds Verses for fear, "Jesus rose from the dead" finds the empty tomb), and for a matching subject the first passages, with what each one says, are listed right there. Stories and Verses for… pages have a <strong>Print this page</strong> button, and the Print button at the top prints the page you are reading, not the whole window. In the Sermon builder they appear in the gathered
             material under the same name.
           </li>
+          <li>
+            <strong>Fetch additional stories</strong> (at the bottom of each list) brings in new stories, Verses for… pages and children's pages, with their pictures, that were added after this version of the app was made.
+            It needs the internet once; the pages are then kept on this computer and work offline. Press it again from time to time: it says what was added, or that you already have everything.
+          </li>
         </ul>
       </>
     ),

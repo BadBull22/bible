@@ -15,6 +15,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       "Content Factory > Photos: a second set of 331 nature photos and a set of 55 Christian pictures can be downloaded if you want them; you can also add your own photos. The app writes the credit line a photo needs on the picture's footer.",
       "Content Factory > On my phone: scan a code and your saved pictures and videos open on your phone over your home Wi-Fi, where you can save them to post. Nothing to install, nothing goes through the internet; it is off until you switch it on.",
       "Settings > Keep in step: you can also put your finished pictures in the shared OneDrive, Google Drive or Dropbox folder, for the phone.",
+      "Browse: a “Fetch additional stories” button at the bottom of Bible stories, Verses for… and For children brings in new stories and pages (with their pictures) added since this version of the app, without a new version. They are kept on your computer and work offline.",
       "Your backups (My Study > Export, the weekly automatic backup) now keep the Content Factory's names, logos, header and footer and its Ready to post list, and a backup made on the phone app can be imported.",
     ],
   },
