@@ -17,6 +17,10 @@ Sharing text or a picture, reading aloud with the phone's voices, saving or open
 - `allow-share-image`
 - `allow-save-image`
 - `allow-install-update`
+- `allow-share-file`
+- `allow-save-backup-copy`
+- `allow-list-backup-copies`
+- `allow-read-backup-copy`
 
 ## Permission Table
 
@@ -75,6 +79,32 @@ Enables the install_update command without any pre-configured scope.
 <td>
 
 Denies the install_update command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-list-backup-copies`
+
+</td>
+<td>
+
+Enables the list_backup_copies command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-list-backup-copies`
+
+</td>
+<td>
+
+Denies the list_backup_copies command without any pre-configured scope.
 
 </td>
 </tr>
@@ -186,6 +216,58 @@ Denies the pick_folder command without any pre-configured scope.
 <tr>
 <td>
 
+`phone:allow-read-backup-copy`
+
+</td>
+<td>
+
+Enables the read_backup_copy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-read-backup-copy`
+
+</td>
+<td>
+
+Denies the read_backup_copy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-save-backup-copy`
+
+</td>
+<td>
+
+Enables the save_backup_copy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-save-backup-copy`
+
+</td>
+<td>
+
+Denies the save_backup_copy command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `phone:allow-save-image`
 
 </td>
@@ -257,6 +339,32 @@ Enables the share command without any pre-configured scope.
 <td>
 
 Denies the share command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-share-file`
+
+</td>
+<td>
+
+Enables the share_file command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-share-file`
+
+</td>
+<td>
+
+Denies the share_file command without any pre-configured scope.
 
 </td>
 </tr>
