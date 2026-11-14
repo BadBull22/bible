@@ -625,7 +625,7 @@ export function SettingsPanel({
               ))}
             </ul>
             <p className="search-hint" style={{ display: "block" }}>
-              Online only, with your own key: NIV and NKJV via api.bible; ESV via api.esv.org (© Crossway, non-commercial use). Built with Tauri, Rust, React, SQLite, candle and Cytoscape (MIT / Apache 2.0). Full credits and licences:{" "}
+              Online only, with your own key: NIV and NKJV via api.bible; ESV via api.esv.org (© Crossway, non-commercial use). Built with Tauri, Rust, React, SQLite, candle and Cytoscape (MIT / Apache 2.0) and, for the Content Factory's videos, Mediabunny (MPL-2.0). Full credits and licences:{" "}
               <button className="link-btn" onClick={() => void openUrl("https://bible4me.org/credits/").catch(() => undefined)} title="https://bible4me.org/credits/">
                 bible4me.org/credits
               </button>

@@ -16,6 +16,7 @@
     "cytoscape": "^3.34.3",
     "cytoscape-cola": "^2.5.1",
     "leaflet": "^1.9.4",
+    "mediabunny": "1.66.0",
     "react": "^19.1.0",
     "react-cytoscapejs": "^2.0.0",
     "react-dom": "^19.1.0"

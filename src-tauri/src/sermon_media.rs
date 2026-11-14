@@ -124,7 +124,7 @@ pub fn path_of(data: &Path, file: &str) -> Result<PathBuf, String> {
 /// The largest file that can be added (a long video can be bigger: add it as a link).
 const MAX_BYTES: usize = 1 << 30;
 
-fn percent_decode(s: &str) -> String {
+pub(crate) fn percent_decode(s: &str) -> String {
     let b = s.as_bytes();
     let mut out = Vec::with_capacity(b.len());
     let mut i = 0;
@@ -177,13 +177,59 @@ pub fn sermon_media_path(app: AppHandle, file: String) -> Result<String, String>
     Ok(path_of(&data_dir(&app)?, &file)?.display().to_string())
 }
 
-// ---------------------------------------------------------------- the nature photos
+// ---------------------------------------------------------------- the photo packs (nature photos, Christian pictures)
 
-pub const BACKGROUNDS_URL: &str = "https://github.com/BadBull22/bible/releases/download/backgrounds-v1/nature-backgrounds-v1.zip";
-pub const BACKGROUNDS_SHA256: &str = "86917e58634e3f109f0f9fca1e010b81e51b1fd92ed940d1823a41f459aaef77";
+/// The nature photos: version 2 holds the first 100 (the same numbers) and more. Made by mobile/data/build_backgrounds.py, which also
+/// prints the size and the SHA-256; the zip is the release `backgrounds-v2` (never marked latest). The phone uses the same file.
+pub const BACKGROUNDS_URL: &str = "https://github.com/BadBull22/bible/releases/download/backgrounds-v2/nature-backgrounds-v2.zip";
+pub const BACKGROUNDS_SHA256: &str = "ed2e3a9ae422172f2e4d94e7b33cb5e58d0a55b7e11529cf1b238311c61d688e";
+/// How many photos the latest pack holds, and about how big it is (to offer "more photos" to someone who has the first 100).
+pub const BACKGROUNDS_COUNT: usize = 331;
+pub const BACKGROUNDS_MB: u32 = 36;
+
+/// A pack of pictures to put behind words, downloaded once: where it comes from, its checksum, what it holds and where it is kept.
+pub struct Pack {
+    pub name: &'static str,
+    /// the folder it is unpacked into, inside the app's data folder
+    pub dir: &'static str,
+    pub url: &'static str,
+    pub sha256: &'static str,
+    pub count: usize,
+    pub mb: u32,
+    /// the event that reports how much has been downloaded (0-100)
+    pub event: &'static str,
+}
+
+pub const NATURE: Pack = Pack { name: "nature", dir: "backgrounds", url: BACKGROUNDS_URL, sha256: BACKGROUNDS_SHA256, count: BACKGROUNDS_COUNT, mb: BACKGROUNDS_MB, event: "backgrounds-progress" };
+
+/// The Christian pictures (crosses, prayer, worship, stained glass, the Bible, Christmas): 55 photographs the owner chose from Unsplash (the Unsplash
+/// License: free for any use, no credit needed), kept apart from the nature photos so they can be left out or taken away on their own. Made by
+/// mobile/data/build_christian_pack.py; the zip is the release `backgrounds-christian-v1` (never marked latest).
+pub const CHRISTIAN: Pack = Pack {
+    name: "christian",
+    dir: "backgrounds-christian",
+    url: "https://github.com/BadBull22/bible/releases/download/backgrounds-christian-v1/christian-pictures-v1.zip",
+    sha256: "dbad4dc9af6b98b6140ca8f53f0fad52f89a536a91f6b0f9571b54d519901649",
+    count: 55,
+    mb: 12,
+    event: "christian-progress",
+};
+
+/// The pack a page asks for by name (none: the nature photos).
+fn pack_of(name: &Option<String>) -> Result<&'static Pack, String> {
+    match name.as_deref() {
+        None | Some("") | Some("nature") => Ok(&NATURE),
+        Some("christian") => Ok(&CHRISTIAN),
+        Some(_) => Err("No such pack of pictures.".into()),
+    }
+}
+
+fn pack_dir(data: &Path, pack: &Pack) -> PathBuf {
+    data.join(pack.dir)
+}
 
 fn backgrounds_dir(data: &Path) -> PathBuf {
-    data.join("backgrounds")
+    pack_dir(data, &NATURE)
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -196,35 +242,47 @@ pub struct Background {
     pub source: String,
 }
 
+fn read_pack(data: &Path, pack: &Pack) -> Result<Vec<Background>, String> {
+    serde_json::from_str(&fs::read_to_string(pack_dir(data, pack).join("backgrounds.json")).map_err(err)?).map_err(err)
+}
+
 fn read_backgrounds(data: &Path) -> Result<Vec<Background>, String> {
-    serde_json::from_str(&fs::read_to_string(backgrounds_dir(data).join("backgrounds.json")).map_err(err)?).map_err(err)
+    read_pack(data, &NATURE)
 }
 
-/// The nature photos, if downloaded (an empty list if not).
+/// The photos of a pack, if downloaded (an empty list if not). With no pack named: the nature photos.
 #[tauri::command]
-pub fn sermon_backgrounds(app: AppHandle) -> Vec<Background> {
-    data_dir(&app).ok().and_then(|d| read_backgrounds(&d).ok()).unwrap_or_default()
+pub fn sermon_backgrounds(app: AppHandle, pack: Option<String>) -> Vec<Background> {
+    let Ok(p) = pack_of(&pack) else { return Vec::new() };
+    data_dir(&app).ok().and_then(|d| read_pack(&d, p).ok()).unwrap_or_default()
 }
 
-/// A nature photo's bytes (JPEG): its small picture, or the full one.
+/// How many photos the latest pack holds and how big the download is.
 #[tauri::command]
-pub async fn sermon_background_bytes(app: AppHandle, id: String, full: bool) -> Result<tauri::ipc::Response, String> {
+pub fn sermon_backgrounds_info(pack: Option<String>) -> (usize, u32) {
+    pack_of(&pack).map(|p| (p.count, p.mb)).unwrap_or((0, 0))
+}
+
+/// A photo's bytes (JPEG): its small picture, or the full one.
+#[tauri::command]
+pub async fn sermon_background_bytes(app: AppHandle, id: String, full: bool, pack: Option<String>) -> Result<tauri::ipc::Response, String> {
     if !id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
         return Err("No such picture.".into());
     }
-    let path = backgrounds_dir(&data_dir(&app)?).join(if full { "full" } else { "thumb" }).join(format!("{id}.jpg"));
+    let p = pack_of(&pack)?;
+    let path = pack_dir(&data_dir(&app)?, p).join(if full { "full" } else { "thumb" }).join(format!("{id}.jpg"));
     let bytes = tauri::async_runtime::spawn_blocking(move || fs::read(path)).await.map_err(err)?.map_err(|_| "That picture hasn't been downloaded.".to_string())?;
     Ok(tauri::ipc::Response::new(bytes))
 }
 
-/// Unpacks the photos' zip (checked against its SHA-256) into `backgrounds\`.
-pub fn install_backgrounds(data: &Path, bytes: &[u8]) -> Result<usize, String> {
+/// Unpacks a pack's zip (checked against its SHA-256) into its own folder.
+pub fn install_pack(data: &Path, bytes: &[u8], pack: &Pack) -> Result<usize, String> {
     let sum: String = Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect();
-    if sum != BACKGROUNDS_SHA256 {
+    if sum != pack.sha256 {
         return Err("The download didn't arrive whole. Please try again.".into());
     }
     let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).map_err(err)?;
-    let fresh = data.join("backgrounds.part");
+    let fresh = data.join(format!("{}.part", pack.dir));
     let _ = fs::remove_dir_all(&fresh);
     for i in 0..zip.len() {
         let mut f = zip.by_index(i).map_err(err)?;
@@ -241,17 +299,23 @@ pub fn install_backgrounds(data: &Path, bytes: &[u8]) -> Result<usize, String> {
         f.read_to_end(&mut buf).map_err(err)?;
         fs::write(&out, buf).map_err(err)?;
     }
-    let _ = fs::remove_dir_all(backgrounds_dir(data));
-    fs::rename(&fresh, backgrounds_dir(data)).map_err(err)?;
-    Ok(read_backgrounds(data)?.len())
+    let _ = fs::remove_dir_all(pack_dir(data, pack));
+    fs::rename(&fresh, pack_dir(data, pack)).map_err(err)?;
+    Ok(read_pack(data, pack)?.len())
 }
 
-/// Downloads the nature photos (about 8 MB) once; emits "backgrounds-progress" (0-100).
+/// Unpacks the nature photos' zip.
+pub fn install_backgrounds(data: &Path, bytes: &[u8]) -> Result<usize, String> {
+    install_pack(data, bytes, &NATURE)
+}
+
+/// Downloads a pack of photos once (the nature photos, or the Christian pictures); emits the pack's progress event (0-100).
 #[tauri::command]
-pub async fn sermon_backgrounds_download(app: AppHandle) -> Result<usize, String> {
+pub async fn sermon_backgrounds_download(app: AppHandle, pack: Option<String>) -> Result<usize, String> {
+    let p = pack_of(&pack)?;
     let client = reqwest::Client::builder().user_agent(crate::library_commands::USER_AGENT).timeout(std::time::Duration::from_secs(300)).build().map_err(err)?;
     let mut resp = client
-        .get(BACKGROUNDS_URL)
+        .get(p.url)
         .send()
         .await
         .map_err(|_| "Couldn't download the pictures. Check the internet connection and try again.".to_string())?
@@ -269,12 +333,12 @@ pub async fn sermon_backgrounds_download(app: AppHandle) -> Result<usize, String
             let pct = ((bytes.len() as u64 * 100) / total).min(100) as u8;
             if pct >= last + 5 {
                 last = pct;
-                let _ = app.emit("backgrounds-progress", pct);
+                let _ = app.emit(p.event, pct);
             }
         }
     }
     let data = data_dir(&app)?;
-    tauri::async_runtime::spawn_blocking(move || install_backgrounds(&data, &bytes)).await.map_err(err)?
+    tauri::async_runtime::spawn_blocking(move || install_pack(&data, &bytes, p)).await.map_err(err)?
 }
 
 #[cfg(test)]
@@ -299,5 +363,46 @@ mod tests {
         assert!(path_of(&dir, "0000000000.jpg").is_err());
         assert!(install_backgrounds(&dir, b"not the zip").is_err());
         let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// The real pack, from a file on this computer: `BACKGROUNDS_ZIP=<path to nature-backgrounds-v2.zip> cargo test --lib real_nature_pack -- --ignored`.
+    /// Checks that the pack's checksum is the one in the code, that it unpacks, and that it holds the number of photos the code says.
+    #[test]
+    #[ignore]
+    fn real_nature_pack_installs() {
+        let Ok(path) = std::env::var("BACKGROUNDS_ZIP") else { panic!("set BACKGROUNDS_ZIP to the pack's path") };
+        let bytes = fs::read(path).unwrap();
+        let dir = std::env::temp_dir().join(format!("bc-pack-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        let n = install_backgrounds(&dir, &bytes).unwrap();
+        assert_eq!(n, BACKGROUNDS_COUNT);
+        let list = read_backgrounds(&dir).unwrap();
+        assert!(list.iter().all(|b| b.licence.to_lowercase().starts_with("cc0") && backgrounds_dir(&dir).join("full").join(format!("{}.jpg", b.id)).is_file() && backgrounds_dir(&dir).join("thumb").join(format!("{}.jpg", b.id)).is_file()));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    /// The real Christian pictures pack: `CHRISTIAN_ZIP=<path to christian-pictures-v1.zip> cargo test --lib real_christian_pack -- --ignored`.
+    #[test]
+    #[ignore]
+    fn real_christian_pack_installs() {
+        let Ok(path) = std::env::var("CHRISTIAN_ZIP") else { panic!("set CHRISTIAN_ZIP to the pack's path") };
+        let bytes = fs::read(path).unwrap();
+        let dir = std::env::temp_dir().join(format!("bc-christian-test-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        assert_eq!(install_pack(&dir, &bytes, &CHRISTIAN).unwrap(), CHRISTIAN.count);
+        let list = read_pack(&dir, &CHRISTIAN).unwrap();
+        assert!(list.iter().all(|b| b.licence == "Unsplash License" && b.source.starts_with("https://unsplash.com/photos/") && pack_dir(&dir, &CHRISTIAN).join("full").join(format!("{}.jpg", b.id)).is_file() && pack_dir(&dir, &CHRISTIAN).join("thumb").join(format!("{}.jpg", b.id)).is_file()));
+        // the nature photos are a different folder and a different checksum
+        assert!(install_pack(&dir, &bytes, &NATURE).is_err());
+        assert!(!pack_dir(&dir, &NATURE).exists());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_pack_is_found_by_name() {
+        assert_eq!(pack_of(&None).unwrap().name, "nature");
+        assert_eq!(pack_of(&Some("christian".into())).unwrap().dir, "backgrounds-christian");
+        assert!(pack_of(&Some("../x".into())).is_err());
+        assert_ne!(NATURE.dir, CHRISTIAN.dir);
     }
 }
