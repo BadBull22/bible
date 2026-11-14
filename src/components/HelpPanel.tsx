@@ -212,6 +212,10 @@ const SECTIONS: Section[] = [
             the other device's version as a copy beside yours, named <em>(from …)</em>. Settings says when this happened.
           </li>
           <li>Pictures, videos and music in your sermons are copied too. Downloaded Bibles, books and modules are not: add them on each device.</li>
+          <li>
+            You can also choose to put your Content Factory pictures (and, if you like, videos) in the shared folder, in a <em>pictures</em> folder inside <em>Bible
+            Concordance sync</em>, for your phone. They are only ever added there; nothing in the folder is changed or deleted.
+          </li>
           <li>The phone keeps notes, highlights, bookmarks and reading plans in step; sermons stay on the computers.</li>
         </ul>
       </>
@@ -958,6 +962,13 @@ const SECTIONS: Section[] = [
           (WhatsApp, Mail and more), <strong>Copy file</strong> lets you paste the picture or video into a message or an upload box, and <strong>Copy picture</strong> and
           <strong> Copy caption</strong> do the same for the picture and its words. Pictures and videos made here can also be used on slides: in the
           sermon builder or the notices, choose <strong>Add a picture, video, music…</strong> and open the <strong>Content Factory</strong> tab.
+        </p>
+        <p>
+          <strong>On my phone:</strong> press <strong>On my phone</strong> at the top, scan the code with your phone's camera (the phone must be on the same
+          Wi-Fi), and your saved pictures and videos open on the phone, where <strong>Save to my phone</strong> keeps them to post from there. Nothing to
+          install, nothing goes through the internet, and the phone can only look: it cannot change or delete anything. It is off until you switch it on and
+          switches itself off after an hour. If you keep your phone in step through a OneDrive, Google Drive or Dropbox folder, <strong>Settings → Keep in step
+          with your other devices</strong> can also copy your finished pictures into that folder for the phone.
         </p>
       </>
     ),

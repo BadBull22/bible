@@ -85,6 +85,22 @@ export function SyncSettings() {
               Stop keeping in step
             </button>
           </div>
+          <label className="sync-share">
+            <span>Also put my Content Factory pictures in this folder, for the phone</span>
+            <select
+              value={st.share_pictures ?? ""}
+              onChange={(e) => void api.syncSetSharePictures(e.target.value === "pictures" || e.target.value === "all" ? e.target.value : null).then(setSt)}
+              aria-label="Content Factory pictures in the shared folder"
+            >
+              <option value="">No</option>
+              <option value="pictures">Pictures</option>
+              <option value="all">Pictures and videos</option>
+            </select>
+          </label>
+          <p className="search-hint" style={{ marginTop: 0 }}>
+            The finished pictures are copied (never changed or deleted) into a <em>pictures</em> folder inside the shared folder at each sync, so they are in your OneDrive, Google Drive or Dropbox for the phone. Videos can be large.
+            To see them on the phone now without a cloud drive, use <strong>On my phone</strong> in the Content Factory.
+          </p>
           {last && (
             <div className="sync-last">
               <p>
@@ -105,6 +121,11 @@ export function SyncSettings() {
               ) : (
                 <p className="muted">No other device has synced with this folder yet. Choose the same folder on them.</p>
               )}
+              {(last.notes ?? []).map((n, i) => (
+                <p key={"n" + i} className="muted">
+                  {n}
+                </p>
+              ))}
               {last.conflicts.map((c, i) => (
                 <p key={i} className="sync-conflict">
                   {c}

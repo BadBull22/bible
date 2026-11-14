@@ -7813,6 +7813,14 @@ body.show-body {
   max-width: 24rem;
 }
 
+.sync-share {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: 28rem;
+  margin: 0.6rem 0 0.2rem;
+}
+
 .sync-sub {
   margin: 0.8rem 0 0.2rem;
   font-size: 0.95rem;

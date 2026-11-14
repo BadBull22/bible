@@ -684,6 +684,8 @@ export interface SyncReport {
   skipped: string[];
   /** sermon pictures and videos copied */
   media?: number;
+  /** anything else the reader should know */
+  notes?: string[];
 }
 
 /** The phone over the home Wi-Fi (lan.rs). */
@@ -707,6 +709,8 @@ export interface SyncStatus {
   last: SyncReport | null;
   /** the last sync's error, if it failed */
   error: string | null;
+  /** the Content Factory's pictures (and with "all", videos) are also put in the shared folder for the phone */
+  share_pictures: "pictures" | "all" | null;
 }
 
 export interface SermonHit extends SavedSermon {
@@ -1161,6 +1165,7 @@ export const api = {
   /** the shared folder to keep in step through (null: stop) */
   syncSetFolder: (folder: string | null) => invoke<SyncStatus>("sync_set_folder", { folder }),
   syncSetName: (name: string) => invoke<SyncStatus>("sync_set_name", { name }),
+  syncSetSharePictures: (mode: "pictures" | "all" | null) => invoke<SyncStatus>("sync_set_share_pictures", { mode }),
   syncNow: () => invoke<SyncReport>("sync_now"),
   lanStatus: () => invoke<LanStatus>("lan_status"),
   lanEnable: (on: boolean) => invoke<LanStatus>("lan_enable", { on }),
@@ -1275,6 +1280,10 @@ export const api = {
   /** opens the Windows Share window for saved files */
   factoryShare: (paths: string[], title: string, text: string) => invoke<void>("factory_share", { paths, title, text }),
   factoryOpenFolder: () => invoke<string>("factory_open_folder"),
+  /** the pictures and videos on a phone over the home Wi-Fi (a page the computer serves while it is on) */
+  factoryPhoneStart: () => invoke<RemoteInfo>("factory_phone_start"),
+  factoryPhoneInfo: () => invoke<RemoteInfo | null>("factory_phone_info"),
+  factoryPhoneStop: () => invoke<void>("factory_phone_stop"),
   /** opens (or brings forward) the gallery of saved pictures and videos in a window of its own */
   factoryGalleryOpen: () => invoke<void>("factory_gallery_open"),
   /** the reader's own pictures (Documents\\Bible Concordance\\Content Factory\\My pictures), by name */

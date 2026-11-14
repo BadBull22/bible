@@ -24,6 +24,7 @@ import { Card, clamp, Credit, FONTS, LAYOUTS, Look, NO_NAME, type Place, SIZES, 
 import { Motion, makeAudioFile, makeVideo, Quality, videoSize, videoSupported } from "../factory/video";
 import { AdvancedBox, BandPanel, NamesBox, Popover, Segmented, shortSize, SITES, Thumb } from "./FactoryParts";
 import { FactoryLibrary } from "./FactoryLibrary";
+import { FactoryPhone } from "./FactoryPhone";
 import { FactoryPhotos } from "./FactoryPhotos";
 import { PlaceOverlay, type PlaceTarget } from "./FactoryPlace";
 import { FactoryPalette, type PaletteTarget } from "./FactoryPalette";
@@ -88,6 +89,8 @@ export function ContentFactory({ books, versions, chapterCounts, onClose }: Prop
   const [previewSize, setPreviewSize] = useState<SizeId>(settings.sizes[0] ?? "square");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [phoneOpen, setPhoneOpen] = useState(false);
+  const [phoneOn, setPhoneOn] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   useEffect(() => {
     if (!note) return;
@@ -605,6 +608,10 @@ export function ContentFactory({ books, versions, chapterCounts, onClose }: Prop
     void emit("factory:saved").catch(() => undefined);
   };
   const openGallery = () => void api.factoryGalleryOpen().catch((e) => setError(String(e)));
+  // the phone page may be on from an earlier visit to the studio: the button says so
+  useEffect(() => {
+    void api.factoryPhoneInfo().then((i) => setPhoneOn(!!i)).catch(() => undefined);
+  }, []);
 
   const savePictures = async (forCards: Card[] = cards, forLabel: string = label, forCaption: string = caption, goToPost = true) => {
     if (!forCards.length || nothingChosen) return;
@@ -1581,6 +1588,9 @@ export function ContentFactory({ books, versions, chapterCounts, onClose }: Prop
         <button type="button" className="fx-btn" onClick={openGallery} title="Show the saved pictures and videos in a window of their own, to move to another screen">
           <Icon name="library" size={17} /> Gallery
         </button>
+        <button type="button" className={"fx-btn" + (phoneOn ? " on" : "")} onClick={() => setPhoneOpen(true)} title="See the saved pictures and videos on your phone, over the home Wi-Fi, and save them there">
+          <Icon name="phone" size={17} /> {phoneOn ? "Phone: on" : "On my phone"}
+        </button>
         <button type="button" className="fx-btn icon" onClick={() => void api.factoryOpenFolder().catch((e) => setError(String(e)))} title="Open the folder where pictures and videos are saved" aria-label="Open the folder">
           <Icon name="folder" size={18} />
         </button>
@@ -1738,6 +1748,8 @@ export function ContentFactory({ books, versions, chapterCounts, onClose }: Prop
           )}
         </main>
       </div>
+
+      {phoneOpen && <FactoryPhone onClose={() => setPhoneOpen(false)} onState={setPhoneOn} />}
 
       <FactoryLibrary
         posts={posts}

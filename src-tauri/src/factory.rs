@@ -11,7 +11,7 @@ const MAX_BYTES: usize = 800 * 1024 * 1024;
 const FOLDERS: [&str; 5] = ["Pictures", "Videos", "Music", "Captions", "My pictures"];
 const EXTENSIONS: [&str; 12] = ["png", "jpg", "jpeg", "mp4", "m4a", "txt", "webm", "mp3", "ogg", "oga", "wav", "flac"];
 
-fn root(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn root(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(app.path().document_dir().map_err(|e| e.to_string())?.join("Bible Concordance").join("Content Factory"))
 }
 
