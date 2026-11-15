@@ -1,0 +1,2077 @@
+{
+ "format": 1,
+ "version": "BSB",
+ "note": "BATCH 2, APPROVED by the owner 2026-11-15 (keep all): references are final; the words are read from the reader's own Bible",
+ "cards": [
+  {
+   "ref": "Genesis 1:27",
+   "theme": "Bible stories",
+   "text": "So God created man in His own image; in the image of God He created him; male and female He created them.",
+   "id": "vc201"
+  },
+  {
+   "ref": "Genesis 2:7",
+   "theme": "Bible stories",
+   "text": "Then the LORD God formed man from the dust of the ground and breathed the breath of life into his nostrils, and the man became a living being.",
+   "id": "vc202"
+  },
+  {
+   "ref": "Genesis 3:15",
+   "theme": "Bible stories",
+   "text": "And I will put enmity between you and the woman, and between your seed and her seed. He will crush your head, and you will strike his heel. ”",
+   "id": "vc203"
+  },
+  {
+   "ref": "Genesis 6:8",
+   "theme": "Bible stories",
+   "text": "Noah, however, found favor in the eyes of the LORD.",
+   "id": "vc204"
+  },
+  {
+   "ref": "Genesis 8:22",
+   "theme": "Bible stories",
+   "text": "As long as the earth endures, seedtime and harvest, cold and heat, summer and winter, day and night shall never cease.”",
+   "id": "vc205"
+  },
+  {
+   "ref": "Genesis 12:2-3",
+   "theme": "Bible stories",
+   "text": "I will make you into a great nation, and I will bless you; I will make your name great, so that you will be a blessing. I will bless those who bless you and curse those who curse you; and all the families of the earth will be blessed through you. ”",
+   "id": "vc206"
+  },
+  {
+   "ref": "Genesis 22:8",
+   "theme": "Bible stories",
+   "text": "Abraham answered, “ God Himself will provide the lamb for the burnt offering, my son.” And the two walked on together.",
+   "id": "vc207"
+  },
+  {
+   "ref": "Genesis 28:15",
+   "theme": "Bible stories",
+   "text": "Look, I am with you, and I will watch over you wherever you go, and I will bring you back to this land. For I will not leave you until I have done what I have promised you.”",
+   "id": "vc208"
+  },
+  {
+   "ref": "Genesis 50:20",
+   "theme": "Bible stories",
+   "text": "As for you, what you intended against me for evil, God intended for good, in order to accomplish a day like this — to preserve the lives of many people.",
+   "id": "vc209"
+  },
+  {
+   "ref": "Exodus 3:14",
+   "theme": "Bible stories",
+   "text": "God said to Moses, “ I AM WHO I AM. This is what you are to say to the Israelites: ‘ I AM has sent me to you.’”",
+   "id": "vc210"
+  },
+  {
+   "ref": "Exodus 14:21-22",
+   "theme": "Bible stories",
+   "text": "Then Moses stretched out his hand over the sea, and all that night the LORD drove back the sea with a strong east wind that turned it into dry land. So the waters were divided, and the Israelites went through the sea on dry ground, with walls of water on their right and on their left.",
+   "id": "vc211"
+  },
+  {
+   "ref": "Joshua 6:20",
+   "theme": "Bible stories",
+   "text": "So when the rams’ horns sounded, the people shouted. When they heard the blast of the horn, the people gave a great shout, and the wall collapsed. Then all the people charged straight into the city and captured it.",
+   "id": "vc212"
+  },
+  {
+   "ref": "Judges 6:12",
+   "theme": "Bible stories",
+   "text": "And the angel of the LORD appeared to Gideon and said, “ The LORD is with you, O mighty man of valor.”",
+   "id": "vc213"
+  },
+  {
+   "ref": "Ruth 1:16",
+   "theme": "Bible stories",
+   "text": "But Ruth replied: “ Do not urge me to leave you or to turn from following you. For wherever you go, I will go, and wherever you live, I will live; your people will be my people, and your God will be my God.",
+   "id": "vc214"
+  },
+  {
+   "ref": "1 Samuel 3:10",
+   "theme": "Bible stories",
+   "text": "Then the LORD came and stood there, calling as before, “ Samuel! Samuel!” And Samuel answered, “ Speak, for Your servant is listening.”",
+   "id": "vc215"
+  },
+  {
+   "ref": "1 Samuel 16:7",
+   "theme": "Bible stories",
+   "text": "But the LORD said to Samuel, “ Do not consider his appearance or height, for I have rejected him; the LORD does not see as man does. For man sees the outward appearance, but the LORD sees the heart.”",
+   "id": "vc216"
+  },
+  {
+   "ref": "1 Samuel 17:45",
+   "theme": "Bible stories",
+   "text": "But David said to the Philistine, “ You come against me with sword and spear and javelin, but I come against you in the name of the LORD of Hosts, the God of the armies of Israel, whom you have defied.",
+   "id": "vc217"
+  },
+  {
+   "ref": "1 Kings 18:39",
+   "theme": "Bible stories",
+   "text": "When all the people saw this, they fell facedown and said, “ The LORD, He is God! The LORD, He is God!”",
+   "id": "vc218"
+  },
+  {
+   "ref": "2 Kings 5:14",
+   "theme": "Bible stories",
+   "text": "So Naaman went down and dipped himself in the Jordan seven times, according to the word of the man of God, and his flesh was restored and became like that of a little child, and he was clean.",
+   "id": "vc219"
+  },
+  {
+   "ref": "Esther 4:14",
+   "theme": "Bible stories",
+   "text": "For if you remain silent at this time, relief and deliverance for the Jews will arise from another place, but you and your father’s house will perish. And who knows if perhaps you have come to the kingdom for such a time as this?”",
+   "id": "vc220"
+  },
+  {
+   "ref": "Job 19:25",
+   "theme": "Bible stories",
+   "text": "But I know that my Redeemer lives, and in the end He will stand upon the earth.",
+   "id": "vc221"
+  },
+  {
+   "ref": "Daniel 3:17-18",
+   "theme": "Bible stories",
+   "text": "If the God whom we serve exists, then He is able to deliver us from the blazing fiery furnace and from your hand, O king. But even if He does not, let it be known to you, O king, that we will not serve your gods or worship the golden statue you have set up.”",
+   "id": "vc222"
+  },
+  {
+   "ref": "Daniel 6:22",
+   "theme": "Bible stories",
+   "text": "My God sent His angel and shut the mouths of the lions. They have not hurt me, for I was found innocent in His sight, and I have done no wrong against you, O king.”",
+   "id": "vc223"
+  },
+  {
+   "ref": "Jonah 2:2",
+   "theme": "Bible stories",
+   "text": "saying: “ In my distress I called to the LORD, and He answered me. From the belly of Sheol I called for help, and You heard my voice.",
+   "id": "vc224"
+  },
+  {
+   "ref": "Revelation 21:23",
+   "theme": "Heaven",
+   "text": "And the city has no need of sun or moon to shine on it, because the glory of God illuminates the city, and the Lamb is its lamp.",
+   "id": "vc225"
+  },
+  {
+   "ref": "Revelation 22:5",
+   "theme": "Heaven",
+   "text": "There will be no more night in the city, and they will have no need for the light of a lamp or of the sun. For the Lord God will shine on them, and they will reign forever and ever.",
+   "id": "vc226"
+  },
+  {
+   "ref": "Revelation 7:9",
+   "theme": "Heaven",
+   "text": "After this I looked and saw a multitude too large to count, from every nation and tribe and people and tongue, standing before the throne and before the Lamb. They were wearing white robes and holding palm branches in their hands.",
+   "id": "vc227"
+  },
+  {
+   "ref": "Revelation 7:15-16",
+   "theme": "Heaven",
+   "text": "For this reason, they are before the throne of God and serve Him day and night in His temple; and the One seated on the throne will spread His tabernacle over them. ‘ Never again will they hunger, and never will they thirst; nor will the sun beat down upon them, nor any scorching heat.’",
+   "id": "vc228"
+  },
+  {
+   "ref": "Matthew 6:20",
+   "theme": "Heaven",
+   "text": "But store up for yourselves treasures in heaven, where moth and rust do not destroy, and where thieves do not break in and steal.",
+   "id": "vc229"
+  },
+  {
+   "ref": "Matthew 5:12",
+   "theme": "Heaven",
+   "text": "Rejoice and be glad, because great is your reward in heaven; for in the same way they persecuted the prophets before you.",
+   "id": "vc230"
+  },
+  {
+   "ref": "Luke 10:20",
+   "theme": "Heaven",
+   "text": "Nevertheless, do not rejoice that the spirits submit to you, but rejoice that your names are written in heaven.”",
+   "id": "vc231"
+  },
+  {
+   "ref": "Luke 23:43",
+   "theme": "Heaven",
+   "text": "And Jesus said to him, “ Truly I tell you, today you will be with Me in Paradise.”",
+   "id": "vc232"
+  },
+  {
+   "ref": "2 Corinthians 5:8",
+   "theme": "Heaven",
+   "text": "We are confident, then, and would prefer to be away from the body and at home with the Lord.",
+   "id": "vc233"
+  },
+  {
+   "ref": "Philippians 1:23",
+   "theme": "Heaven",
+   "text": "I am torn between the two. I desire to depart and be with Christ, which is far better indeed.",
+   "id": "vc234"
+  },
+  {
+   "ref": "Hebrews 11:16",
+   "theme": "Heaven",
+   "text": "Instead, they were longing for a better country, a heavenly one. Therefore God is not ashamed to be called their God, for He has prepared a city for them.",
+   "id": "vc235"
+  },
+  {
+   "ref": "Hebrews 12:22-23",
+   "theme": "Heaven",
+   "text": "Instead, you have come to Mount Zion, to the city of the living God, the heavenly Jerusalem. You have come to myriads of angels in joyful assembly, to the congregation of the firstborn, enrolled in heaven. You have come to God the Judge of all, to the spirits of the righteous made perfect,",
+   "id": "vc236"
+  },
+  {
+   "ref": "1 Peter 1:4",
+   "theme": "Heaven",
+   "text": "and into an inheritance that is imperishable, undefiled, and unfading, reserved in heaven for you,",
+   "id": "vc237"
+  },
+  {
+   "ref": "Psalms 23:6",
+   "theme": "Heaven",
+   "text": "Surely goodness and mercy will follow me all the days of my life, and I will dwell in the house of the LORD forever.",
+   "id": "vc238"
+  },
+  {
+   "ref": "Isaiah 25:8",
+   "theme": "Heaven",
+   "text": "He will swallow up death forever. The Lord GOD will wipe away the tears from every face and remove the disgrace of His people from the whole earth. For the LORD has spoken.",
+   "id": "vc239"
+  },
+  {
+   "ref": "John 17:24",
+   "theme": "Heaven",
+   "text": "Father, I want those You have given Me to be with Me where I am, that they may see the glory You gave Me because You loved Me before the foundation of the world.",
+   "id": "vc240"
+  },
+  {
+   "ref": "Ephesians 2:6",
+   "theme": "Heaven",
+   "text": "And God raised us up with Christ and seated us with Him in the heavenly realms in Christ Jesus,",
+   "id": "vc241"
+  },
+  {
+   "ref": "Colossians 1:5",
+   "theme": "Heaven",
+   "text": "the faith and love proceeding from the hope stored up for you in heaven, of which you have already heard in the word of truth, the gospel",
+   "id": "vc242"
+  },
+  {
+   "ref": "Matthew 18:3",
+   "theme": "Heaven",
+   "text": "“ Truly I tell you,” He said, “ unless you change and become like little children, you will never enter the kingdom of heaven.",
+   "id": "vc243"
+  },
+  {
+   "ref": "Revelation 21:7",
+   "theme": "Heaven",
+   "text": "The one who overcomes will inherit all things, and I will be his God, and he will be My son.",
+   "id": "vc244"
+  },
+  {
+   "ref": "Ephesians 6:11-12",
+   "theme": "Spiritual warfare",
+   "text": "Put on the full armor of God, so that you can make your stand against the devil’s schemes. For our struggle is not against flesh and blood, but against the rulers, against the authorities, against the powers of this world’s darkness, and against the spiritual forces of evil in the heavenly realms.",
+   "id": "vc245"
+  },
+  {
+   "ref": "Ephesians 6:13",
+   "theme": "Spiritual warfare",
+   "text": "Therefore take up the full armor of God, so that when the day of evil comes, you will be able to stand your ground, and having done everything, to stand.",
+   "id": "vc246"
+  },
+  {
+   "ref": "Ephesians 6:16-17",
+   "theme": "Spiritual warfare",
+   "text": "In addition to all this, take up the shield of faith, with which you can extinguish all the flaming arrows of the evil one. And take the helmet of salvation and the sword of the Spirit, which is the word of God.",
+   "id": "vc247"
+  },
+  {
+   "ref": "2 Corinthians 10:4-5",
+   "theme": "Spiritual warfare",
+   "text": "The weapons of our warfare are not the weapons of the world. Instead, they have divine power to demolish strongholds. We tear down arguments and every presumption set up against the knowledge of God; and we take captive every thought to make it obedient to Christ.",
+   "id": "vc248"
+  },
+  {
+   "ref": "1 John 4:4",
+   "theme": "Spiritual warfare",
+   "text": "You, little children, are from God and have overcome them, because greater is He who is in you than he who is in the world.",
+   "id": "vc249"
+  },
+  {
+   "ref": "1 John 3:8",
+   "theme": "Spiritual warfare",
+   "text": "The one who practices sin is of the devil, because the devil has been sinning from the very start. This is why the Son of God was revealed, to destroy the works of the devil.",
+   "id": "vc250"
+  },
+  {
+   "ref": "Luke 10:19",
+   "theme": "Spiritual warfare",
+   "text": "Behold, I have given you authority to tread on snakes and scorpions, and over all the power of the enemy. Nothing will harm you.",
+   "id": "vc251"
+  },
+  {
+   "ref": "Revelation 12:11",
+   "theme": "Spiritual warfare",
+   "text": "They have conquered him by the blood of the Lamb and by the word of their testimony. And they did not love their lives so as to shy away from death.",
+   "id": "vc252"
+  },
+  {
+   "ref": "Colossians 2:15",
+   "theme": "Spiritual warfare",
+   "text": "And having disarmed the powers and authorities, He made a public spectacle of them, triumphing over them by the cross.",
+   "id": "vc253"
+  },
+  {
+   "ref": "Romans 16:20",
+   "theme": "Spiritual warfare",
+   "text": "The God of peace will soon crush Satan under your feet. The grace of our Lord Jesus Christ be with you.",
+   "id": "vc254"
+  },
+  {
+   "ref": "Isaiah 54:17",
+   "theme": "Spiritual warfare",
+   "text": "No weapon formed against you shall prosper, and you will refute every tongue that accuses you. This is the heritage of the servants of the LORD, and their vindication is from Me,” declares the LORD.",
+   "id": "vc255"
+  },
+  {
+   "ref": "Psalms 18:34",
+   "theme": "Spiritual warfare",
+   "text": "He trains my hands for battle; my arms can bend a bow of bronze.",
+   "id": "vc256"
+  },
+  {
+   "ref": "Psalms 144:1",
+   "theme": "Spiritual warfare",
+   "text": "Blessed be the LORD, my Rock, who trains my hands for war, my fingers for battle.",
+   "id": "vc257"
+  },
+  {
+   "ref": "Matthew 18:18",
+   "theme": "Spiritual warfare",
+   "text": "Truly I tell you, whatever you bind on earth will be bound in heaven, and whatever you loose on earth will be loosed in heaven.",
+   "id": "vc258"
+  },
+  {
+   "ref": "2 Timothy 2:3-4",
+   "theme": "Spiritual warfare",
+   "text": "Join me in suffering, like a good soldier of Christ Jesus. A soldier refrains from entangling himself in civilian affairs, in order to please the one who enlisted him.",
+   "id": "vc259"
+  },
+  {
+   "ref": "Psalms 91:13",
+   "theme": "Spiritual warfare",
+   "text": "You will tread on the lion and cobra; you will trample the young lion and serpent.",
+   "id": "vc260"
+  },
+  {
+   "ref": "Hebrews 2:14",
+   "theme": "Spiritual warfare",
+   "text": "Now since the children have flesh and blood, He too shared in their humanity, so that by His death He might destroy him who holds the power of death, that is, the devil,",
+   "id": "vc261"
+  },
+  {
+   "ref": "1 Timothy 6:12",
+   "theme": "Spiritual warfare",
+   "text": "Fight the good fight of the faith. Take hold of the eternal life to which you were called when you made the good confession before many witnesses.",
+   "id": "vc262"
+  },
+  {
+   "ref": "Deuteronomy 20:4",
+   "theme": "Spiritual warfare",
+   "text": "For the LORD your God goes with you to fight for you against your enemies, to give you the victory.”",
+   "id": "vc263"
+  },
+  {
+   "ref": "2 Chronicles 20:17",
+   "theme": "Spiritual warfare",
+   "text": "You need not fight this battle. Take up your positions, stand firm, and see the salvation of the LORD on your behalf, O Judah and Jerusalem. Do not be afraid or discouraged. Go out and face them tomorrow, for the LORD is with you.’”",
+   "id": "vc264"
+  },
+  {
+   "ref": "Numbers 23:19",
+   "theme": "Promises kept",
+   "text": "God is not a man, that He should lie, or a son of man, that He should change His mind. Does He speak and not act? Does He promise and not fulfill?",
+   "id": "vc265"
+  },
+  {
+   "ref": "Joshua 21:45",
+   "theme": "Promises kept",
+   "text": "Not one of all the LORD’s good promises to the house of Israel had failed; everything was fulfilled.",
+   "id": "vc266"
+  },
+  {
+   "ref": "Joshua 23:14",
+   "theme": "Promises kept",
+   "text": "Now behold, today I am going the way of all the earth, and you know with all your heart and soul that not one of the good promises the LORD your God made to you has failed. Everything was fulfilled for you; not one promise has failed.",
+   "id": "vc267"
+  },
+  {
+   "ref": "1 Kings 8:56",
+   "theme": "Promises kept",
+   "text": "“ Blessed be the LORD, who has given rest to His people Israel according to all that He promised. Not one word has failed of all the good promises He made through His servant Moses.",
+   "id": "vc268"
+  },
+  {
+   "ref": "Psalms 145:13",
+   "theme": "Promises kept",
+   "text": "Your kingdom is an everlasting kingdom, and Your dominion endures through all generations. The LORD is faithful in all His words and kind in all His actions.",
+   "id": "vc269"
+  },
+  {
+   "ref": "Psalms 89:34",
+   "theme": "Promises kept",
+   "text": "I will not violate My covenant or alter the utterance of My lips.",
+   "id": "vc270"
+  },
+  {
+   "ref": "Psalms 119:90",
+   "theme": "Promises kept",
+   "text": "Your faithfulness continues through all generations; You established the earth, and it endures.",
+   "id": "vc271"
+  },
+  {
+   "ref": "2 Corinthians 1:20",
+   "theme": "Promises kept",
+   "text": "For all the promises of God are “ Yes ” in Christ. And so through Him, our “ Amen ” is spoken to the glory of God.",
+   "id": "vc272"
+  },
+  {
+   "ref": "Titus 1:2",
+   "theme": "Promises kept",
+   "text": "in the hope of eternal life, which God, who cannot lie, promised before time began.",
+   "id": "vc273"
+  },
+  {
+   "ref": "2 Peter 1:4",
+   "theme": "Promises kept",
+   "text": "Through these He has given us His precious and magnificent promises, so that through them you may become partakers of the divine nature, now that you have escaped the corruption in the world caused by evil desires.",
+   "id": "vc274"
+  },
+  {
+   "ref": "Genesis 21:1",
+   "theme": "Promises kept",
+   "text": "Now the LORD attended to Sarah as He had said, and the LORD did for Sarah what He had promised.",
+   "id": "vc275"
+  },
+  {
+   "ref": "Deuteronomy 7:9",
+   "theme": "Promises kept",
+   "text": "Know therefore that the LORD your God is God, the faithful God who keeps His covenant of loving devotion for a thousand generations of those who love Him and keep His commandments.",
+   "id": "vc276"
+  },
+  {
+   "ref": "1 Thessalonians 5:24",
+   "theme": "Promises kept",
+   "text": "The One who calls you is faithful, and He will do it.",
+   "id": "vc277"
+  },
+  {
+   "ref": "2 Timothy 2:13",
+   "theme": "Promises kept",
+   "text": "if we are faithless, He remains faithful, for He cannot deny Himself.",
+   "id": "vc278"
+  },
+  {
+   "ref": "Romans 4:21",
+   "theme": "Promises kept",
+   "text": "being fully persuaded that God was able to do what He had promised.",
+   "id": "vc279"
+  },
+  {
+   "ref": "Psalms 33:4",
+   "theme": "Promises kept",
+   "text": "For the word of the LORD is upright, and all His work is trustworthy.",
+   "id": "vc280"
+  },
+  {
+   "ref": "Joshua 1:5",
+   "theme": "Promises kept",
+   "text": "No one shall stand against you all the days of your life. As I was with Moses, so will I be with you; I will never leave you nor forsake you.",
+   "id": "vc281"
+  },
+  {
+   "ref": "Galatians 3:29",
+   "theme": "Promises kept",
+   "text": "And if you belong to Christ, then you are Abraham’s seed and heirs according to the promise.",
+   "id": "vc282"
+  },
+  {
+   "ref": "Acts 13:32-33",
+   "theme": "Promises kept",
+   "text": "And now we proclaim to you the good news: What God promised our fathers He has fulfilled for us, their children, by raising up Jesus. As it is written in the second Psalm: ‘ You are My Son; today I have become Your Father.’",
+   "id": "vc283"
+  },
+  {
+   "ref": "Luke 24:44",
+   "theme": "Promises kept",
+   "text": "Jesus said to them, “ These are the words I spoke to you while I was still with you: Everything must be fulfilled that is written about Me in the Law of Moses, the Prophets, and the Psalms.”",
+   "id": "vc284"
+  },
+  {
+   "ref": "Isaiah 7:14",
+   "theme": "Prophecy",
+   "text": "Therefore the Lord Himself will give you a sign: Behold, the virgin will be with child and will give birth to a son, and will call Him Immanuel.",
+   "id": "vc285"
+  },
+  {
+   "ref": "Isaiah 53:6",
+   "theme": "Prophecy",
+   "text": "We all like sheep have gone astray, each one has turned to his own way; and the LORD has laid upon Him the iniquity of us all.",
+   "id": "vc286"
+  },
+  {
+   "ref": "Micah 5:2",
+   "theme": "Prophecy",
+   "text": "But you, Bethlehem Ephrathah, who are small among the clans of Judah, out of you will come forth for Me One to be ruler over Israel — One whose origins are of old, from the days of eternity.",
+   "id": "vc287"
+  },
+  {
+   "ref": "Zechariah 9:9",
+   "theme": "Prophecy",
+   "text": "Rejoice greatly, O Daughter of Zion! Shout in triumph, O Daughter of Jerusalem! See, your King comes to you, righteous and victorious, humble and riding on a donkey, on a colt, the foal of a donkey.",
+   "id": "vc288"
+  },
+  {
+   "ref": "Psalms 22:16",
+   "theme": "Prophecy",
+   "text": "For dogs surround me; a band of evil men encircles me; they have pierced my hands and feet.",
+   "id": "vc289"
+  },
+  {
+   "ref": "Psalms 22:18",
+   "theme": "Prophecy",
+   "text": "They divide my garments among them and cast lots for my clothing.",
+   "id": "vc290"
+  },
+  {
+   "ref": "Jeremiah 23:5",
+   "theme": "Prophecy",
+   "text": "Behold, the days are coming, declares the LORD, when I will raise up for David a righteous Branch, and He will reign wisely as King and will administer justice and righteousness in the land.",
+   "id": "vc291"
+  },
+  {
+   "ref": "Matthew 24:14",
+   "theme": "Prophecy",
+   "text": "And this gospel of the kingdom will be preached in all the world as a testimony to all nations, and then the end will come.",
+   "id": "vc292"
+  },
+  {
+   "ref": "Matthew 24:30",
+   "theme": "Prophecy",
+   "text": "At that time the sign of the Son of Man will appear in heaven, and all the tribes of the earth will mourn. They will see the Son of Man coming on the clouds of heaven, with power and great glory.",
+   "id": "vc293"
+  },
+  {
+   "ref": "Luke 21:28",
+   "theme": "Prophecy",
+   "text": "When these things begin to happen, stand up and lift up your heads, because your redemption is drawing near.”",
+   "id": "vc294"
+  },
+  {
+   "ref": "Acts 2:16-17",
+   "theme": "Prophecy",
+   "text": "No, this is what was spoken by the prophet Joel: ‘ In the last days, God says, I will pour out My Spirit on all people. Your sons and daughters will prophesy, your young men will see visions, your old men will dream dreams.",
+   "id": "vc295"
+  },
+  {
+   "ref": "2 Peter 1:19",
+   "theme": "Prophecy",
+   "text": "We also have the word of the prophets as confirmed beyond doubt. And you will do well to pay attention to it, as to a lamp shining in a dark place, until the day dawns and the morning star rises in your hearts.",
+   "id": "vc296"
+  },
+  {
+   "ref": "1 Corinthians 14:3",
+   "theme": "Prophecy",
+   "text": "But he who prophesies speaks to men for their edification, encouragement, and comfort.",
+   "id": "vc297"
+  },
+  {
+   "ref": "Amos 3:7",
+   "theme": "Prophecy",
+   "text": "Surely the Lord GOD does nothing without revealing His plan to His servants the prophets.",
+   "id": "vc298"
+  },
+  {
+   "ref": "Revelation 19:10",
+   "theme": "Prophecy",
+   "text": "So I fell at his feet to worship him. But he told me, “ Do not do that! I am a fellow servant with you and your brothers who rely on the testimony of Jesus. Worship God! For the testimony of Jesus is the spirit of prophecy.”",
+   "id": "vc299"
+  },
+  {
+   "ref": "Isaiah 11:6",
+   "theme": "Prophecy",
+   "text": "The wolf will live with the lamb, and the leopard will lie down with the goat; the calf and young lion and fatling will be together, and a little child will lead them.",
+   "id": "vc300"
+  },
+  {
+   "ref": "Isaiah 2:4",
+   "theme": "Prophecy",
+   "text": "Then He will judge between the nations and arbitrate for many peoples. They will beat their swords into plowshares and their spears into pruning hooks. Nation will no longer take up the sword against nation, nor train anymore for war.",
+   "id": "vc301"
+  },
+  {
+   "ref": "Ezekiel 37:10",
+   "theme": "Prophecy",
+   "text": "So I prophesied as He had commanded me, and the breath entered them, and they came to life and stood on their feet — a vast army.",
+   "id": "vc302"
+  },
+  {
+   "ref": "Zechariah 12:10",
+   "theme": "Prophecy",
+   "text": "Then I will pour out on the house of David and on the people of Jerusalem a spirit of grace and prayer, and they will look on Me, the One they have pierced. They will mourn for Him as one mourns for an only child, and grieve bitterly for Him as one grieves for a firstborn son.",
+   "id": "vc303"
+  },
+  {
+   "ref": "Revelation 1:3",
+   "theme": "Prophecy",
+   "text": "Blessed is the one who reads aloud the words of this prophecy, and blessed are those who hear and obey what is written in it, because the time is near.",
+   "id": "vc304"
+  },
+  {
+   "ref": "Ephesians 2:10",
+   "theme": "Purpose",
+   "text": "For we are God’s workmanship, created in Christ Jesus to do good works, which God prepared in advance as our way of life.",
+   "id": "vc305"
+  },
+  {
+   "ref": "Jeremiah 1:5",
+   "theme": "Purpose",
+   "text": "“ Before I formed you in the womb I knew you, and before you were born I set you apart and appointed you as a prophet to the nations.”",
+   "id": "vc306"
+  },
+  {
+   "ref": "Psalms 138:8",
+   "theme": "Purpose",
+   "text": "The LORD will fulfill His purpose for me. O LORD, Your loving devotion endures forever — do not abandon the works of Your hands.",
+   "id": "vc307"
+  },
+  {
+   "ref": "Psalms 57:2",
+   "theme": "Purpose",
+   "text": "I cry out to God Most High, to God who fulfills His purpose for me.",
+   "id": "vc308"
+  },
+  {
+   "ref": "Isaiah 43:7",
+   "theme": "Purpose",
+   "text": "everyone called by My name and created for My glory, whom I have indeed formed and made.”",
+   "id": "vc309"
+  },
+  {
+   "ref": "Colossians 1:16",
+   "theme": "Purpose",
+   "text": "For in Him all things were created, things in heaven and on earth, visible and invisible, whether thrones or dominions or rulers or authorities. All things were created through Him and for Him.",
+   "id": "vc310"
+  },
+  {
+   "ref": "1 Peter 2:9",
+   "theme": "Purpose",
+   "text": "But you are a chosen people, a royal priesthood, a holy nation, a people for God’s own possession, to proclaim the virtues of Him who called you out of darkness into His marvelous light.",
+   "id": "vc311"
+  },
+  {
+   "ref": "Matthew 5:14-16",
+   "theme": "Purpose",
+   "text": "You are the light of the world. A city on a hill cannot be hidden. Neither do people light a lamp and put it under a basket. Instead, they set it on a stand, and it gives light to everyone in the house. In the same way, let your light shine before men, that they may see your good deeds and glorify your Father in heaven.",
+   "id": "vc312"
+  },
+  {
+   "ref": "Philippians 2:13",
+   "theme": "Purpose",
+   "text": "For it is God who works in you to will and to act on behalf of His good purpose.",
+   "id": "vc313"
+  },
+  {
+   "ref": "2 Timothy 1:9",
+   "theme": "Purpose",
+   "text": "He has saved us and called us to a holy calling, not because of our works, but by His own purpose and by the grace He granted us in Christ Jesus before time began.",
+   "id": "vc314"
+  },
+  {
+   "ref": "Romans 12:4-5",
+   "theme": "Purpose",
+   "text": "Just as each of us has one body with many members, and not all members have the same function, so in Christ we who are many are one body, and each member belongs to one another.",
+   "id": "vc315"
+  },
+  {
+   "ref": "Ecclesiastes 12:13",
+   "theme": "Purpose",
+   "text": "When all has been heard, the conclusion of the matter is this: Fear God and keep His commandments, because this is the whole duty of man.",
+   "id": "vc316"
+  },
+  {
+   "ref": "Psalms 139:16",
+   "theme": "Purpose",
+   "text": "Your eyes saw my unformed body; all my days were written in Your book and ordained for me before one of them came to be.",
+   "id": "vc317"
+  },
+  {
+   "ref": "Acts 20:24",
+   "theme": "Purpose",
+   "text": "But I consider my life of no value to me, if only I may finish my course and complete the ministry I have received from the Lord Jesus —the ministry of testifying to the good news of God’s grace.",
+   "id": "vc318"
+  },
+  {
+   "ref": "Romans 11:36",
+   "theme": "Purpose",
+   "text": "For from Him and through Him and to Him are all things. To Him be the glory forever! Amen.",
+   "id": "vc319"
+  },
+  {
+   "ref": "1 Corinthians 10:31",
+   "theme": "Purpose",
+   "text": "So whether you eat or drink or whatever you do, do it all to the glory of God.",
+   "id": "vc320"
+  },
+  {
+   "ref": "Proverbs 16:4",
+   "theme": "Purpose",
+   "text": "The LORD has made everything for His purpose — even the wicked for the day of disaster.",
+   "id": "vc321"
+  },
+  {
+   "ref": "Isaiah 46:10",
+   "theme": "Purpose",
+   "text": "I declare the end from the beginning, and ancient times from what is still to come. I say, ‘ My purpose will stand, and all My good pleasure I will accomplish.’",
+   "id": "vc322"
+  },
+  {
+   "ref": "Romans 8:29",
+   "theme": "Purpose",
+   "text": "For those God foreknew, He also predestined to be conformed to the image of His Son, so that He would be the firstborn among many brothers.",
+   "id": "vc323"
+  },
+  {
+   "ref": "Ephesians 1:11",
+   "theme": "Purpose",
+   "text": "In Him we were also chosen as God’s own, having been predestined according to the plan of Him who works out everything by the counsel of His will,",
+   "id": "vc324"
+  },
+  {
+   "ref": "Psalms 127:3",
+   "theme": "Family",
+   "text": "Children are indeed a heritage from the LORD, and the fruit of the womb is His reward.",
+   "id": "vc325"
+  },
+  {
+   "ref": "Psalms 127:1",
+   "theme": "Family",
+   "text": "Unless the LORD builds the house, its builders labor in vain; unless the LORD protects the city, its watchmen stand guard in vain.",
+   "id": "vc326"
+  },
+  {
+   "ref": "Psalms 128:1-3",
+   "theme": "Family",
+   "text": "Blessed are all who fear the LORD, who walk in His ways! For when you eat the fruit of your labor, blessings and prosperity will be yours. Your wife will be like a fruitful vine flourishing within your house, your sons like olive shoots sitting around your table.",
+   "id": "vc327"
+  },
+  {
+   "ref": "Proverbs 17:6",
+   "theme": "Family",
+   "text": "Grandchildren are the crown of the aged, and the glory of a son is his father.",
+   "id": "vc328"
+  },
+  {
+   "ref": "Proverbs 31:28",
+   "theme": "Family",
+   "text": "Her children rise up and call her blessed; her husband praises her as well:",
+   "id": "vc329"
+  },
+  {
+   "ref": "Proverbs 18:22",
+   "theme": "Family",
+   "text": "He who finds a wife finds a good thing and obtains favor from the LORD.",
+   "id": "vc330"
+  },
+  {
+   "ref": "Genesis 2:24",
+   "theme": "Family",
+   "text": "For this reason a man will leave his father and mother and be united to his wife, and they will become one flesh.",
+   "id": "vc331"
+  },
+  {
+   "ref": "Ephesians 5:25",
+   "theme": "Family",
+   "text": "Husbands, love your wives, just as Christ loved the church and gave Himself up for her",
+   "id": "vc332"
+  },
+  {
+   "ref": "Ephesians 5:33",
+   "theme": "Family",
+   "text": "Nevertheless, each one of you also must love his wife as he loves himself, and the wife must respect her husband.",
+   "id": "vc333"
+  },
+  {
+   "ref": "Ephesians 6:1-3",
+   "theme": "Family",
+   "text": "Children, obey your parents in the Lord, for this is right. “ Honor your father and mother ” ( which is the first commandment with a promise ), “ that it may go well with you and that you may have a long life on the earth.”",
+   "id": "vc334"
+  },
+  {
+   "ref": "Ephesians 6:4",
+   "theme": "Family",
+   "text": "Fathers, do not provoke your children to wrath; instead, bring them up in the discipline and instruction of the Lord.",
+   "id": "vc335"
+  },
+  {
+   "ref": "Colossians 3:20",
+   "theme": "Family",
+   "text": "Children, obey your parents in everything, for this is pleasing to the Lord.",
+   "id": "vc336"
+  },
+  {
+   "ref": "Colossians 3:18-19",
+   "theme": "Family",
+   "text": "Wives, submit to your husbands, as is fitting in the Lord. Husbands, love your wives and do not be harsh with them.",
+   "id": "vc337"
+  },
+  {
+   "ref": "Malachi 4:6",
+   "theme": "Family",
+   "text": "And he will turn the hearts of the fathers to their children, and the hearts of the children to their fathers. Otherwise, I will come and strike the land with a curse.”",
+   "id": "vc338"
+  },
+  {
+   "ref": "1 Timothy 5:8",
+   "theme": "Family",
+   "text": "If anyone does not provide for his own, and especially his own household, he has denied the faith and is worse than an unbeliever.",
+   "id": "vc339"
+  },
+  {
+   "ref": "Proverbs 14:1",
+   "theme": "Family",
+   "text": "Every wise woman builds her house, but a foolish one tears it down with her own hands.",
+   "id": "vc340"
+  },
+  {
+   "ref": "Psalms 68:6",
+   "theme": "Family",
+   "text": "God settles the lonely in families; He leads the prisoners out to prosperity, but the rebellious dwell in a sun-scorched land.",
+   "id": "vc341"
+  },
+  {
+   "ref": "Exodus 20:12",
+   "theme": "Family",
+   "text": "Honor your father and mother, so that your days may be long in the land that the LORD your God is giving you.",
+   "id": "vc342"
+  },
+  {
+   "ref": "Proverbs 13:22",
+   "theme": "Family",
+   "text": "A good man leaves an inheritance to his children’s children, but the sinner’s wealth is passed to the righteous.",
+   "id": "vc343"
+  },
+  {
+   "ref": "Matthew 19:5-6",
+   "theme": "Family",
+   "text": "and said, ‘ For this reason a man will leave his father and mother and be united to his wife, and the two will become one flesh ’? So they are no longer two, but one flesh. Therefore what God has joined together, let man not separate.”",
+   "id": "vc344"
+  },
+  {
+   "ref": "Ecclesiastes 4:12",
+   "theme": "Family",
+   "text": "And though one may be overpowered, two can resist. Moreover, a cord of three strands is not quickly broken.",
+   "id": "vc345"
+  },
+  {
+   "ref": "1 Peter 3:7",
+   "theme": "Family",
+   "text": "Husbands, in the same way, treat your wives with consideration as a delicate vessel, and with honor as fellow heirs of the gracious gift of life, so that your prayers will not be hindered.",
+   "id": "vc346"
+  },
+  {
+   "ref": "John 2:11",
+   "theme": "Miracles",
+   "text": "Jesus performed this, the first of His signs, at Cana in Galilee. He thus revealed His glory, and His disciples believed in Him.",
+   "id": "vc347"
+  },
+  {
+   "ref": "John 20:30-31",
+   "theme": "Miracles",
+   "text": "Jesus performed many other signs in the presence of His disciples, which are not written in this book. But these are written so that you may believe that Jesus is the Christ, the Son of God, and that by believing you may have life in His name.",
+   "id": "vc348"
+  },
+  {
+   "ref": "John 14:12",
+   "theme": "Miracles",
+   "text": "Truly, truly, I tell you, whoever believes in Me will also do the works that I am doing. He will do even greater things than these, because I am going to the Father.",
+   "id": "vc349"
+  },
+  {
+   "ref": "Mark 16:20",
+   "theme": "Miracles",
+   "text": "And they went out and preached everywhere, and the Lord worked through them, confirming His word by the signs that accompanied it.",
+   "id": "vc350"
+  },
+  {
+   "ref": "Acts 2:22",
+   "theme": "Miracles",
+   "text": "Men of Israel, listen to this message: Jesus of Nazareth was a man certified by God to you by miracles, wonders, and signs, which God did among you through Him, as you yourselves know.",
+   "id": "vc351"
+  },
+  {
+   "ref": "Acts 19:11-12",
+   "theme": "Miracles",
+   "text": "God did extraordinary miracles through the hands of Paul, so that even handkerchiefs and aprons that had touched him were taken to the sick, and the diseases and evil spirits left them.",
+   "id": "vc352"
+  },
+  {
+   "ref": "Acts 5:12",
+   "theme": "Miracles",
+   "text": "The apostles performed many signs and wonders among the people, and with one accord the believers gathered together in Solomon’s Colonnade.",
+   "id": "vc353"
+  },
+  {
+   "ref": "Hebrews 2:4",
+   "theme": "Miracles",
+   "text": "and was affirmed by God through signs, wonders, various miracles, and gifts of the Holy Spirit distributed according to His will.",
+   "id": "vc354"
+  },
+  {
+   "ref": "Psalms 77:14",
+   "theme": "Miracles",
+   "text": "You are the God who works wonders; You display Your strength among the peoples.",
+   "id": "vc355"
+  },
+  {
+   "ref": "Psalms 72:18",
+   "theme": "Miracles",
+   "text": "Blessed be the LORD God, the God of Israel, who alone does marvelous deeds.",
+   "id": "vc356"
+  },
+  {
+   "ref": "Psalms 86:10",
+   "theme": "Miracles",
+   "text": "For You are great and perform wonders; You alone are God.",
+   "id": "vc357"
+  },
+  {
+   "ref": "Exodus 15:11",
+   "theme": "Miracles",
+   "text": "Who among the gods is like You, O LORD? Who is like You — majestic in holiness, revered with praises, performing wonders?",
+   "id": "vc358"
+  },
+  {
+   "ref": "Mark 4:39",
+   "theme": "Miracles",
+   "text": "Then Jesus got up and rebuked the wind and the sea. “ Silence!” He commanded. “ Be still!” And the wind died down, and it was perfectly calm.",
+   "id": "vc359"
+  },
+  {
+   "ref": "Mark 4:41",
+   "theme": "Miracles",
+   "text": "Overwhelmed with fear, they asked one another, “ Who is this, that even the wind and the sea obey Him?”",
+   "id": "vc360"
+  },
+  {
+   "ref": "Matthew 14:27",
+   "theme": "Miracles",
+   "text": "But Jesus spoke up at once: “ Take courage! It is I. Do not be afraid.”",
+   "id": "vc361"
+  },
+  {
+   "ref": "John 11:40",
+   "theme": "Miracles",
+   "text": "Jesus replied, “ Did I not tell you that if you believed, you would see the glory of God?”",
+   "id": "vc362"
+  },
+  {
+   "ref": "Luke 5:24-25",
+   "theme": "Miracles",
+   "text": "But so that you may know that the Son of Man has authority on the earth to forgive sins...” He said to the paralytic, “ I tell you, get up, pick up your mat, and go home.” And immediately the man stood up before them, took what he had been lying on, and went home glorifying God.",
+   "id": "vc363"
+  },
+  {
+   "ref": "Luke 7:22",
+   "theme": "Miracles",
+   "text": "So He replied, “ Go back and report to John what you have seen and heard: The blind receive sight, the lame walk, the lepers are cleansed, the deaf hear, the dead are raised, and the good news is preached to the poor.",
+   "id": "vc364"
+  },
+  {
+   "ref": "Matthew 15:30-31",
+   "theme": "Miracles",
+   "text": "Large crowds came to Him, bringing the lame, the blind, the crippled, the mute, and many others, and laid them at His feet, and He healed them. The crowd was amazed when they saw the mute speaking, the crippled restored, the lame walking, and the blind seeing. And they glorified the God of Israel.",
+   "id": "vc365"
+  },
+  {
+   "ref": "Isaiah 35:5-6",
+   "theme": "Miracles",
+   "text": "Then the eyes of the blind will be opened and the ears of the deaf unstopped. Then the lame will leap like a deer and the mute tongue will shout for joy. For waters will gush forth in the wilderness, and streams in the desert.",
+   "id": "vc366"
+  },
+  {
+   "ref": "Psalms 30:5",
+   "theme": "Joy",
+   "text": "For His anger is fleeting, but His favor lasts a lifetime. Weeping may stay the night, but joy comes in the morning.",
+   "id": "vc367"
+  },
+  {
+   "ref": "Psalms 126:5-6",
+   "theme": "Joy",
+   "text": "Those who sow in tears will reap with shouts of joy. He who goes out weeping, bearing a trail of seed, will surely return with shouts of joy, carrying sheaves of grain.",
+   "id": "vc368"
+  },
+  {
+   "ref": "John 15:11",
+   "theme": "Joy",
+   "text": "I have told you these things so that My joy may be in you and your joy may be complete.",
+   "id": "vc369"
+  },
+  {
+   "ref": "John 16:22",
+   "theme": "Joy",
+   "text": "So also you have sorrow now, but I will see you again and your hearts will rejoice, and no one will take away your joy.",
+   "id": "vc370"
+  },
+  {
+   "ref": "Psalms 51:12",
+   "theme": "Joy",
+   "text": "Restore to me the joy of Your salvation, and sustain me with a willing spirit.",
+   "id": "vc371"
+  },
+  {
+   "ref": "Isaiah 35:10",
+   "theme": "Joy",
+   "text": "So the redeemed of the LORD will return and enter Zion with singing, crowned with everlasting joy. Gladness and joy will overtake them, and sorrow and sighing will flee.",
+   "id": "vc372"
+  },
+  {
+   "ref": "Isaiah 61:10",
+   "theme": "Joy",
+   "text": "I will rejoice greatly in the LORD, my soul will exult in my God; for He has clothed me with garments of salvation and wrapped me in a robe of righteousness, as a bridegroom wears a priestly headdress, as a bride adorns herself with her jewels.",
+   "id": "vc373"
+  },
+  {
+   "ref": "Psalms 97:11-12",
+   "theme": "Joy",
+   "text": "Light shines on the righteous, gladness on the upright in heart. Rejoice in the LORD, you righteous ones, and praise His holy name.",
+   "id": "vc374"
+  },
+  {
+   "ref": "Psalms 5:11",
+   "theme": "Joy",
+   "text": "But let all who take refuge in You rejoice; let them ever shout for joy. May You shelter them, that those who love Your name may rejoice in You.",
+   "id": "vc375"
+  },
+  {
+   "ref": "Proverbs 17:22",
+   "theme": "Joy",
+   "text": "A joyful heart is good medicine, but a broken spirit dries up the bones.",
+   "id": "vc376"
+  },
+  {
+   "ref": "Psalms 16:9",
+   "theme": "Joy",
+   "text": "Therefore my heart is glad and my tongue rejoices; my body also will dwell securely.",
+   "id": "vc377"
+  },
+  {
+   "ref": "Romans 8:25",
+   "theme": "Perseverance",
+   "text": "But if we hope for what we do not yet see, we wait for it patiently.",
+   "id": "vc378"
+  },
+  {
+   "ref": "2 Timothy 4:7",
+   "theme": "Perseverance",
+   "text": "I have fought the good fight, I have finished the race, I have kept the faith.",
+   "id": "vc379"
+  },
+  {
+   "ref": "Luke 21:19",
+   "theme": "Perseverance",
+   "text": "By your patient endurance you will gain your souls.",
+   "id": "vc380"
+  },
+  {
+   "ref": "Psalms 27:14",
+   "theme": "Perseverance",
+   "text": "Wait patiently for the LORD; be strong and courageous. Wait patiently for the LORD!",
+   "id": "vc381"
+  },
+  {
+   "ref": "Colossians 1:11",
+   "theme": "Perseverance",
+   "text": "being strengthened with all power according to His glorious might so that you may have full endurance and patience, and joyfully",
+   "id": "vc382"
+  },
+  {
+   "ref": "Revelation 2:10",
+   "theme": "Perseverance",
+   "text": "Do not fear what you are about to suffer. Look, the devil is about to throw some of you into prison to test you, and you will suffer tribulation for ten days. Be faithful even unto death, and I will give you the crown of life.",
+   "id": "vc383"
+  },
+  {
+   "ref": "1 Corinthians 9:24",
+   "theme": "Perseverance",
+   "text": "Do you not know that in a race all the runners run, but only one receives the prize? Run in such a way as to take the prize.",
+   "id": "vc384"
+  },
+  {
+   "ref": "Philippians 3:13-14",
+   "theme": "Perseverance",
+   "text": "Brothers, I do not consider myself yet to have taken hold of it. But one thing I do: Forgetting what is behind and straining toward what is ahead, I press on toward the goal to win the prize of God’s heavenly calling in Christ Jesus.",
+   "id": "vc385"
+  },
+  {
+   "ref": "Hebrews 12:11",
+   "theme": "Perseverance",
+   "text": "No discipline seems enjoyable at the time, but painful. Later on, however, it yields a harvest of righteousness and peace to those who have been trained by it.",
+   "id": "vc386"
+  },
+  {
+   "ref": "1 Corinthians 15:57",
+   "theme": "Victory",
+   "text": "But thanks be to God, who gives us the victory through our Lord Jesus Christ!",
+   "id": "vc387"
+  },
+  {
+   "ref": "Romans 8:37",
+   "theme": "Victory",
+   "text": "No, in all these things we are more than conquerors through Him who loved us.",
+   "id": "vc388"
+  },
+  {
+   "ref": "Revelation 3:21",
+   "theme": "Victory",
+   "text": "To the one who overcomes, I will grant the right to sit with Me on My throne, just as I overcame and sat down with My Father on His throne.",
+   "id": "vc389"
+  },
+  {
+   "ref": "Psalms 60:12",
+   "theme": "Victory",
+   "text": "With God we will perform with valor, and He will trample our enemies.",
+   "id": "vc390"
+  },
+  {
+   "ref": "Joshua 1:3",
+   "theme": "Victory",
+   "text": "I have given you every place where the sole of your foot will tread, just as I promised to Moses.",
+   "id": "vc391"
+  },
+  {
+   "ref": "Psalms 44:5",
+   "theme": "Victory",
+   "text": "Through You we repel our foes; through Your name we trample our enemies.",
+   "id": "vc392"
+  },
+  {
+   "ref": "2 Corinthians 2:14",
+   "theme": "Victory",
+   "text": "But thanks be to God, who always leads us triumphantly as captives in Christ and through us spreads everywhere the fragrance of the knowledge of Him.",
+   "id": "vc393"
+  },
+  {
+   "ref": "Romans 6:14",
+   "theme": "Victory",
+   "text": "For sin shall not be your master, because you are not under law, but under grace.",
+   "id": "vc394"
+  },
+  {
+   "ref": "Proverbs 21:31",
+   "theme": "Victory",
+   "text": "A horse is prepared for the day of battle, but victory is of the LORD.",
+   "id": "vc395"
+  },
+  {
+   "ref": "1 John 2:14",
+   "theme": "Victory",
+   "text": "I have written to you, fathers, because you know Him who is from the beginning. I have written to you, young men, because you are strong, and the word of God abides in you, and you have overcome the evil one.",
+   "id": "vc396"
+  },
+  {
+   "ref": "Mark 16:15",
+   "theme": "Sharing the good news",
+   "text": "And He said to them, “ Go into all the world and preach the gospel to every creature.",
+   "id": "vc397"
+  },
+  {
+   "ref": "Romans 10:14-15",
+   "theme": "Sharing the good news",
+   "text": "How then can they call on the One in whom they have not believed? And how can they believe in the One of whom they have not heard? And how can they hear without someone to preach? And how can they preach unless they are sent? As it is written: “ How beautiful are the feet of those who bring good news!”",
+   "id": "vc398"
+  },
+  {
+   "ref": "2 Corinthians 5:20",
+   "theme": "Sharing the good news",
+   "text": "Therefore we are ambassadors for Christ, as though God were making His appeal through us. We implore you on behalf of Christ: Be reconciled to God.",
+   "id": "vc399"
+  },
+  {
+   "ref": "Isaiah 6:8",
+   "theme": "Sharing the good news",
+   "text": "Then I heard the voice of the Lord saying: “ Whom shall I send? Who will go for Us?” And I said: “ Here am I. Send me!”",
+   "id": "vc400"
+  },
+  {
+   "ref": "Matthew 9:37-38",
+   "theme": "Sharing the good news",
+   "text": "Then He said to His disciples, “ The harvest is plentiful, but the workers are few. Ask the Lord of the harvest, therefore, to send out workers into His harvest.”",
+   "id": "vc401"
+  },
+  {
+   "ref": "1 Peter 3:15",
+   "theme": "Sharing the good news",
+   "text": "But in your hearts sanctify Christ as Lord. Always be prepared to give a defense to everyone who asks you the reason for the hope that is in you. But respond with gentleness and respect,",
+   "id": "vc402"
+  },
+  {
+   "ref": "Colossians 4:5-6",
+   "theme": "Sharing the good news",
+   "text": "Act wisely toward outsiders, redeeming the time. Let your speech always be gracious, seasoned with salt, so that you may know how to answer everyone.",
+   "id": "vc403"
+  },
+  {
+   "ref": "Proverbs 11:30",
+   "theme": "Sharing the good news",
+   "text": "The fruit of the righteous is a tree of life, and he who wins souls is wise.",
+   "id": "vc404"
+  },
+  {
+   "ref": "Luke 14:23",
+   "theme": "Sharing the good news",
+   "text": "So the master told his servant, ‘ Go out to the highways and hedges and compel them to come in, so that my house will be full.",
+   "id": "vc405"
+  },
+  {
+   "ref": "John 20:21",
+   "theme": "Sharing the good news",
+   "text": "Again Jesus said to them, “ Peace be with you. As the Father has sent Me, so also I am sending you.”",
+   "id": "vc406"
+  },
+  {
+   "ref": "Psalms 96:3",
+   "theme": "Sharing the good news",
+   "text": "Declare His glory among the nations, His wonderful deeds among all peoples.",
+   "id": "vc407"
+  },
+  {
+   "ref": "James 4:10",
+   "theme": "Humility and repentance",
+   "text": "Humble yourselves before the Lord, and He will exalt you.",
+   "id": "vc408"
+  },
+  {
+   "ref": "1 Peter 5:6",
+   "theme": "Humility and repentance",
+   "text": "Humble yourselves, therefore, under God’s mighty hand, so that in due time He may exalt you.",
+   "id": "vc409"
+  },
+  {
+   "ref": "Proverbs 11:2",
+   "theme": "Humility and repentance",
+   "text": "When pride comes, disgrace follows, but with humility comes wisdom.",
+   "id": "vc410"
+  },
+  {
+   "ref": "Proverbs 16:18",
+   "theme": "Humility and repentance",
+   "text": "Pride goes before destruction, and a haughty spirit before a fall.",
+   "id": "vc411"
+  },
+  {
+   "ref": "Psalms 51:17",
+   "theme": "Humility and repentance",
+   "text": "The sacrifices of God are a broken spirit; a broken and a contrite heart, O God, You will not despise.",
+   "id": "vc412"
+  },
+  {
+   "ref": "Joel 2:13",
+   "theme": "Humility and repentance",
+   "text": "So rend your hearts and not your garments, and return to the LORD your God. For He is gracious and compassionate, slow to anger, abounding in loving devotion. And He relents from sending disaster.",
+   "id": "vc413"
+  },
+  {
+   "ref": "Luke 18:14",
+   "theme": "Humility and repentance",
+   "text": "I tell you, this man, rather than the Pharisee, went home justified. For everyone who exalts himself will be humbled, but the one who humbles himself will be exalted.”",
+   "id": "vc414"
+  },
+  {
+   "ref": "Isaiah 66:2",
+   "theme": "Humility and repentance",
+   "text": "Has not My hand made all these things? And so they came into being,” declares the LORD. “ This is the one I will esteem: he who is humble and contrite in spirit, who trembles at My word.",
+   "id": "vc415"
+  },
+  {
+   "ref": "Matthew 5:3",
+   "theme": "Humility and repentance",
+   "text": "“ Blessed are the poor in spirit, for theirs is the kingdom of heaven.",
+   "id": "vc416"
+  },
+  {
+   "ref": "Zephaniah 2:3",
+   "theme": "Humility and repentance",
+   "text": "Seek the LORD, all you humble of the earth who carry out His justice. Seek righteousness; seek humility. Perhaps you will be sheltered on the day of the LORD’s anger.",
+   "id": "vc417"
+  },
+  {
+   "ref": "Psalms 25:9",
+   "theme": "Humility and repentance",
+   "text": "He guides the humble in what is right and teaches them His way.",
+   "id": "vc418"
+  },
+  {
+   "ref": "1 Peter 1:15-16",
+   "theme": "Holiness",
+   "text": "But just as He who called you is holy, so be holy in all you do, for it is written: “ Be holy, because I am holy.”",
+   "id": "vc419"
+  },
+  {
+   "ref": "Hebrews 12:14",
+   "theme": "Holiness",
+   "text": "Pursue peace with everyone, as well as holiness, without which no one will see the Lord.",
+   "id": "vc420"
+  },
+  {
+   "ref": "Psalms 24:3-4",
+   "theme": "Holiness",
+   "text": "Who may ascend the hill of the LORD? Who may stand in His holy place? He who has clean hands and a pure heart, who does not lift up his soul to an idol or swear deceitfully.",
+   "id": "vc421"
+  },
+  {
+   "ref": "Matthew 5:8",
+   "theme": "Holiness",
+   "text": "Blessed are the pure in heart, for they will see God.",
+   "id": "vc422"
+  },
+  {
+   "ref": "2 Corinthians 7:1",
+   "theme": "Holiness",
+   "text": "Therefore, beloved, since we have these promises, let us cleanse ourselves from everything that defiles body and spirit, perfecting holiness in the fear of God.",
+   "id": "vc423"
+  },
+  {
+   "ref": "Philippians 4:8",
+   "theme": "Holiness",
+   "text": "Finally, brothers, whatever is true, whatever is honorable, whatever is right, whatever is pure, whatever is lovely, whatever is admirable — if anything is excellent or praiseworthy — think on these things.",
+   "id": "vc424"
+  },
+  {
+   "ref": "1 Thessalonians 4:7",
+   "theme": "Holiness",
+   "text": "For God has not called us to impurity, but to holiness.",
+   "id": "vc425"
+  },
+  {
+   "ref": "Isaiah 6:3",
+   "theme": "Holiness",
+   "text": "And they were calling out to one another: “ Holy, holy, holy is the LORD of Hosts; all the earth is full of His glory.”",
+   "id": "vc426"
+  },
+  {
+   "ref": "Matthew 5:6",
+   "theme": "Holiness",
+   "text": "Blessed are those who hunger and thirst for righteousness, for they will be filled.",
+   "id": "vc427"
+  },
+  {
+   "ref": "2 Timothy 2:21",
+   "theme": "Holiness",
+   "text": "So if anyone cleanses himself of what is unfit, he will be a vessel for honor: sanctified, useful to the Master, and prepared for every good work.",
+   "id": "vc428"
+  },
+  {
+   "ref": "2 Corinthians 5:21",
+   "theme": "Who you are in Christ",
+   "text": "God made Him who knew no sin to be sin on our behalf, so that in Him we might become the righteousness of God.",
+   "id": "vc429"
+  },
+  {
+   "ref": "Galatians 3:26",
+   "theme": "Who you are in Christ",
+   "text": "You are all sons of God through faith in Christ Jesus.",
+   "id": "vc430"
+  },
+  {
+   "ref": "Romans 8:16-17",
+   "theme": "Who you are in Christ",
+   "text": "The Spirit Himself testifies with our spirit that we are God’s children. And if we are children, then we are heirs: heirs of God and co-heirs with Christ — if indeed we suffer with Him, so that we may also be glorified with Him.",
+   "id": "vc431"
+  },
+  {
+   "ref": "Colossians 3:3",
+   "theme": "Who you are in Christ",
+   "text": "For you died, and your life is now hidden with Christ in God.",
+   "id": "vc432"
+  },
+  {
+   "ref": "Ephesians 1:4",
+   "theme": "Who you are in Christ",
+   "text": "For He chose us in Him before the foundation of the world to be holy and blameless in His presence. In love",
+   "id": "vc433"
+  },
+  {
+   "ref": "Ephesians 1:5",
+   "theme": "Who you are in Christ",
+   "text": "He predestined us for adoption as His sons through Jesus Christ, according to the good pleasure of His will,",
+   "id": "vc434"
+  },
+  {
+   "ref": "John 15:15",
+   "theme": "Who you are in Christ",
+   "text": "No longer do I call you servants, for a servant does not understand what his master is doing. But I have called you friends, because everything I have learned from My Father I have made known to you.",
+   "id": "vc435"
+  },
+  {
+   "ref": "John 15:16",
+   "theme": "Who you are in Christ",
+   "text": "You did not choose Me, but I chose you. And I appointed you to go and bear fruit — fruit that will remain — so that whatever you ask the Father in My name, He will give you.",
+   "id": "vc436"
+  },
+  {
+   "ref": "Romans 8:15",
+   "theme": "Who you are in Christ",
+   "text": "For you did not receive a spirit of slavery that returns you to fear, but you received the Spirit of sonship, by whom we cry, “ Abba! Father!”",
+   "id": "vc437"
+  },
+  {
+   "ref": "Galatians 4:6-7",
+   "theme": "Who you are in Christ",
+   "text": "And because you are sons, God sent the Spirit of His Son into our hearts, crying out, “ Abba, Father!” So you are no longer a slave, but a son; and since you are a son, you are also an heir through God.",
+   "id": "vc438"
+  },
+  {
+   "ref": "Ephesians 2:19",
+   "theme": "Who you are in Christ",
+   "text": "Therefore you are no longer strangers and foreigners, but fellow citizens with the saints and members of God’s household,",
+   "id": "vc439"
+  },
+  {
+   "ref": "1 Corinthians 6:19-20",
+   "theme": "Who you are in Christ",
+   "text": "Do you not know that your body is a temple of the Holy Spirit who is in you, whom you have received from God? You are not your own; you were bought at a price. Therefore glorify God with your body.",
+   "id": "vc440"
+  },
+  {
+   "ref": "2 Corinthians 3:18",
+   "theme": "Who you are in Christ",
+   "text": "And we, who with unveiled faces all reflect the glory of the Lord, are being transformed into His image with intensifying glory, which comes from the Lord, who is the Spirit.",
+   "id": "vc441"
+  },
+  {
+   "ref": "Colossians 2:9-10",
+   "theme": "Who you are in Christ",
+   "text": "For in Christ all the fullness of the Deity dwells in bodily form. And you have been made complete in Christ, who is the head over every ruler and authority.",
+   "id": "vc442"
+  },
+  {
+   "ref": "Matthew 11:29",
+   "theme": "Rest",
+   "text": "Take My yoke upon you and learn from Me; for I am gentle and humble in heart, and you will find rest for your souls.",
+   "id": "vc443"
+  },
+  {
+   "ref": "Psalms 127:2",
+   "theme": "Rest",
+   "text": "In vain you rise early and stay up late, toiling for bread to eat — for He gives sleep to His beloved.",
+   "id": "vc444"
+  },
+  {
+   "ref": "Hebrews 4:9-10",
+   "theme": "Rest",
+   "text": "There remains, then, a Sabbath rest for the people of God. For whoever enters God’s rest also rests from his own work, just as God did from His.",
+   "id": "vc445"
+  },
+  {
+   "ref": "Psalms 116:7",
+   "theme": "Rest",
+   "text": "Return to your rest, O my soul, for the LORD has been good to you.",
+   "id": "vc446"
+  },
+  {
+   "ref": "Mark 6:31",
+   "theme": "Rest",
+   "text": "And He said to them, “ Come with Me privately to a solitary place, and let us rest for a while.” For many people were coming and going, and they did not even have time to eat.",
+   "id": "vc447"
+  },
+  {
+   "ref": "Psalms 62:1",
+   "theme": "Rest",
+   "text": "In God alone my soul finds rest; my salvation comes from Him.",
+   "id": "vc448"
+  },
+  {
+   "ref": "Proverbs 3:24",
+   "theme": "Rest",
+   "text": "When you lie down, you will not be afraid; when you rest, your sleep will be sweet.",
+   "id": "vc449"
+  },
+  {
+   "ref": "Jeremiah 6:16",
+   "theme": "Rest",
+   "text": "This is what the LORD says: “ Stand at the crossroads and look. Ask for the ancient paths: ‘ Where is the good way?’ Then walk in it, and you will find rest for your souls. But they said, ‘ We will not walk in it!’",
+   "id": "vc450"
+  },
+  {
+   "ref": "Psalms 23:2",
+   "theme": "Rest",
+   "text": "He makes me lie down in green pastures; He leads me beside quiet waters.",
+   "id": "vc451"
+  },
+  {
+   "ref": "2 Corinthians 9:7",
+   "theme": "Giving",
+   "text": "Each one should give what he has decided in his heart to give, not out of regret or compulsion. For God loves a cheerful giver.",
+   "id": "vc452"
+  },
+  {
+   "ref": "Proverbs 11:24-25",
+   "theme": "Giving",
+   "text": "One gives freely, yet gains even more; another withholds what is right, only to become poor. A generous soul will prosper, and he who refreshes others will himself be refreshed.",
+   "id": "vc453"
+  },
+  {
+   "ref": "Acts 20:35",
+   "theme": "Giving",
+   "text": "In everything, I showed you that by this kind of hard work we must help the weak, remembering the words of the Lord Jesus Himself: ‘ It is more blessed to give than to receive.’”",
+   "id": "vc454"
+  },
+  {
+   "ref": "Proverbs 19:17",
+   "theme": "Giving",
+   "text": "Kindness to the poor is a loan to the LORD, and He will repay the lender.",
+   "id": "vc455"
+  },
+  {
+   "ref": "Proverbs 3:27",
+   "theme": "Giving",
+   "text": "Do not withhold good from the deserving when it is within your power to act.",
+   "id": "vc456"
+  },
+  {
+   "ref": "Matthew 6:3-4",
+   "theme": "Giving",
+   "text": "But when you give to the needy, do not let your left hand know what your right hand is doing, so that your giving may be in secret. And your Father, who sees what is done in secret, will reward you.",
+   "id": "vc457"
+  },
+  {
+   "ref": "1 Timothy 6:18",
+   "theme": "Giving",
+   "text": "Instruct them to do good, to be rich in good works, and to be generous and ready to share,",
+   "id": "vc458"
+  },
+  {
+   "ref": "Hebrews 13:16",
+   "theme": "Giving",
+   "text": "And do not neglect to do good and to share with others, for with such sacrifices God is pleased.",
+   "id": "vc459"
+  },
+  {
+   "ref": "Luke 21:3-4",
+   "theme": "Giving",
+   "text": "“ Truly I tell you,” He said, “ this poor widow has put in more than all the others. For they all contributed out of their surplus, but she out of her poverty has put in all she had to live on.”",
+   "id": "vc460"
+  },
+  {
+   "ref": "Deuteronomy 15:10",
+   "theme": "Giving",
+   "text": "Give generously to him, and do not let your heart be grieved when you do so. And because of this the LORD your God will bless you in all your work and in everything to which you put your hand.",
+   "id": "vc461"
+  },
+  {
+   "ref": "1 Peter 4:12-13",
+   "theme": "Trials and suffering",
+   "text": "Beloved, do not be surprised at the fiery trial that has come upon you, as though something strange were happening to you. But rejoice that you share in the sufferings of Christ, so that you may be overjoyed at the revelation of His glory.",
+   "id": "vc462"
+  },
+  {
+   "ref": "1 Peter 5:10",
+   "theme": "Trials and suffering",
+   "text": "And after you have suffered for a little while, the God of all grace, who has called you to His eternal glory in Christ, will Himself restore you, secure you, strengthen you, and establish you.",
+   "id": "vc463"
+  },
+  {
+   "ref": "Romans 8:17-18",
+   "theme": "Trials and suffering",
+   "text": "And if we are children, then we are heirs: heirs of God and co-heirs with Christ — if indeed we suffer with Him, so that we may also be glorified with Him. I consider that our present sufferings are not comparable to the glory that will be revealed in us.",
+   "id": "vc464"
+  },
+  {
+   "ref": "2 Corinthians 1:5",
+   "theme": "Trials and suffering",
+   "text": "For just as the sufferings of Christ overflow to us, so also through Christ our comfort overflows.",
+   "id": "vc465"
+  },
+  {
+   "ref": "Job 23:10",
+   "theme": "Trials and suffering",
+   "text": "Yet He knows the way I have taken; when He has tested me, I will come forth as gold.",
+   "id": "vc466"
+  },
+  {
+   "ref": "Psalms 34:19",
+   "theme": "Trials and suffering",
+   "text": "Many are the afflictions of the righteous, but the LORD delivers him from them all.",
+   "id": "vc467"
+  },
+  {
+   "ref": "Psalms 66:10-12",
+   "theme": "Trials and suffering",
+   "text": "For You, O God, have tested us; You have refined us like silver. You led us into the net; You laid burdens on our backs. You let men ride over our heads; we went through fire and water, but You brought us into abundance.",
+   "id": "vc468"
+  },
+  {
+   "ref": "Isaiah 48:10",
+   "theme": "Trials and suffering",
+   "text": "See, I have refined you, but not as silver; I have tested you in the furnace of affliction.",
+   "id": "vc469"
+  },
+  {
+   "ref": "Psalms 119:71",
+   "theme": "Trials and suffering",
+   "text": "It was good for me to be afflicted, that I might learn Your statutes.",
+   "id": "vc470"
+  },
+  {
+   "ref": "Philippians 1:29",
+   "theme": "Trials and suffering",
+   "text": "For it has been granted to you on behalf of Christ not only to believe in Him, but also to suffer for Him,",
+   "id": "vc471"
+  },
+  {
+   "ref": "Hebrews 4:15",
+   "theme": "Trials and suffering",
+   "text": "For we do not have a high priest who is unable to sympathize with our weaknesses, but we have one who was tempted in every way that we are, yet was without sin.",
+   "id": "vc472"
+  },
+  {
+   "ref": "2 Timothy 3:12",
+   "theme": "Trials and suffering",
+   "text": "Indeed, all who desire to live godly lives in Christ Jesus will be persecuted,",
+   "id": "vc473"
+  },
+  {
+   "ref": "Psalms 19:1",
+   "theme": "Creation and God's greatness",
+   "text": "The heavens declare the glory of God; the skies proclaim the work of His hands.",
+   "id": "vc474"
+  },
+  {
+   "ref": "Psalms 8:3-4",
+   "theme": "Creation and God's greatness",
+   "text": "When I behold Your heavens, the work of Your fingers, the moon and the stars, which You have set in place — what is man that You are mindful of him, or the son of man that You care for him?",
+   "id": "vc475"
+  },
+  {
+   "ref": "Psalms 24:1",
+   "theme": "Creation and God's greatness",
+   "text": "The earth is the LORD’s, and the fullness thereof, the world and all who dwell therein.",
+   "id": "vc476"
+  },
+  {
+   "ref": "Psalms 33:6",
+   "theme": "Creation and God's greatness",
+   "text": "By the word of the LORD the heavens were made, and all the stars by the breath of His mouth.",
+   "id": "vc477"
+  },
+  {
+   "ref": "Psalms 104:24",
+   "theme": "Creation and God's greatness",
+   "text": "How many are Your works, O LORD! In wisdom You have made them all; the earth is full of Your creatures.",
+   "id": "vc478"
+  },
+  {
+   "ref": "Job 38:4",
+   "theme": "Creation and God's greatness",
+   "text": "Where were you when I laid the foundations of the earth? Tell Me, if you have understanding.",
+   "id": "vc479"
+  },
+  {
+   "ref": "Isaiah 40:26",
+   "theme": "Creation and God's greatness",
+   "text": "Lift up your eyes on high: Who created all these? He leads forth the starry host by number; He calls each one by name. Because of His great power and mighty strength, not one of them is missing.",
+   "id": "vc480"
+  },
+  {
+   "ref": "Jeremiah 10:12",
+   "theme": "Creation and God's greatness",
+   "text": "The LORD made the earth by His power; He established the world by His wisdom and stretched out the heavens by His understanding.",
+   "id": "vc481"
+  },
+  {
+   "ref": "Nehemiah 9:6",
+   "theme": "Creation and God's greatness",
+   "text": "You alone are the LORD. You created the heavens, the highest heavens with all their host, the earth and all that is on it, the seas and all that is in them. You give life to all things, and the host of heaven worships You.",
+   "id": "vc482"
+  },
+  {
+   "ref": "Romans 1:20",
+   "theme": "Creation and God's greatness",
+   "text": "For since the creation of the world God’s invisible qualities, His eternal power and divine nature, have been clearly seen, being understood from His workmanship, so that men are without excuse.",
+   "id": "vc483"
+  },
+  {
+   "ref": "Psalms 95:3-5",
+   "theme": "Creation and God's greatness",
+   "text": "For the LORD is a great God, a great King above all gods. In His hand are the depths of the earth, and the mountain peaks belong to Him. The sea is His, for He made it, and His hands formed the dry land.",
+   "id": "vc484"
+  },
+  {
+   "ref": "Psalms 90:2",
+   "theme": "Creation and God's greatness",
+   "text": "Before the mountains were born or You brought forth the earth and the world, from everlasting to everlasting You are God.",
+   "id": "vc485"
+  },
+  {
+   "ref": "Isaiah 45:18",
+   "theme": "Creation and God's greatness",
+   "text": "For thus says the LORD, who created the heavens — He is God; He formed the earth and fashioned it; He established it; He did not create it to be empty, but formed it to be inhabited: “ I am the LORD, and there is no other.",
+   "id": "vc486"
+  },
+  {
+   "ref": "Hebrews 11:3",
+   "theme": "Creation and God's greatness",
+   "text": "By faith we understand that the universe was formed at God’s command, so that what is seen was not made out of what was visible.",
+   "id": "vc487"
+  },
+  {
+   "ref": "Romans 6:4",
+   "theme": "The cross and the resurrection",
+   "text": "We were therefore buried with Him through baptism into death, in order that, just as Christ was raised from the dead through the glory of the Father, we too may walk in newness of life.",
+   "id": "vc488"
+  },
+  {
+   "ref": "Romans 8:34",
+   "theme": "The cross and the resurrection",
+   "text": "Who is there to condemn us? For Christ Jesus, who died, and more than that was raised to life, is at the right hand of God — and He is interceding for us.",
+   "id": "vc489"
+  },
+  {
+   "ref": "Matthew 28:5-6",
+   "theme": "The cross and the resurrection",
+   "text": "But the angel said to the women, “ Do not be afraid, for I know that you are looking for Jesus, who was crucified. He is not here; He has risen, just as He said! Come, see the place where He lay.",
+   "id": "vc490"
+  },
+  {
+   "ref": "Luke 24:5-6",
+   "theme": "The cross and the resurrection",
+   "text": "As the women bowed their faces to the ground in terror, the two men asked them, “ Why do you look for the living among the dead? He is not here; He has risen! Remember how He told you while He was still in Galilee:",
+   "id": "vc491"
+  },
+  {
+   "ref": "John 19:30",
+   "theme": "The cross and the resurrection",
+   "text": "When Jesus had received the sour wine, He said, “ It is finished.” And bowing His head, He yielded up His spirit.",
+   "id": "vc492"
+  },
+  {
+   "ref": "Galatians 6:14",
+   "theme": "The cross and the resurrection",
+   "text": "But as for me, may I never boast, except in the cross of our Lord Jesus Christ, through which the world has been crucified to me, and I to the world.",
+   "id": "vc493"
+  },
+  {
+   "ref": "1 Peter 3:18",
+   "theme": "The cross and the resurrection",
+   "text": "For Christ also suffered for sins once for all, the righteous for the unrighteous, to bring you to God. He was put to death in the body but made alive in the Spirit,",
+   "id": "vc494"
+  },
+  {
+   "ref": "Revelation 1:18",
+   "theme": "The cross and the resurrection",
+   "text": "the Living One. I was dead, and behold, now I am alive forever and ever! And I hold the keys of Death and of Hades.",
+   "id": "vc495"
+  },
+  {
+   "ref": "Acts 2:24",
+   "theme": "The cross and the resurrection",
+   "text": "But God raised Him from the dead, releasing Him from the agony of death, because it was impossible for Him to be held in its clutches.",
+   "id": "vc496"
+  },
+  {
+   "ref": "Philippians 3:10",
+   "theme": "The cross and the resurrection",
+   "text": "I want to know Christ and the power of His resurrection and the fellowship of His sufferings, being conformed to Him in His death,",
+   "id": "vc497"
+  },
+  {
+   "ref": "Colossians 2:14",
+   "theme": "The cross and the resurrection",
+   "text": "having canceled the debt ascribed to us in the decrees that stood against us. He took it away, nailing it to the cross!",
+   "id": "vc498"
+  },
+  {
+   "ref": "2 Timothy 2:8",
+   "theme": "The cross and the resurrection",
+   "text": "Remember Jesus Christ, raised from the dead, descended from David, as proclaimed by my gospel,",
+   "id": "vc499"
+  },
+  {
+   "ref": "John 12:32",
+   "theme": "The cross and the resurrection",
+   "text": "And I, when I am lifted up from the earth, will draw everyone to Myself.”",
+   "id": "vc500"
+  },
+  {
+   "ref": "Romans 5:10",
+   "theme": "The cross and the resurrection",
+   "text": "For if, when we were enemies of God, we were reconciled to Him through the death of His Son, how much more, having been reconciled, shall we be saved through His life!",
+   "id": "vc501"
+  },
+  {
+   "ref": "Psalms 34:7",
+   "theme": "Angels and God's protection",
+   "text": "The angel of the LORD encamps around those who fear Him, and he delivers them.",
+   "id": "vc502"
+  },
+  {
+   "ref": "Hebrews 1:14",
+   "theme": "Angels and God's protection",
+   "text": "Are not the angels ministering spirits sent to serve those who will inherit salvation?",
+   "id": "vc503"
+  },
+  {
+   "ref": "Exodus 23:20",
+   "theme": "Angels and God's protection",
+   "text": "Behold, I am sending an angel before you to protect you along the way and to bring you to the place I have prepared.",
+   "id": "vc504"
+  },
+  {
+   "ref": "Matthew 18:10",
+   "theme": "Angels and God's protection",
+   "text": "See that you do not look down on any of these little ones. For I tell you that their angels in heaven always see the face of My Father in heaven.",
+   "id": "vc505"
+  },
+  {
+   "ref": "2 Kings 6:16-17",
+   "theme": "Angels and God's protection",
+   "text": "“ Do not be afraid,” Elisha answered, “ for those who are with us are more than those who are with them.” Then Elisha prayed, “ O LORD, please open his eyes that he may see.” And the LORD opened the eyes of the young man, and he saw that the hills were full of horses and chariots of fire all around Elisha.",
+   "id": "vc506"
+  },
+  {
+   "ref": "Hebrews 13:2",
+   "theme": "Angels and God's protection",
+   "text": "Do not neglect to show hospitality to strangers, for by so doing some people have entertained angels without knowing it.",
+   "id": "vc507"
+  },
+  {
+   "ref": "Luke 2:13-14",
+   "theme": "Angels and God's protection",
+   "text": "And suddenly there appeared with the angel a great multitude of the heavenly host, praising God and saying: “ Glory to God in the highest, and on earth peace to men on whom His favor rests!”",
+   "id": "vc508"
+  },
+  {
+   "ref": "Psalms 103:20",
+   "theme": "Angels and God's protection",
+   "text": "Bless the LORD, all His angels mighty in strength who carry out His word, who hearken to the voice of His command.",
+   "id": "vc509"
+  },
+  {
+   "ref": "Psalms 121:7-8",
+   "theme": "Angels and God's protection",
+   "text": "The LORD will guard you from all evil; He will preserve your soul. The LORD will watch over your coming and going, both now and forevermore.",
+   "id": "vc510"
+  },
+  {
+   "ref": "Psalms 125:2",
+   "theme": "Angels and God's protection",
+   "text": "As the mountains surround Jerusalem, so the LORD surrounds His people, both now and forevermore.",
+   "id": "vc511"
+  },
+  {
+   "ref": "Isaiah 31:5",
+   "theme": "Angels and God's protection",
+   "text": "Like birds hovering overhead, so the LORD of Hosts will protect Jerusalem. He will shield it and deliver it; He will pass over it and preserve it.”",
+   "id": "vc512"
+  },
+  {
+   "ref": "Psalms 32:7",
+   "theme": "Angels and God's protection",
+   "text": "You are my hiding place. You protect me from trouble; You surround me with songs of deliverance. Selah",
+   "id": "vc513"
+  },
+  {
+   "ref": "1 Corinthians 12:4-6",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "There are different gifts, but the same Spirit. There are different ministries, but the same Lord. There are different ways of working, but the same God works all things in all people.",
+   "id": "vc514"
+  },
+  {
+   "ref": "1 Corinthians 12:27",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "Now you are the body of Christ, and each of you is a member of it.",
+   "id": "vc515"
+  },
+  {
+   "ref": "Ephesians 4:11-12",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "And it was He who gave some to be apostles, some to be prophets, some to be evangelists, and some to be pastors and teachers, to equip the saints for works of ministry and to build up the body of Christ,",
+   "id": "vc516"
+  },
+  {
+   "ref": "1 Corinthians 14:2",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "For he who speaks in a tongue does not speak to men, but to God. Indeed, no one understands him; he utters mysteries in the Spirit.",
+   "id": "vc517"
+  },
+  {
+   "ref": "1 Corinthians 14:39",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "So, my brothers, be eager to prophesy, and do not forbid speaking in tongues.",
+   "id": "vc518"
+  },
+  {
+   "ref": "Acts 2:42",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "They devoted themselves to the apostles ’ teaching and to the fellowship, to the breaking of bread and to prayer.",
+   "id": "vc519"
+  },
+  {
+   "ref": "Acts 2:46-47",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "With one accord they continued to meet daily in the temple courts and to break bread from house to house, sharing their meals with gladness and sincerity of heart, praising God and enjoying the favor of all the people. And the Lord added to their number daily those who were being saved.",
+   "id": "vc520"
+  },
+  {
+   "ref": "Hebrews 10:24-25",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "And let us consider how to spur one another on to love and good deeds. Let us not neglect meeting together, as some have made a habit, but let us encourage one another, and all the more as you see the Day approaching.",
+   "id": "vc521"
+  },
+  {
+   "ref": "Matthew 18:20",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "For where two or three gather together in My name, there am I with them.”",
+   "id": "vc522"
+  },
+  {
+   "ref": "1 Peter 4:10",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "As good stewards of the manifold grace of God, each of you should use whatever gift he has received to serve one another.",
+   "id": "vc523"
+  },
+  {
+   "ref": "Acts 4:32",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "The multitude of believers was one in heart and soul. No one claimed that any of his possessions was his own, but they shared everything they owned.",
+   "id": "vc524"
+  },
+  {
+   "ref": "Ephesians 4:3",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "and with diligence to preserve the unity of the Spirit through the bond of peace.",
+   "id": "vc525"
+  },
+  {
+   "ref": "John 17:21",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "that all of them may be one, as You, Father, are in Me, and I am in You. May they also be in Us, so that the world may believe that You sent Me.",
+   "id": "vc526"
+  },
+  {
+   "ref": "1 Corinthians 14:26",
+   "theme": "Gifts of the Spirit and the church",
+   "text": "What then shall we say, brothers? When you come together, everyone has a psalm or a teaching, a revelation, a tongue, or an interpretation. All of these must be done to build up the church.",
+   "id": "vc527"
+  },
+  {
+   "ref": "Proverbs 18:24",
+   "theme": "Friendship and fellowship",
+   "text": "A man of many companions may come to ruin, but there is a friend who stays closer than a brother.",
+   "id": "vc528"
+  },
+  {
+   "ref": "Ecclesiastes 4:9-10",
+   "theme": "Friendship and fellowship",
+   "text": "Two are better than one, because they have a good return for their labor. For if one falls down, his companion can lift him up; but pity the one who falls without another to help him up!",
+   "id": "vc529"
+  },
+  {
+   "ref": "Proverbs 27:6",
+   "theme": "Friendship and fellowship",
+   "text": "The wounds of a friend are faithful, but the kisses of an enemy are deceitful.",
+   "id": "vc530"
+  },
+  {
+   "ref": "Romans 12:10",
+   "theme": "Friendship and fellowship",
+   "text": "Be devoted to one another in brotherly love. Outdo yourselves in honoring one another.",
+   "id": "vc531"
+  },
+  {
+   "ref": "Galatians 6:2",
+   "theme": "Friendship and fellowship",
+   "text": "Carry one another’s burdens, and in this way you will fulfill the law of Christ.",
+   "id": "vc532"
+  },
+  {
+   "ref": "1 Thessalonians 5:11",
+   "theme": "Friendship and fellowship",
+   "text": "Therefore encourage and build one another up, just as you are already doing.",
+   "id": "vc533"
+  },
+  {
+   "ref": "Hebrews 3:13",
+   "theme": "Friendship and fellowship",
+   "text": "But exhort one another daily, as long as it is called today, so that none of you may be hardened by sin’s deceitfulness.",
+   "id": "vc534"
+  },
+  {
+   "ref": "Romans 15:7",
+   "theme": "Friendship and fellowship",
+   "text": "Accept one another, then, just as Christ accepted you, in order to bring glory to God.",
+   "id": "vc535"
+  },
+  {
+   "ref": "Proverbs 27:9",
+   "theme": "Friendship and fellowship",
+   "text": "Oil and incense bring joy to the heart, and the sweetness of a friend is counsel to the soul.",
+   "id": "vc536"
+  },
+  {
+   "ref": "Philippians 2:2",
+   "theme": "Friendship and fellowship",
+   "text": "then make my joy complete by being like-minded, having the same love, being united in spirit and purpose.",
+   "id": "vc537"
+  },
+  {
+   "ref": "Psalms 67:1",
+   "theme": "Blessing",
+   "text": "May God be gracious to us and bless us, and cause His face to shine upon us, Selah",
+   "id": "vc538"
+  },
+  {
+   "ref": "Deuteronomy 28:2",
+   "theme": "Blessing",
+   "text": "And all these blessings will come upon you and overtake you, if you will obey the voice of the LORD your God:",
+   "id": "vc539"
+  },
+  {
+   "ref": "Proverbs 10:6",
+   "theme": "Blessing",
+   "text": "Blessings are on the head of the righteous, but the mouth of the wicked conceals violence.",
+   "id": "vc540"
+  },
+  {
+   "ref": "Psalms 115:14-15",
+   "theme": "Blessing",
+   "text": "May the LORD give you increase, both you and your children. May you be blessed by the LORD, the Maker of heaven and earth.",
+   "id": "vc541"
+  },
+  {
+   "ref": "Ephesians 1:3",
+   "theme": "Blessing",
+   "text": "Blessed be the God and Father of our Lord Jesus Christ, who has blessed us in Christ with every spiritual blessing in the heavenly realms.",
+   "id": "vc542"
+  },
+  {
+   "ref": "Psalms 128:2",
+   "theme": "Blessing",
+   "text": "For when you eat the fruit of your labor, blessings and prosperity will be yours.",
+   "id": "vc543"
+  },
+  {
+   "ref": "Psalms 84:12",
+   "theme": "Blessing",
+   "text": "O LORD of Hosts, how blessed is the man who trusts in You!",
+   "id": "vc544"
+  },
+  {
+   "ref": "Psalms 112:1-2",
+   "theme": "Blessing",
+   "text": "Hallelujah! Blessed is the man who fears the LORD, who greatly delights in His commandments. His descendants will be mighty in the land; the generation of the upright will be blessed.",
+   "id": "vc545"
+  }
+ ]
+}
