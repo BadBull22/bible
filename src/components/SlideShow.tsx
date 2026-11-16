@@ -21,6 +21,7 @@ import { AutoPlay, nextAfterTimer, NO_AUTO, secondsFor, secondsLeft } from "../a
 import { AutoPlayBox } from "./AutoPlayBox";
 import { LiveAdd } from "./LiveAdd";
 import { PhoneRemote } from "./PhoneRemote";
+import { FollowAlong } from "./FollowAlong";
 import { Preview } from "./SlidesEditor";
 
 /** Whether a video or music clip on the slide is playing. */
@@ -342,6 +343,11 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
   const [remote, setRemote] = useState<RemoteInfo | null>(null);
   const [remoteBusy, setRemoteBusy] = useState(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);
+  // follow along: the read-only page for the congregation's phones
+  const [followOpen, setFollowOpen] = useState(false);
+  const [follow, setFollow] = useState<RemoteInfo | null>(null);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
   const [view, setView] = useState<"grid" | "list">(() => {
     try {
       return JSON.parse(localStorage.getItem(VIEW_KEY) ?? "{}").view === "list" ? "list" : "grid";
@@ -559,7 +565,7 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
   }, []);
 
   // what the phone shows: this slide and the next, the notes, and the parts of the show (sent on every change while the remote is on)
-  const brief = (s: SlideSpec | undefined) => (s ? { title: (s.kind === "image" && !s.title ? "(picture)" : s.title).slice(0, 140), body: s.body.slice(0, 500) } : null);
+  const brief = (s: SlideSpec | undefined) => (s ? { title: (s.kind === "image" && !s.title ? "(picture)" : s.title).slice(0, 140), body: s.body.slice(0, 500), kind: s.kind } : null);
   const remoteJson = JSON.stringify({
     part: deck?.title || (deck ? KIND_NAME[deck.kind] : ""),
     index,
@@ -571,12 +577,39 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
     notes: (cur?.notes ?? "").slice(0, 800),
     parts: decks.map((d) => KIND_NAME[d.kind]),
     active,
+    // the show's timer, for the stage view (it counts on its own from these)
+    began,
+    count: countdown,
   });
   useEffect(() => {
     if (remote) void api.remoteState(remoteJson).catch(() => undefined);
   }, [remote, remoteJson]);
-  // the remote stops with the show
-  useEffect(() => () => void api.remoteStop().catch(() => undefined), []);
+  useEffect(() => {
+    if (follow) void api.followState(remoteJson).catch(() => undefined);
+  }, [follow, remoteJson]);
+  // the remote and follow along stop with the show
+  useEffect(
+    () => () => {
+      void api.remoteStop().catch(() => undefined);
+      void api.followStop().catch(() => undefined);
+    },
+    [],
+  );
+  const startFollow = async () => {
+    setFollowBusy(true);
+    setFollowError(null);
+    try {
+      setFollow(await api.followStart());
+    } catch (e) {
+      setFollowError(String(e));
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+  const stopFollow = () => {
+    void api.followStop().catch(() => undefined);
+    setFollow(null);
+  };
   const startRemote = async () => {
     setRemoteBusy(true);
     setRemoteError(null);
@@ -738,6 +771,9 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
           <button className={"outline-btn" + (autoOn ? " on" : "")} onClick={() => setAutoOpen(true)} title="Slides that move on by themselves, and the fade between slides">
             {autoOn ? (left !== null ? `Auto: ${left}s` : "Auto: on") : "Auto"}
           </button>
+          <button className={"outline-btn" + (follow ? " on" : "")} onClick={() => setFollowOpen(true)} title="Let people on the church Wi-Fi read the words on their own phones (read only)">
+            {follow ? "Follow along: on" : "Follow along"}
+          </button>
           <button className={"outline-btn" + (remote ? " on" : "")} onClick={() => setRemoteOpen(true)} title="Work the slides from your phone, on the same Wi-Fi">
             {remote ? "Phone remote: on" : "Phone remote"}
           </button>
@@ -784,6 +820,7 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
           </div>
         </div>
       )}
+      {followOpen && <FollowAlong info={follow} busy={followBusy} error={followError} onStart={() => void startFollow()} onStop={stopFollow} onClose={() => setFollowOpen(false)} />}
       {remoteOpen && <PhoneRemote info={remote} busy={remoteBusy} error={remoteError} onStart={() => void startRemote()} onStop={stopRemote} onClose={() => setRemoteOpen(false)} />}
       {mode === "rehearsal" && (
         <p className="pr-msg pr-rehearsal">

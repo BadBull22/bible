@@ -881,8 +881,8 @@ const SECTIONS: Section[] = [
   },
   {
     id: "slide-show-extras",
-    title: "Slide show: the CCLI line, slides that move on by themselves, labelled lyrics",
-    keywords: "ccli line song writer number licence autoplay auto advance timer fade transition notices loop slide show presenter paste lyrics verse chorus bridge pre-chorus tag label",
+    title: "Slide show: stage view, follow along, the CCLI line, slides that move on by themselves, labelled lyrics",
+    keywords: "stage view tablet follow along congregation phone qr code ccli line song writer number licence autoplay auto advance timer fade transition notices loop slide show presenter paste lyrics verse chorus bridge pre-chorus tag label",
     body: (
       <>
         <p>
@@ -897,6 +897,18 @@ const SECTIONS: Section[] = [
           slides (none, short or slow). It is saved with the notices. Under a slide, <strong>Move on after</strong> gives that slide a time of its
           own (0 makes it wait for you). In the presenter, press <strong>Auto</strong> to start or stop; the button counts the seconds down.
           Black, a video playing, or adding a slide pauses the timer, and a video, music or countdown slide waits for you unless it has a time of its own.
+        </p>
+        <p>
+          <strong>The pastor's stage view.</strong> In the presenter, <strong>Phone remote</strong> now also offers <strong>The pastor's stage view, for a tablet</strong>.
+          Open its address on a tablet or a second phone on the same Wi-Fi: the slide and the next one are large, with your notes, the clock, a timer
+          and Back, Black and Next buttons. It is for you only (your notes show), so do not share its code.
+        </p>
+        <p>
+          <strong>Follow along.</strong> In the presenter, <strong>Follow along</strong> lets people on the church Wi-Fi read the words of the slide on the
+          screen on their own phones, changing as you move on. Switch it on, show the QR code on the screen (or print it), and they point their camera at it.
+          It is read only: nobody can change the slides, and your notes and the next slide are never sent. It is off until you switch it on, works only
+          for devices on the same network that have the address, and stops when the show ends. Church guest Wi-Fi often stops phones from seeing this
+          computer; try it once beforehand.
         </p>
         <p>
           <strong>Pasted lyrics get their names.</strong> When you paste the words of a song with no headings, the app now works out the

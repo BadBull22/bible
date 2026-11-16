@@ -12,6 +12,8 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     items: [
       "Presenter > CCLI line: show the song's title, writer and CCLI number small at the foot of its slides, when you switch it on.",
       "Slide show timing (notices and music pages, and the presenter's Auto button): slides can move on by themselves after the number of seconds you choose, start again at the end, and fade (none, short or slow) between slides. A slide can have a time of its own.",
+      "Presenter > Phone remote > The pastor's stage view: a page for a tablet or second phone with the slide and the next one large, your notes, the clock, a timer and Back, Black and Next.",
+      "Presenter > Follow along: people on the church Wi-Fi can read the words on the screen on their own phones, read only, with a QR code to show. Off until you switch it on.",
       "Songs: words pasted with no headings are now named more closely: Chorus, Pre-Chorus, Bridge, Tag and Verse 1, 2…",
       "Content Factory > Photos > Paintings now opens every Bible painting you have downloaded (James Tissot, Gustave Doré, Sweet Publishing) to put behind the words, not only the ones for the verse on show. Choose a collection or a book, or find a painting by words. The credit line a licence asks for is added to the picture for you.",
     ],
