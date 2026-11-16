@@ -294,6 +294,8 @@ export function App() {
   const [showPictures, setShowPictures] = useState(false); // More > Downloads > Pictures
   const [showComputerPics, setShowComputerPics] = useState(false); // More > Downloads > Pictures from the computer
   const [scrollOpen, setScrollOpen] = useState(false); // Extras > Daily Scroll
+  /** the Daily Scroll stays open (hidden) while a passage, story or writer opened from a card is read, so Back comes back to the same card */
+  const [scrollAway, setScrollAway] = useState<null | "passage" | "browse" | "author">(null);
   const [scrollShare, setScrollShare] = useState<ScrollShare | null>(null); // the picture studio opened from a Daily Scroll card
   const [makingPicture, setMakingPicture] = useState(false); // More > Make a picture
   // the Library: open (on its first page, or on the chapter's commentaries)
@@ -540,6 +542,7 @@ export function App() {
     const c = cameFrom;
     if (!c) return;
     setCameFrom(null);
+    if (c.label === "Daily Scroll") setScrollAway(null);
     setTab(c.tab);
     // the page is drawn again first (it scrolls itself to the top), then put back where it was
     for (const wait of [60, 220, 500]) window.setTimeout(() => pane.current && (pane.current.scrollTop = c.scroll), wait);
@@ -960,7 +963,22 @@ export function App() {
   useBack(showLinks, () => setShowLinks(false));
   useBack(showPictures, () => setShowPictures(false));
   useBack(showComputerPics, () => setShowComputerPics(false));
-  useBack(scrollOpen, () => setScrollOpen(false));
+  useBack(scrollOpen && scrollAway === null, () => setScrollOpen(false));
+  // coming back from what a card opened: the scroll is shown again where it was
+  useEffect(() => {
+    if (scrollAway === "browse" && tab === "plans" && (!browse || browse.id === null)) {
+      setBrowse(null);
+      setScrollAway(null);
+    } else if (scrollAway === "author" && !authorsOpen) setScrollAway(null);
+    else if (scrollAway === "passage" && cameFrom == null) {
+      // the passage was left some other way than Back (another tab): the scroll is closed
+      setScrollOpen(false);
+      setScrollAway(null);
+    } else if (scrollAway && tab !== "plans" && tab !== "read") {
+      setScrollOpen(false);
+      setScrollAway(null);
+    }
+  }, [scrollAway, tab, browse, authorsOpen, cameFrom]);
   useBack(scrollShare != null, () => setScrollShare(null));
   useBack(makingPicture, () => setMakingPicture(false));
   useBack(library !== null, () => setLibrary(null));
@@ -1766,15 +1784,20 @@ export function App() {
       {scrollOpen && (
         <DailyScroll
           version={version}
+          hidden={scrollAway !== null}
           onClose={() => setScrollOpen(false)}
           onShare={setScrollShare}
           say={say}
           fail={fail}
           onOpen={(o: ScrollOpen) => {
-            setScrollOpen(false);
-            if (o.to === "passage") goFrom("Daily Scroll", o.book, o.chapter, o.verse);
-            else if (o.to === "author") setAuthorsOpen(true);
-            else {
+            if (o.to === "passage") {
+              setScrollAway("passage");
+              goFrom("Daily Scroll", o.book, o.chapter, o.verse);
+            } else if (o.to === "author") {
+              setScrollAway("author");
+              setAuthorsOpen(true);
+            } else {
+              setScrollAway("browse");
               setBrowseIn("extras");
               setBrowse({ kind: o.to === "story" ? "stories" : o.to === "topic" ? "topics" : "children", id: o.id });
             }
