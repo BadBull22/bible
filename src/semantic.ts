@@ -112,3 +112,48 @@ export function meaningSummary(name: string, language: "greek" | "hebrew", words
   const lang = language === "greek" ? "Greek" : "Hebrew";
   return `${name} (${lang}): ${words.toLocaleString("en-US")} word${words === 1 ? "" : "s"}, ${verses.toLocaleString("en-US")} verse${verses === 1 ? "" : "s"}.`;
 }
+
+/** A group of meanings in the tree the app shows, with the number of words and verses inside it (from the app, see src-tauri/src/semantic.rs). */
+export interface DomainNode {
+  code: string;
+  name: string;
+  level: number;
+  words: number;
+  verses: number;
+}
+
+/** The groups directly under a group (the top ones for ""), in order. */
+export const childrenOf = (nodes: DomainNode[], code: string): DomainNode[] => nodes.filter((n) => parentCode(n.code) === code).sort((a, b) => a.code.localeCompare(b.code));
+
+/** The group and the ones above it, top first. */
+export function breadcrumb(nodes: DomainNode[], code: string): DomainNode[] {
+  const by = new Map(nodes.map((n) => [n.code, n]));
+  const out: DomainNode[] = [];
+  for (let c = code; c; c = parentCode(c)) {
+    const n = by.get(c);
+    if (n) out.unshift(n);
+  }
+  return out;
+}
+
+/** Groups whose name has every word typed ("love", "forgive", "to be afraid"), the ones with the most verses first. */
+export function searchDomains(nodes: DomainNode[], query: string, limit = 40): DomainNode[] {
+  const words = query.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  if (words.length === 0) return [];
+  return nodes
+    .filter((n) => {
+      const name = n.name.toLowerCase();
+      return words.every((w) => name.includes(w));
+    })
+    .sort((a, b) => b.verses - a.verses || a.code.localeCompare(b.code))
+    .slice(0, limit);
+}
+
+/** The sentence over the books of a Strong's number search: "G26 is used 116 times in 105 verses." */
+export function strongsSummary(strongs: string, occurrences: number, verses: number): string {
+  if (occurrences === 0) return `${strongs} is not used in the text of the original languages here.`;
+  return `${strongs} is used ${occurrences.toLocaleString("en-US")} time${occurrences === 1 ? "" : "s"} in ${verses.toLocaleString("en-US")} verse${verses === 1 ? "" : "s"}.`;
+}
+
+/** Is what was typed a Strong's number (G26, h0157)? The number in the app's own form, or "". */
+export const asStrongs = (text: string): string => (/^\s*[GgHh]\s*0*\d{1,5}\s*$/.test(text) ? normStrongs(text.replace(/\s+/g, "")) : "");

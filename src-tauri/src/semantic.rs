@@ -289,9 +289,13 @@ pub fn semantic_concordance(
     meaning: Option<usize>,
 ) -> Result<ConcordanceResult, String> {
     let lang = state.get()?.lang(&language)?;
-    let verses = lang.select(&code, entry, meaning);
     let conn = db.0.lock().map_err(|e| e.to_string())?;
-    let mut books = books_of(&conn)?;
+    concordance_of(lang, &conn, &code, entry, meaning)
+}
+
+fn concordance_of(lang: &Lang, conn: &rusqlite::Connection, code: &str, entry: Option<usize>, meaning: Option<usize>) -> Result<ConcordanceResult, String> {
+    let verses = lang.select(code, entry, meaning);
+    let mut books = books_of(conn)?;
     let mut total = 0i64;
     for v in verses.keys() {
         if let Some(b) = books.iter_mut().find(|b| b.order_index == i64::from(v / 1_000_000)) {
@@ -317,9 +321,13 @@ pub fn semantic_hits(
     book: Option<String>,
 ) -> Result<Vec<SearchHit>, String> {
     let lang = state.get()?.lang(&language)?;
-    let verses = lang.select(&code, entry, meaning);
     let conn = db.0.lock().map_err(|e| e.to_string())?;
-    let names: HashMap<i64, String> = books_of(&conn)?.into_iter().map(|b| (b.order_index, b.book)).collect();
+    hits_of(lang, &conn, &version_code, &code, entry, meaning, book.as_deref())
+}
+
+fn hits_of(lang: &Lang, conn: &rusqlite::Connection, version_code: &str, code: &str, entry: Option<usize>, meaning: Option<usize>, book: Option<&str>) -> Result<Vec<SearchHit>, String> {
+    let verses = lang.select(code, entry, meaning);
+    let names: HashMap<i64, String> = books_of(conn)?.into_iter().map(|b| (b.order_index, b.book)).collect();
     let mut stmt = conn
         .prepare(
             "SELECT v.chapter, v.verse, v.text FROM verses v JOIN books b ON v.book_id = b.id JOIN versions ver ON v.version_id = ver.id
@@ -333,7 +341,7 @@ pub fn semantic_hits(
     }
     for (order, list) in by_book {
         let Some(name) = names.get(&order) else { continue };
-        if book.as_ref().is_some_and(|b| b != name) {
+        if book.is_some_and(|b| b != name) {
             continue;
         }
         let text: HashMap<(i64, i64), String> = stmt
@@ -345,7 +353,7 @@ pub fn semantic_hits(
             let (chapter, verse) = (i64::from((v % 1_000_000) / 1_000), i64::from(v % 1_000));
             // a verse the chosen Bible does not have (the numbering differs in a few places) is left out
             if let Some(t) = text.get(&(chapter, verse)) {
-                out.push(SearchHit { version_code: version_code.clone(), book: name.clone(), chapter, verse, text: t.clone(), verse_end: None, why: words.clone() });
+                out.push(SearchHit { version_code: version_code.to_string(), book: name.clone(), chapter, verse, text: t.clone(), verse_end: None, why: words.clone() });
             }
         }
     }
@@ -406,16 +414,21 @@ fn study_conn<'a>(state: &'a State<StudyState>) -> Result<std::sync::MutexGuard<
 #[tauri::command]
 pub fn strongs_concordance(study: State<StudyState>, db: State<DbState>, strongs: String) -> Result<ConcordanceResult, String> {
     let s = norm_strongs(&strongs).ok_or("Type a Strong's number: G for Greek or H for Hebrew, then the number, like G26 or H157.")?;
+    let study = study_conn(&study)?;
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    strongs_counts(&study, &conn, &s)
+}
+
+fn strongs_counts(study: &rusqlite::Connection, conn: &rusqlite::Connection, s: &str) -> Result<ConcordanceResult, String> {
     let counts: HashMap<String, (i64, i64)> = {
-        let conn = study_conn(&study)?;
+        let conn = study;
         let mut stmt = conn
             .prepare("SELECT book, COUNT(*), COUNT(DISTINCT chapter * 1000 + verse) FROM interlinear WHERE strongs = ?1 GROUP BY book")
             .map_err(|e| e.to_string())?;
         let rows = stmt.query_map(params![s], |r| Ok((r.get::<_, String>(0)?, (r.get::<_, i64>(1)?, r.get::<_, i64>(2)?)))).map_err(|e| e.to_string())?;
         rows.filter_map(|r| r.ok()).collect()
     };
-    let conn = db.0.lock().map_err(|e| e.to_string())?;
-    let mut books = books_of(&conn)?;
+    let mut books = books_of(conn)?;
     let (mut total, mut verses) = (0, 0);
     for b in books.iter_mut() {
         if let Some((n, v)) = counts.get(&b.book) {
@@ -432,17 +445,22 @@ pub fn strongs_concordance(study: State<StudyState>, db: State<DbState>, strongs
 #[tauri::command]
 pub fn strongs_verses(study: State<StudyState>, db: State<DbState>, version_code: String, strongs: String, scope: FrequencyScope) -> Result<Vec<SearchHit>, String> {
     let s = norm_strongs(&strongs).ok_or("Type a Strong's number, like G26 or H157.")?;
+    let study = study_conn(&study)?;
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    strongs_hits(&study, &conn, &version_code, &s, &scope)
+}
+
+fn strongs_hits(study: &rusqlite::Connection, conn: &rusqlite::Connection, version_code: &str, s: &str, scope: &FrequencyScope) -> Result<Vec<SearchHit>, String> {
     let rows: Vec<(String, i64, i64)> = {
-        let conn = study_conn(&study)?;
+        let conn = study;
         let mut stmt = conn.prepare("SELECT DISTINCT book, chapter, verse FROM interlinear WHERE strongs = ?1").map_err(|e| e.to_string())?;
         let r = stmt.query_map(params![s], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, i64>(2)?))).map_err(|e| e.to_string())?;
         r.filter_map(|r| r.ok()).collect()
     };
-    let conn = db.0.lock().map_err(|e| e.to_string())?;
-    let books = books_of(&conn)?;
+    let books = books_of(conn)?;
     let wanted: HashSet<&str> = books
         .iter()
-        .filter(|b| match &scope {
+        .filter(|b| match scope {
             FrequencyScope::Book { book } => &b.book == book,
             FrequencyScope::Testament { testament } => &b.testament == testament,
         })
@@ -460,7 +478,7 @@ pub fn strongs_verses(study: State<StudyState>, db: State<DbState>, version_code
     let mut out = Vec::new();
     for (book, chapter, verse) in rows {
         if let Ok(text) = stmt.query_row(params![version_code, book, chapter, verse], |r| r.get::<_, String>(0)) {
-            out.push(SearchHit { version_code: version_code.clone(), book, chapter, verse, text, verse_end: None, why: Vec::new() });
+            out.push(SearchHit { version_code: version_code.to_string(), book, chapter, verse, text, verse_end: None, why: Vec::new() });
         }
     }
     Ok(out)
@@ -524,6 +542,51 @@ mod tests {
         assert!(Data::from_json("not json").is_err());
         let state = SemanticState::new(PathBuf::from("does/not/exist.json"));
         assert!(state.get().is_err());
+    }
+
+    /// The real databases: the book counts, the verses with their words, and a Strong's number's counts agree with each other.
+    #[test]
+    fn the_searches_work_on_the_real_databases() {
+        let res = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources");
+        let (Ok(text), true, true) = (std::fs::read_to_string(res.join("semantic_domains.json")), res.join("bible.db").exists(), res.join("study.db").exists()) else { return };
+        let d = Data::from_json(&text).unwrap();
+        let bible = rusqlite::Connection::open_with_flags(res.join("bible.db"), rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap();
+        let study = rusqlite::Connection::open_with_flags(res.join("study.db"), rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap();
+
+        // love (Greek): books have counts, John's verses come back with text and the words that put them there
+        let love = d.greek.nodes.iter().find(|n| n.name == "Love, Affection, Compassion").unwrap();
+        let r = concordance_of(&d.greek, &bible, &love.code, None, None).unwrap();
+        assert_eq!(r.books.len(), 66);
+        assert!(r.total_verses > 100, "{}", r.total_verses);
+        assert!(r.books.iter().filter(|b| b.order_index < 40).all(|b| b.verses == 0), "the Greek words are all in the New Testament");
+        let john = r.books.iter().find(|b| b.book == "John").unwrap();
+        assert!(john.verses > 10);
+        let hits = hits_of(&d.greek, &bible, "BSB", &love.code, None, None, Some("John")).unwrap();
+        assert_eq!(hits.len() as i64, john.verses, "every verse the count promised comes back with its words");
+        assert!(hits.iter().all(|h| h.book == "John" && !h.text.is_empty() && !h.why.is_empty()));
+        assert!(hits.windows(2).all(|w| (w[0].chapter, w[0].verse) < (w[1].chapter, w[1].verse)), "in Bible order");
+        // the whole Testament at once
+        let all = hits_of(&d.greek, &bible, "BSB", &love.code, None, None, None).unwrap();
+        assert!(all.len() as i64 >= r.total_verses * 99 / 100, "{} of {}", all.len(), r.total_verses);
+        // the Hebrew side: love in the Old Testament, not the New
+        let hl = d.hebrew.nodes.iter().find(|n| n.name == "Love").expect("a Hebrew group named Love");
+        let hr = concordance_of(&d.hebrew, &bible, &hl.code, None, None).unwrap();
+        assert!(hr.total_verses > 50 && hr.books.iter().filter(|b| b.order_index >= 40).all(|b| b.verses == 0));
+        // a word in it, one meaning of it
+        let (ei, _) = d.greek.entries.iter().enumerate().find(|(_, e)| e.strongs.contains(&"G26".to_string())).unwrap();
+        let one = concordance_of(&d.greek, &bible, "025", Some(ei), None).unwrap();
+        assert!(one.total_verses > 50 && one.total_verses <= 116 + 20, "agape is used about 116 times: {}", one.total_verses);
+
+        // by Strong's number: G26 (agape) is used 116 times in the Greek New Testament
+        let s = strongs_counts(&study, &bible, "G26").unwrap();
+        assert!((100..=130).contains(&s.total_occurrences), "{}", s.total_occurrences);
+        assert!(s.total_verses <= s.total_occurrences && s.books.iter().filter(|b| b.order_index < 40).all(|b| b.occurrences == 0));
+        let v = strongs_hits(&study, &bible, "BSB", "G26", &FrequencyScope::Book { book: "1 John".into() }).unwrap();
+        assert_eq!(v.len() as i64, s.books.iter().find(|b| b.book == "1 John").unwrap().verses);
+        assert!(v.iter().all(|h| h.book == "1 John" && !h.text.is_empty()));
+        let nt = strongs_hits(&study, &bible, "BSB", "G26", &FrequencyScope::Testament { testament: "NT".into() }).unwrap();
+        assert_eq!(nt.len() as i64, s.total_verses);
+        assert_eq!(strongs_counts(&study, &bible, "G99999").unwrap().total_occurrences, 0);
     }
 
     /// The real data file: love is where it should be, the counts are big, and the verses are in the right Testament.

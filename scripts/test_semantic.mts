@@ -1,7 +1,7 @@
 // Search by meaning: the pieces of the pipeline and the data file it makes. Run: node --experimental-strip-types scripts/test_semantic.mts
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { cleanText, domainPath, inDomain, levelOf, meaningSummary, normStrongs, packVerses, parentCode, SEMANTIC_CREDIT, unKey, unpackVerses, verseKey, verseOfRef, type SemanticFile } from "../src/semantic.ts";
+import { asStrongs, breadcrumb, childrenOf, cleanText, domainPath, searchDomains, strongsSummary, type DomainNode, inDomain, levelOf, meaningSummary, normStrongs, packVerses, parentCode, SEMANTIC_CREDIT, unKey, unpackVerses, verseKey, verseOfRef, type SemanticFile } from "../src/semantic.ts";
 import { buildLanguage } from "./build_semantic_domains.mts";
 
 // ---- references
@@ -50,6 +50,35 @@ assert.equal(domainPath("025", names), "Attitudes and Emotions");
 assert.equal(domainPath("099", names), "099", "an unnamed group shows its code");
 assert.equal(meaningSummary("Love", "greek", 1, 2), "Love (Greek): 1 word, 2 verses.");
 assert.equal(meaningSummary("Love", "hebrew", 52, 1036), "Love (Hebrew): 52 words, 1,036 verses.");
+
+// ---- browsing the groups
+const tree: DomainNode[] = [
+  { code: "025", name: "Attitudes and Emotions", level: 1, words: 90, verses: 900 },
+  { code: "025003", name: "Love, Affection, Compassion", level: 2, words: 12, verses: 300 },
+  { code: "025009", name: "Hate, Hostility", level: 2, words: 5, verses: 40 },
+  { code: "033", name: "Communication", level: 1, words: 200, verses: 2000 },
+  { code: "033001", name: "Love-feasts and Affection", level: 2, words: 1, verses: 3 },
+];
+assert.deepEqual(childrenOf(tree, "").map((n) => n.code), ["025", "033"]);
+assert.deepEqual(childrenOf(tree, "025").map((n) => n.code), ["025003", "025009"]);
+assert.deepEqual(childrenOf(tree, "025003"), []);
+assert.deepEqual(breadcrumb(tree, "025003").map((n) => n.name), ["Attitudes and Emotions", "Love, Affection, Compassion"]);
+assert.deepEqual(breadcrumb(tree, "999"), []);
+assert.deepEqual(searchDomains(tree, "love").map((n) => n.code), ["025003", "033001"], "most verses first");
+assert.deepEqual(searchDomains(tree, "  LOVE affection ").map((n) => n.code), ["025003", "033001"], "every word must be in the name; capitals do not matter");
+assert.deepEqual(searchDomains(tree, "love hostility"), []);
+assert.deepEqual(searchDomains(tree, ""), []);
+assert.deepEqual(searchDomains(tree, "...,"), []);
+assert.equal(searchDomains(tree, "a", 2).length, 2, "the list is capped");
+assert.equal(asStrongs("G26"), "G26");
+assert.equal(asStrongs(" h0157 "), "H157");
+assert.equal(asStrongs("g 26"), "G26");
+assert.equal(asStrongs("grace"), "");
+assert.equal(asStrongs("26"), "");
+assert.equal(asStrongs(""), "");
+assert.equal(strongsSummary("G26", 116, 105), "G26 is used 116 times in 105 verses.");
+assert.equal(strongsSummary("H157", 1, 1), "H157 is used 1 time in 1 verse.");
+assert.match(strongsSummary("G99999", 0, 0), /not used/);
 
 // ---- a small made-up dictionary through the same pipeline as the real one
 const fake = [
