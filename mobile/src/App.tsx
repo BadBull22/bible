@@ -50,7 +50,8 @@ import { OtherLinks } from "./OtherLinks";
 import { ComputerPictures } from "./ComputerPictures";
 import { useWhatsNew, WhatsNewBanner, WHATS_NEW_VERSION } from "./WhatsNew";
 import { Library, VerseCommentaries } from "./Library";
-import { VersePicture } from "./VersePicture";
+import { MakePicture, VersePicture } from "./VersePicture";
+import { DailyScroll, DailyScrollEntry, type ScrollOpen, type ScrollShare } from "./ScrollFeed";
 import { verseForToday } from "./votd";
 import { WordStudy } from "./WordStudy";
 
@@ -292,6 +293,9 @@ export function App() {
   const [showLinks, setShowLinks] = useState(false); // More > Downloads > Other links
   const [showPictures, setShowPictures] = useState(false); // More > Downloads > Pictures
   const [showComputerPics, setShowComputerPics] = useState(false); // More > Downloads > Pictures from the computer
+  const [scrollOpen, setScrollOpen] = useState(false); // Extras > Daily Scroll
+  const [scrollShare, setScrollShare] = useState<ScrollShare | null>(null); // the picture studio opened from a Daily Scroll card
+  const [makingPicture, setMakingPicture] = useState(false); // More > Make a picture
   // the Library: open (on its first page, or on the chapter's commentaries)
   const [library, setLibrary] = useState<null | "home" | "commentary">(null);
   const [hasCommentary, setHasCommentary] = useState(false);
@@ -956,6 +960,9 @@ export function App() {
   useBack(showLinks, () => setShowLinks(false));
   useBack(showPictures, () => setShowPictures(false));
   useBack(showComputerPics, () => setShowComputerPics(false));
+  useBack(scrollOpen, () => setScrollOpen(false));
+  useBack(scrollShare != null, () => setScrollShare(null));
+  useBack(makingPicture, () => setMakingPicture(false));
   useBack(library !== null, () => setLibrary(null));
 
   const chosenVerse = chosen != null ? verses.find((v) => v.verse === chosen) : undefined;
@@ -1433,6 +1440,7 @@ export function App() {
         {tab === "plans" && !mapsOpen && !authorsOpen && !(browse && browseIn === "extras") && (
           <>
             <div className="more-list">
+              <DailyScrollEntry onOpen={() => setScrollOpen(true)} />
               <BrowseEntryPoints
                 onOpen={(kind) => {
                   setBrowseIn("extras");
@@ -1564,6 +1572,7 @@ export function App() {
                 <LinkRow title="Bible translations" note={`${versions.length} on this phone · more languages`} onClick={() => setShowTranslations(true)} />
                 <LinkRow title="Library" note="Commentaries, dictionaries, books" onClick={() => setLibrary("home")} />
                 <LinkRow title="Other links" note="Where to find e-Sword, MySword and MyBible files" onClick={() => setShowLinks(true)} />
+                <LinkRow title="Make a picture" note="A verse or your own words, to keep or share" onClick={() => setMakingPicture(true)} />
                 <PicturesRow onOpen={() => setShowPictures(true)} />
                 <LinkRow title="Pictures from the computer" note="Made in the Windows app: save and share" onClick={() => setShowComputerPics(true)} />
                 <PictureRows
@@ -1753,6 +1762,38 @@ export function App() {
       </nav>
 
       {toast && <div className="toast" role="status">{toast}</div>}
+
+      {scrollOpen && (
+        <DailyScroll
+          version={version}
+          onClose={() => setScrollOpen(false)}
+          onShare={setScrollShare}
+          onBookmark={(b, c, v) => void bookmark(b, c, v)}
+          fail={fail}
+          onOpen={(o: ScrollOpen) => {
+            setScrollOpen(false);
+            if (o.to === "passage") goFrom("Daily Scroll", o.book, o.chapter, o.verse);
+            else if (o.to === "author") setAuthorsOpen(true);
+            else {
+              setBrowseIn("extras");
+              setBrowse({ kind: o.to === "story" ? "stories" : o.to === "topic" ? "topics" : "children", id: o.id });
+            }
+          }}
+        />
+      )}
+
+      {scrollShare && (
+        <Sheet tall onClose={() => setScrollShare(null)}>
+          <h3>Make a picture</h3>
+          <VersePicture book={scrollShare.book} chapter={scrollShare.chapter} first={scrollShare.first} last={scrollShare.last} version={version} text={scrollShare.text} free={scrollShare.free} start={scrollShare.start} say={say} fail={fail} />
+        </Sheet>
+      )}
+
+      {makingPicture && (
+        <Sheet tall onClose={() => setMakingPicture(false)}>
+          <MakePicture books={books} version={version} say={say} fail={fail} />
+        </Sheet>
+      )}
 
       {sharingToday && today && (
         <Sheet tall onClose={() => setSharingToday(false)}>

@@ -4,7 +4,7 @@
 
 type Passage = [string, number, number, number];
 
-const PASSAGES: Passage[] = [
+export const PASSAGES: Passage[] = [
   ["John", 3, 16, 16], ["Psalms", 23, 1, 1], ["Proverbs", 3, 5, 6], ["Philippians", 4, 13, 13], ["Romans", 8, 28, 28],
   ["Isaiah", 40, 31, 31], ["Jeremiah", 29, 11, 11], ["Matthew", 11, 28, 28], ["Joshua", 1, 9, 9], ["Philippians", 4, 6, 7],
   ["Romans", 12, 2, 2], ["Psalms", 46, 1, 1], ["Isaiah", 41, 10, 10], ["2 Timothy", 1, 7, 7], ["Matthew", 6, 33, 33],

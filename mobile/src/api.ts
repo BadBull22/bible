@@ -381,6 +381,8 @@ export const api = {
   backgroundsStatus: (pack: BackgroundPack = "nature") => invoke<{ count: number; size_mb: number; latest: number }>("backgrounds_status", { pack }),
   /** downloads a set ("backgrounds-progress", or "backgrounds-progress-christian", events report the percentage); returns how many */
   backgroundsInstall: (pack: BackgroundPack = "nature") => invoke<number>("backgrounds_install", { pack }),
+  /** just the ids and subjects of a set's photos: [id, theme] */
+  backgroundsIds: (pack: BackgroundPack = "nature") => invoke<[string, string][]>("backgrounds_ids", { pack }),
   backgroundsThumbs: (pack: BackgroundPack = "nature") => invoke<BackgroundThumb[]>("backgrounds_thumbs", { pack }),
   /** one background, full size: [JPEG base64, where it is from] */
   backgroundImage: (id: string, pack: BackgroundPack = "nature") => invoke<[string, BackgroundInfo]>("background_image", { id, pack }),
@@ -583,6 +585,10 @@ export const phone = {
   saveComputerPicture: (uri: string, id: string, name: string, mime: string) => invoke<{ saved: boolean; already: boolean; where: string }>("plugin:phone|save_computer_picture", { uri, id, name, mime }),
   shareComputerPictures: (uri: string, ids: string[], names: string[], mime: string) => invoke<unknown>("plugin:phone|share_computer_pictures", { uri, id: ids.join("|"), name: names.join("|"), mime }),
   openComputerFile: (uri: string, id: string, name: string, mime: string) => invoke<unknown>("plugin:phone|open_computer_file", { uri, id, name, mime }),
+  /** saves pictures (base64 each) in the gallery, Pictures/Bible Concordance: how many were saved and where */
+  saveToGallery: (base64: string[], names: string[], mime: string) => invoke<{ saved: number; where: string }>("plugin:phone|save_to_gallery", { base64: base64.join("|"), names: names.join("|"), mime }),
+  /** shares one or several pictures (base64 each) through the share sheet, with some text */
+  shareImages: (base64: string[], names: string[], mime: string, text: string | null = null) => invoke<unknown>("plugin:phone|share_images", { base64: base64.join("|"), names: names.join("|"), mime, text }),
   /** shares a text file (a backup) through the share sheet */
   shareFile: (name: string, text: string, mime: string | null = null, title: string | null = null) => invoke<unknown>("plugin:phone|share_file", { name, text, mime, title }),
   /** writes a dated automatic backup copy (Documents/Bible Concordance backup) and keeps the newest three */

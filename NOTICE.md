@@ -44,6 +44,7 @@ user's own key from the publisher's platform, and remain the property of their p
 | Messianic prophecy/fulfilment reference pairs and their five-section grouping (Prophecies tab) | Selection compiled from *FULFILLED*, a Tableau Public visualisation by "thecfelix" with Kevin Flerlage | Scripture references are facts, not copyrightable; the **selection and grouping** are credited to those authors. Their bundled verse text (NIV) was **not** used — this app renders the verses from its own public-domain translations instead. Pairings were corrected and re-verified against the bundled BSB. |
 | all-MiniLM-L6-v2 sentence-embedding model (topic search) | sentence-transformers | Apache 2.0 |
 | Poppins Regular font (the "Gospel" wordmark on the opening screen) | The Poppins Project Authors, via `google/fonts` | SIL Open Font License 1.1 |
+| Lora, Poppins SemiBold and Bold, Dancing Script and Nunito fonts (the phone app's picture studio and Daily Scroll) | Their Project Authors, via `google/fonts` | SIL Open Font License 1.1 |
 
 Word-level Strong's-number tagging for BSB/KJV/ASV/WEB comes from the OSIS/USFM markup
 included in the above sources. Curated genealogies and "Firsts & Milestones" entries were
