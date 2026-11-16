@@ -42,6 +42,12 @@ assert.ok(one.body.startsWith("Psalms 1:1 is ready"));
 const two = planNotifications(base({ memory: [learn("Psalms", "2026-11-16"), learn("John", "2026-11-16")] })).find((p) => p.open === "memory")!;
 assert.ok(two.body.includes("and 1 more verse are ready"), two.body);
 
+// a reading plan being followed brings "Today's reading" once a week and opens the plans
+plan = planNotifications(base({ plan: "New Testament in 90 days" }));
+const readings = plan.filter((p) => p.open === "plans");
+assert.ok(readings.length >= 1 && readings.every((p) => p.title === "Today's reading" && p.body === "Today's reading in “New Testament in 90 days” is waiting."));
+assert.ok(!planNotifications(base()).some((p) => p.open === "plans"), "no plan, no reading reminder");
+
 // prayers bring "A moment to pray" and rotate through the list
 plan = planNotifications(base({ prayers: ["My mother's health", "A new job", "Our church"] }));
 const pray = plan.filter((p) => p.open === "prayer");

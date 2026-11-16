@@ -26,8 +26,8 @@ export function BackupRestore({ onBackUp, onSave, onShare, onRestoreLatest, onRe
   return (
     <>
       <p className="hint">
-        The phone makes a backup by itself, in Documents &gt; Bible Concordance backup, after you change a highlight, bookmark, note or setting. It keeps the last three days. It holds your notes, highlights, bookmarks, reading plans
-        and settings, and the Bible you read if you added it yourself. Books, commentaries and picture packs are not in it: download them again from More. Restoring only adds what is missing; nothing you have now is removed.
+        The phone makes a backup by itself, in Documents &gt; Bible Concordance backup, after you change a highlight, bookmark, note or setting. It keeps the last three days. It holds your notes, highlights, bookmarks, reading plans,
+        prayer list, memory verses and settings, and the Bible you read if you added it yourself. Books, commentaries and picture packs are not in it: download them again from More. Restoring only adds what is missing; nothing you have now is removed.
       </p>
       <p className="hint">
         Last automatic backup: <strong>{lastText(lastAt, new Date())}</strong>

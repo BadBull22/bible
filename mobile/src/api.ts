@@ -271,6 +271,33 @@ export interface Counts {
   highlights: number;
   notes: number;
   plans: number;
+  prayers?: number;
+  memory?: number;
+}
+
+/** One thing the reader is praying about (the prayer list). */
+export interface Prayer {
+  id: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  /** the day it was answered ("YYYY-MM-DD"), or absent while still being prayed for */
+  answered_at?: string | null;
+  answer_note: string;
+}
+
+/** A verse (or a few in a row) being learned, as the Rust side keeps it. */
+export interface MemoryRow {
+  book: string;
+  chapter: number;
+  verse: number;
+  verse_end: number;
+  added_on: string;
+  /** 0 to 6 */
+  box: number;
+  due_on: string;
+  last_on?: string | null;
+  updated_at: string;
 }
 
 /** The highlight colours, the same as the desktop app's (and in its order). */
@@ -302,6 +329,17 @@ export const api = {
   setHighlightName: (color: string, title: string) => invoke<void>("set_highlight_name", { color, title }),
   books: () => invoke<Book[]>("books"),
   chapter: (version: string, book: string, chapter: number) => invoke<Verse[]>("chapter", { version, book, chapter }),
+  prayers: () => invoke<Prayer[]>("prayers"),
+  savePrayer: (id: string, body: string) => invoke<void>("save_prayer", { id, body }),
+  /** marks a prayer answered on `day` ("YYYY-MM-DD") with a line on how, or (day null) puts it back among those still being prayed for */
+  answerPrayer: (id: string, day: string | null, note: string) => invoke<void>("answer_prayer", { id, day, note }),
+  deletePrayer: (id: string) => invoke<void>("delete_prayer", { id }),
+  memoryVerses: () => invoke<MemoryRow[]>("memory_verses"),
+  /** true when it was added (false: already being learned) */
+  addMemoryVerse: (book: string, chapter: number, verse: number, verseEnd: number, today: string) => invoke<boolean>("add_memory_verse", { book, chapter, verse, verseEnd, today }),
+  setMemoryProgress: (book: string, chapter: number, verse: number, verseEnd: number, boxNo: number, dueOn: string, today: string) =>
+    invoke<void>("set_memory_progress", { book, chapter, verse, verseEnd, boxNo, dueOn, today }),
+  removeMemoryVerse: (book: string, chapter: number, verse: number, verseEnd: number) => invoke<void>("remove_memory_verse", { book, chapter, verse, verseEnd }),
   passage: (version: string, book: string, chapter: number, verse: number, verseEnd: number | null = null) =>
     invoke<string>("passage", { version, book, chapter, verse, verseEnd }),
   search: (query: string, version: string, testament: string | null, book: string | null) =>
@@ -556,6 +594,20 @@ export interface UpdateOffer {
 }
 
 /** What only the phone itself can do (see src-tauri/plugins/phone). */
+export interface ListenStatus {
+  running: boolean;
+  playing: boolean;
+  /** which piece of the queue it is on, and how many there are */
+  index: number;
+  total: number;
+  /** the chapter being read, "John 3" */
+  label: string;
+  /** the queue was read to its end */
+  finished: boolean;
+  /** the token the queue was started with */
+  token: string;
+}
+
 export const phone = {
   share: (text: string, title: string | null = null) => invoke<unknown>("plugin:phone|share", { text, title }),
   /** speaks with the phone's voice (`voice`: one of `voices`, or null for the default); resolves when it has finished, or was stopped */
@@ -585,6 +637,21 @@ export const phone = {
   saveComputerPicture: (uri: string, id: string, name: string, mime: string) => invoke<{ saved: boolean; already: boolean; where: string }>("plugin:phone|save_computer_picture", { uri, id, name, mime }),
   shareComputerPictures: (uri: string, ids: string[], names: string[], mime: string) => invoke<unknown>("plugin:phone|share_computer_pictures", { uri, id: ids.join("|"), name: names.join("|"), mime }),
   openComputerFile: (uri: string, id: string, name: string, mime: string) => invoke<unknown>("plugin:phone|open_computer_file", { uri, id, name, mime }),
+  /** hands the phone the plan of daily notifications (each { at (ms), id, title, body, open }); it keeps and sends them, even with the app closed */
+  scheduleNotifications: (json: string) => invoke<{ scheduled: number; allowed: boolean; exact: boolean }>("plugin:phone|schedule_notifications", { json }),
+  cancelNotifications: () => invoke<unknown>("plugin:phone|cancel_notifications"),
+  /** one notification at once: { id, title, body, open } */
+  notifyNow: (json: string) => invoke<{ allowed: boolean }>("plugin:phone|notify_now", { json }),
+  /** the verses for the home-screen widget: [{ day: "YYYY-MM-DD", ref, text }] */
+  setWidgetData: (json: string) => invoke<{ widgets: number }>("plugin:phone|set_widget_data", { json }),
+  /** asks the launcher to put the verse widget on the home screen */
+  pinWidget: () => invoke<{ supported: boolean; asked: boolean; widgets: number }>("plugin:phone|pin_widget"),
+  /** where a notification or the widget opened the app to ("scroll", "mood", "prayer", "memory", "listen"), once; null otherwise */
+  takeLaunch: () => invoke<{ open: string | null }>("plugin:phone|take_launch"),
+  /** reads aloud with the screen off: { pieces: [{ t, h, l }], start, rate, voice, sleepMin, token } */
+  listenStart: (json: string) => invoke<unknown>("plugin:phone|listen_start", { json }),
+  listenControl: (action: "toggle" | "next" | "prev" | "stop") => invoke<unknown>("plugin:phone|listen_control", { action }),
+  listenStatus: () => invoke<ListenStatus>("plugin:phone|listen_status"),
   /** saves pictures (base64 each) in the gallery, Pictures/Bible Concordance: how many were saved and where */
   saveToGallery: (base64: string[], names: string[], mime: string) => invoke<{ saved: number; where: string }>("plugin:phone|save_to_gallery", { base64: base64.join("|"), names: names.join("|"), mime }),
   /** shares one or several pictures (base64 each) through the share sheet, with some text */

@@ -5,7 +5,7 @@
 import { dayNumber } from "./dailyScroll.ts";
 import { dueVerses, refOf, dayString, type Learning } from "./memoryVerse.ts";
 
-export type OpenTarget = "scroll" | "memory" | "prayer" | "mood";
+export type OpenTarget = "scroll" | "memory" | "prayer" | "mood" | "plans";
 
 export interface Planned {
   /** milliseconds since 1970 */
@@ -28,10 +28,12 @@ export interface PlanInput {
   memory: Learning[];
   /** the prayers still being prayed for, in the order to remember them */
   prayers: string[];
+  /** the name of a reading plan being followed, or none */
+  plan?: string | null;
 }
 
 /** One kind of notification for each day of the week's turn; a kind with nothing to say that day is replaced by the Daily Scroll or "How are you today?". */
-const RHYTHM = ["verse", "scroll", "mood", "verse", "memory", "prayer", "scroll"] as const;
+const RHYTHM = ["verse", "scroll", "mood", "verse", "memory", "prayer", "plan"] as const;
 
 const SCROLL_LINES = [
   "Twenty new cards today: a verse, a Bible story and more.",
@@ -59,6 +61,7 @@ export function planNotifications(inp: PlanInput): Planned[] {
     const due = dueVerses(inp.memory, dayStr);
     if (kind === "memory" && due.length === 0) kind = "scroll";
     if (kind === "prayer" && inp.prayers.length === 0) kind = "mood";
+    if (kind === "plan" && !inp.plan) kind = "scroll";
     const verse = inp.verseFor(date);
     if (kind === "verse" && !verse) kind = "scroll";
     const id = 5000 + i;
@@ -68,6 +71,8 @@ export function planNotifications(inp: PlanInput): Planned[] {
       const more = due.length - 1;
       const body = more > 0 ? `${refOf(due[0])} and ${more} more ${more === 1 ? "verse" : "verses"} are ready to practise.` : `${refOf(due[0])} is ready to practise.`;
       out.push({ at: date.getTime(), id, title: "Time to practise", body, open: "memory" });
+    } else if (kind === "plan" && inp.plan) {
+      out.push({ at: date.getTime(), id, title: "Today's reading", body: `Today's reading in “${cut(inp.plan, 60)}” is waiting.`, open: "plans" });
     } else if (kind === "prayer") {
       const p = inp.prayers[((n % inp.prayers.length) + inp.prayers.length) % inp.prayers.length];
       out.push({ at: date.getTime(), id, title: "A moment to pray", body: `You are praying about: “${cut(p, 110)}”`, open: "prayer" });

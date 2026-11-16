@@ -2196,3 +2196,30 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
 .scroll-offer { position: absolute; z-index: 3; left: 0.8rem; right: 0.8rem; top: calc(3.9rem + env(safe-area-inset-top)); padding: 0.8rem; border-radius: 0.8rem; background: rgba(0, 0, 0, 0.7); color: #fff; font-size: 0.9rem; }
 .scroll-offer p { margin: 0 0 0.6rem; }
 .scroll-offer button { margin-right: 0.5rem; }
+
+/* ---------- How are you today? / the prayer list / memory verses / Listen mode ---------- */
+.mood-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; margin: 0.8rem 0; }
+.mood-grid button { padding: 0.9rem 0.6rem; border-radius: 0.8rem; border: 1px solid var(--line, #8884); background: var(--card, transparent); color: inherit; font: inherit; font-weight: 600; text-align: center; }
+.mood-line { font-style: italic; }
+.mood-note { margin: 0.6rem 0 0; }
+.memory-card { margin: 0.8rem 0; padding: 1rem 1.1rem; border-radius: 0.9rem; border: 1px solid var(--line, #8884); background: var(--card, rgba(127, 127, 127, 0.08)); }
+.memory-ref { margin: 0.7rem 0 0; font-weight: 700; opacity: 0.85; }
+.memory-words { margin: 0; font-family: "Lora", Georgia, serif; font-size: 1.15rem; line-height: 1.6; }
+.memory-full { font-size: 1.1rem; }
+.memory-letters { letter-spacing: 0.08em; font-size: 1.3rem; }
+.memory-blank { display: inline-block; letter-spacing: 0.05em; opacity: 0.55; }
+.memory-done { font-size: 1.25rem; font-weight: 700; margin: 0.6rem 0; }
+.memory-add { display: flex; gap: 0.5rem; margin: 0.8rem 0 0.3rem; }
+.memory-add .field { flex: 1; min-width: 0; margin: 0; }
+.memory-row { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; padding: 0.2rem 0; background: none; border: 0; color: inherit; font: inherit; text-align: left; }
+.memory-row-ref { font-weight: 700; }
+.prayer-head { margin: 1.2rem 0 0.3rem; }
+.prayer-list { list-style: none; margin: 0; padding: 0; }
+.prayer { margin: 0.5rem 0; padding: 0.7rem 0.9rem; border-radius: 0.8rem; border: 1px solid var(--line, #8884); background: var(--card, rgba(127, 127, 127, 0.06)); }
+.prayer.answered { opacity: 0.9; border-left: 4px solid #4caf7d; }
+.prayer-text { margin: 0; white-space: pre-wrap; }
+.prayer-meta { margin: 0.2rem 0 0.4rem; }
+.prayer-answer .field { width: 100%; }
+.listen-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin: 0.4rem 0 0.8rem; }
+.listen-row .hint { margin: 0; }
+.playing button { margin-left: 0.3rem; }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_label">Verse for today</string>
+    <string name="widget_description">A verse for the day on your home screen. Tap it to open the Daily Scroll.</string>
+    <string name="widget_empty">Open Bible Concordance to get today\'s verse.</string>
+    <string name="notify_channel">Daily verse and reminders</string>
+    <string name="listen_channel">Listening</string>
+</resources>

@@ -307,6 +307,18 @@
           "markdownDescription": "Denies the battery_settings command without any pre-configured scope."
         },
         {
+          "description": "Enables the cancel_notifications command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-cancel-notifications",
+          "markdownDescription": "Enables the cancel_notifications command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the cancel_notifications command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-cancel-notifications",
+          "markdownDescription": "Denies the cancel_notifications command without any pre-configured scope."
+        },
+        {
           "description": "Enables the install_update command without any pre-configured scope.",
           "type": "string",
           "const": "allow-install-update",
@@ -341,6 +353,54 @@
           "type": "string",
           "const": "deny-list-computer-pictures",
           "markdownDescription": "Denies the list_computer_pictures command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the listen_control command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-listen-control",
+          "markdownDescription": "Enables the listen_control command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the listen_control command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-listen-control",
+          "markdownDescription": "Denies the listen_control command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the listen_start command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-listen-start",
+          "markdownDescription": "Enables the listen_start command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the listen_start command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-listen-start",
+          "markdownDescription": "Denies the listen_start command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the listen_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-listen-status",
+          "markdownDescription": "Enables the listen_status command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the listen_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-listen-status",
+          "markdownDescription": "Denies the listen_status command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the notify_now command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-notify-now",
+          "markdownDescription": "Enables the notify_now command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the notify_now command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-notify-now",
+          "markdownDescription": "Denies the notify_now command without any pre-configured scope."
         },
         {
           "description": "Enables the open_computer_file command without any pre-configured scope.",
@@ -401,6 +461,18 @@
           "type": "string",
           "const": "deny-pick-folder",
           "markdownDescription": "Denies the pick_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the pin_widget command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-pin-widget",
+          "markdownDescription": "Enables the pin_widget command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the pin_widget command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-pin-widget",
+          "markdownDescription": "Denies the pin_widget command without any pre-configured scope."
         },
         {
           "description": "Enables the read_backup_copy command without any pre-configured scope.",
@@ -487,6 +559,30 @@
           "markdownDescription": "Denies the save_to_gallery command without any pre-configured scope."
         },
         {
+          "description": "Enables the schedule_notifications command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-schedule-notifications",
+          "markdownDescription": "Enables the schedule_notifications command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the schedule_notifications command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-schedule-notifications",
+          "markdownDescription": "Denies the schedule_notifications command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_widget_data command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-widget-data",
+          "markdownDescription": "Enables the set_widget_data command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_widget_data command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-widget-data",
+          "markdownDescription": "Denies the set_widget_data command without any pre-configured scope."
+        },
+        {
           "description": "Enables the share command without any pre-configured scope.",
           "type": "string",
           "const": "allow-share",
@@ -571,6 +667,18 @@
           "markdownDescription": "Denies the stop_speaking command without any pre-configured scope."
         },
         {
+          "description": "Enables the take_launch command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-take-launch",
+          "markdownDescription": "Enables the take_launch command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the take_launch command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-take-launch",
+          "markdownDescription": "Denies the take_launch command without any pre-configured scope."
+        },
+        {
           "description": "Enables the voices command without any pre-configured scope.",
           "type": "string",
           "const": "allow-voices",
@@ -583,10 +691,10 @@
           "markdownDescription": "Denies the voices command without any pre-configured scope."
         },
         {
-          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-list-computer-pictures`\n- `allow-read-computer-picture`\n- `allow-save-computer-picture`\n- `allow-share-computer-pictures`\n- `allow-open-computer-file`\n- `allow-save-to-gallery`\n- `allow-share-images`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`",
+          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-list-computer-pictures`\n- `allow-read-computer-picture`\n- `allow-save-computer-picture`\n- `allow-share-computer-pictures`\n- `allow-open-computer-file`\n- `allow-schedule-notifications`\n- `allow-cancel-notifications`\n- `allow-notify-now`\n- `allow-set-widget-data`\n- `allow-pin-widget`\n- `allow-take-launch`\n- `allow-listen-start`\n- `allow-listen-control`\n- `allow-listen-status`\n- `allow-save-to-gallery`\n- `allow-share-images`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-list-computer-pictures`\n- `allow-read-computer-picture`\n- `allow-save-computer-picture`\n- `allow-share-computer-pictures`\n- `allow-open-computer-file`\n- `allow-save-to-gallery`\n- `allow-share-images`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`"
+          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-list-computer-pictures`\n- `allow-read-computer-picture`\n- `allow-save-computer-picture`\n- `allow-share-computer-pictures`\n- `allow-open-computer-file`\n- `allow-schedule-notifications`\n- `allow-cancel-notifications`\n- `allow-notify-now`\n- `allow-set-widget-data`\n- `allow-pin-widget`\n- `allow-take-launch`\n- `allow-listen-start`\n- `allow-listen-control`\n- `allow-listen-status`\n- `allow-save-to-gallery`\n- `allow-share-images`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`"
         }
       ]
     }

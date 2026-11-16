@@ -15,7 +15,30 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- Listen mode: the Bible read aloud with the screen off (a foreground service of the media playback kind, with a notification and lock-screen
+         controls), and the daily notifications and the verse widget that start again after the phone restarts -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application>
+        <receiver android:name="com.ghostclaw.phone.NotifyReceiver" android:exported="false" />
+        <receiver android:name="com.ghostclaw.phone.BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+        <!-- the home-screen widget with the verse for the day -->
+        <receiver android:name="com.ghostclaw.phone.VerseWidget" android:exported="true" android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.ghostclaw.phone.WIDGET_REFRESH" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/verse_widget_info" />
+        </receiver>
+        <service android:name="com.ghostclaw.phone.ListenService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
         <!-- hands a verse picture to the app it is shared with (PhonePlugin.shareImage), and a
              downloaded update to the installer (PhonePlugin.installUpdate) -->
         <provider

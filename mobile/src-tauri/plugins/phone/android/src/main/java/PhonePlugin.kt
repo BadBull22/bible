@@ -36,6 +36,16 @@ class ShareArgs {
 }
 
 @InvokeArg
+class JsonArgs {
+  lateinit var json: String
+}
+
+@InvokeArg
+class ActionArgs {
+  lateinit var action: String
+}
+
+@InvokeArg
 class LinkArgs {
   /** an https:// address */
   lateinit var url: String
@@ -257,6 +267,119 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
     tts?.stop()
     finish(false)
     invoke.resolve(JSObject().put("stopped", true))
+  }
+
+  // ---------------------------------------------------------------- the daily notifications, the home-screen widget, and Listen mode (see Daily.kt, ListenService.kt)
+
+  /** The page hands over a plan of notifications (a JSON list of { at, id, title, body, open }) for the next two weeks; the phone keeps and sends them. */
+  @Command
+  fun scheduleNotifications(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(JsonArgs::class.java)
+      val n = Daily.schedule(activity.applicationContext, Daily.parse(args.json))
+      invoke.resolve(JSObject().put("scheduled", n).put("allowed", Daily.allowed(activity)).put("exact", Daily.canBeExact(activity)))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  @Command
+  fun cancelNotifications(invoke: Invoke) {
+    Daily.cancelAll(activity.applicationContext)
+    invoke.resolve(JSObject().put("cancelled", true))
+  }
+
+  /** Shows one notification at once (to see how they look, or that they arrive on this phone). */
+  @Command
+  fun notifyNow(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(JsonArgs::class.java)
+      val o = org.json.JSONObject(args.json)
+      Daily.post(activity.applicationContext, o.optInt("id", 5900), o.getString("title"), o.getString("body"), o.optString("open", "scroll"))
+      invoke.resolve(JSObject().put("allowed", Daily.allowed(activity)))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** The verses for the widget: a JSON list of { day, ref, text }. */
+  @Command
+  fun setWidgetData(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(JsonArgs::class.java)
+      Daily.setWidgetData(activity.applicationContext, args.json)
+      invoke.resolve(JSObject().put("widgets", VerseWidget.ids(activity).size))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** Asks the phone's launcher to put the verse widget on the home screen (the launcher asks the reader to confirm). */
+  @Command
+  fun pinWidget(invoke: Invoke) {
+    val mgr = android.appwidget.AppWidgetManager.getInstance(activity)
+    val supported = Build.VERSION.SDK_INT >= 26 && mgr.isRequestPinAppWidgetSupported
+    var asked = false
+    if (supported) {
+      asked = try {
+        mgr.requestPinAppWidget(android.content.ComponentName(activity, VerseWidget::class.java), null, null)
+      } catch (_: Exception) {
+        false
+      }
+    }
+    invoke.resolve(JSObject().put("supported", supported).put("asked", asked).put("widgets", VerseWidget.ids(activity).size))
+  }
+
+  /** Where the app was opened to from a notification or the widget ("scroll", "mood", "prayer", "memory", "listen"), once; then none. */
+  @Command
+  fun takeLaunch(invoke: Invoke) {
+    val open = Daily.pendingOpen
+    Daily.pendingOpen = null
+    invoke.resolve(JSObject().put("open", open))
+  }
+
+  /** Starts reading aloud with the screen off: a JSON queue { pieces: [{ t, h, l }], start, rate, voice, sleepMin, token }. */
+  @Command
+  fun listenStart(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(JsonArgs::class.java)
+      ListenService.start(activity.applicationContext, args.json)
+      invoke.resolve(JSObject().put("started", true))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** "toggle" (pause or play), "next", "prev" (chapters) or "stop". */
+  @Command
+  fun listenControl(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(ActionArgs::class.java)
+      ListenService.control(activity.applicationContext, args.action)
+      invoke.resolve(JSObject().put("done", true))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  @Command
+  fun listenStatus(invoke: Invoke) {
+    invoke.resolve(JSObject(ListenService.status(activity.applicationContext).toString()))
+  }
+
+  override fun load(webView: android.webkit.WebView) {
+    // opened from a notification or the widget: where to go (kept until the page asks)
+    activity.intent?.getStringExtra(Daily.EXTRA_OPEN)?.let {
+      Daily.pendingOpen = it
+      activity.intent.removeExtra(Daily.EXTRA_OPEN)
+    }
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    intent.getStringExtra(Daily.EXTRA_OPEN)?.let {
+      Daily.pendingOpen = it
+      intent.removeExtra(Daily.EXTRA_OPEN)
+    }
   }
 
   override fun onPause() {

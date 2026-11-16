@@ -22,6 +22,15 @@ Sharing text or a picture, reading aloud with the phone's voices, saving or open
 - `allow-save-computer-picture`
 - `allow-share-computer-pictures`
 - `allow-open-computer-file`
+- `allow-schedule-notifications`
+- `allow-cancel-notifications`
+- `allow-notify-now`
+- `allow-set-widget-data`
+- `allow-pin-widget`
+- `allow-take-launch`
+- `allow-listen-start`
+- `allow-listen-control`
+- `allow-listen-status`
 - `allow-save-to-gallery`
 - `allow-share-images`
 - `allow-share-file`
@@ -60,6 +69,32 @@ Enables the battery_settings command without any pre-configured scope.
 <td>
 
 Denies the battery_settings command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-cancel-notifications`
+
+</td>
+<td>
+
+Enables the cancel_notifications command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-cancel-notifications`
+
+</td>
+<td>
+
+Denies the cancel_notifications command without any pre-configured scope.
 
 </td>
 </tr>
@@ -138,6 +173,110 @@ Enables the list_computer_pictures command without any pre-configured scope.
 <td>
 
 Denies the list_computer_pictures command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-listen-control`
+
+</td>
+<td>
+
+Enables the listen_control command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-listen-control`
+
+</td>
+<td>
+
+Denies the listen_control command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-listen-start`
+
+</td>
+<td>
+
+Enables the listen_start command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-listen-start`
+
+</td>
+<td>
+
+Denies the listen_start command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-listen-status`
+
+</td>
+<td>
+
+Enables the listen_status command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-listen-status`
+
+</td>
+<td>
+
+Denies the listen_status command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-notify-now`
+
+</td>
+<td>
+
+Enables the notify_now command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-notify-now`
+
+</td>
+<td>
+
+Denies the notify_now command without any pre-configured scope.
 
 </td>
 </tr>
@@ -268,6 +407,32 @@ Enables the pick_folder command without any pre-configured scope.
 <td>
 
 Denies the pick_folder command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-pin-widget`
+
+</td>
+<td>
+
+Enables the pin_widget command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-pin-widget`
+
+</td>
+<td>
+
+Denies the pin_widget command without any pre-configured scope.
 
 </td>
 </tr>
@@ -457,6 +622,58 @@ Denies the save_to_gallery command without any pre-configured scope.
 <tr>
 <td>
 
+`phone:allow-schedule-notifications`
+
+</td>
+<td>
+
+Enables the schedule_notifications command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-schedule-notifications`
+
+</td>
+<td>
+
+Denies the schedule_notifications command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-set-widget-data`
+
+</td>
+<td>
+
+Enables the set_widget_data command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-set-widget-data`
+
+</td>
+<td>
+
+Denies the set_widget_data command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `phone:allow-share`
 
 </td>
@@ -632,6 +849,32 @@ Enables the stop_speaking command without any pre-configured scope.
 <td>
 
 Denies the stop_speaking command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-take-launch`
+
+</td>
+<td>
+
+Enables the take_launch command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-take-launch`
+
+</td>
+<td>
+
+Denies the take_launch command without any pre-configured scope.
 
 </td>
 </tr>
