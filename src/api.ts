@@ -157,6 +157,33 @@ export interface ConcordanceResult {
   found: { word: string; count: number }[];
 }
 
+export type { DomainNode } from "./semantic";
+import type { DomainNode } from "./semantic";
+
+/** one meaning of one Hebrew or Greek word, in a group of meanings */
+export interface MeaningWord {
+  entry: number;
+  meaning: number;
+  strongs: string[];
+  lemma: string;
+  glosses: string[];
+  definition: string;
+  /** the Louw-Nida number of a Greek meaning */
+  ln: string | null;
+  verses: number;
+}
+
+/** what a word means in a verse (the dictionary lists this verse for the meaning when `here`) */
+export interface WordMeaning {
+  lemma: string;
+  glosses: string[];
+  definition: string;
+  ln: string | null;
+  /** "Attitudes and Emotions > Love, Affection, Compassion" for each group */
+  groups: string[];
+  here: boolean;
+}
+
 export interface WordFrequencyResult {
   total_occurrences: number;
   verses: SearchHit[];
@@ -1165,6 +1192,17 @@ export const api = {
   /** "Follow along": a read-only page of the words on the screen for the congregation's phones */
   followStart: () => invoke<RemoteInfo>("follow_start"),
   followStop: () => invoke<void>("follow_stop"),
+  /** Search by meaning (Hebrew and Greek words grouped by what they mean) and the Concordance's Strong's number search */
+  semanticTree: (language: "greek" | "hebrew") => invoke<DomainNode[]>("semantic_tree", { language }),
+  semanticWords: (language: "greek" | "hebrew", code: string) => invoke<MeaningWord[]>("semantic_words", { language, code }),
+  semanticConcordance: (language: "greek" | "hebrew", code: string, entry: number | null = null, meaning: number | null = null) =>
+    invoke<ConcordanceResult>("semantic_concordance", { language, code, entry, meaning }),
+  semanticHits: (versionCode: string, language: "greek" | "hebrew", code: string, entry: number | null, meaning: number | null, book: string | null) =>
+    invoke<SearchHit[]>("semantic_hits", { versionCode, language, code, entry, meaning, book }),
+  semanticWordMeanings: (strongs: string, book: string | null = null, chapter: number | null = null, verse: number | null = null) =>
+    invoke<WordMeaning[]>("semantic_word_meanings", { strongs, book, chapter, verse }),
+  strongsConcordance: (strongs: string) => invoke<ConcordanceResult>("strongs_concordance", { strongs }),
+  strongsVerses: (versionCode: string, strongs: string, scope: FrequencyScope) => invoke<SearchHit[]>("strongs_verses", { versionCode, strongs, scope }),
   followState: (json: string) => invoke<void>("follow_state", { json }),
   sermonGet: (id: number) => invoke<SavedSermon | null>("sermon_get", { id }),
   /** saves a new sermon (id 0) or changes to an existing one; returns its id */

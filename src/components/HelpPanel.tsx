@@ -306,7 +306,7 @@ const SECTIONS: Section[] = [
   {
     id: "concordance",
     title: "Concordance: how often a word is used, book by book",
-    keywords: "concordance word count frequency how many times book old testament new testament forms believe believes believed",
+    keywords: "concordance meaning semantic domains love forgive strongs number word count frequency how many times book old testament new testament forms believe believes believed",
     body: (
       <>
         <p>
@@ -326,6 +326,23 @@ const SECTIONS: Section[] = [
             Choose which Bible to count in; a short phrase such as <em>born again</em> works too.
           </li>
         </ul>
+        <p>
+          <strong>Three ways to look:</strong> the buttons at the top choose between <strong>Word</strong> (the words of the Bible you read),{" "}
+          <strong>Strong's number</strong> (type G26 or H157 to count the Greek or Hebrew word behind it, in the original text) and{" "}
+          <strong>Meaning</strong>.
+        </p>
+        <p>
+          <strong>Meaning</strong> searches by what words mean, not how they are spelled. Choose <em>New Testament (Greek)</em> or <em>Old Testament (Hebrew)</em>,
+          type a few letters of a meaning (love, forgive, joy, fear, shepherd) or open the groups one level at a time (the small › button), and choose a
+          group. You see every word in it, how many verses use them in each book, and the verses, each showing the Hebrew or Greek words that put it there.
+          Open <strong>The words in…</strong> and click one to see only that word with that meaning. The groups come from the UBS dictionaries of Biblical Hebrew
+          and of the Greek New Testament (adapted from Louw and Nida), shared under the Creative Commons Attribution-ShareAlike 4.0 licence. The Hebrew dictionary is
+          still being finished, so a few Hebrew words have no meaning yet.
+        </p>
+        <p>
+          In the <strong>Interlinear</strong>, under a word's Strong's number, <strong>Meaning here</strong> says which meaning the dictionary gives the word in that
+          verse, and the group it belongs to (hover for the whole path).
+        </p>
       </>
     ),
   },
