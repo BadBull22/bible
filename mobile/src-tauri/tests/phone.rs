@@ -192,7 +192,7 @@ fn plans_and_backup() {
     assert_eq!(userdata::plan_progress(&phone).unwrap(), [userdata::PlanProgress { plan_id: "nt-90".into(), started_on: "2026-10-01".into(), done_days: vec![1] }]);
 
     let (json, counts) = userdata::backup_json(&phone).unwrap();
-    assert_eq!(counts, userdata::Counts { bookmarks: 1, highlights: 1, notes: 1, plans: 1 });
+    assert_eq!(counts, userdata::Counts { bookmarks: 1, highlights: 1, notes: 1, plans: 1, ..Default::default() });
     assert!(json.contains("bible-concordance-study/1"));
 
     // onto a fresh phone, then again: nothing doubles
@@ -213,7 +213,7 @@ fn plans_and_backup() {
         "plans":[{"plan_id":"nt-90","started_on":"2026-09-01","done_days":[1,5]}],
         "sermons":[{"id":3,"title":"Faith"}],"book_bookmarks":[{"module":"x","section":1,"para":2}]}"#;
     let n = userdata::restore(&mut phone, desktop).unwrap();
-    assert_eq!(n, userdata::Counts { bookmarks: 1, highlights: 1, notes: 1, plans: 1 });
+    assert_eq!(n, userdata::Counts { bookmarks: 1, highlights: 1, notes: 1, plans: 1, ..Default::default() });
     assert_eq!(userdata::note(&phone, "Romans", 8, 28).unwrap(), "Newer, from the desktop.");
     let m = userdata::chapter_marks(&phone, "John", 1).unwrap();
     assert_eq!(m.highlights, [(1, "lime".to_string())], "the phone has the desktop's bright colours too (since 2.9.8), so lime stays lime");
@@ -472,4 +472,57 @@ fn a_question_is_found_without_its_question_mark_and_a_spelling_slip_is_put_righ
     let r = ask::ask_with_correction(&d, &s, "who betryed Jesus", None).unwrap();
     assert!(matches!(&r.answer, Some(Answer::Curated { question, .. }) if question == "Who betrayed Jesus?"), "{:?}", r.answer);
     assert_eq!(r.corrected.as_deref(), Some("who betrayed Jesus"));
+}
+
+#[test]
+fn prayers_and_memory_verses() {
+    let phone = Connection::open_in_memory().unwrap();
+    userdata::init(&phone).unwrap();
+    // prayers: add, change the words, answer, put back, an empty one is refused
+    userdata::save_prayer(&phone, "p1", "My mother's health").unwrap();
+    userdata::save_prayer(&phone, "p2", "  A new job  ").unwrap();
+    assert!(userdata::save_prayer(&phone, "p3", "   ").is_err());
+    userdata::save_prayer(&phone, "p1", "My mother's health and rest").unwrap();
+    let list = userdata::prayers(&phone).unwrap();
+    assert_eq!(list.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(), ["p2", "p1"], "newest first while praying");
+    assert_eq!(list[0].body, "A new job");
+    userdata::answer_prayer(&phone, "p2", Some("2026-11-20"), " He opened a door ").unwrap();
+    let list = userdata::prayers(&phone).unwrap();
+    assert_eq!(list.iter().map(|p| p.id.as_str()).collect::<Vec<_>>(), ["p1", "p2"], "answered ones go below those still being prayed for");
+    assert_eq!((list[1].answered_at.as_deref(), list[1].answer_note.as_str()), (Some("2026-11-20"), "He opened a door"));
+    // memory verses: added once, due today; progress is kept; the order is by due day
+    assert!(userdata::add_memory_verse(&phone, "Psalms", 23, 1, 1, "2026-11-20").unwrap());
+    assert!(!userdata::add_memory_verse(&phone, "Psalms", 23, 1, 1, "2026-11-21").unwrap(), "already being learned");
+    assert!(userdata::add_memory_verse(&phone, "John", 3, 16, 17, "2026-11-20").unwrap());
+    userdata::set_memory_progress(&phone, "Psalms", 23, 1, 1, 2, "2026-11-27", "2026-11-20").unwrap();
+    let mem = userdata::memory_verses(&phone).unwrap();
+    assert_eq!(mem[0].book, "John", "due today comes first");
+    assert_eq!((mem[1].box_no, mem[1].due_on.as_str(), mem[1].last_on.as_deref()), (2, "2026-11-27", Some("2026-11-20")));
+
+    // both go into a backup and come back on another phone, and a second restore adds nothing
+    let (json, counts) = userdata::backup_json(&phone).unwrap();
+    assert_eq!((counts.prayers, counts.memory), (2, 2));
+    assert!(json.contains("\"box\": 2"));
+    let mut other = Connection::open_in_memory().unwrap();
+    userdata::init(&other).unwrap();
+    let n = userdata::restore(&mut other, &json).unwrap();
+    assert_eq!((n.prayers, n.memory), (2, 2));
+    assert_eq!(userdata::prayers(&other).unwrap(), userdata::prayers(&phone).unwrap());
+    assert_eq!(userdata::memory_verses(&other).unwrap().len(), 2);
+    let again = userdata::restore(&mut other, &json).unwrap();
+    assert_eq!((again.prayers, again.memory), (0, 0), "nothing doubles");
+    // an answer marked on this phone later travels: the newer copy wins, an older one does not undo it
+    std::thread::sleep(std::time::Duration::from_millis(1100));
+    userdata::answer_prayer(&phone, "p1", Some("2026-12-02"), "Healed, thank God").unwrap();
+    let newer = userdata::backup_json(&phone).unwrap().0;
+    assert_eq!(userdata::restore(&mut other, &newer).unwrap().prayers, 1);
+    assert_eq!(userdata::prayers(&other).unwrap().iter().find(|p| p.id == "p1").unwrap().answer_note, "Healed, thank God");
+    assert_eq!(userdata::restore(&mut other, &json).unwrap().prayers, 0, "the older file does not undo it");
+    // a desktop backup (no prayers, no memory) restores cleanly
+    let desktop = r#"{"format":"bible-concordance-study/1","bookmarks":[],"highlights":[],"notes":[],"plans":[]}"#;
+    assert_eq!(userdata::restore(&mut other, desktop).unwrap(), userdata::Counts::default());
+    // remove
+    userdata::remove_memory_verse(&other, "John", 3, 16, 17).unwrap();
+    userdata::delete_prayer(&other, "p2").unwrap();
+    assert_eq!((userdata::memory_verses(&other).unwrap().len(), userdata::prayers(&other).unwrap().len()), (1, 1));
 }
