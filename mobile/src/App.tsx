@@ -1768,7 +1768,7 @@ export function App() {
           version={version}
           onClose={() => setScrollOpen(false)}
           onShare={setScrollShare}
-          onBookmark={(b, c, v) => void bookmark(b, c, v)}
+          say={say}
           fail={fail}
           onOpen={(o: ScrollOpen) => {
             setScrollOpen(false);

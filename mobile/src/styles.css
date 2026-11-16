@@ -2182,8 +2182,10 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
 .scroll-words.faint { opacity: 0.5; }
 .scroll-ref { margin: 1rem 0 0; font-size: 1rem; opacity: 0.9; }
 .scroll-note { margin: 0.8rem auto 0; max-width: 28rem; font-size: 0.95rem; opacity: 0.85; font-style: italic; }
-.scroll-actions { position: absolute; left: 0; right: 0; bottom: calc(1.4rem + var(--sab)); display: flex; justify-content: center; gap: 0.7rem; }
-.scroll-actions button { min-width: 5.5rem; padding: 0.7rem 1.1rem; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 2rem; background: rgba(0, 0, 0, 0.35); color: inherit; font: inherit; }
+.scroll-actions { position: absolute; left: 0; right: 0; bottom: calc(1.2rem + var(--sab)); display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.scroll-actions > div { display: flex; justify-content: center; gap: 0.6rem; }
+.scroll-actions button.scroll-open { min-width: 0; padding: 0.3rem 0.6rem; border: 0; background: none; text-decoration: underline; opacity: 0.9; }
+.scroll-actions button { min-width: 5.2rem; padding: 0.7rem 1.1rem; border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 2rem; background: rgba(0, 0, 0, 0.35); color: inherit; font: inherit; }
 .scroll-actions button.primary { background: #fff; color: #111; border-color: #fff; }
 .scroll-end { background: #1b2233; }
 .scroll-top { position: absolute; top: 0; left: 0; right: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; padding: calc(0.6rem + env(safe-area-inset-top)) 0.8rem 0.6rem; pointer-events: none; }

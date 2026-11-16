@@ -5,7 +5,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { api, type BackgroundPack } from "./api";
+import { api, phone, type BackgroundPack } from "./api";
 import { parseRef } from "../../src/browse/browseLogic";
 import { CHILDREN, STORIES, TOPICS } from "../../src/browse/data";
 import { BIBLE_AUTHORS } from "../../src/bibleAuthors";
@@ -13,7 +13,7 @@ import { PASSAGES } from "./votd";
 import verseCardsOne from "../data/daily_scroll_verse_cards.json";
 import verseCardsTwo from "../data/daily_scroll_verse_cards_batch2.json";
 import { buildDeck, buildPool, dayNumber, hashOf, kindLabel, remember, trimWords, type Card, type History, type Sources } from "./dailyScroll";
-import { LOOKS } from "./VersePicture";
+import { LOOKS, quickPicture } from "./VersePicture";
 
 /** What the picture studio is opened with from a card. */
 export interface ScrollShare {
@@ -37,7 +37,7 @@ interface Props {
   onClose: () => void;
   onShare: (s: ScrollShare) => void;
   onOpen: (o: ScrollOpen) => void;
-  onBookmark: (book: string, chapter: number, verse: number) => void;
+  say: (message: string) => void;
   fail: (e: unknown) => void;
 }
 
@@ -120,7 +120,7 @@ async function pickPhoto(card: Card, photos: Photos[]): Promise<{ url: string; p
   return best ? { url: best.url, pack: set.pack, id: best.id } : null;
 }
 
-function CardView({ card, version, photos, root, onShare, onOpen, onBookmark }: { card: Card; version: string; photos: Photos[]; root: React.RefObject<HTMLDivElement | null> } & Pick<Props, "onShare" | "onOpen" | "onBookmark">) {
+function CardView({ card, version, photos, root, onShare, onOpen, say, fail }: { card: Card; version: string; photos: Photos[]; root: React.RefObject<HTMLDivElement | null> } & Pick<Props, "onShare" | "onOpen" | "say" | "fail">) {
   const el = useRef<HTMLElement>(null);
   const [near, setNear] = useState(false);
   const [words, setWords] = useState<string | null>(null);
@@ -174,7 +174,23 @@ function CardView({ card, version, photos, root, onShare, onOpen, onBookmark }: 
 
   const bigText = card.ref ? (words ? trimWords(words, 420) : words) : card.text;
   const long = (bigText?.length ?? 0) > 230;
-  const share = () => {
+  // Quick share and Save make the picture at once with the reader's saved choices; Edit opens the studio
+  const [busy, setBusy] = useState(false);
+  const label = ref ? `${card.ref} · ${shownIn}` : (card.title ?? "");
+  const make = () => quickPicture({ text: bigText ?? "", label, photoUrl: photo?.url ?? null, lookIndex: hashOf(card.id) });
+  async function quick(action: "share" | "save") {
+    setBusy(true);
+    try {
+      const p = await make();
+      if (action === "share") await phone.shareImages([p.data], [p.name], p.mime, p.caption);
+      else say(`Saved in ${(await phone.saveToGallery([p.data], [p.name], p.mime)).where}`);
+    } catch (e) {
+      fail(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const edit = () => {
     if (ref) onShare({ book: ref.book, chapter: ref.chapter, first: ref.verse, last: ref.verseEnd, text: bigText ?? "", start: photo ? { pack: photo.pack, id: photo.id } : null });
     else onShare({ book: "", chapter: 0, first: 0, last: 0, text: card.text ?? "", free: { label: card.title ?? "", text: card.text ?? "" }, start: photo ? { pack: photo.pack, id: photo.id } : null });
   };
@@ -207,19 +223,26 @@ function CardView({ card, version, photos, root, onShare, onOpen, onBookmark }: 
         {card.note && <p className="scroll-note">{card.note}</p>}
       </div>
       <div className="scroll-actions">
-        <button onClick={share} disabled={ref != null && !words}>
-          Share
+        <button className="scroll-open" onClick={open}>
+          {card.kind === "story" ? "Read the story ›" : card.kind === "author" ? "About the writer ›" : card.kind === "topic" ? "More on this ›" : card.kind === "memory" ? "The children's page ›" : "Read it in the Bible ›"}
         </button>
-        {ref && (
-          <button onClick={() => onBookmark(ref.book, ref.chapter, ref.verse)}>Save</button>
-        )}
-        <button onClick={open}>Open</button>
+        <div>
+          <button onClick={() => void quick("share")} disabled={busy || !hasWords}>
+            Quick share
+          </button>
+          <button onClick={() => void quick("save")} disabled={busy || !hasWords}>
+            Save
+          </button>
+          <button onClick={edit} disabled={!hasWords}>
+            Edit
+          </button>
+        </div>
       </div>
     </section>
   );
 }
 
-export function DailyScroll({ version, onClose, onShare, onOpen, onBookmark, fail }: Props) {
+export function DailyScroll({ version, onClose, onShare, onOpen, say, fail }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const today = useMemo(() => dayNumber(), []);
   const pool = useMemo(() => buildPool(sources()), []);
@@ -314,7 +337,7 @@ export function DailyScroll({ version, onClose, onShare, onOpen, onBookmark, fai
       )}
       <div className="scroll-feed" ref={root} onScroll={onScroll}>
         {deck.map((c) => (
-          <CardView key={c.id} card={c} version={version} photos={photos} root={root} onShare={onShare} onOpen={onOpen} onBookmark={onBookmark} />
+          <CardView key={c.id} card={c} version={version} photos={photos} root={root} onShare={onShare} onOpen={onOpen} say={say} fail={fail} />
         ))}
         <section key={`end-${more}`} className="scroll-card scroll-end">
           <div className="scroll-body">
