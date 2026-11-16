@@ -317,6 +317,23 @@ function loadLogoPos(): LogoPos {
   return CORNER;
 }
 
+/** A finished picture of some words, made at once with the reader's saved choices (size, font, colour, logo) and no editing: what the Daily Scroll's Quick share
+ *  and Save use. `photoUrl` is the photo behind the words (a data address), or null for the colour look `lookIndex`. */
+export async function quickPicture(o: { text: string; label: string; photoUrl: string | null; lookIndex: number }): Promise<{ data: string; mime: string; name: string; caption: string }> {
+  const prefs = loadPrefs();
+  const font = FONTS.find((f) => f.key === prefs.font) ?? FONTS[0];
+  await Promise.all(FONTS.map((f) => document.fonts.load(`${f.weight} 40px ${f.family}`).catch(() => undefined)));
+  const ground: Ground = o.photoUrl ? { kind: "photo", image: await loadImageFrom(o.photoUrl) } : { kind: "colour", look: LOOKS[((o.lookIndex % LOOKS.length) + LOOKS.length) % LOOKS.length] };
+  const saved = store.get(LOGO_KEY);
+  const logo = saved ? await loadImageFrom(saved).catch(() => null) : null;
+  const pos = loadLogoPos();
+  const c = document.createElement("canvas");
+  drawPicture(c, { w: WIDTH, h: HEIGHTS[prefs.size], ground, text: o.text, label: o.label, font, ink: prefs.ink, align: prefs.align, darken: prefs.darken, credit: null, logo: logo ? { image: logo, x: pos.x, y: pos.y, scale: pos.scale } : null });
+  const mime = prefs.format === "png" ? "image/png" : "image/jpeg";
+  const base = (o.label || "Words").replace(/[^A-Za-z0-9 ]/g, " ").replace(/\s+/g, " ").trim() || "Picture";
+  return { data: c.toDataURL(mime, 0.92).split(",")[1] ?? "", mime, name: `${base} ${prefs.size}.${prefs.format === "png" ? "png" : "jpg"}`, caption: `${o.label || "Words"} · https://bible4me.org` };
+}
+
 type Tool = "look" | "words" | "logo" | "file";
 type Mode = "colour" | "nature" | "christian" | "painting" | "mine";
 
