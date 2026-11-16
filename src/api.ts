@@ -24,6 +24,9 @@ export interface RemoteInfo {
   on: boolean;
   url: string;
   qr_svg: string;
+  /** the phone remote only: the pastor's stage view page (current and next slide, notes, clock, timer) and its QR code */
+  stage_url?: string | null;
+  stage_qr_svg?: string | null;
 }
 
 export interface BookInfo {
@@ -1159,6 +1162,10 @@ export const api = {
   remoteStart: () => invoke<RemoteInfo>("remote_start"),
   remoteStop: () => invoke<void>("remote_stop"),
   remoteState: (json: string) => invoke<void>("remote_state", { json }),
+  /** "Follow along": a read-only page of the words on the screen for the congregation's phones */
+  followStart: () => invoke<RemoteInfo>("follow_start"),
+  followStop: () => invoke<void>("follow_stop"),
+  followState: (json: string) => invoke<void>("follow_state", { json }),
   sermonGet: (id: number) => invoke<SavedSermon | null>("sermon_get", { id }),
   /** saves a new sermon (id 0) or changes to an existing one; returns its id */
   sermonSave: (sermon: SavedSermon) => invoke<number>("sermon_save", { sermon }),

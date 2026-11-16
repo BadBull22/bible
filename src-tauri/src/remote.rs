@@ -20,6 +20,8 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::lan::{is_private, local_address};
 
 const PAGE: &str = include_str!("remote_page.html");
+/// the pastor's stage view for a tablet or phone: the slide and the next one large, the notes, the clock and the timer, and the buttons
+const STAGE: &str = include_str!("stage_page.html");
 const PORT: u16 = 47811;
 const MAX_BODY: usize = 512;
 
@@ -46,19 +48,32 @@ pub struct RemoteInfo {
     pub url: String,
     /// the QR code as an SVG picture
     pub qr_svg: String,
+    /// the stage view's address and its QR code (the remote only)
+    pub stage_url: Option<String>,
+    pub stage_qr_svg: Option<String>,
 }
 
-pub(crate) fn info(url: &str) -> Result<RemoteInfo, String> {
+fn qr_of(url: &str) -> Result<String, String> {
     use qrcode::render::svg;
     let qr = qrcode::QrCode::new(url.as_bytes()).map_err(err)?;
-    let qr_svg = qr
+    Ok(qr
         .render::<svg::Color>()
         .min_dimensions(220, 220)
         .quiet_zone(true)
         .dark_color(svg::Color("#000000"))
         .light_color(svg::Color("#ffffff"))
-        .build();
-    Ok(RemoteInfo { on: true, url: url.to_string(), qr_svg })
+        .build())
+}
+
+/// The address and its QR code (no stage view: used for the follow-along page too).
+pub(crate) fn info(url: &str) -> Result<RemoteInfo, String> {
+    Ok(RemoteInfo { on: true, url: url.to_string(), qr_svg: qr_of(url)?, stage_url: None, stage_qr_svg: None })
+}
+
+/// The remote's address with the stage view's beside it.
+fn info_with_stage(url: &str) -> Result<RemoteInfo, String> {
+    let stage = format!("{url}/stage");
+    Ok(RemoteInfo { stage_qr_svg: Some(qr_of(&stage)?), stage_url: Some(stage), ..info(url)? })
 }
 
 /// A code nobody can guess: 12 hex digits from SQLite's own random source.
@@ -73,7 +88,7 @@ pub fn remote_start(app: AppHandle) -> Result<RemoteInfo, String> {
     let state = app.state::<RemoteState>();
     let mut running = state.running.lock().map_err(err)?;
     if let Some(r) = running.as_ref() {
-        return info(&r.url);
+        return info_with_stage(&r.url);
     }
     let ip = local_address().ok_or("This computer isn't on a home network (Wi-Fi or cable), so a phone can't reach it.")?;
     let listener = TcpListener::bind(("0.0.0.0", PORT)).or_else(|_| TcpListener::bind(("0.0.0.0", 0))).map_err(|e| format!("The app couldn't listen on the network: {e}"))?;
@@ -105,7 +120,7 @@ pub fn remote_start(app: AppHandle) -> Result<RemoteInfo, String> {
             }
         });
     }
-    let out = info(&url)?;
+    let out = info_with_stage(&url)?;
     *running = Some(Running { stop, url, shown });
     Ok(out)
 }
@@ -170,8 +185,9 @@ fn reply(s: &mut TcpStream, status: u16, kind: &str, body: &str) -> Result<(), S
     };
     write!(
         s,
-        "HTTP/1.1 {status} {reason}\r\nContent-Type: {kind}\r\nContent-Length: {}\r\nCache-Control: no-store\r\nReferrer-Policy: no-referrer\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n",
-        body.len()
+        "HTTP/1.1 {status} {reason}\r\nContent-Type: {kind}\r\nContent-Length: {}\r\nCache-Control: no-store\r\nReferrer-Policy: no-referrer\r\nX-Content-Type-Options: nosniff\r\nX-Server-Time: {}\r\nConnection: close\r\n\r\n",
+        body.len(),
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0)
     )
     .map_err(err)?;
     s.write_all(body.as_bytes()).map_err(err)?;
@@ -205,6 +221,8 @@ fn serve(on_key: &dyn Fn(&'static str), mut s: TcpStream, code: &str, shown: &Mu
         reply(&mut s, 413, "text/plain; charset=utf-8", "Too large.")?;
     } else if method == "GET" && (path == base || path == format!("{base}/")) {
         reply(&mut s, 200, "text/html; charset=utf-8", PAGE)?;
+    } else if method == "GET" && (path == format!("{base}/stage") || path == format!("{base}/stage/")) {
+        reply(&mut s, 200, "text/html; charset=utf-8", STAGE)?;
     } else if method == "GET" && path == format!("{base}/state") {
         let json = shown.lock().map(|j| j.clone()).unwrap_or_default();
         let json = if json.is_empty() { r#"{"idle":true}"#.to_string() } else { json };
@@ -250,6 +268,9 @@ mod tests {
         assert_ne!(a, b);
         let i = info("http://192.168.1.20:47811/r/abcdef123456").unwrap();
         assert!(i.on && i.qr_svg.contains("<svg") && i.qr_svg.contains("</svg>"));
+        let s = info_with_stage("http://192.168.1.20:47811/r/abcdef123456").unwrap();
+        assert_eq!(s.stage_url.as_deref(), Some("http://192.168.1.20:47811/r/abcdef123456/stage"));
+        assert!(s.stage_qr_svg.unwrap().contains("<svg"));
     }
 
     /// The real server code answers real requests on this computer: the page, the state, a button, and nothing for a wrong code.
@@ -261,7 +282,7 @@ mod tests {
         let keys = Arc::new(Mutex::new(Vec::<&'static str>::new()));
         let (shown2, keys2) = (shown.clone(), keys.clone());
         let server = std::thread::spawn(move || {
-            for _ in 0..7 {
+            for _ in 0..9 {
                 let (s, _) = listener.accept().unwrap();
                 serve(&|k| keys2.lock().unwrap().push(k), s, "abc123", &shown2).unwrap();
             }
@@ -296,6 +317,14 @@ Host: x
         assert!(post("/r/abc123/key", r#"{"k":"next"}"#).starts_with("HTTP/1.1 200"));
         assert!(post("/r/abc123/key", r#"{"k":"Delete"}"#).starts_with("HTTP/1.1 400"));
         assert!(post("/r/zzz/key", r#"{"k":"back"}"#).starts_with("HTTP/1.1 404"), "a wrong code opens nothing");
+        let stage = ask("GET /r/abc123/stage HTTP/1.1
+Host: x
+
+");
+        assert!(stage.starts_with("HTTP/1.1 200") && stage.contains("Stage view") && stage.contains("Your notes") && stage.contains("X-Server-Time: "), "{stage}");
+        assert!(ask("GET /r/zzz/stage HTTP/1.1
+
+").starts_with("HTTP/1.1 404"), "the stage view needs the code too");
         assert!(ask("GET /r/zzz HTTP/1.1
 
 ").starts_with("HTTP/1.1 404"));

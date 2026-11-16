@@ -8,6 +8,7 @@ pub mod firsts;
 mod genealogy;
 pub mod library;
 mod lan;
+mod follow;
 mod remote;
 mod library_commands;
 mod logging;
@@ -218,6 +219,7 @@ pub fn run() {
             // the phone over the home Wi-Fi, if the reader turned it on
             app.manage(lan::LanState::default());
             app.manage(remote::RemoteState::default());
+            app.manage(follow::FollowState::default());
             app.manage(factory_phone::PhoneShareState::default());
             lan::start_if_on(app.handle());
             app.manage(voice::VoiceState::default());
@@ -354,6 +356,9 @@ pub fn run() {
             remote::remote_start,
             remote::remote_stop,
             remote::remote_state,
+            follow::follow_start,
+            follow::follow_stop,
+            follow::follow_state,
             study_commands::sermon_templates,
             study_commands::sermon_template_save,
             study_commands::sermon_template_delete,

@@ -47,6 +47,19 @@ export function PhoneRemote({ info, busy, error, onStart, onStop, onClose }: Pro
             <p className="muted remote-url">
               Or type this into the phone's browser: <code>{info.url}</code>
             </p>
+            {info.stage_url && (
+              <details className="remote-stage">
+                <summary>The pastor's stage view, for a tablet</summary>
+                <p>
+                  A page for a tablet or a second phone on the platform: the slide and the next one large, your notes, the clock and a timer, with Back, Black and Next.
+                  It is for you only (the notes show), so keep this code to yourself.
+                </p>
+                {info.stage_qr_svg && <div className="remote-qr" dangerouslySetInnerHTML={{ __html: info.stage_qr_svg }} aria-label="QR code for the stage view" role="img" />}
+                <p className="muted remote-url">
+                  Or type: <code>{info.stage_url}</code>
+                </p>
+              </details>
+            )}
             <details className="muted">
               <summary>It won't open on the phone</summary>
               <ul>

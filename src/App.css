@@ -10921,3 +10921,12 @@ body.show-body {
   cursor: pointer;
   font-weight: 600;
 }
+
+.remote-stage {
+  margin: 0.5rem 0;
+}
+
+.remote-stage summary {
+  cursor: pointer;
+  font-weight: 600;
+}
