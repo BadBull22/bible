@@ -3,6 +3,7 @@ import { api, Deck, SongRow } from "../api";
 import { bestHit, clearNew, loadList, makeSongsFile, mergeChart, normTitle, readSongsFile, saveList, StoredSong, toTopSongs, TopSong } from "../worshipTop100";
 import type { SlideSpec } from "../sermonOutputs";
 import { parseSong, parseSongFile, SongData, songSlides, songText } from "../songs";
+import { parseOpenSong } from "../opensong";
 import { CloseIcon } from "./icons";
 import { backdrop } from "../backdrop";
 import { confirmAsk } from "../confirm";
@@ -563,6 +564,34 @@ export function SongSidebar({ onAdd, onArrange }: { onAdd: (slides: SlideSpec[],
   const [added, setAdded] = useState<Record<number, number>>({});
   const [top, setTop] = useState(false);
   const fileIn = useRef<HTMLInputElement>(null);
+  const openSongIn = useRef<HTMLInputElement>(null);
+  const openSongDir = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState<string | null>(null);
+
+  /** Songs from OpenSong files (a few files, or a whole folder of them): each one that is a song is kept; the others are counted and left. A song with the same title and writer is updated, not doubled. */
+  const importOpenSong = async (files: File[]) => {
+    setError(null);
+    let kept = 0;
+    let skipped = 0;
+    const MAX = 5000;
+    for (const [i, f] of files.slice(0, MAX).entries()) {
+      setImporting(`Reading song ${i + 1} of ${Math.min(files.length, MAX)}…`);
+      try {
+        // a song file is small; anything big is not one. (An OpenSong file has no ending, or .xml; its name is the title.)
+        if (f.size > 1_000_000) throw new Error("too large");
+        const song = parseOpenSong(await f.text(), f.name.replace(/\.[^.]+$/, ""));
+        if (!song) throw new Error("not a song");
+        await api.songSave(rowOf(song));
+        kept++;
+      } catch {
+        skipped++;
+      }
+    }
+    setImporting(null);
+    void load("");
+    setNote(`${kept} song${kept === 1 ? "" : "s"} added from OpenSong${skipped ? `; ${skipped} file${skipped === 1 ? " was" : "s were"} not a song and left out` : ""}${files.length > MAX ? `; only the first ${MAX} were read` : ""}.`);
+    window.setTimeout(() => setNote(null), 12000);
+  };
 
   /** Every saved song in one file, to copy to another computer (the church's): the words go with it, nothing is put in the app. */
   const exportSongs = async () => {
@@ -698,6 +727,38 @@ export function SongSidebar({ onAdd, onArrange }: { onAdd: (slides: SlideSpec[],
             Songs from a file…
           </button>
         </span>
+        <span className="song-side-files">
+          <button className="text-btn" onClick={() => openSongIn.current?.click()} disabled={!!importing} title="Adds songs from OpenSong files (the church's own songs: nothing is added unless you choose it)">
+            OpenSong songs…
+          </button>
+          <button className="text-btn" onClick={() => openSongDir.current?.click()} disabled={!!importing} title="Adds every OpenSong song in a folder (its Songs folder, say)">
+            An OpenSong folder…
+          </button>
+        </span>
+        {importing && <span className="muted">{importing}</span>}
+        <input
+          ref={openSongIn}
+          type="file"
+          multiple
+          hidden
+          onChange={(e) => {
+            const fs = [...(e.target.files ?? [])];
+            e.target.value = "";
+            if (fs.length) void importOpenSong(fs);
+          }}
+        />
+        <input
+          ref={openSongDir}
+          type="file"
+          multiple
+          hidden
+          {...({ webkitdirectory: "" } as object)}
+          onChange={(e) => {
+            const fs = [...(e.target.files ?? [])];
+            e.target.value = "";
+            if (fs.length) void importOpenSong(fs);
+          }}
+        />
         <input
           ref={fileIn}
           type="file"
