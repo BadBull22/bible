@@ -899,6 +899,12 @@ const SECTIONS: Section[] = [
           Black, a video playing, or adding a slide pauses the timer, and a video, music or countdown slide waits for you unless it has a time of its own.
         </p>
         <p>
+          <strong>Songs from OpenSong.</strong> If your church kept its songs in OpenSong, open the Music page and choose <strong>OpenSong songs…</strong>
+          (pick some song files) or <strong>An OpenSong folder…</strong> (pick its Songs folder). Each song is added to your saved songs with its parts, the order
+          to sing them in, the writer and the CCLI number; chord lines are left out. A file that is not a song is skipped and counted. These are your church's
+          own songs: nothing is added unless you choose it, and a song with the same title and writer is updated, not doubled.
+        </p>
+        <p>
           <strong>The pastor's stage view.</strong> In the presenter, <strong>Phone remote</strong> now also offers <strong>The pastor's stage view, for a tablet</strong>.
           Open its address on a tablet or a second phone on the same Wi-Fi: the slide and the next one are large, with your notes, the clock, a timer
           and Back, Black and Next buttons. It is for you only (your notes show), so do not share its code.
