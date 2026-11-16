@@ -3,9 +3,11 @@
 // for a photograph (credited automatically), and the reader's own picture. The grid sits beside the preview, so a click shows at once.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { api, PictureInfo } from "../api";
 import { PHOTO_IDEAS, searchCommons, type CommonsPhoto } from "../factory/commons";
 import { shrinkPhoto } from "../factory/logo";
+import { filterPaintings, isSmallPicture, paintingBooks, paintingCredit, paintingsTabLabel } from "../factory/paintings";
 import { Segmented } from "./FactoryParts";
 
 export interface NaturePhoto {
@@ -34,53 +36,39 @@ interface Props {
   onGetChristian: () => void;
   onChristian: (b: NaturePhoto) => void;
   onMine: (file: File) => void;
+  /** the book names in Bible order, for the book chooser of the paintings */
+  bookOrder?: string[];
+  /** open Explore, Pictures (to download the painting collections) */
+  onOpenPictures?: () => void;
 }
 
 type Source = "nature" | "christian" | "paintings" | "online" | "mine";
 
-/** the credit a Bible painting's licence asks for (public domain needs none) */
-function paintingCredit(p: PictureInfo): string {
-  if (/public domain|^pd\b|cc0/i.test(p.licence)) return "";
-  return `Picture: ${p.title}, ${p.artist ? `${p.artist}, ` : ""}${p.licence}`.slice(0, 150);
-}
-
-export function FactoryPhotos({ chapter, onPick, nature, latest, natureBusy, onGetNature, onNature, christian, christianInfo, christianBusy, onGetChristian, onChristian, onMine }: Props) {
+export function FactoryPhotos({ chapter, onPick, nature, latest, natureBusy, onGetNature, onNature, christian, christianInfo, christianBusy, onGetChristian, onChristian, onMine, bookOrder, onOpenPictures }: Props) {
   const [source, setSource] = useState<Source>("nature");
-  const [paintings, setPaintings] = useState<PictureInfo[] | null>(null);
-  const [thumbs, setThumbs] = useState<Record<string, string>>({});
+  const [paintingTotal, setPaintingTotal] = useState(0);
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<CommonsPhoto[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setPaintings(null);
-    if (!chapter) return;
-    api
-      .picturesForChapter(chapter.book, chapter.chapter)
-      .then((r) => setPaintings(r.pictures.filter((p) => p.downloaded)))
-      .catch(() => setPaintings([]));
-  }, [chapter?.book, chapter?.chapter]); // eslint-disable-line react-hooks/exhaustive-deps
-
+  // how many paintings are downloaded in all (for the tab's label); asked again when a collection is added or removed
   useEffect(() => {
     let live = true;
-    const made: string[] = [];
-    (async () => {
-      for (const p of (paintings ?? []).slice(0, 48)) {
-        try {
-          const u = URL.createObjectURL(new Blob([await api.pictureBytes(p.id)]));
-          made.push(u);
-          if (live) setThumbs((m) => ({ ...m, [p.id]: u }));
-        } catch {
-          /* skip */
-        }
-      }
-    })();
+    const count = () =>
+      api
+        .picturesCollections()
+        .then((cs) => live && setPaintingTotal(cs.reduce((n, c) => n + c.downloaded, 0)))
+        .catch(() => undefined);
+    void count();
+    const un = listen("pictures-changed", () => void count());
+    window.addEventListener("focus", count);
     return () => {
       live = false;
-      made.forEach((u) => URL.revokeObjectURL(u));
+      window.removeEventListener("focus", count);
+      void un.then((f) => f());
     };
-  }, [paintings]);
+  }, []);
 
   const search = async (q: string) => {
     if (!q.trim()) return;
@@ -109,7 +97,6 @@ export function FactoryPhotos({ chapter, onPick, nature, latest, natureBusy, onG
     }
   };
 
-  const nPaint = paintings?.length ?? 0;
   return (
     <div className="fx-photos">
       <Segmented
@@ -119,7 +106,7 @@ export function FactoryPhotos({ chapter, onPick, nature, latest, natureBusy, onG
         options={[
           { id: "nature", label: nature && nature.length ? `Nature (${nature.length})` : "Nature" },
           { id: "christian", label: christian && christian.length ? `Christian (${christian.length})` : "Christian" },
-          { id: "paintings", label: nPaint ? `Paintings (${nPaint})` : "Paintings", disabled: !chapter || nPaint === 0, title: chapter ? (nPaint ? undefined : "No Bible paintings are downloaded for this chapter (Explore, Pictures)") : "Paintings go with a verse from the Bible" },
+          { id: "paintings", label: paintingsTabLabel(paintingTotal), title: "Every Bible painting downloaded in Explore, Pictures" },
           { id: "online", label: "Online" },
           { id: "mine", label: "Mine" },
         ]}
@@ -167,20 +154,7 @@ export function FactoryPhotos({ chapter, onPick, nature, latest, natureBusy, onG
         </>
       )}
 
-      {source === "paintings" && chapter && nPaint > 0 && (
-        <>
-          <p className="muted fx-hint">
-            Paintings for {chapter.book === "Psalms" ? "Psalm" : chapter.book} {chapter.chapter}. Click one to put it behind the words.
-          </p>
-          <div className="fx-grid">
-            {paintings!.slice(0, 48).map((p) => (
-              <button key={p.id} type="button" title={`${p.title}${p.artist ? `, ${p.artist}` : ""}`} onClick={() => void api.pictureBytes(p.id).then((b) => onPick(new Blob([b]), paintingCredit(p)))}>
-                {thumbs[p.id] ? <img src={thumbs[p.id]} alt={p.title} /> : <span className="muted">…</span>}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      {source === "paintings" && <PaintingsTab chapter={chapter} onPick={onPick} bookOrder={bookOrder ?? []} onOpenPictures={onOpenPictures} />}
 
       {source === "online" && (
         <>
@@ -231,6 +205,191 @@ export function FactoryPhotos({ chapter, onPick, nature, latest, natureBusy, onG
 
       {source === "mine" && <MyPictures onPick={onPick} onOne={onMine} />}
     </div>
+  );
+}
+
+/** small copies of the paintings, kept for the visit so that going back to the tab does not load them again */
+const paintingThumbs = new Map<string, string>();
+
+/** One painting as a little picture, made when it scrolls into view (the big file is read, shrunk and let go). */
+function PaintingThumb({ p }: { p: PictureInfo }) {
+  const [url, setUrl] = useState<string | null>(paintingThumbs.get(p.id) ?? null);
+  const box = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (url) return;
+    const el = box.current;
+    let live = true;
+    const load = async () => {
+      try {
+        const bmp = await createImageBitmap(new Blob([await api.pictureBytes(p.id)]), { resizeWidth: 280, resizeQuality: "medium" });
+        const c = document.createElement("canvas");
+        c.width = bmp.width;
+        c.height = bmp.height;
+        c.getContext("2d")!.drawImage(bmp, 0, 0);
+        bmp.close();
+        const blob = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", 0.8));
+        if (blob && live) {
+          const u = URL.createObjectURL(blob);
+          paintingThumbs.set(p.id, u);
+          setUrl(u);
+        }
+      } catch {
+        /* a picture that cannot be read stays a blank tile */
+      }
+    };
+    if (!el || typeof IntersectionObserver === "undefined") {
+      void load();
+      return () => {
+        live = false;
+      };
+    }
+    const io = new IntersectionObserver((es) => es.some((e) => e.isIntersecting) && (io.disconnect(), void load()), { rootMargin: "160px" });
+    io.observe(el);
+    return () => {
+      live = false;
+      io.disconnect();
+    };
+  }, [p.id, url]);
+  return <span ref={box}>{url ? <img src={url} alt={p.title} /> : <span className="muted">…</span>}</span>;
+}
+
+const PAINT_PAGE = 60;
+
+/** The "Paintings" tab: the paintings that go with this passage first, then everything downloaded in Explore, Pictures, with a collection, a book and a search by words. */
+function PaintingsTab({ chapter, onPick, bookOrder, onOpenPictures }: { chapter: { book: string; chapter: number } | null; onPick: (blob: Blob, credit: string) => Promise<void>; bookOrder: string[]; onOpenPictures?: () => void }) {
+  const [all, setAll] = useState<PictureInfo[] | null>(null);
+  const [collections, setCollections] = useState<{ key: string; title: string; downloaded: number; count: number }[]>([]);
+  const [forChapter, setForChapter] = useState<PictureInfo[]>([]);
+  const [collection, setCollection] = useState("");
+  const [book, setBook] = useState("");
+  const [query, setQuery] = useState("");
+  const [shown, setShown] = useState(PAINT_PAGE);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const cs = await api.picturesCollections();
+      setCollections(cs.map((c) => ({ key: c.key, title: c.title, downloaded: c.downloaded, count: c.count })));
+      const lists = await Promise.all(cs.filter((c) => c.downloaded > 0).map((c) => api.picturesGallery(c.key, 0, 100000).then(([items]) => items)));
+      setAll(lists.flat());
+    } catch {
+      setAll([]);
+    }
+  }, []);
+  useEffect(() => {
+    void load();
+    const un = listen("pictures-changed", () => void load());
+    return () => void un.then((f) => f());
+  }, [load]);
+
+  useEffect(() => {
+    setForChapter([]);
+    if (!chapter) return;
+    let live = true;
+    api
+      .picturesForChapter(chapter.book, chapter.chapter)
+      .then((r) => live && setForChapter(r.pictures.filter((p) => p.downloaded)))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [chapter?.book, chapter?.chapter]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => setShown(PAINT_PAGE), [collection, book, query]);
+
+  const books = useMemo(() => paintingBooks(all ?? [], bookOrder), [all, bookOrder]);
+  const list = useMemo(() => filterPaintings(all ?? [], { collection, book, query }), [all, collection, book, query]);
+  const missing = collections.filter((c) => c.downloaded > 0 && c.downloaded < c.count).reduce((n, c) => n + c.count - c.downloaded, 0);
+
+  const pick = async (p: PictureInfo) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await onPick(new Blob([await api.pictureBytes(p.id)]), paintingCredit(p));
+    } catch {
+      setError("That painting could not be opened.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const tile = (p: PictureInfo) => (
+    <button key={p.id} type="button" title={`${p.title}${p.artist ? `, ${p.artist}` : ""}${paintingCredit(p) ? " (a credit line goes on the picture)" : ""}${isSmallPicture(p) ? ". A small picture: it may look soft in a tall size." : ""}`} onClick={() => void pick(p)} disabled={busy}>
+      <PaintingThumb p={p} />
+      {isSmallPicture(p) && <span className="fx-small-badge">small</span>}
+    </button>
+  );
+
+  if (all === null) return <p className="muted fx-hint">Looking for your paintings…</p>;
+  if (all.length === 0)
+    return (
+      <div className="fx-offer">
+        <p className="muted">No Bible paintings are downloaded yet. James Tissot, Gustave Doré and Sweet Publishing are free collections you can fetch once in Explore, Pictures.</p>
+        {onOpenPictures && (
+          <button type="button" className="pill-btn" onClick={onOpenPictures}>
+            Get the painting collections
+          </button>
+        )}
+      </div>
+    );
+
+  return (
+    <>
+      {forChapter.length > 0 && chapter && (
+        <>
+          <p className="muted fx-hint">
+            For {chapter.book === "Psalms" ? "Psalm" : chapter.book} {chapter.chapter}:
+          </p>
+          <div className="fx-grid">{forChapter.slice(0, 12).map(tile)}</div>
+        </>
+      )}
+      <div className="fx-pickrow">
+        <label className="fx-inline-field">
+          <span>From</span>
+          <select value={collection} onChange={(e) => setCollection(e.target.value)} aria-label="Which collection of paintings">
+            <option value="">All collections</option>
+            {collections
+              .filter((c) => c.downloaded > 0)
+              .map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.title.replace(/ — .*$/, "")} ({c.downloaded})
+                </option>
+              ))}
+          </select>
+        </label>
+        <label className="fx-inline-field">
+          <span>Book</span>
+          <select value={book} onChange={(e) => setBook(e.target.value)} aria-label="Which book of the Bible">
+            <option value="">Any book</option>
+            {books.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Find one by words, e.g. manger, Moses, Psalms 23" aria-label="Find a painting by words" />
+      <p className="muted fx-hint">
+        {list.length.toLocaleString("en-US")} painting{list.length === 1 ? "" : "s"}. Click one to put it behind the words. Sweet Publishing and the Tissot Old Testament scans need a credit, so a small line is added to the picture.
+      </p>
+      {error && <p className="status-error">{error}</p>}
+      <div className="fx-grid">{list.slice(0, shown).map(tile)}</div>
+      {list.length > shown && (
+        <button type="button" className="outline-btn fx-small" onClick={() => setShown((n) => n + PAINT_PAGE)}>
+          Show more ({(list.length - shown).toLocaleString("en-US")} left)
+        </button>
+      )}
+      {missing > 0 && onOpenPictures && (
+        <p className="muted fx-hint">
+          {missing.toLocaleString("en-US")} more in these collections are not downloaded.{" "}
+          <button type="button" className="link-btn" onClick={onOpenPictures}>
+            Get them
+          </button>
+        </p>
+      )}
+    </>
   );
 }
 

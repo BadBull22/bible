@@ -953,7 +953,7 @@ const SECTIONS: Section[] = [
         <p>
           <strong>Changing a picture:</strong> edit the words, the layout, the letters, the size, the darkening and the colours; in the Photos tool put a picture
           behind the words: one of the 331 nature photos, one of the 55 Christian pictures (crosses, prayer, worship, stained glass, the Bible, Christmas; each is a small optional
-          download of its own, from Unsplash, free to use), a Bible painting that goes with the passage, a photograph found online (Wikimedia Commons:
+          download of its own, from Unsplash, free to use), a Bible painting (<strong>Paintings</strong> opens every Tissot, Doré and Sweet Publishing picture you have downloaded in Explore → Pictures: choose a collection or a book, or find one by words; Sweet Publishing and the Tissot Old Testament scans need a credit, so a small line is added to the picture for you), a photograph found online (Wikimedia Commons:
           only public domain, CC0, CC BY and CC BY-SA, with the credit put on the picture for you), or one of your own. <strong>Mine</strong> keeps a folder of your own
           pictures (Documents → Bible Concordance → Content Factory → My pictures): <strong>Add pictures…</strong> takes photos you downloaded (from Unsplash,
           Pexels or Pixabay, which allow free use, or any you took yourself) and makes large ones a sensible size; click one to put it behind the words. Check the
