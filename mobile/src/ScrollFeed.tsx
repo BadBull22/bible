@@ -12,6 +12,7 @@ import { BIBLE_AUTHORS } from "../../src/bibleAuthors";
 import { PASSAGES } from "./votd";
 import verseCardsOne from "../data/daily_scroll_verse_cards.json";
 import verseCardsTwo from "../data/daily_scroll_verse_cards_batch2.json";
+import firstsFile from "../../src-tauri/resources/firsts.json";
 import { buildDeck, buildPool, dayNumber, hashOf, kindLabel, remember, trimWords, type Card, type History, type Sources } from "./dailyScroll";
 import { LOOKS, quickPicture } from "./VersePicture";
 
@@ -88,6 +89,7 @@ function sources(): Sources {
     stories: STORIES.map((s) => ({ id: s.id, title: s.title, summary: s.summary })),
     authors: BIBLE_AUTHORS.map((a) => ({ name: a.name, note: a.note, books: a.books })),
     children: CHILDREN.map((c) => ({ id: c.id, title: c.title, memory: c.memory })),
+    facts: (firstsFile as { entries: { id: string; category: string; question: string; answer: string; citations: string[] }[] }).entries,
   };
 }
 
@@ -178,7 +180,7 @@ function CardView({ card, version, photos, root, onShare, onOpen, say, fail }: {
   const long = (bigText?.length ?? 0) > 230;
   // Quick share and Save make the picture at once with the reader's saved choices; Edit opens the studio
   const [busy, setBusy] = useState(false);
-  const label = ref ? `${card.ref} · ${shownIn}` : (card.title ?? "");
+  const label = ref ? `${card.ref} · ${shownIn}` : card.kind === "fact" ? (card.note ?? card.title ?? "") : (card.title ?? "");
   const make = () => quickPicture({ text: bigText ?? "", label, photoUrl: photo?.url ?? null, lookIndex: hashOf(card.id) });
   async function quick(action: "share" | "save") {
     setBusy(true);
@@ -194,13 +196,17 @@ function CardView({ card, version, photos, root, onShare, onOpen, say, fail }: {
   }
   const edit = () => {
     if (ref) onShare({ book: ref.book, chapter: ref.chapter, first: ref.verse, last: ref.verseEnd, text: bigText ?? "", start: photo ? { pack: photo.pack, id: photo.id } : null });
-    else onShare({ book: "", chapter: 0, first: 0, last: 0, text: card.text ?? "", free: { label: card.title ?? "", text: card.text ?? "" }, start: photo ? { pack: photo.pack, id: photo.id } : null });
+    else onShare({ book: "", chapter: 0, first: 0, last: 0, text: card.text ?? "", free: { label: card.kind === "fact" ? (card.note ?? card.title ?? "") : (card.title ?? ""), text: card.text ?? "" }, start: photo ? { pack: photo.pack, id: photo.id } : null });
   };
   const open = () => {
     if (card.kind === "story" && card.open) onOpen({ to: "story", id: card.open });
     else if (card.kind === "author" && card.open) onOpen({ to: "author", name: card.open });
     else if (card.kind === "topic" && card.open) onOpen({ to: "topic", id: card.open });
     else if (card.kind === "memory" && card.open) onOpen({ to: "children", id: card.open });
+    else if (card.kind === "fact") {
+      const r = card.open ? parseRef(card.open) : null;
+      if (r) onOpen({ to: "passage", book: r.book, chapter: r.chapter, verse: r.verse });
+    }
     else if (ref) onOpen({ to: "passage", book: ref.book, chapter: ref.chapter, verse: ref.verse });
   };
   const hasWords = !!bigText;
@@ -225,7 +231,7 @@ function CardView({ card, version, photos, root, onShare, onOpen, say, fail }: {
         {card.note && <p className="scroll-note">{card.note}</p>}
       </div>
       <div className="scroll-actions">
-        <button className="scroll-open" onClick={open}>
+        <button className="scroll-open" onClick={open} hidden={card.kind === "fact" && !card.open}>
           {card.kind === "story" ? "Read the story ›" : card.kind === "author" ? "About the writer ›" : card.kind === "topic" ? "More on this ›" : card.kind === "memory" ? "The children's page ›" : "Read it in the Bible ›"}
         </button>
         <div>
