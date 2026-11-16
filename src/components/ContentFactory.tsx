@@ -37,6 +37,8 @@ interface Props {
   versions: Version[];
   chapterCounts: Record<string, number>;
   onClose: () => void;
+  /** open Explore, Pictures (to download the painting collections) */
+  onOpenPictures?: () => void;
 }
 
 const bytesOf = async (b: Blob) => new Uint8Array(await b.arrayBuffer());
@@ -58,7 +60,7 @@ const creditOf = (card: Card): Credit | null => {
   return t ? { text: t } : null;
 };
 
-export function ContentFactory({ books, versions, chapterCounts, onClose }: Props) {
+export function ContentFactory({ books, versions, chapterCounts, onClose, onOpenPictures }: Props) {
   const [settings, setSettings] = useState(loadSettings);
   const update = useCallback((s: typeof settings) => {
     setSettings(s);
@@ -498,6 +500,8 @@ export function ContentFactory({ books, versions, chapterCounts, onClose }: Prop
       setError("That picture could not be opened.");
     }
   };
+
+  const bookNames = useMemo(() => [...books].sort((a, b) => a.order_index - b.order_index).map((b) => b.name), [books]);
 
   /** the chapter of the picture on show, when it is Scripture (to offer the paintings that go with it) */
   const cardChapter = useMemo(() => {
@@ -1169,7 +1173,7 @@ export function ContentFactory({ books, versions, chapterCounts, onClose }: Prop
         </div>
       )}
     <div className="fx-span">
-      <FactoryPhotos chapter={cardChapter} onPick={usePicture} nature={nature} latest={latest} natureBusy={natureBusy} onGetNature={() => void getNature()} onNature={(b) => void useNature(b)} christian={christian} christianInfo={christianInfo} christianBusy={christianBusy} onGetChristian={() => void getChristian()} onChristian={(b) => void useChristian(b)} onMine={(f) => void useMine(f)} />
+      <FactoryPhotos chapter={cardChapter} onPick={usePicture} nature={nature} latest={latest} natureBusy={natureBusy} onGetNature={() => void getNature()} onNature={(b) => void useNature(b)} christian={christian} christianInfo={christianInfo} christianBusy={christianBusy} onGetChristian={() => void getChristian()} onChristian={(b) => void useChristian(b)} onMine={(f) => void useMine(f)} bookOrder={bookNames} onOpenPictures={onOpenPictures} />
     </div>
     </>
   );

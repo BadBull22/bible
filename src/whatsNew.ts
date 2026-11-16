@@ -8,6 +8,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: "3.1.1",
+    items: [
+      "Content Factory > Photos > Paintings now opens every Bible painting you have downloaded (James Tissot, Gustave Doré, Sweet Publishing) to put behind the words, not only the ones for the verse on show. Choose a collection or a book, or find a painting by words. The credit line a licence asks for is added to the picture for you.",
+    ],
+  },
+  {
     version: "3.1.0",
     items: [
       "Concordance (Reference menu): type a word and see how many times it is used in every book of the Bible, with the Old and New Testament totals. Tap a book to read its verses with the word marked. “And its forms” counts believe, believes, believed and believing together.",

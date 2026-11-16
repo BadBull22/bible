@@ -7,6 +7,7 @@ import { giveBack, inOrder, setStatus, tidy, waiting, type Post } from "../src/f
 import { SEASON_VERSES, SERIES_ORDER } from "../src/factory/seasonVerses.ts";
 import { dayNumber, occasionOn } from "../src/themes/themeCalendar.ts";
 import { acceptable, creditLine, needsCredit } from "../src/factory/commons.ts";
+import { filterPaintings, isSmallPicture, paintingBooks, paintingCredit, paintingNeedsCredit, paintingsTabLabel, type PaintingLike } from "../src/factory/paintings.ts";
 import { quoted, tidyQuotes } from "../src/factory/text.ts";
 import { SIZES } from "../src/factory/types.ts";
 import { groupFiles, projectCount, projectName } from "../src/factory/gallery.ts";
@@ -428,4 +429,38 @@ assert.equal(creditLine("<a href='x'>Jane Smith</a>", "CC BY-SA 4.0"), "Photo: J
 assert.equal(creditLine("", "CC BY 2.0"), "Photo: CC BY 2.0, Wikimedia Commons");
 assert.equal(creditLine("Original: Sri Chakra Pranav Derivative work: UnpetitproleX", "CC BY-SA 4.0"), "Photo: Sri Chakra Pranav, CC BY-SA 4.0, Wikimedia Commons", "long artist notes are cut down");
 assert.equal(creditLine("Jane", "CC0"), "", "no credit line for CC0");
+// ---- paintings: the credit each collection's licence asks for
+const dore = { title: "The Creation of Light", artist: "Gustave Doré", licence: "Public domain" };
+const tissotNt = { title: "The Flight into Egypt", artist: "James Tissot", licence: "Public domain" };
+const tissotOt = { title: "Moses Sees the Promised Land", artist: "James Tissot (published 1904)", licence: "Public domain artwork; scans by Phillip Medhurst (CC BY-SA)" };
+const sweet = { title: "1 Chronicles 10 \u00b7 picture 1", artist: "Jim Padgett, Sweet Publishing", licence: "CC BY-SA 3.0" };
+assert.equal(paintingCredit(dore), "", "Doré is public domain: no credit");
+assert.equal(paintingCredit(tissotNt), "", "Tissot New Testament is public domain: no credit");
+assert.equal(paintingCredit(sweet), "Picture: Jim Padgett, Sweet Publishing, CC BY-SA 3.0", "Sweet Publishing always carries its credit and licence");
+assert.match(paintingCredit(tissotOt), /Phillip Medhurst/, "the Tissot Old Testament scans are CC BY-SA, even though the art is public domain");
+assert.match(paintingCredit(tissotOt), /CC BY-SA/);
+assert.ok(!/published 1904/.test(paintingCredit(tissotOt)));
+for (const p of [tissotOt, sweet, { ...sweet, title: "x".repeat(400) }, { ...sweet, artist: "y".repeat(120) }]) {
+  const c = paintingCredit(p);
+  assert.ok(c.length > 0 && c.length <= 150, "a credit is never empty and never longer than 150 characters");
+  assert.ok(/CC BY-SA/.test(c) || p.artist.length > 100, "the licence stays in the line");
+}
+assert.ok(paintingNeedsCredit("CC BY 4.0") && paintingNeedsCredit("cc by-sa 3.0") && !paintingNeedsCredit("Public domain") && !paintingNeedsCredit("CC0"));
+assert.equal(paintingCredit({ ...dore, title: "A" }), "");
+// ---- paintings: the list, the filter and the labels
+const pmk = (id: string, c: string, title: string, book: string, ch: number, w = 1280, h = 1100): PaintingLike => ({ id, c, title, refs: [[book, ch, null, null]], w, h, artist: "", licence: "" });
+const lib = [pmk("a", "dore", "The Creation of Light", "Genesis", 1), pmk("b", "tissot-nt", "The Magi Journeying", "Matthew", 2, 512, 700), pmk("c", "sweet", "Psalms 23 \u00b7 picture 1", "Psalms", 23), pmk("d", "sweet", "Genesis 1 \u00b7 picture 2", "Genesis", 1)];
+assert.equal(filterPaintings(lib, {}).length, 4);
+assert.deepEqual(filterPaintings(lib, { collection: "sweet" }).map((p) => p.id), ["c", "d"]);
+assert.deepEqual(filterPaintings(lib, { book: "Genesis" }).map((p) => p.id), ["a", "d"]);
+assert.deepEqual(filterPaintings(lib, { collection: "sweet", book: "Genesis" }).map((p) => p.id), ["d"]);
+assert.deepEqual(filterPaintings(lib, { query: "  magi " }).map((p) => p.id), ["b"]);
+assert.deepEqual(filterPaintings(lib, { query: "psalms 23" }).map((p) => p.id), ["c"]);
+assert.deepEqual(filterPaintings(lib, { query: "creation genesis" }).map((p) => p.id), ["a"], "every word must match, in the title or the book");
+assert.equal(filterPaintings(lib, { query: "zebra" }).length, 0);
+assert.deepEqual(paintingBooks(lib, ["Genesis", "Psalms", "Matthew"]), ["Genesis", "Psalms", "Matthew"], "books in Bible order");
+assert.deepEqual(paintingBooks(lib, []), ["Genesis", "Matthew", "Psalms"], "without an order, A to Z");
+assert.ok(isSmallPicture(lib[1]) && !isSmallPicture(lib[0]) && !isSmallPicture({ w: 0, h: 0 }), "a short side under 1,000 pixels is small; unknown sizes are not flagged");
+assert.equal(paintingsTabLabel(0), "Paintings");
+assert.equal(paintingsTabLabel(3251), "Paintings (3,251)");
 console.log("factory: all checks passed");
