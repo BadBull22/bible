@@ -9,6 +9,7 @@ mod genealogy;
 pub mod library;
 mod lan;
 mod follow;
+pub mod semantic;
 mod remote;
 mod library_commands;
 mod logging;
@@ -220,6 +221,12 @@ pub fn run() {
             app.manage(lan::LanState::default());
             app.manage(remote::RemoteState::default());
             app.manage(follow::FollowState::default());
+            // the meanings of the words (Hebrew and Greek): read the first time they are asked for
+            let semantic_path = app
+                .path()
+                .resolve("resources/semantic_domains.json", tauri::path::BaseDirectory::Resource)
+                .unwrap_or_else(|_| std::path::PathBuf::from("semantic_domains.json"));
+            app.manage(semantic::SemanticState::new(semantic_path));
             app.manage(factory_phone::PhoneShareState::default());
             lan::start_if_on(app.handle());
             app.manage(voice::VoiceState::default());
@@ -359,6 +366,13 @@ pub fn run() {
             follow::follow_start,
             follow::follow_stop,
             follow::follow_state,
+            semantic::semantic_tree,
+            semantic::semantic_words,
+            semantic::semantic_concordance,
+            semantic::semantic_hits,
+            semantic::semantic_word_meanings,
+            semantic::strongs_concordance,
+            semantic::strongs_verses,
             study_commands::sermon_templates,
             study_commands::sermon_template_save,
             study_commands::sermon_template_delete,
