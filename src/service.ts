@@ -6,6 +6,7 @@ import { api, Deck, DeckKind, SavedSermon } from "./api";
 import type { SermonBody } from "./sermon";
 import type { MediaRef } from "./sermonMedia";
 import { SlideSpec, slidesOf } from "./sermonOutputs";
+import { AutoPlay, autoForDeck, NO_AUTO, parseAuto } from "./autoplay";
 
 export type ServiceKind = DeckKind | "sermon";
 
@@ -16,18 +17,21 @@ export interface DeckBody {
   background: string | null;
   /** a see-through picture over the background */
   overlay?: string | null;
+  /** the slides move on by themselves, and the fade between them (absent in a deck saved before this existed) */
+  auto?: AutoPlay;
 }
 
 export function parseDeck(body: string): DeckBody {
   try {
     const b = JSON.parse(body || "{}") as Partial<DeckBody>;
-    return { slides: Array.isArray(b.slides) ? b.slides : [], background: b.background ?? null, overlay: b.overlay ?? null };
+    return { slides: Array.isArray(b.slides) ? b.slides : [], background: b.background ?? null, overlay: b.overlay ?? null, auto: parseAuto(b.auto) };
   } catch {
-    return { slides: [], background: null, overlay: null };
+    return { slides: [], background: null, overlay: null, auto: { ...NO_AUTO } };
   }
 }
 
-export const deckBody = (slides: SlideSpec[], background: string | null, overlay: string | null = null): string => JSON.stringify({ slides, background, overlay } satisfies DeckBody);
+export const deckBody = (slides: SlideSpec[], background: string | null, overlay: string | null = null, auto: AutoPlay | null = null): string =>
+  JSON.stringify({ slides, background, overlay, ...autoForDeck(auto) } satisfies DeckBody);
 
 /** What the presenter is given for one part of the service. */
 export interface PresenterDeck {
@@ -39,6 +43,8 @@ export interface PresenterDeck {
   background: string | null;
   /** a see-through picture over the background */
   overlay?: string | null;
+  /** the timer that moves the slides on, and the fade (a deck saved without them: off) */
+  auto?: AutoPlay;
   /** what its place is remembered under */
   resumeKey: string;
 }
@@ -83,8 +89,8 @@ export async function loadServicePart(kind: ServiceKind, id: number, version: st
   }
   const d: Deck | null = await api.deckGet(id);
   if (!d) return null;
-  const { slides, background, overlay } = parseDeck(d.body);
-  return { kind, title: d.title, slides, background, overlay, resumeKey: `${kind}:${d.id}` };
+  const { slides, background, overlay, auto } = parseDeck(d.body);
+  return { kind, title: d.title, slides, background, overlay, auto, resumeKey: `${kind}:${d.id}` };
 }
 
 /** Which saved one of each is in the service (kept for next time). */

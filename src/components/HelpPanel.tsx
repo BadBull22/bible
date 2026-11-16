@@ -880,6 +880,34 @@ const SECTIONS: Section[] = [
     ),
   },
   {
+    id: "slide-show-extras",
+    title: "Slide show: the CCLI line, slides that move on by themselves, labelled lyrics",
+    keywords: "ccli line song writer number licence autoplay auto advance timer fade transition notices loop slide show presenter paste lyrics verse chorus bridge pre-chorus tag label",
+    body: (
+      <>
+        <p>
+          <strong>The CCLI line.</strong> When a song is added from your saved songs, its slides remember the title, the writer and the
+          CCLI number you typed in the song. In the presenter, press <strong>CCLI line</strong> and that line appears small at the foot of
+          every slide of the song, on the screen the room sees. Press it again to take it off. It is off until you switch it on, and the
+          choice is remembered. (It only shows for songs that were added after this was built.)
+        </p>
+        <p>
+          <strong>Slides that move on by themselves.</strong> For the notices before the service: on the notices or music page, open{" "}
+          <strong>Slide show timing</strong> and choose how many seconds each slide stays, whether to start again at the end, and the fade between
+          slides (none, short or slow). It is saved with the notices. Under a slide, <strong>Move on after</strong> gives that slide a time of its
+          own (0 makes it wait for you). In the presenter, press <strong>Auto</strong> to start or stop; the button counts the seconds down.
+          Black, a video playing, or adding a slide pauses the timer, and a video, music or countdown slide waits for you unless it has a time of its own.
+        </p>
+        <p>
+          <strong>Pasted lyrics get their names.</strong> When you paste the words of a song with no headings, the app now works out the
+          parts: a part that comes round again is the Chorus, a short part that always leads into it is the Pre-Chorus, a short part after two verses
+          and two choruses is the Bridge, a last line after the third chorus is the Tag, and the rest are Verse 1, Verse 2… Check the names in the song
+          editor and change any that are wrong by writing the heading yourself (for example “Bridge”) on the line above the words.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "content-factory",
     title: "Content Factory: pictures and videos to post",
     keywords: "content factory picture pictures video videos post share facebook whatsapp instagram tiktok youtube story reel status social media verse image caption music name logo week series season advent christmas lent passover pentecost harvest mp4 slideshow voice narrate",

@@ -17,6 +17,8 @@ import { kindOfName, mediaUrl, youtubeId } from "../sermonMedia";
 import { groupsOf, slideForLetter, STRIP_LABEL, stripKind } from "../presentGroups";
 import { targetOf } from "../countdown";
 import { KIND_NAME, PresenterDeck } from "../service";
+import { AutoPlay, nextAfterTimer, NO_AUTO, secondsFor, secondsLeft } from "../autoplay";
+import { AutoPlayBox } from "./AutoPlayBox";
 import { LiveAdd } from "./LiveAdd";
 import { PhoneRemote } from "./PhoneRemote";
 import { Preview } from "./SlidesEditor";
@@ -45,6 +47,10 @@ interface ShowState {
   seek: { n: number; to: number } | null;
   /** a test pattern naming the screen, shown for a few seconds */
   test: string | null;
+  /** the CCLI line (title, writer, number) shown at the foot of a song's slides */
+  ccli: boolean;
+  /** seconds the fade between slides lasts (0: a cut) */
+  fade: number;
 }
 
 /** What a "link" slide plays on the slide screen: a kept video or music file, a video or music file at a web
@@ -130,9 +136,9 @@ export function ShowScreen() {
   if (!st || !s || st.black) return <div className="show-screen" />;
   return (
     <div className="show-screen">
-      <div className="show-slide" key={st.index}>
+      <div className="show-slide" key={st.index} style={st.fade > 0 ? { animationDuration: `${st.fade}s` } : { animation: "none" }}>
         {/* the title and "Play" are taken off while a clip plays or is paused: the video or the album picture is the slide */}
-        <Preview s={s} background={st.background} overlay={st.overlay} bare={st.clear || (!!clipOf(s) && st.clip !== "stopped")} live countTo={st.countTo} />
+        <Preview s={s} background={st.background} overlay={st.overlay} bare={st.clear || (!!clipOf(s) && st.clip !== "stopped")} live countTo={st.countTo} credit={st.ccli ? s.credit : null} />
         <ClipPlayer s={s} clip={st.clip} seek={st.seek} volume={st.volume} />
         {st.lower && (
           <div className="show-lower">
@@ -212,6 +218,7 @@ function ClipPlayer({ s, clip, seek, volume }: { s: SlideSpec; clip: Clip; seek:
 
 const SCREEN_KEY = "bc-slides-screen";
 const VIEW_KEY = "bc-present-view";
+const CCLI_KEY = "bc-present-ccli";
 const sameScreen = (a: Monitor | null | undefined, b: Monitor | null | undefined) => !!a && !!b && a.position.x === b.position.x && a.position.y === b.position.y;
 /** The screens other than the one the app is on, left to right. */
 async function otherScreens(): Promise<Monitor[]> {
@@ -315,6 +322,21 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
   const [countdown, setCountdown] = useState<number | null>(null);
   const [askCount, setAskCount] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  // the CCLI line at the foot of song slides (kept from show to show)
+  const [ccli, setCcli] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(CCLI_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  // slides that move on by themselves: the timing of each part (from its saved deck), whether it is running, and when this slide came up
+  const [autos, setAutos] = useState<AutoPlay[]>(() => decks.map((d) => d.auto ?? NO_AUTO));
+  const [autoOn, setAutoOn] = useState(false);
+  const [autoOpen, setAutoOpen] = useState(false);
+  const [shownAt, setShownAt] = useState(() => Date.now());
+  const auto = autos[active] ?? NO_AUTO;
+  const setAuto = (a: AutoPlay) => setAutos((l) => l.map((x, i) => (i === active ? a : x)));
   // the phone remote: its window, and what it is while on (the address and QR code)
   const [remoteOpen, setRemoteOpen] = useState(false);
   const [remote, setRemote] = useState<RemoteInfo | null>(null);
@@ -524,13 +546,13 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
   }, [key]);
 
   // what the slide screen shows: sent on every change, and when it says it is ready
-  const state: ShowState = { slides, background, index, black, clear, lower, volume, overlay, countTo, clip, seek, test };
+  const state: ShowState = { slides, background, index, black, clear, lower, volume, overlay, countTo, clip, seek, test, ccli, fade: auto.fade };
   const latest = useRef(state);
   latest.current = state;
   useEffect(() => {
     if (win) void emitTo(win.label, "show:state", state);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [win, slides, background, index, black, clear, lower, volume, overlay, countTo, clip, seek, test]);
+  }, [win, slides, background, index, black, clear, lower, volume, overlay, countTo, clip, seek, test, ccli, auto.fade]);
   useEffect(() => {
     const off = listen<string>("show:ready", (e) => void emitTo(e.payload, "show:state", latest.current));
     return () => void off.then((un) => un());
@@ -588,6 +610,27 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
       /* not remembered */
     }
   }, [view, size]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(CCLI_KEY, ccli ? "1" : "0");
+    } catch {
+      /* not remembered */
+    }
+  }, [ccli]);
+  // the timer starts over with each slide that comes up
+  const waiting = black || adding || resumeShown || clip !== "stopped" || !!test || autoOpen;
+  useEffect(() => setShownAt(Date.now()), [index, active, autoOn, waiting]);
+  const secs = secondsFor(cur, auto);
+  useEffect(() => {
+    if (!autoOn || waiting || secs <= 0) return;
+    const t = setTimeout(() => {
+      const to = nextAfterTimer(index, slides.length, auto.loop);
+      if (to === null) setAutoOn(false);
+      else go(to);
+    }, Math.max(100, secs * 1000 - (Date.now() - shownAt)));
+    return () => clearTimeout(t);
+  }, [autoOn, waiting, secs, index, active, shownAt, slides.length, auto.loop, go]);
+  const left = autoOn && !waiting ? secondsLeft(cur, auto, shownAt, now.getTime()) : null;
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
@@ -687,6 +730,14 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
           >
             + Add
           </button>
+          {slides.some((s) => s.credit) && (
+            <button className={"outline-btn" + (ccli ? " on" : "")} onClick={() => setCcli((v) => !v)} title="Show the song's title, writer and CCLI number at the foot of its slides, as the church's CCLI licence asks">
+              {ccli ? "CCLI line: on" : "CCLI line"}
+            </button>
+          )}
+          <button className={"outline-btn" + (autoOn ? " on" : "")} onClick={() => setAutoOpen(true)} title="Slides that move on by themselves, and the fade between slides">
+            {autoOn ? (left !== null ? `Auto: ${left}s` : "Auto: on") : "Auto"}
+          </button>
           <button className={"outline-btn" + (remote ? " on" : "")} onClick={() => setRemoteOpen(true)} title="Work the slides from your phone, on the same Wi-Fi">
             {remote ? "Phone remote: on" : "Phone remote"}
           </button>
@@ -702,6 +753,37 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
         </span>
       </header>
       {error && <p className="error pr-msg">{error}</p>}
+      {autoOpen && (
+        <div className="remote-overlay" role="dialog" aria-modal="true" aria-label="Slides that move on by themselves" onClick={() => setAutoOpen(false)}>
+          <div className="remote-box" onClick={(e) => e.stopPropagation()}>
+            <header className="remote-head">
+              <h3>Slides that move on by themselves</h3>
+              <button className="text-btn" onClick={() => setAutoOpen(false)} aria-label="Close">
+                ×
+              </button>
+            </header>
+            <AutoPlayBox value={auto} onChange={setAuto} />
+            <p className="muted">
+              Good for the notices before the service. A video, music or countdown slide waits for you unless it has a time of its own. Black, a video playing or adding a slide pauses the timer. For this show only; set it on the notices page to keep it.
+            </p>
+            <div className="remote-actions">
+              <button
+                className={autoOn ? "outline-btn" : "pill-btn"}
+                disabled={!autoOn && auto.seconds <= 0 && !slides.some((s) => (s.after ?? 0) > 0)}
+                onClick={() => {
+                  setAutoOn((v) => !v);
+                  setAutoOpen(false);
+                }}
+              >
+                {autoOn ? "Stop moving on by itself" : "Start"}
+              </button>
+              <button className="outline-btn" onClick={() => setAutoOpen(false)}>
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {remoteOpen && <PhoneRemote info={remote} busy={remoteBusy} error={remoteError} onStart={() => void startRemote()} onStop={stopRemote} onClose={() => setRemoteOpen(false)} />}
       {mode === "rehearsal" && (
         <p className="pr-msg pr-rehearsal">
@@ -890,7 +972,7 @@ export function Presenter({ decks, start = 0, versions, books, versionCode, onEn
             </button>
           </div>
           <div className={"pr-preview" + (black ? " black" : "")}>
-            {cur && <Preview s={cur} background={background} overlay={overlay} bare={clear || (!!clipOf(cur) && clip !== "stopped")} live countTo={countTo} />}
+            {cur && <Preview s={cur} background={background} overlay={overlay} bare={clear || (!!clipOf(cur) && clip !== "stopped")} live countTo={countTo} credit={ccli ? cur.credit : null} />}
             {mode === "rehearsal" && !black && cur && <ClipPlayer s={cur} clip={clip} seek={seek} volume={volume} />}
             {lower && (
               <div className="show-lower">

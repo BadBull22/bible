@@ -9018,7 +9018,7 @@ body.show-body {
 }
 
 /* the words and pictures sit above the layers behind them */
-.slide-preview > *:not(.slide-layer):not(.slide-beside):not(.slide-box):not(.slide-corner) {
+.slide-preview > *:not(.slide-layer):not(.slide-beside):not(.slide-box):not(.slide-corner):not(.slide-ccli) {
   position: relative;
   z-index: 2;
 }
@@ -10875,5 +10875,49 @@ body.show-body {
   color: inherit;
   border-radius: 3px;
   padding: 0 0.1em;
+  font-weight: 600;
+}
+
+/* the CCLI line at the foot of a song's slide, and the timing of a show */
+.slide-preview > .slide-ccli {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: 2.2%;
+  z-index: 3;
+  font-family: Georgia, serif;
+  font-size: 0.62em;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.82);
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.auto-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+.auto-field {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.auto-field input[type="number"],
+.sb-seconds {
+  width: 4.5rem;
+}
+
+.deck-auto {
+  margin: 0.4rem 0 0.6rem;
+}
+
+.deck-auto summary {
+  cursor: pointer;
   font-weight: 600;
 }
