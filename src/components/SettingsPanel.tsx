@@ -82,6 +82,7 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "Kokoro-82M text-to-speech model and voices, hexgrad (read aloud)", licence: "Apache 2.0" },
   { name: "kokoro-onnx (thewh1teagle) and ONNX Runtime (Microsoft) — read-aloud engine", licence: "MIT" },
   { name: "espeak-ng and phonemizer — pronunciation, inside the separate read-aloud voice program", licence: "GPL-3.0 (source: github.com/espeak-ng/espeak-ng, github.com/bootphon/phonemizer)" },
+  { name: "UBS Dictionary of Biblical Hebrew and UBS Dictionary of the Greek New Testament (adapted from Louw and Nida), © United Bible Societies: the meanings of words (Concordance, Meaning)", licence: "CC BY-SA 4.0" },
   { name: "Poppins Regular font (the \"Gospel\" wordmark, opening screen)", licence: "SIL Open Font License 1.1" },
 ];
 
