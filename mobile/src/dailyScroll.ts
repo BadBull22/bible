@@ -3,7 +3,7 @@
 // so a run of verses is broken by a story or an author. "Show me more" adds 10 more. Nothing is learned about the reader: no tracking, no profile.
 // Pure, so Node tests it (scripts/test_daily_scroll.mts); the screen (DailyScroll.tsx) does the drawing.
 
-export type CardKind = "verse" | "daily" | "topic" | "story" | "author" | "memory";
+export type CardKind = "verse" | "daily" | "topic" | "story" | "author" | "memory" | "fact";
 
 export interface Card {
   /** stable: the same card has the same id every day (it is what the history remembers) */
@@ -17,6 +17,8 @@ export interface Card {
   title?: string;
   /** a line under the Scripture (a "Verses for..." note) */
   note?: string;
+  /** for a "fact" card: which kind ("firsts", "facts" or "prophecy") */
+  cat?: string;
   /** what Open goes to: a story's, "Verses for..." page's or children's page's id, or an author's name (a verse card opens its passage) */
   open?: string;
 }
@@ -29,6 +31,8 @@ export interface Sources {
   stories: { id: string; title: string; summary: string }[];
   authors: { name: string; note: string; books: string[] }[];
   children: { id: string; title: string; memory: { ref: string } }[];
+  /** the short Bible facts (the Firsts and Milestones file): a question, its answer (empty for a prophecy, whose question is the statement) and its Scripture */
+  facts?: { id: string; category: string; question: string; answer: string; citations: string[] }[];
 }
 
 /** Every card, in a fixed order. */
@@ -41,6 +45,13 @@ export function buildPool(s: Sources): Card[] {
   for (const st of s.stories) pool.push({ id: `s:${st.id}`, kind: "story", title: st.title, text: firstSentences(st.summary, 2), open: st.id });
   for (const a of s.authors) pool.push({ id: `a:${a.name}`, kind: "author", title: a.name, text: firstSentences(a.note, 2), open: a.name });
   for (const c of s.children) pool.push({ id: `m:${c.id}`, kind: "memory", ref: c.memory.ref, title: "A verse to remember", open: c.id });
+  for (const f of s.facts ?? []) {
+    if (!["firsts", "facts", "prophecy"].includes(f.category)) continue;
+    const prophecy = f.category === "prophecy";
+    const text = (prophecy ? f.question : f.answer).replace(/\s+-- /g, " — ").replace(/\s+/g, " ").trim();
+    if (!text || text.length > 280) continue;
+    pool.push({ id: `f:${f.id}`, kind: "fact", cat: f.category, title: prophecy ? undefined : f.question.trim(), text, note: f.citations.join(" · ") || undefined, open: f.citations[0] });
+  }
   return pool;
 }
 
@@ -77,9 +88,9 @@ function shuffled<T>(items: T[], rand: () => number): T[] {
 }
 
 /** the kinds in a day's 20 cards, in order: Scripture mostly, a story or an author now and then */
-export const RHYTHM: CardKind[] = ["verse", "verse", "story", "verse", "topic", "verse", "author", "verse", "daily", "topic", "verse", "story", "verse", "memory", "verse", "topic", "author", "verse", "story", "verse"];
+export const RHYTHM: CardKind[] = ["verse", "verse", "story", "verse", "topic", "verse", "author", "fact", "daily", "topic", "verse", "story", "verse", "memory", "fact", "topic", "author", "verse", "story", "verse"];
 /** when a kind has run out the next best is used, in this order */
-const FALLBACK: CardKind[] = ["verse", "topic", "daily", "memory", "story", "author"];
+const FALLBACK: CardKind[] = ["verse", "topic", "daily", "memory", "story", "author", "fact"];
 /** how many days a shown card is left out */
 export const REST_DAYS = 50;
 
@@ -156,6 +167,8 @@ export function kindLabel(c: Card): string {
       return "Who wrote the Bible";
     case "memory":
       return "A verse to remember";
+    case "fact":
+      return c.cat === "prophecy" ? "Bible prophecy" : "Bible fact";
     case "topic":
       return c.title ?? "Verses for…";
     default:

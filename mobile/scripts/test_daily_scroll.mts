@@ -10,6 +10,7 @@ const topics = JSON.parse(readFileSync("src/browse/data/topics.json", "utf8")).p
 const children = JSON.parse(readFileSync("src/browse/data/children.json", "utf8")).pages;
 const daily: [string, number, number, number][] = [...readFileSync("mobile/src/votd.ts", "utf8").matchAll(/\["([^"]+)", (\d+), (\d+), (\d+)\]/g)].map((m) => [m[1], +m[2], +m[3], +m[4]]);
 const authors = [...readFileSync("src/bibleAuthors.ts", "utf8").matchAll(/name: "([^"]+)",\s*testament: "[^"]+",\s*note: "([^"]+)"/g)].map((m) => ({ name: m[1], note: m[2], books: [] }));
+const firsts = JSON.parse(readFileSync("src-tauri/resources/firsts.json", "utf8")).entries;
 const src: Sources = {
   verseCards: verses.map((c: { id: string; ref: string }) => ({ id: c.id, ref: c.ref })),
   daily,
@@ -17,12 +18,19 @@ const src: Sources = {
   stories: stories.map((s: { id: string; title: string; summary: string }) => ({ id: s.id, title: s.title, summary: s.summary })),
   authors,
   children: children.map((c: { id: string; title: string; memory: { ref: string } }) => ({ id: c.id, title: c.title, memory: c.memory })),
+  facts: firsts,
 };
 const pool = buildPool(src);
 console.log(`pool: ${pool.length} cards (${verses.length} verse cards, ${daily.length} daily, ${topics.reduce((n: number, t: { items: unknown[] }) => n + t.items.length, 0)} topic passages, ${stories.length} stories, ${authors.length} authors, ${children.length} memory verses)`);
-assert.ok(pool.length >= 950, "about a thousand cards are held");
+assert.ok(pool.length >= 1000, "about a thousand cards are held");
+const factCards = pool.filter((c) => c.kind === "fact");
+assert.ok(factCards.length >= 40 && factCards.length <= 63, `the Bible fact cards (${factCards.length})`);
+assert.ok(factCards.every((c) => !!c.text && c.text.length <= 280 && !/ -- /.test(c.text)), "a fact card has short, clean words");
+assert.ok(factCards.every((c) => !c.open || !!parseRef(c.open)), "a fact card opens a passage the screen can read");
+assert.equal(kindLabel(factCards.find((c) => c.cat === "prophecy")!), "Bible prophecy");
+assert.equal(kindLabel(factCards.find((c) => c.cat === "firsts")!), "Bible fact");
 assert.equal(new Set(pool.map((c) => c.id)).size, pool.length, "every card has its own id");
-assert.ok(pool.every((c) => (c.kind === "story" || c.kind === "author" ? !!c.text : !!c.ref)), "a card has words or a reference");
+assert.ok(pool.every((c) => (c.kind === "story" || c.kind === "author" || c.kind === "fact" ? !!c.text : !!c.ref)), "a card has words or a reference");
 
 // every card that shows Scripture has a reference the screen can read (book, chapter, verses)
 for (const c of pool) if (c.ref) assert.ok(parseRef(c.ref), `${c.id}: cannot read "${c.ref}"`);
