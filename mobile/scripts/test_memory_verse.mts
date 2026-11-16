@@ -1,6 +1,6 @@
 // Memory verse practice: the boxes, the days, the blanks. Run: node --experimental-strip-types mobile/scripts/test_memory_verse.mts
 import assert from "node:assert/strict";
-import { addDays, afterPractice, blankWords, dayString, daysBetween, dueVerses, firstLetters, INTERVALS, refOf, stageName, SUGGESTED, TOP_BOX } from "../src/memoryVerse.ts";
+import { addDays, afterPractice, blankWords, dayString, daysBetween, dueVerses, firstLetters, INTERVALS, levelForBox, refOf, stageName, SUGGESTED, TOP_BOX } from "../src/memoryVerse.ts";
 
 // days
 assert.equal(dayString(new Date(2026, 10, 16, 23, 59)), "2026-11-16");
@@ -52,6 +52,11 @@ assert.notDeepEqual(blankWords(text, 2, "John 3:16").parts.map((p) => p.hidden),
 assert.equal(blankWords(text, 2, "x").parts.map((p) => p.word).join(" "), text);
 assert.equal(blankWords("", 2, "x").parts.length, 0);
 assert.equal(blankWords(text, 9, "x").hiddenCount, n, "a level too high is the top level");
+
+// the level of hiding grows with the box and never leaves 1 to 4
+assert.deepEqual([0, 1, 2, 3, 4, 5, 6].map(levelForBox), [1, 1, 2, 2, 3, 3, 4]);
+assert.equal(levelForBox(-4), 1);
+assert.equal(levelForBox(99), 4);
 
 // first letters
 assert.equal(firstLetters("For God so loved"), "F G s l");

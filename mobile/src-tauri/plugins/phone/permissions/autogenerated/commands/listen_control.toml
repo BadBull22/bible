@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-listen-control"
+description = "Enables the listen_control command without any pre-configured scope."
+commands.allow = ["listen_control"]
+
+[[permission]]
+identifier = "deny-listen-control"
+description = "Denies the listen_control command without any pre-configured scope."
+commands.deny = ["listen_control"]

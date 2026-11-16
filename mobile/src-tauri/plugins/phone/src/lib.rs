@@ -83,6 +83,55 @@ fn open_computer_file<R: Runtime>(app: AppHandle<R>, uri: String, id: String, na
     app.state::<Phone<R>>().run("openComputerFile", json!({ "uri": uri, "id": id, "name": name.unwrap_or_else(|| "picture".into()), "mime": mime }))
 }
 
+/// The plan of daily notifications (a JSON list), kept and sent by the phone.
+#[tauri::command(async)]
+fn schedule_notifications<R: Runtime>(app: AppHandle<R>, json: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("scheduleNotifications", serde_json::json!({ "json": json }))
+}
+
+#[tauri::command(async)]
+fn cancel_notifications<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("cancelNotifications", serde_json::json!({}))
+}
+
+/// One notification at once, to see how it looks.
+#[tauri::command(async)]
+fn notify_now<R: Runtime>(app: AppHandle<R>, json: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("notifyNow", serde_json::json!({ "json": json }))
+}
+
+/// The verses for the home-screen widget (a JSON list).
+#[tauri::command(async)]
+fn set_widget_data<R: Runtime>(app: AppHandle<R>, json: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("setWidgetData", serde_json::json!({ "json": json }))
+}
+
+#[tauri::command(async)]
+fn pin_widget<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("pinWidget", serde_json::json!({}))
+}
+
+/// Where a notification or the widget opened the app to, once.
+#[tauri::command(async)]
+fn take_launch<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("takeLaunch", serde_json::json!({}))
+}
+
+#[tauri::command(async)]
+fn listen_start<R: Runtime>(app: AppHandle<R>, json: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("listenStart", serde_json::json!({ "json": json }))
+}
+
+#[tauri::command(async)]
+fn listen_control<R: Runtime>(app: AppHandle<R>, action: String) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("listenControl", serde_json::json!({ "action": action }))
+}
+
+#[tauri::command(async)]
+fn listen_status<R: Runtime>(app: AppHandle<R>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("listenStatus", serde_json::json!({}))
+}
+
 /// Saves pictures (base64 joined with "|", their names joined with "|") in the gallery: { saved, where }.
 #[tauri::command(async)]
 fn save_to_gallery<R: Runtime>(app: AppHandle<R>, base64: String, names: String, mime: Option<String>) -> Result<Value, String> {
@@ -202,7 +251,7 @@ pub fn updates_dir<R: Runtime>(app: &AppHandle<R>) -> Result<std::path::PathBuf,
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("phone")
-        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, open_link, voices, share_image, save_image, install_update, list_computer_pictures, read_computer_picture, save_computer_picture, share_computer_pictures, open_computer_file, save_to_gallery, share_images, share_file, save_backup_copy, list_backup_copies, read_backup_copy])
+        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, open_link, voices, share_image, save_image, install_update, list_computer_pictures, read_computer_picture, save_computer_picture, share_computer_pictures, open_computer_file, schedule_notifications, cancel_notifications, notify_now, set_widget_data, pin_widget, take_launch, listen_start, listen_control, listen_status, save_to_gallery, share_images, share_file, save_backup_copy, list_backup_copies, read_backup_copy])
         .setup(|app, _api| {
             #[cfg(target_os = "android")]
             app.manage(Phone { handle: _api.register_android_plugin("com.ghostclaw.phone", "PhonePlugin")? });

@@ -14,6 +14,7 @@ import {
   CommentaryOn,
   Counts,
   Hit,
+  ListenStatus,
   Mark,
   MarkKind,
   phone,
@@ -32,7 +33,8 @@ import { backupFileName } from "./backupPlan";
 import { applyAppearance, Contrast, DEFAULT_APPEARANCE, Font, TextColor, Theme, watchSystemTheme } from "./appearance";
 import { buildPlan, currentDay, describeReadings, PLANS, todayIso } from "./plans";
 import { parseReference, Reference } from "./refs";
-import { canRemind, setReminder } from "./reminder";
+import { canRemind, refreshDaily, testReminder } from "./reminder";
+import { buildQueue, chaptersFinished, chaptersFrom } from "./listenQueue";
 import { Translations } from "./Translations";
 import { UpdateBanner, UpdateSettings, usePlayBuild, useUpdates } from "./Updates";
 import { SyncSettings, useAutoSync } from "./Sync";
@@ -52,6 +54,10 @@ import { useWhatsNew, WhatsNewBanner, WHATS_NEW_VERSION } from "./WhatsNew";
 import { Library, VerseCommentaries } from "./Library";
 import { MakePicture, VersePicture } from "./VersePicture";
 import { DailyScroll, DailyScrollEntry, type ScrollOpen, type ScrollShare } from "./ScrollFeed";
+import { HowAreYou, MoodEntry } from "./HowAreYou";
+import { PrayerEntry, PrayerList } from "./PrayerList";
+import { MemoryEntry, MemoryPractice } from "./MemoryPractice";
+import { dayString as todayString, dueVerses } from "./memoryVerse";
 import { verseForToday } from "./votd";
 import { WordStudy } from "./WordStudy";
 
@@ -217,7 +223,7 @@ const SLEEP: [string, string][] = [
 const ALL_CHAPTERS = 1189;
 
 const countsText = (c: Counts) =>
-  `${c.bookmarks} bookmark${c.bookmarks === 1 ? "" : "s"}, ${c.highlights} highlight${c.highlights === 1 ? "" : "s"}, ${c.notes} note${c.notes === 1 ? "" : "s"} and ${c.plans} reading plan${c.plans === 1 ? "" : "s"}`;
+  `${c.bookmarks} bookmark${c.bookmarks === 1 ? "" : "s"}, ${c.highlights} highlight${c.highlights === 1 ? "" : "s"}, ${c.notes} note${c.notes === 1 ? "" : "s"}${c.prayers ? `, ${c.prayers} prayer request${c.prayers === 1 ? "" : "s"}` : ""}${c.memory ? `, ${c.memory} memory verse${c.memory === 1 ? "" : "s"}` : ""} and ${c.plans} reading plan${c.plans === 1 ? "" : "s"}`;
 
 export function App() {
   const saved = useMemo(loadSaved, []);
@@ -298,6 +304,22 @@ export function App() {
   const [scrollAway, setScrollAway] = useState<null | "passage" | "browse" | "author">(null);
   const [scrollShare, setScrollShare] = useState<ScrollShare | null>(null); // the picture studio opened from a Daily Scroll card
   const [makingPicture, setMakingPicture] = useState(false); // More > Make a picture
+  // How are you today? / the prayer list / memory verses (Extras): each is a sheet
+  const [showHow, setShowHow] = useState(false);
+  const [showPrayers, setShowPrayers] = useState(false);
+  const [prayerDraft, setPrayerDraft] = useState<string | null>(null);
+  const [showMemory, setShowMemory] = useState(false);
+  const [practiceNow, setPracticeNow] = useState(false);
+  /** how many prayers are being prayed for, and the memory verses (due today, and all), for the Extras rows */
+  const [habit, setHabit] = useState({ praying: 0, due: 0, learning: 0 });
+  const refreshHabit = () =>
+    Promise.all([api.prayers(), api.memoryVerses()])
+      .then(([p, m]) => setHabit({ praying: p.filter((x) => !x.answered_at).length, due: dueVerses(m, todayString()).length, learning: m.length }))
+      .catch(() => undefined);
+  useEffect(() => {
+    void refreshHabit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // the Library: open (on its first page, or on the chapter's commentaries)
   const [library, setLibrary] = useState<null | "home" | "commentary">(null);
   const [hasCommentary, setHasCommentary] = useState(false);
@@ -767,6 +789,11 @@ export function App() {
 
   const highlightOf = useMemo(() => new Map(marks.highlights), [marks]);
   const changed = () => setMarksVersion((n) => n + 1);
+  /** the prayer list or the memory verses changed: the Extras rows, and a new backup copy */
+  const habitChanged = () => {
+    void refreshHabit();
+    changed();
+  };
   useEffect(() => {
     api
       .highlightNames()
@@ -797,13 +824,11 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
-  // the daily reminder: scheduled again whenever its time or the plans change
-  const reminderBody = () => {
-    const plan = PLANS.find((p) => progress.some((x) => x.plan_id === p.id));
-    return plan ? `Today's reading in “${plan.name}” is waiting.` : "A few minutes with the Bible today?";
-  };
+  // the daily notification and the home-screen widget: planned again whenever the time, the Bible, the reading plans, the prayer list or the memory verses change (and
+  // each time the app opens), so each day says something different. See reminder.ts.
+  const planName = () => PLANS.find((p) => progress.some((x) => x.plan_id === p.id))?.name ?? null;
   async function chooseReminder(time: string | null) {
-    const ok = await setReminder(time, reminderBody()).catch((e) => {
+    const ok = await refreshDaily({ version, reminder: time, plan: planName(), ask: true }).catch((e) => {
       fail(e);
       return false;
     });
@@ -816,9 +841,103 @@ export function App() {
     if (time) say(`Reminder set for ${time} every day`);
   }
   useEffect(() => {
-    if (reminder) void setReminder(reminder, reminderBody()).catch(() => undefined);
+    if (!canRemind || books.length === 0) return;
+    const t = window.setTimeout(() => void refreshDaily({ version, reminder, plan: planName() }).catch(() => undefined), 1500);
+    return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progress]);
+  }, [progress, version, reminder, habit.praying, habit.due, habit.learning, books.length]);
+
+  // --- opened from a notification or the widget: go where it said (the phone keeps the place until the page asks)
+  const goTo = (open: string | null) => {
+    if (!open) return;
+    if (open === "scroll") setScrollOpen(true);
+    else if (open === "mood") {
+      setTab("plans");
+      setShowHow(true);
+    } else if (open === "prayer") {
+      setTab("plans");
+      setShowPrayers(true);
+    } else if (open === "memory") {
+      setTab("plans");
+      setPracticeNow(true);
+      setShowMemory(true);
+    } else if (open === "plans") setTab("plans");
+  };
+  useEffect(() => {
+    if (!canRemind || books.length === 0) return;
+    const ask = () =>
+      phone
+        .takeLaunch()
+        .then((r) => goTo(r.open))
+        .catch(() => undefined);
+    void ask();
+    const onShow = () => document.visibilityState === "visible" && void ask();
+    document.addEventListener("visibilitychange", onShow);
+    window.addEventListener("focus", onShow);
+    return () => {
+      document.removeEventListener("visibilitychange", onShow);
+      window.removeEventListener("focus", onShow);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [books.length]);
+
+  // --- Listen mode: the phone reads on with the screen off (ListenService); the page hands over several chapters and later marks the ones heard to the end as read
+  const [listen, setListen] = useState<ListenStatus | null>(null);
+  const LISTEN_KEY = "pocket:listen";
+  async function syncListen() {
+    let session: { token: string; chapters: { book: string; chapter: number }[]; spans: { from: number; to: number }[]; marked: number } | null = null;
+    try {
+      session = JSON.parse(localStorage.getItem(LISTEN_KEY) ?? "null");
+    } catch {
+      session = null;
+    }
+    const s = await phone.listenStatus().catch(() => null);
+    if (!s) return;
+    setListen(s.running ? s : null);
+    if (session && s.token === session.token) {
+      const done = chaptersFinished(session.spans, s.index, s.finished);
+      for (let i = session.marked; i < done; i++) markRead(session.chapters[i].book, session.chapters[i].chapter);
+      session.marked = Math.max(session.marked, done);
+      try {
+        if (!s.running) localStorage.removeItem(LISTEN_KEY);
+        else localStorage.setItem(LISTEN_KEY, JSON.stringify(session));
+      } catch {
+        /* a convenience */
+      }
+    }
+  }
+  async function startListenMode() {
+    try {
+      stopListening();
+      const list = chaptersFrom(books, place.book, place.chapter, 10);
+      if (list.length === 0) return;
+      const chapters = await Promise.all(list.map(async (c) => ({ ...c, verses: await api.chapter(version, c.book, c.chapter) })));
+      const q = buildQueue(chapters);
+      const token = String(Date.now());
+      await phone.listenStart(JSON.stringify({ pieces: q.pieces, start: 0, rate, voice, sleepMin: Number(sleep) > 0 ? Number(sleep) : 0, token }));
+      try {
+        localStorage.setItem(LISTEN_KEY, JSON.stringify({ token, chapters: list, spans: q.spans, marked: 0 }));
+      } catch {
+        /* a convenience */
+      }
+      say("Listening. It keeps going with the screen off.");
+      window.setTimeout(() => void syncListen(), 1500);
+    } catch (e) {
+      fail(e);
+    }
+  }
+  useEffect(() => {
+    if (!canRemind) return;
+    void syncListen();
+    const t = window.setInterval(() => void syncListen(), listen?.running ? 3000 : 15000);
+    const onShow = () => document.visibilityState === "visible" && void syncListen();
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      window.clearInterval(t);
+      document.removeEventListener("visibilitychange", onShow);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listen?.running]);
 
   // --- the book's introduction and the chapter's notes
   const openIntro = () =>
@@ -981,6 +1100,9 @@ export function App() {
   }, [scrollAway, tab, browse, authorsOpen, cameFrom]);
   useBack(scrollShare != null, () => setScrollShare(null));
   useBack(makingPicture, () => setMakingPicture(false));
+  useBack(showHow, () => setShowHow(false));
+  useBack(showPrayers, () => setShowPrayers(false));
+  useBack(showMemory, () => setShowMemory(false));
   useBack(library !== null, () => setLibrary(null));
 
   const chosenVerse = chosen != null ? verses.find((v) => v.verse === chosen) : undefined;
@@ -1110,6 +1232,12 @@ export function App() {
                   ))}
               </select>
             </div>
+            {canRemind && !listen?.running && (
+              <div className="listen-row">
+                <button onClick={() => void startListenMode()}>🎧 Listen to this chapter</button>
+                <span className="hint">Reads on, chapter after chapter, with the screen off</span>
+              </div>
+            )}
             {today && (
               <aside className="today">
                 <div className="hit-head">
@@ -1467,6 +1595,9 @@ export function App() {
               />
               <MapsEntry onOpen={() => setMapsOpen(true)} />
               <AuthorsEntry onOpen={() => setAuthorsOpen(true)} />
+              <MoodEntry onOpen={() => setShowHow(true)} />
+              <PrayerEntry open={habit.praying} onOpen={() => setShowPrayers(true)} />
+              <MemoryEntry due={habit.due} total={habit.learning} onOpen={() => setShowMemory(true)} />
             </div>
             <input className="field" value={word} onChange={(e) => setWord(e.target.value)} placeholder="Bible dictionary: a person, place or word" aria-label="Look up in the dictionary" autoCapitalize="none" autoCorrect="off" />
             {found && found.length === 0 && <p className="hint">No article by that name.</p>}
@@ -1512,6 +1643,24 @@ export function App() {
                   <input type="checkbox" checked={reminder != null} onChange={(e) => void chooseReminder(e.target.checked ? "07:00" : null)} /> Daily reminder
                 </label>
                 <input type="time" value={reminder ?? "07:00"} disabled={reminder == null} onChange={(e) => e.target.value && void chooseReminder(e.target.value)} aria-label="Reminder time" />
+              </div>
+            )}
+            {canRemind && (
+              <div className="actions wrap">
+                <button className="link" onClick={() => void testReminder().then((ok) => say(ok ? "A notification was sent" : "Notifications aren't allowed for this app")).catch(fail)}>
+                  Show me a notification
+                </button>
+                <button
+                  className="link"
+                  onClick={() =>
+                    phone
+                      .pinWidget()
+                      .then((r) => say(r.supported ? (r.asked ? "Confirm on your home screen to add the verse widget" : "Press and hold your home screen, then choose Widgets") : "Press and hold your home screen, then choose Widgets"))
+                      .catch(fail)
+                  }
+                >
+                  Add the verse widget to the home screen
+                </button>
               </div>
             )}
             {canRemind && !playBuild && reminder != null && (
@@ -1745,6 +1894,22 @@ export function App() {
       </main>
       </div>
 
+      {listen?.running && (
+        <div className="playing">
+          <span>
+            {listen.playing ? "Listening" : "Paused"}: {listen.label}
+          </span>
+          <button onClick={() => void phone.listenControl("prev").then(syncListen)} aria-label="Previous chapter">
+            ⏮
+          </button>
+          <button onClick={() => void phone.listenControl("toggle").then(() => window.setTimeout(syncListen, 400))}>{listen.playing ? "Pause" : "Play"}</button>
+          <button onClick={() => void phone.listenControl("next").then(syncListen)} aria-label="Next chapter">
+            ⏭
+          </button>
+          <button onClick={() => void phone.listenControl("stop").then(() => window.setTimeout(syncListen, 600))}>Stop</button>
+        </div>
+      )}
+
       {speaking != null && (
         <div className="playing">
           <span>
@@ -1803,6 +1968,54 @@ export function App() {
             }
           }}
         />
+      )}
+
+      {showHow && (
+        <Sheet tall onClose={() => setShowHow(false)}>
+          <HowAreYou
+            version={version}
+            say={say}
+            fail={fail}
+            onRead={(b, c, v) => {
+              setShowHow(false);
+              goFrom("How are you today?", b, c, v);
+            }}
+            onMore={(topicId) => {
+              setShowHow(false);
+              setBrowseIn("extras");
+              setBrowse({ kind: "topics", id: topicId });
+            }}
+            onPray={(draft) => {
+              setShowHow(false);
+              setPrayerDraft(draft);
+              setShowPrayers(true);
+            }}
+            onChanged={habitChanged}
+          />
+        </Sheet>
+      )}
+
+      {showPrayers && (
+        <Sheet tall onClose={() => setShowPrayers(false)}>
+          <PrayerList draft={prayerDraft} say={say} fail={fail} onChanged={habitChanged} />
+        </Sheet>
+      )}
+
+      {showMemory && (
+        <Sheet tall onClose={() => setShowMemory(false)}>
+          <MemoryPractice
+            version={version}
+            books={books}
+            say={say}
+            fail={fail}
+            practiceNow={practiceNow}
+            onRead={(b, c, v) => {
+              setShowMemory(false);
+              goFrom("Memory verses", b, c, v);
+            }}
+            onChanged={habitChanged}
+          />
+        </Sheet>
       )}
 
       {scrollShare && (
@@ -2180,6 +2393,18 @@ function VerseSheet({ book, chapter, verse, version, color, names, bookmarked, o
             <button onClick={() => setView("refs")}>Cross-references</button>
             <button onClick={() => setView("compare")}>Compare translations</button>
             <button onClick={onListen}>Listen from here</button>
+            <button
+              onClick={() => {
+                const d = new Date();
+                const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                api
+                  .addMemoryVerse(book, chapter, verse.verse, verse.verse, today)
+                  .then((added) => say(added ? "Added to your memory verses (Extras)" : "You are already learning this verse"))
+                  .catch(fail);
+              }}
+            >
+              Learn by heart
+            </button>
             <button onClick={() => setView("picture")}>Verse picture</button>
             <button
               onClick={() =>

@@ -13,7 +13,7 @@ export interface Learning {
   added_on: string;
   box: number;
   due_on: string;
-  last_on: string | null;
+  last_on?: string | null;
 }
 
 /** "YYYY-MM-DD" for a date, in the phone's own time (not UTC). */
@@ -85,9 +85,9 @@ export function firstLetters(text: string): string {
     .join(" ");
 }
 
-/** How much to hide for a verse in this box: new verses are shown whole at first, then more and more is taken away. */
+/** How much to hide for a verse in this box (1 = a quarter of the words ... 4 = all of them): new verses keep most of their words, learned ones hide more and more. */
 export function levelForBox(box: number): number {
-  return Math.max(0, Math.min(4, box - 0));
+  return [1, 1, 2, 2, 3, 3, 4][Math.max(0, Math.min(TOP_BOX, Math.round(box)))];
 }
 
 function hash(s: string): number {
