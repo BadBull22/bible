@@ -475,6 +475,18 @@
           "markdownDescription": "Denies the save_text command without any pre-configured scope."
         },
         {
+          "description": "Enables the save_to_gallery command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-save-to-gallery",
+          "markdownDescription": "Enables the save_to_gallery command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save_to_gallery command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-save-to-gallery",
+          "markdownDescription": "Denies the save_to_gallery command without any pre-configured scope."
+        },
+        {
           "description": "Enables the share command without any pre-configured scope.",
           "type": "string",
           "const": "allow-share",
@@ -523,6 +535,18 @@
           "markdownDescription": "Denies the share_image command without any pre-configured scope."
         },
         {
+          "description": "Enables the share_images command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-share-images",
+          "markdownDescription": "Enables the share_images command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the share_images command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-share-images",
+          "markdownDescription": "Denies the share_images command without any pre-configured scope."
+        },
+        {
           "description": "Enables the speak command without any pre-configured scope.",
           "type": "string",
           "const": "allow-speak",
@@ -559,10 +583,10 @@
           "markdownDescription": "Denies the voices command without any pre-configured scope."
         },
         {
-          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-list-computer-pictures`\n- `allow-read-computer-picture`\n- `allow-save-computer-picture`\n- `allow-share-computer-pictures`\n- `allow-open-computer-file`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`",
+          "description": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-list-computer-pictures`\n- `allow-read-computer-picture`\n- `allow-save-computer-picture`\n- `allow-share-computer-pictures`\n- `allow-open-computer-file`\n- `allow-save-to-gallery`\n- `allow-share-images`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-list-computer-pictures`\n- `allow-read-computer-picture`\n- `allow-save-computer-picture`\n- `allow-share-computer-pictures`\n- `allow-open-computer-file`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`"
+          "markdownDescription": "Sharing text or a picture, reading aloud with the phone's voices, saving or opening a file the reader chooses, choosing a folder to keep in step through, opening a web page in the browser, and handing a downloaded update to Android's installer.\n#### This default permission set includes:\n\n- `allow-share`\n- `allow-speak`\n- `allow-stop-speaking`\n- `allow-save-text`\n- `allow-open-text`\n- `allow-open-file`\n- `allow-pick-folder`\n- `allow-battery-settings`\n- `allow-open-link`\n- `allow-voices`\n- `allow-share-image`\n- `allow-save-image`\n- `allow-install-update`\n- `allow-list-computer-pictures`\n- `allow-read-computer-picture`\n- `allow-save-computer-picture`\n- `allow-share-computer-pictures`\n- `allow-open-computer-file`\n- `allow-save-to-gallery`\n- `allow-share-images`\n- `allow-share-file`\n- `allow-save-backup-copy`\n- `allow-list-backup-copies`\n- `allow-read-backup-copy`"
         }
       ]
     }

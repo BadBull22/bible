@@ -83,6 +83,18 @@ fn open_computer_file<R: Runtime>(app: AppHandle<R>, uri: String, id: String, na
     app.state::<Phone<R>>().run("openComputerFile", json!({ "uri": uri, "id": id, "name": name.unwrap_or_else(|| "picture".into()), "mime": mime }))
 }
 
+/// Saves pictures (base64 joined with "|", their names joined with "|") in the gallery: { saved, where }.
+#[tauri::command(async)]
+fn save_to_gallery<R: Runtime>(app: AppHandle<R>, base64: String, names: String, mime: Option<String>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("saveToGallery", json!({ "base64": base64, "names": names, "mime": mime }))
+}
+
+/// Shares one or several pictures through the share sheet, with some text.
+#[tauri::command(async)]
+fn share_images<R: Runtime>(app: AppHandle<R>, base64: String, names: String, mime: Option<String>, text: Option<String>) -> Result<Value, String> {
+    app.state::<Phone<R>>().run("shareImages", json!({ "base64": base64, "names": names, "mime": mime, "text": text }))
+}
+
 /// Shares a text file (a backup) through the share sheet.
 #[tauri::command(async)]
 fn share_file<R: Runtime>(app: AppHandle<R>, name: String, text: String, mime: Option<String>, title: Option<String>) -> Result<Value, String> {
@@ -190,7 +202,7 @@ pub fn updates_dir<R: Runtime>(app: &AppHandle<R>) -> Result<std::path::PathBuf,
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
     Builder::new("phone")
-        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, open_link, voices, share_image, save_image, install_update, list_computer_pictures, read_computer_picture, save_computer_picture, share_computer_pictures, open_computer_file, share_file, save_backup_copy, list_backup_copies, read_backup_copy])
+        .invoke_handler(tauri::generate_handler![share, speak, stop_speaking, save_text, open_text, open_file, pick_folder, battery_settings, open_link, voices, share_image, save_image, install_update, list_computer_pictures, read_computer_picture, save_computer_picture, share_computer_pictures, open_computer_file, save_to_gallery, share_images, share_file, save_backup_copy, list_backup_copies, read_backup_copy])
         .setup(|app, _api| {
             #[cfg(target_os = "android")]
             app.manage(Phone { handle: _api.register_android_plugin("com.ghostclaw.phone", "PhonePlugin")? });

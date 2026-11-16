@@ -896,6 +896,12 @@ fn backgrounds_thumbs(core: State<Core>, pack: Option<String>) -> Result<Vec<bac
     backgrounds::thumbs(&core.get()?.dir, backgrounds::pack_of(pack.as_deref())?)
 }
 
+/// The ids and subjects of a set's photos: [(id, theme)].
+#[tauri::command(async)]
+fn backgrounds_ids(core: State<Core>, pack: Option<String>) -> Result<Vec<(String, String)>, String> {
+    backgrounds::ids(&core.get()?.dir, backgrounds::pack_of(pack.as_deref())?)
+}
+
 #[tauri::command(async)]
 fn background_image(core: State<Core>, id: String, pack: Option<String>) -> Result<(String, backgrounds::Background), String> {
     backgrounds::image(&core.get()?.dir, backgrounds::pack_of(pack.as_deref())?, &id)
@@ -1199,6 +1205,7 @@ pub fn run() {
             backgrounds_status,
             backgrounds_install,
             backgrounds_thumbs,
+            backgrounds_ids,
             background_image,
             backgrounds_remove,
             update_check,

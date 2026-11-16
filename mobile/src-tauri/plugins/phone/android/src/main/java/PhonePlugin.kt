@@ -110,6 +110,16 @@ class PicArgs {
   var mime: String? = null
 }
 
+@InvokeArg
+class PicturesArgs {
+  /** the pictures, base64, joined with "|" (base64 never holds that character) */
+  lateinit var base64: String
+  /** their file names, joined with "|" */
+  lateinit var names: String
+  var mime: String? = null
+  var text: String? = null
+}
+
 /** The folder inside the sync folder where the computer puts the pictures and videos it made. */
 const val PICTURES_FOLDER = "pictures"
 
@@ -467,6 +477,92 @@ class PhonePlugin(private val activity: Activity) : Plugin(activity) {
       }
       activity.startActivity(view)
       invoke.resolve(JSObject().put("opened", true))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  // ---------------------------------------------------------------- pictures made on the phone: save to the gallery, share several
+
+  /** Saves pictures (base64 joined with "|") in the gallery, in Pictures/Bible Concordance (Android 10 and newer, no permission; older: the app's own
+   * folder): { saved: how many, where }. A name already there gets a number added. */
+  @Command
+  fun saveToGallery(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(PicturesArgs::class.java)
+      val data = args.base64.split("|").filter { it.isNotBlank() }
+      val names = args.names.split("|")
+      val mime = args.mime ?: "image/png"
+      var saved = 0
+      data.forEachIndexed { i, b64 ->
+        val bytes = Base64.decode(b64, Base64.DEFAULT)
+        val base = safeName(names.getOrElse(i) { "picture" }, "picture")
+        if (Build.VERSION.SDK_INT >= 29) {
+          val resolver = activity.contentResolver
+          val coll = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+          var name = base
+          var n = 1
+          while (true) {
+            var exists = false
+            resolver.query(coll, arrayOf(MediaStore.MediaColumns._ID), MediaStore.MediaColumns.RELATIVE_PATH + " = ? AND " + MediaStore.MediaColumns.DISPLAY_NAME + " = ?", arrayOf("Pictures/Bible Concordance/", name), null)?.use { exists = it.moveToFirst() }
+            if (!exists) break
+            n++
+            name = base.substringBeforeLast('.') + " ($n)." + base.substringAfterLast('.', "png")
+          }
+          val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, mime)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/Bible Concordance")
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+          }
+          val out = resolver.insert(coll, values) ?: throw Exception("The phone would not make the file.")
+          try {
+            resolver.openOutputStream(out, "w")?.use { it.write(bytes) } ?: throw Exception("The file could not be written.")
+            resolver.update(out, ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }, null, null)
+          } catch (ex: Exception) {
+            resolver.delete(out, null, null)
+            throw ex
+          }
+        } else {
+          val dir = File(activity.getExternalFilesDir(Environment.DIRECTORY_PICTURES) ?: activity.filesDir, "Bible Concordance").apply { mkdirs() }
+          var f = File(dir, base)
+          var n = 1
+          while (f.exists()) { n++; f = File(dir, base.substringBeforeLast('.') + " ($n)." + base.substringAfterLast('.', "png")) }
+          f.writeBytes(bytes)
+        }
+        saved++
+      }
+      invoke.resolve(JSObject().put("saved", saved).put("where", if (Build.VERSION.SDK_INT >= 29) "Pictures/Bible Concordance" else "the app's own folder"))
+    } catch (ex: Exception) {
+      invoke.reject(ex.message)
+    }
+  }
+
+  /** Shares one or several pictures (base64 joined with "|") through the share sheet, with some text. */
+  @Command
+  fun shareImages(invoke: Invoke) {
+    try {
+      val args = invoke.parseArgs(PicturesArgs::class.java)
+      val data = args.base64.split("|").filter { it.isNotBlank() }
+      val names = args.names.split("|")
+      if (data.isEmpty()) throw Exception("Nothing to share.")
+      val dir = File(activity.cacheDir, "shared").apply { mkdirs() }
+      dir.listFiles()?.forEach { it.delete() }
+      val uris = ArrayList<Uri>()
+      data.forEachIndexed { i, b64 ->
+        val f = File(dir, "${i + 1} " + safeName(names.getOrElse(i) { "picture.png" }, "picture.png"))
+        f.writeBytes(Base64.decode(b64, Base64.DEFAULT))
+        uris.add(FileProvider.getUriForFile(activity, activity.packageName + ".phone.files", f))
+      }
+      val send = Intent(if (uris.size == 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
+        type = args.mime ?: "image/png"
+        if (uris.size == 1) putExtra(Intent.EXTRA_STREAM, uris[0]) else putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+        args.text?.let { putExtra(Intent.EXTRA_TEXT, it) }
+        clipData = ClipData.newRawUri(null, uris[0]).also { cd -> uris.drop(1).forEach { cd.addItem(ClipData.Item(it)) } }
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      }
+      activity.startActivity(Intent.createChooser(send, null))
+      invoke.resolve(JSObject().put("shared", true))
     } catch (ex: Exception) {
       invoke.reject(ex.message)
     }

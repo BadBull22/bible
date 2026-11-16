@@ -117,6 +117,11 @@ pub fn thumbs(data: &Path, pack: &Pack) -> Result<Vec<Thumb>, String> {
         .collect())
 }
 
+/// Just the ids and subjects of a set's photos (the thumbnails are much bigger: this is for choosing a photo by number).
+pub fn ids(data: &Path, pack: &Pack) -> Result<Vec<(String, String)>, String> {
+    Ok(read_list(data, pack)?.into_iter().map(|b| (b.id, b.theme)).collect())
+}
+
 /// One background, full size (JPEG, base64), with where it is from.
 pub fn image(data: &Path, pack: &Pack, id: &str) -> Result<(String, Background), String> {
     if !id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {

@@ -22,6 +22,8 @@ Sharing text or a picture, reading aloud with the phone's voices, saving or open
 - `allow-save-computer-picture`
 - `allow-share-computer-pictures`
 - `allow-open-computer-file`
+- `allow-save-to-gallery`
+- `allow-share-images`
 - `allow-share-file`
 - `allow-save-backup-copy`
 - `allow-list-backup-copies`
@@ -429,6 +431,32 @@ Denies the save_text command without any pre-configured scope.
 <tr>
 <td>
 
+`phone:allow-save-to-gallery`
+
+</td>
+<td>
+
+Enables the save_to_gallery command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-save-to-gallery`
+
+</td>
+<td>
+
+Denies the save_to_gallery command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `phone:allow-share`
 
 </td>
@@ -526,6 +554,32 @@ Enables the share_image command without any pre-configured scope.
 <td>
 
 Denies the share_image command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:allow-share-images`
+
+</td>
+<td>
+
+Enables the share_images command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`phone:deny-share-images`
+
+</td>
+<td>
+
+Denies the share_images command without any pre-configured scope.
 
 </td>
 </tr>
