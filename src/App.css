@@ -9590,7 +9590,7 @@ body.show-body {
 }
 
 /* a slide with its parts placed in boxes (a heading graphic spaced round, or placed by hand) */
-.slide-preview > *:not(.slide-layer):not(.slide-beside):not(.slide-box):not(.slide-corner) {
+.slide-preview > *:not(.slide-layer):not(.slide-beside):not(.slide-box):not(.slide-corner):not(.slide-ccli) {
   position: relative;
   z-index: 2;
 }
