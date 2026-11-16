@@ -34,6 +34,8 @@ export type ScrollOpen =
 
 interface Props {
   version: string;
+  /** out of sight (while a passage or story opened from a card is read) but still there, at the same card */
+  hidden?: boolean;
   onClose: () => void;
   onShare: (s: ScrollShare) => void;
   onOpen: (o: ScrollOpen) => void;
@@ -242,7 +244,7 @@ function CardView({ card, version, photos, root, onShare, onOpen, say, fail }: {
   );
 }
 
-export function DailyScroll({ version, onClose, onShare, onOpen, say, fail }: Props) {
+export function DailyScroll({ version, hidden, onClose, onShare, onOpen, say, fail }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const today = useMemo(() => dayNumber(), []);
   const pool = useMemo(() => buildPool(sources()), []);
@@ -296,17 +298,24 @@ export function DailyScroll({ version, onClose, onShare, onOpen, say, fail }: Pr
     }
   }
 
+  // where the feed was when it was last seen: the phone may reset a hidden list to its top, so it is put back when the scroll is shown again
+  const keep = useRef(0);
   const onScroll = () => {
     const r = root.current;
-    if (r) setAt(Math.round(r.scrollTop / Math.max(1, r.clientHeight)));
+    if (!r || hidden) return;
+    keep.current = r.scrollTop;
+    setAt(Math.round(r.scrollTop / Math.max(1, r.clientHeight)));
   };
+  useEffect(() => {
+    if (!hidden && root.current && Math.abs(root.current.scrollTop - keep.current) > 2) root.current.scrollTo({ top: keep.current, behavior: "instant" });
+  }, [hidden]);
   const showMore = () => {
     // the new cards are put where the end card was, so the first of them comes into view in its place (the feed does not follow the end card down)
     setMore((m) => m + 1);
   };
 
   return (
-    <div className="scroll-overlay" role="dialog" aria-label="Daily Scroll">
+    <div className={"scroll-overlay" + (hidden ? " away" : "")} role="dialog" aria-hidden={hidden} aria-label="Daily Scroll">
       <div className="scroll-top">
         <button className="scroll-close" onClick={onClose} aria-label="Close the Daily Scroll">
           ✕

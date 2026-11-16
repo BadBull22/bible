@@ -2170,6 +2170,7 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
 
 /* ---------- the Daily Scroll ---------- */
 .scroll-overlay { position: fixed; inset: 0; z-index: 19; background: #111; color: #fff; }
+.scroll-overlay.away { visibility: hidden; pointer-events: none; }
 .scroll-feed { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; overscroll-behavior: contain; overflow-anchor: none; }
 .scroll-card { position: relative; box-sizing: border-box; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; display: flex; flex-direction: column; justify-content: center; padding: calc(4rem + env(safe-area-inset-top)) 1.6rem calc(6rem + var(--sab)); background-size: cover; background-position: center; color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45); }
 .scroll-card:not(.photo) { text-shadow: none; }
