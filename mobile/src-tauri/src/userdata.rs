@@ -47,7 +47,21 @@ pub fn init(conn: &Connection) -> Result<(), String> {
          -- how much of the Bible has been read (since 0.3.0)
          CREATE TABLE IF NOT EXISTS reading_log (
             book TEXT NOT NULL, chapter INTEGER NOT NULL, read_on TEXT NOT NULL,
-            PRIMARY KEY (book, chapter, read_on));",
+            PRIMARY KEY (book, chapter, read_on));
+         -- the prayer list (since 3.0.0): what the reader is praying about, and what was answered. The id is made by the page (the time and some
+         -- random letters), so lists made on two phones can be merged without two requests getting the same one.
+         CREATE TABLE IF NOT EXISTS prayers (
+            id TEXT PRIMARY KEY, body TEXT NOT NULL,
+            created_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+            answered_at TEXT, answer_note TEXT NOT NULL DEFAULT '');
+         -- memory verse practice (since 3.0.0): a verse (or a few verses in a row) the reader is learning, and where it is in the spaced practice
+         -- (box 0 to 6, the day it is next due). The page works out the boxes and days (memoryVerse.ts); this only keeps them.
+         CREATE TABLE IF NOT EXISTS memory_verses (
+            book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, verse_end INTEGER NOT NULL,
+            added_on TEXT NOT NULL, box INTEGER NOT NULL DEFAULT 0, due_on TEXT NOT NULL, last_on TEXT,
+            updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+            PRIMARY KEY (book, chapter, verse, verse_end));",
     )
     .map_err(err)?;
     // tags on bookmarks (since 0.3.0); notes have had a tags column from the start
@@ -381,6 +395,12 @@ pub struct Backup {
     /// the phone's own preferences (a fixed list of them: theme, fonts, the Bible read, the reminder...), made and checked by the page; the desktop app ignores it
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub settings: Option<serde_json::Value>,
+    /// the prayer list (the phone's; the desktop app ignores it)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub prayers: Vec<Prayer>,
+    /// the memory verses being practised, and how far each has come (the phone's; the desktop app ignores it)
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub memory: Vec<MemoryVerse>,
     /// the reader's default Bible, when it is one they added (not one that comes with the app); the desktop app ignores it
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bible: Option<crate::bibles::BibleBackup>,
@@ -400,6 +420,127 @@ pub struct Counts {
     pub highlights: usize,
     pub notes: usize,
     pub plans: usize,
+    #[serde(default)]
+    pub prayers: usize,
+    #[serde(default)]
+    pub memory: usize,
+}
+
+// ---------------------------------------------------------------- the prayer list and memory verses
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Prayer {
+    pub id: String,
+    pub body: String,
+    #[serde(default)]
+    pub created_at: String,
+    #[serde(default)]
+    pub updated_at: String,
+    /// when it was answered (a "YYYY-MM-DD" day), or none while the reader is still praying
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub answered_at: Option<String>,
+    #[serde(default)]
+    pub answer_note: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct MemoryVerse {
+    pub book: String,
+    pub chapter: i64,
+    pub verse: i64,
+    pub verse_end: i64,
+    #[serde(default)]
+    pub added_on: String,
+    #[serde(default, rename = "box")]
+    pub box_no: i64,
+    #[serde(default)]
+    pub due_on: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_on: Option<String>,
+    #[serde(default)]
+    pub updated_at: String,
+}
+
+/// Every prayer: those still being prayed for first (newest first), then the answered ones (the most recently answered first).
+pub fn prayers(conn: &Connection) -> Result<Vec<Prayer>, String> {
+    let mut s = conn
+        .prepare("SELECT id, body, created_at, updated_at, answered_at, answer_note FROM prayers ORDER BY (answered_at IS NOT NULL), coalesce(answered_at, created_at) DESC, rowid DESC")
+        .map_err(err)?;
+    let rows = s
+        .query_map([], |r| Ok(Prayer { id: r.get(0)?, body: r.get(1)?, created_at: r.get(2)?, updated_at: r.get(3)?, answered_at: r.get(4)?, answer_note: r.get(5)? }))
+        .map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
+/// Adds a prayer, or changes the words of one that is there.
+pub fn save_prayer(conn: &Connection, id: &str, body: &str) -> Result<(), String> {
+    let body = body.trim();
+    if id.trim().is_empty() || body.is_empty() {
+        return Err("Write what you are praying about first.".into());
+    }
+    conn.execute(
+        "INSERT INTO prayers (id, body) VALUES (?1, ?2)
+         ON CONFLICT (id) DO UPDATE SET body = excluded.body, updated_at = datetime('now','localtime')",
+        params![id, body],
+    )
+    .map_err(err)?;
+    Ok(())
+}
+
+/// Marks a prayer answered on `day` (with a line on how), or (None) puts it back among those still being prayed for.
+pub fn answer_prayer(conn: &Connection, id: &str, day: Option<&str>, note: &str) -> Result<(), String> {
+    conn.execute(
+        "UPDATE prayers SET answered_at = ?2, answer_note = ?3, updated_at = datetime('now','localtime') WHERE id = ?1",
+        params![id, day, if day.is_some() { note.trim() } else { "" }],
+    )
+    .map_err(err)?;
+    Ok(())
+}
+
+pub fn delete_prayer(conn: &Connection, id: &str) -> Result<(), String> {
+    conn.execute("DELETE FROM prayers WHERE id = ?1", params![id]).map_err(err)?;
+    Ok(())
+}
+
+/// The memory verses, the ones due soonest first.
+pub fn memory_verses(conn: &Connection) -> Result<Vec<MemoryVerse>, String> {
+    let mut s = conn
+        .prepare("SELECT book, chapter, verse, verse_end, added_on, box, due_on, last_on, updated_at FROM memory_verses ORDER BY due_on, added_on, rowid")
+        .map_err(err)?;
+    let rows = s
+        .query_map([], |r| {
+            Ok(MemoryVerse { book: r.get(0)?, chapter: r.get(1)?, verse: r.get(2)?, verse_end: r.get(3)?, added_on: r.get(4)?, box_no: r.get(5)?, due_on: r.get(6)?, last_on: r.get(7)?, updated_at: r.get(8)? })
+        })
+        .map_err(err)?;
+    rows.collect::<Result<_, _>>().map_err(err)
+}
+
+/// Starts learning a verse (or `verse` to `verse_end`): due today. Already being learned: nothing changes. True when it was added.
+pub fn add_memory_verse(conn: &Connection, book: &str, chapter: i64, verse: i64, verse_end: i64, today: &str) -> Result<bool, String> {
+    let end = verse_end.max(verse);
+    let added = conn
+        .execute(
+            "INSERT OR IGNORE INTO memory_verses (book, chapter, verse, verse_end, added_on, box, due_on) VALUES (?1,?2,?3,?4,?5,0,?5)",
+            params![book, chapter, verse, end, today],
+        )
+        .map_err(err)?;
+    Ok(added > 0)
+}
+
+/// Keeps where practice left a verse: its box, the day it is next due, and today as the day it was last practised.
+#[allow(clippy::too_many_arguments)]
+pub fn set_memory_progress(conn: &Connection, book: &str, chapter: i64, verse: i64, verse_end: i64, box_no: i64, due_on: &str, today: &str) -> Result<(), String> {
+    conn.execute(
+        "UPDATE memory_verses SET box = ?5, due_on = ?6, last_on = ?7, updated_at = datetime('now','localtime') WHERE book = ?1 AND chapter = ?2 AND verse = ?3 AND verse_end = ?4",
+        params![book, chapter, verse, verse_end.max(verse), box_no.clamp(0, 6), due_on, today],
+    )
+    .map_err(err)?;
+    Ok(())
+}
+
+pub fn remove_memory_verse(conn: &Connection, book: &str, chapter: i64, verse: i64, verse_end: i64) -> Result<(), String> {
+    conn.execute("DELETE FROM memory_verses WHERE book = ?1 AND chapter = ?2 AND verse = ?3 AND verse_end = ?4", params![book, chapter, verse, verse_end.max(verse)]).map_err(err)?;
+    Ok(())
 }
 
 pub fn backup(conn: &Connection) -> Result<Backup, String> {
@@ -439,6 +580,8 @@ pub fn backup_with(conn: &Connection, settings: Option<serde_json::Value>, bible
             let rows = s.query_map([], |r| Ok(ReadEntry { book: r.get(0)?, chapter: r.get(1)?, read_on: r.get(2)? })).map_err(err)?;
             rows.collect::<Result<_, _>>().map_err(err)?
         },
+        prayers: prayers(conn)?,
+        memory: memory_verses(conn)?,
         settings: settings.filter(|s| !s.is_null()),
         bible,
     })
@@ -451,7 +594,7 @@ pub fn backup_json(conn: &Connection) -> Result<(String, Counts), String> {
 /// The text of a backup file and how much it holds, with the preferences and the added Bible when given.
 pub fn backup_json_with(conn: &Connection, settings: Option<serde_json::Value>, bible: Option<crate::bibles::BibleBackup>) -> Result<(String, Counts), String> {
     let b = backup_with(conn, settings, bible)?;
-    let counts = Counts { bookmarks: b.bookmarks.len(), highlights: b.highlights.len(), notes: b.notes.len(), plans: b.plans.len() };
+    let counts = Counts { bookmarks: b.bookmarks.len(), highlights: b.highlights.len(), notes: b.notes.len(), plans: b.plans.len(), prayers: b.prayers.len(), memory: b.memory.len() };
     Ok((serde_json::to_string_pretty(&b).map_err(err)?, counts))
 }
 
@@ -530,6 +673,38 @@ fn apply_backup(conn: &mut Connection, b: &Backup) -> Result<Counts, String> {
             changed += tx.execute("INSERT OR IGNORE INTO plan_days (plan_id, day) VALUES (?1,?2)", params![p.plan_id, d]).map_err(err)?;
         }
         n.plans += usize::from(changed > 0);
+    }
+    // a prayer is replaced only by a newer copy of itself (so an answer marked on one phone arrives on the other)
+    for p in &b.prayers {
+        if p.id.trim().is_empty() || p.body.trim().is_empty() {
+            continue;
+        }
+        let updated = if p.updated_at.is_empty() { p.created_at.clone() } else { p.updated_at.clone() };
+        n.prayers += tx
+            .execute(
+                "INSERT INTO prayers (id, body, created_at, updated_at, answered_at, answer_note)
+                 VALUES (?1,?2, coalesce(?3, datetime('now','localtime')), coalesce(?4, datetime('now','localtime')), ?5, ?6)
+                 ON CONFLICT (id) DO UPDATE SET body = excluded.body, updated_at = excluded.updated_at, answered_at = excluded.answered_at, answer_note = excluded.answer_note
+                 WHERE excluded.updated_at > prayers.updated_at",
+                params![p.id, p.body, now(&p.created_at), now(&updated), p.answered_at, p.answer_note],
+            )
+            .map_err(err)?;
+    }
+    // a memory verse already here takes the backup's practice only when the backup's is newer
+    for m in &b.memory {
+        if m.book.is_empty() || m.due_on.is_empty() {
+            continue;
+        }
+        let updated = if m.updated_at.is_empty() { m.added_on.clone() } else { m.updated_at.clone() };
+        n.memory += tx
+            .execute(
+                "INSERT INTO memory_verses (book, chapter, verse, verse_end, added_on, box, due_on, last_on, updated_at)
+                 VALUES (?1,?2,?3,?4,?5,?6,?7,?8, coalesce(?9, datetime('now','localtime')))
+                 ON CONFLICT (book, chapter, verse, verse_end) DO UPDATE SET box = excluded.box, due_on = excluded.due_on, last_on = excluded.last_on, updated_at = excluded.updated_at
+                 WHERE excluded.updated_at > memory_verses.updated_at",
+                params![m.book, m.chapter, m.verse, m.verse_end.max(m.verse), m.added_on, m.box_no.clamp(0, 6), m.due_on, m.last_on, now(&updated)],
+            )
+            .map_err(err)?;
     }
     for r in &b.reading {
         tx.execute("INSERT OR IGNORE INTO reading_log (book, chapter, read_on) VALUES (?1,?2,?3)", params![r.book, r.chapter, r.read_on]).map_err(err)?;

@@ -382,6 +382,47 @@ fn toggle_bookmark(core: State<Core>, book: String, chapter: i64, verse: i64) ->
 }
 
 #[tauri::command(async)]
+fn prayers(core: State<Core>) -> Result<Vec<userdata::Prayer>, String> {
+    userdata::prayers(&*core.get()?.user.lock().map_err(err)?)
+}
+
+#[tauri::command(async)]
+fn save_prayer(core: State<Core>, id: String, body: String) -> Result<(), String> {
+    userdata::save_prayer(&*core.get()?.user.lock().map_err(err)?, &id, &body)
+}
+
+#[tauri::command(async)]
+fn answer_prayer(core: State<Core>, id: String, day: Option<String>, note: String) -> Result<(), String> {
+    userdata::answer_prayer(&*core.get()?.user.lock().map_err(err)?, &id, day.as_deref(), &note)
+}
+
+#[tauri::command(async)]
+fn delete_prayer(core: State<Core>, id: String) -> Result<(), String> {
+    userdata::delete_prayer(&*core.get()?.user.lock().map_err(err)?, &id)
+}
+
+#[tauri::command(async)]
+fn memory_verses(core: State<Core>) -> Result<Vec<userdata::MemoryVerse>, String> {
+    userdata::memory_verses(&*core.get()?.user.lock().map_err(err)?)
+}
+
+#[tauri::command(async)]
+fn add_memory_verse(core: State<Core>, book: String, chapter: i64, verse: i64, verse_end: i64, today: String) -> Result<bool, String> {
+    userdata::add_memory_verse(&*core.get()?.user.lock().map_err(err)?, &book, chapter, verse, verse_end, &today)
+}
+
+#[tauri::command(async)]
+#[allow(clippy::too_many_arguments)]
+fn set_memory_progress(core: State<Core>, book: String, chapter: i64, verse: i64, verse_end: i64, box_no: i64, due_on: String, today: String) -> Result<(), String> {
+    userdata::set_memory_progress(&*core.get()?.user.lock().map_err(err)?, &book, chapter, verse, verse_end, box_no, &due_on, &today)
+}
+
+#[tauri::command(async)]
+fn remove_memory_verse(core: State<Core>, book: String, chapter: i64, verse: i64, verse_end: i64) -> Result<(), String> {
+    userdata::remove_memory_verse(&*core.get()?.user.lock().map_err(err)?, &book, chapter, verse, verse_end)
+}
+
+#[tauri::command(async)]
 fn set_highlight(core: State<Core>, book: String, chapter: i64, verse: i64, color: Option<String>) -> Result<(), String> {
     userdata::set_highlight(&*core.get()?.user.lock().map_err(err)?, &book, chapter, verse, color.as_deref())
 }
@@ -1152,6 +1193,14 @@ pub fn run() {
             article,
             chapter_marks,
             toggle_bookmark,
+            prayers,
+            save_prayer,
+            answer_prayer,
+            delete_prayer,
+            memory_verses,
+            add_memory_verse,
+            set_memory_progress,
+            remove_memory_verse,
             set_highlight,
             note,
             set_note,
