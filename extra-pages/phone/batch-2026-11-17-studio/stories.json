@@ -1,0 +1,696 @@
+{
+ "format": 1,
+ "tags": [],
+ "pages": [
+  {
+   "id": "the-woman-who-touched-jesus-cloak",
+   "title": "The Woman Who Touched Jesus' Cloak",
+   "also": [
+    "the woman with the issue of blood",
+    "the bleeding woman",
+    "Jesus heals the bleeding woman",
+    "twelve years of bleeding",
+    "touching the hem of his garment"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Jesus is on his way to the house of Jairus, a synagogue leader whose young daughter is dying, and a large crowd presses around him. In that crowd is a woman who has been bleeding for twelve years. She has spent everything on doctors and only grown worse, and her illness has left her weak and shut out from others. She has heard about Jesus and tells herself that if she can only touch his clothes she will be well. She slips up behind him and touches his cloak, and the bleeding stops at once. Jesus feels that power has gone out of him and asks who touched him. His disciples are amazed that he asks, with so many people pushing close, but he keeps looking round. Trembling, the woman comes forward, kneels and tells him everything. He calls her daughter, tells her that her faith has made her well, and sends her away in peace.",
+   "look_closer": "Notice that Jesus does not let her slip away unseen. A secret healing would have left her afraid and still on the edge of the crowd. By speaking to her in front of everyone, and calling her daughter, he gives her back her place (verses 33-34).",
+   "lessons": [
+    "Desperate people are welcome. She had tried every doctor and had nothing left, and she still came to Jesus (Mark 5:25-28).",
+    "Faith can be small and quiet. She said almost nothing and only reached out to touch his cloak, and Jesus called that faith (5:27-28, 34).",
+    "Jesus notices one person in a crowd. Many pressed against him, but only one touch was a touch of faith, and he stopped to find her (5:30-32).",
+    "He heals more than her body. By calling her daughter and sending her away in peace, he gives her a place among his people again (5:33-34)."
+   ],
+   "context": {
+    "ref": "Mark 5:21-24",
+    "label": "On the way to Jairus' house"
+   },
+   "passages": [
+    {
+     "ref": "Mark 5:25-29",
+     "label": "Twelve years of illness and one touch"
+    },
+    {
+     "ref": "Mark 5:30-34",
+     "label": "Who touched me?"
+    }
+   ],
+   "whole": "Mark 5:25-34",
+   "parallels": [
+    "Matthew 9:20-22",
+    "Luke 8:43-48"
+   ],
+   "also_read": [
+    "Mark 5:35-43"
+   ],
+   "people": [
+    "jairus_711"
+   ],
+   "tags": [
+    "healing",
+    "faith",
+    "miracles",
+    "mercy"
+   ],
+   "related": [
+    "jesus-calms-the-storm",
+    "jesus-heals-the-centurions-servant"
+   ],
+   "topics": [],
+   "child_page": "the-woman-who-touched-the-cloak",
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 1,
+    "date": "2026-11-11"
+   }
+  },
+  {
+   "id": "jesus-heals-the-centurions-servant",
+   "title": "Jesus Heals the Centurion's Servant",
+   "also": [
+    "the Roman officer's servant",
+    "the Roman soldier's servant",
+    "the centurion's faith",
+    "just say the word"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "In Capernaum a Roman officer, a centurion in charge of about a hundred soldiers, has a servant he values highly who is sick and close to death. The centurion has heard about Jesus and sends a group of Jewish elders with a request that Jesus come and heal the man. The elders plead for him, saying he deserves this help because he loves their nation and paid for their synagogue. Jesus goes with them, but before he reaches the house the centurion sends friends with a message: he does not feel worthy to have Jesus under his roof, and Jesus only needs to give the word for his servant to be healed. He knows about authority, since his own soldiers obey his orders. Jesus is amazed and tells the crowd that he has not found faith like this even in Israel. When the messengers get back to the house, they find the servant well.",
+   "look_closer": "Notice who speaks. In Luke the centurion never meets Jesus himself: Jewish elders ask for him, and then friends carry his message. In Matthew's account he speaks to Jesus directly (Matthew 8:5-9).",
+   "lessons": [
+    "Jesus answers need across every boundary. A Roman officer, an outsider to Israel, asks for help, and Jesus goes with the elders at once (Luke 7:3-6).",
+    "Humility and faith go together. The centurion thinks himself unworthy of a visit, yet he trusts Jesus completely (7:6-7).",
+    "Jesus' word is enough. The healing happens at a distance, with Jesus not even entering the house, just as the centurion expected (7:7-10).",
+    "Faith surprises Jesus. He is amazed at a man from outside Israel and holds him up as an example to everyone listening (7:9)."
+   ],
+   "passages": [
+    {
+     "ref": "Luke 7:1-5",
+     "label": "The elders plead for a Roman officer"
+    },
+    {
+     "ref": "Luke 7:6-10",
+     "label": "Just say the word"
+    }
+   ],
+   "whole": "Luke 7:1-10",
+   "parallels": [
+    "Matthew 8:5-13"
+   ],
+   "also_read": [
+    "John 4:46-54"
+   ],
+   "places": [
+    "capernaum_274"
+   ],
+   "tags": [
+    "healing",
+    "faith",
+    "miracles",
+    "mercy"
+   ],
+   "related": [
+    "the-woman-who-touched-jesus-cloak",
+    "jesus-calms-the-storm"
+   ],
+   "topics": [],
+   "child_page": "the-soldier-and-his-servant",
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 1,
+    "date": "2026-11-11"
+   }
+  },
+  {
+   "id": "jesus-heals-a-man-born-blind",
+   "title": "Jesus Heals a Man Born Blind",
+   "also": [
+    "the blind man healed with mud",
+    "the Pool of Siloam",
+    "I was blind, but now I see"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Jesus sees a man who has been blind from birth. His disciples ask whose sin caused it, and Jesus answers that it was no one's sin: God's works are to be shown in him. Jesus makes mud with spit, puts it on the man's eyes and tells him to wash in the Pool of Siloam. The man goes, washes and comes back able to see. His neighbors can hardly believe it, and because it is a Sabbath he is brought to the Pharisees, who are divided about Jesus. They question his parents, who are afraid and tell them to ask their son. The man answers that he knows one thing: he was blind and now he sees. When he argues that Jesus must be from God, they throw him out. Jesus finds him, and the man says he believes and worships him.",
+   "look_closer": "Follow the man's growing confession. First he knows only 'the man they call Jesus' (verse 11), then 'a prophet' (verse 17), then he argues that Jesus must be from God (verse 33), and finally he worships him (verse 38).",
+   "lessons": [
+    "Jesus does not blame the man or his parents. Suffering is not always a punishment, and God can show his works through it (John 9:2-3).",
+    "Sight comes with obedience: the man goes and washes as he is told (John 9:7).",
+    "A simple testimony is hard to argue with: I was blind, and now I see. Telling what Jesus has done does not need a speech (John 9:25).",
+    "Those who could see everything were the ones who refused to see Jesus. Spiritual blindness is turning away from the light (John 9:39-41).",
+    "Jesus finds the man after he is thrown out. Those who stand up for him are not left alone (John 9:34-35)."
+   ],
+   "passages": [
+    {
+     "ref": "John 9:1-12",
+     "label": "Mud, Siloam and sight"
+    },
+    {
+     "ref": "John 9:13-34",
+     "label": "Questions from the Pharisees"
+    },
+    {
+     "ref": "John 9:35-41",
+     "label": "Who is really blind?"
+    }
+   ],
+   "whole": "John 9:1-41",
+   "also_read": [
+    "John 8:12-20",
+    "Isaiah 42:5-7"
+   ],
+   "tags": [
+    "healing",
+    "faith",
+    "miracles",
+    "worship"
+   ],
+   "related": [
+    "the-raising-of-lazarus",
+    "nicodemus-visits-jesus"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "jesus-heals-a-paralytic",
+   "title": "Jesus Heals a Paralytic",
+   "also": [
+    "the paralyzed man lowered through the roof",
+    "the man on the mat",
+    "the four friends and the roof"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Jesus is back in Capernaum, and so many people gather at the house where he is teaching that there is no room left, not even at the door. Four men bring a paralyzed friend on a mat, but they cannot get through the crowd. So they climb up, make an opening in the roof above Jesus and lower the man down on his mat. Seeing their faith, Jesus tells the man his sins are forgiven. Some teachers of the law think to themselves that only God can forgive sins. Jesus knows what they are thinking and asks which is easier: telling the man his sins are forgiven, or telling him to rise and walk. To prove that the Son of Man has the right to forgive sins here on earth, he tells the man to stand, take his mat and go home. The man does so at once, and everyone is amazed and praises God.",
+   "look_closer": "Jesus answers the unspoken question before he heals. The friends came for a cure, and the first thing he says is about forgiveness (verse 5). Then the healing becomes the proof of his right to forgive (verses 10-11).",
+   "lessons": [
+    "Determined friends can carry someone to Jesus. These four will not let a crowd or a roof stop them (Mark 2:3-4).",
+    "Jesus sees their faith, and the first thing he says is that the man's sins are forgiven. The deepest need is not always the one we bring (Mark 2:5).",
+    "Only God can forgive sins, as the teachers say. Jesus' words and his healing show that he has that authority (Mark 2:7, 10-12).",
+    "The result is praise. The crowd glorifies God and says they have never seen anything like it (Mark 2:12)."
+   ],
+   "passages": [
+    {
+     "ref": "Mark 2:1-5",
+     "label": "Through the roof"
+    },
+    {
+     "ref": "Mark 2:6-12",
+     "label": "Forgiven, and made well"
+    }
+   ],
+   "whole": "Mark 2:1-12",
+   "parallels": [
+    "Matthew 9:1-8",
+    "Luke 5:17-26"
+   ],
+   "tags": [
+    "faith",
+    "healing",
+    "miracles",
+    "forgiveness"
+   ],
+   "related": [
+    "the-woman-who-touched-jesus-cloak",
+    "jesus-heals-the-centurions-servant"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "mary-anoints-jesus",
+   "title": "Mary Anoints Jesus",
+   "also": [
+    "Mary of Bethany",
+    "the perfume at Bethany",
+    "the anointing at Bethany"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Six days before the Passover, Jesus comes to Bethany, where Lazarus lives, the man he raised from the dead. A dinner is given in his honor: Martha serves, and Lazarus sits at the table with Jesus. Mary takes a pint of very costly perfume made of pure nard, pours it on Jesus' feet and wipes them with her hair, and the whole house fills with the scent. Judas Iscariot, who will betray Jesus, objects that the perfume could have been sold for three hundred denarii, with the proceeds going to the poor. John explains that Judas does not care about the poor; he is a thief who helps himself to the money bag. Jesus tells him to leave Mary alone. She has kept the perfume for the day of his burial, and he will not always be with them.",
+   "look_closer": "Compare the two reactions in the room. Mary acts without saying a word; Judas speaks about the poor, and John tells us his real reason (verses 3-6). Jesus says what her act means: it points to his burial (verse 7).",
+   "lessons": [
+    "Costly love for Jesus is never wasted. Mary gives something worth about a year's wages, and Jesus speaks up for her (John 12:3, 5, 7).",
+    "Fine words can hide a wrong heart. Judas sounds generous, but John says he was stealing from the money bag (John 12:4-6).",
+    "Jesus is not dismissing the poor; elsewhere he commands care for them. He is saying that this time with him will not come again (John 12:8).",
+    "Jesus links her gift to his burial, a quiet reminder of where the week is heading (John 12:7)."
+   ],
+   "passages": [
+    {
+     "ref": "John 12:1-3",
+     "label": "A dinner in Bethany"
+    },
+    {
+     "ref": "John 12:4-8",
+     "label": "Judas objects"
+    }
+   ],
+   "whole": "John 12:1-8",
+   "parallels": [
+    "Matthew 26:6-13",
+    "Mark 14:3-9"
+   ],
+   "also_read": [
+    "John 11:1-44"
+   ],
+   "tags": [
+    "love",
+    "worship",
+    "generosity"
+   ],
+   "related": [
+    "the-raising-of-lazarus"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "pauls-conversion-on-the-damascus-road",
+   "title": "Paul's Conversion on the Damascus Road",
+   "also": [
+    "Saul on the road to Damascus",
+    "Saul becomes Paul",
+    "the light on the Damascus road"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Saul, later known as Paul, is still breathing threats against the Lord's followers. He asks the high priest for letters of introduction to the Damascus synagogues, which will let him arrest any men or women of the Way and bring them to Jerusalem. Near Damascus a light from heaven flashes around him and he falls to the ground. A voice asks why he is persecuting him, and when Saul asks who is speaking, the answer is Jesus. Saul is told to go into the city and wait. He cannot see, and for three days he neither eats nor drinks. The Lord sends Ananias to him, though Ananias is afraid of Saul. Ananias lays his hands on him and says Jesus has sent him so that Saul can regain his sight and receive the fullness of the Holy Spirit. Something like scales falls from Saul's eyes, and he is baptized. At once he begins to tell people in the synagogues that Jesus is the Son of God.",
+   "look_closer": "Notice how personal Jesus is: he asks why Saul is persecuting him, not his followers (verse 4). Hurting his people is hurting him. Notice also Ananias, who argues with the Lord and yet goes (verses 13-17). Obedience is the key.",
+   "lessons": [
+    "Jesus is so close to his people that harming them is harming him (Acts 9:4-5).",
+    "No one is too far gone. The man who hunted the church becomes one of its most important messengers (Acts 9:1-2, 15).",
+    "God works through ordinary believers like Ananias. He is afraid, but he goes and calls Saul his brother (Acts 9:10-17).",
+    "The change shows in what Saul does next: he is baptized, eats, and begins at once to speak about Jesus (Acts 9:18-20)."
+   ],
+   "passages": [
+    {
+     "ref": "Acts 9:1-9",
+     "label": "A light on the road"
+    },
+    {
+     "ref": "Acts 9:10-19",
+     "label": "Ananias and Saul"
+    },
+    {
+     "ref": "Acts 9:20-31",
+     "label": "Speaking about Jesus"
+    }
+   ],
+   "whole": "Acts 9:1-31",
+   "parallels": [
+    "Acts 22:6-16",
+    "Acts 26:12-18"
+   ],
+   "also_read": [
+    "Galatians 1:11-24",
+    "1 Timothy 1:12-16"
+   ],
+   "tags": [
+    "salvation",
+    "grace",
+    "spirit",
+    "church",
+    "obedience"
+   ],
+   "related": [
+    "the-day-of-pentecost",
+    "zacchaeus-meets-jesus"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "needs_review",
+   "doctrine_note": "Christians understand baptism and being filled with the Holy Spirit in different ways, including how the two relate and whether they come together or at different times. This page says only what the text says.",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "peter-denies-jesus",
+   "title": "Peter Denies Jesus",
+   "also": [
+    "Peter's denial",
+    "the rooster crows",
+    "Peter weeps"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "At the table Jesus tells Simon Peter that Satan has asked to sift the disciples like wheat, but that he has prayed for Peter so his faith will not fail, and that once Peter has turned back he must strengthen the others. Peter insists he is ready to go to prison and even to die with Jesus. Jesus answers that before the rooster crows that day Peter will say three times that he does not know him. Later, after Jesus is arrested, Peter follows at a distance into the high priest's courtyard and sits by the fire. A servant girl, then another person, then a third man says he was with Jesus, and each time Peter denies it. As he speaks the third time, a rooster crows, and Jesus turns and looks at him. Peter remembers the warning, goes outside and weeps bitterly.",
+   "look_closer": "Notice that the warning comes with a promise: Jesus has prayed for Peter, and Peter will turn back (verse 32). In the courtyard the text does not say what the look meant; it tells only what Peter remembered and what he did next (verses 61-62).",
+   "lessons": [
+    "Strong promises are not the same as strength. Peter means every word he says, and still fails within hours (Luke 22:33, 54-62).",
+    "Failure is not the end of the story. Jesus prayed for Peter's faith before he failed, and gave him a task for afterwards (Luke 22:31-32).",
+    "Fear can make a bold person quiet. Peter follows at a distance, and the denials come one after another (Luke 22:54-60).",
+    "Real sorrow is the first step back. Peter's tears show he knows what he has done, and the story of his return is told in John's Gospel (Luke 22:61-62; John 21:15-17)."
+   ],
+   "passages": [
+    {
+     "ref": "Luke 22:31-34",
+     "label": "Jesus warns Peter"
+    },
+    {
+     "ref": "Luke 22:54-62",
+     "label": "Three times, and a rooster"
+    }
+   ],
+   "parallels": [
+    "Matthew 26:69-75",
+    "Mark 14:66-72",
+    "John 18:15-27"
+   ],
+   "also_read": [
+    "John 21:15-19"
+   ],
+   "tags": [
+    "fear",
+    "forgiveness",
+    "grace"
+   ],
+   "related": [
+    "jesus-walks-on-water"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "the-ascension-of-jesus",
+   "title": "The Ascension of Jesus",
+   "also": [
+    "Jesus goes up to heaven",
+    "Jesus taken up",
+    "Ascension Day"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Luke opens the book of Acts by looking back at everything Jesus began to do and to teach, right up to the day he was lifted into heaven. After his suffering, Jesus shows himself alive to the apostles with many convincing proofs over forty days, speaking about the kingdom of God. He tells them not to leave Jerusalem but to wait for the gift the Father promised: in a few days they will be baptized with the Holy Spirit. The apostles ask whether he will now restore the kingdom to Israel. Jesus says the times belong to the Father, but they will receive power when the Spirit comes and will be his witnesses from Jerusalem to the ends of the earth. Then he is lifted up as they watch, and a cloud hides him. Two men in white tell them that this same Jesus will return.",
+   "look_closer": "The apostles ask about the kingdom and Israel, and Jesus does not give them a date. He gives them something to do instead: wait, receive power and be witnesses (verses 6-8). The two men ask why they keep looking at the sky, and promise that he will come back (verses 10-11).",
+   "lessons": [
+    "Jesus does not leave his friends with an empty promise. He rises, shows himself alive, and prepares them for what comes next (Acts 1:3-5).",
+    "The power to be a witness comes from the Holy Spirit, not from the apostles' own strength (Acts 1:8).",
+    "His work reaches outward in steps: Jerusalem, Judea, Samaria, and the ends of the earth. The task is bigger than any one place (Acts 1:8).",
+    "He goes up, and he is coming back. Believers live between the two, waiting and working (Acts 1:9-11)."
+   ],
+   "passages": [
+    {
+     "ref": "Acts 1:1-5",
+     "label": "Forty days, and a promise"
+    },
+    {
+     "ref": "Acts 1:6-8",
+     "label": "Power to be witnesses"
+    },
+    {
+     "ref": "Acts 1:9-11",
+     "label": "Taken up into heaven"
+    }
+   ],
+   "whole": "Acts 1:1-11",
+   "parallels": [
+    "Luke 24:44-53",
+    "Mark 16:19-20"
+   ],
+   "also_read": [
+    "Acts 2:1-4",
+    "John 14:1-3"
+   ],
+   "tags": [
+    "spirit",
+    "hope",
+    "church"
+   ],
+   "related": [
+    "the-day-of-pentecost",
+    "the-empty-tomb"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "needs_review",
+   "doctrine_note": "Christians understand the promised baptism with the Holy Spirit, and the return of Jesus, in different ways, including when and how each happens and how they are shown. This page says only what the text says.",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "the-boy-jesus-in-the-temple",
+   "title": "The Boy Jesus in the Temple",
+   "also": [
+    "Jesus at twelve",
+    "Jesus in the temple as a boy",
+    "the lost boy Jesus"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Every year Mary and Joseph go to Jerusalem for the Passover feast. When Jesus is twelve, the family goes up as usual, but on the way home the boy stays behind in Jerusalem and his parents do not realize it. Thinking he is somewhere in the group, they travel a whole day before they start looking for him among relatives and friends. When they cannot find him, they go back to Jerusalem and search for three days. At last they spot him in the temple, seated with the teachers, listening to them and asking questions, and everyone who hears him is amazed at his understanding. Mary says they have been anxious, and Jesus asks why they were looking, since he had to be in his Father's house. They do not understand, but he goes home with them to Nazareth and obeys them.",
+   "look_closer": "Jesus calls the temple his Father's house, just after Mary has said 'your father and I' (verses 48-49). Luke then says he went home and obeyed them (verse 51). He is both the Son of God and a child who submits to his parents.",
+   "lessons": [
+    "Jesus knows from a young age who his Father is and what he is here for (Luke 2:49).",
+    "Even the Son of God listens, learns and asks questions. Wisdom grows with time and attention (Luke 2:46, 52).",
+    "He obeys his parents though he knows his true Father. Obedience at home is part of growing up in wisdom (Luke 2:51-52).",
+    "Parents can lose track of a child, and God can use even that to show something. Mary keeps these things in her heart (Luke 2:48, 51)."
+   ],
+   "passages": [
+    {
+     "ref": "Luke 2:41-45",
+     "label": "A family trip to Jerusalem"
+    },
+    {
+     "ref": "Luke 2:46-50",
+     "label": "Found in the temple"
+    },
+    {
+     "ref": "Luke 2:51-52",
+     "label": "Growing up in Nazareth"
+    }
+   ],
+   "whole": "Luke 2:41-52",
+   "also_read": [
+    "Proverbs 1:7"
+   ],
+   "tags": [
+    "family",
+    "obedience",
+    "worship"
+   ],
+   "related": [
+    "the-birth-of-jesus",
+    "the-baptism-of-jesus"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "the-crucifixion-of-jesus",
+   "title": "The Crucifixion of Jesus",
+   "also": [
+    "Good Friday",
+    "Jesus dies on the cross",
+    "Golgotha",
+    "the cross"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "Roman soldiers take Jesus into the governor's headquarters, dress him in a purple robe, press a crown of thorns on his head and mock him as King of the Jews. Then they lead him out to be crucified, later a passer-by named Simon, from Cyrene, is forced to carry the cross the rest of the way. At the place called Golgotha, Jesus is crucified between two robbers, with a sign above Him that reads: The King of the Jews. People passing by, the chief priests and even one of the men crucified beside him ridicule Him. At midday darkness covers the whole land for three hours. Then Jesus cries out in a loud voice and breathes his last. The curtain of the temple is torn in two, from the top down, and the centurion who watched him die says that this man truly was the Son of God. Women who had followed him from Galilee watch from a distance.",
+   "look_closer": "Watch who speaks. Soldiers, passers-by and priests all say he should save himself (verses 29-32), yet the first to name him is a Roman officer who sees how he dies (verse 39). The torn curtain (verse 38) is explained later: the way into God's presence is open, restored access (Hebrews 10:19-20).",
+   "lessons": [
+    "Jesus is mocked as a king and dies under a sign that calls him King of the Jews. People meant it as an insult; it is exactly who He is (Mark 15:17-18, 26).",
+    "He does not come down from the cross when they dare him to. Staying there is the way He saves everyone (Mark 15:30-32).",
+    "The Roman officer who watches him die is the first to say who He is. Faith can begin at the foot of the cross, even for an outsider (Mark 15:39).",
+    "Scripture says our forgiveness was bought at a great price: not with silver or gold, but with the precious blood of Christ (1 Peter 1:18-19)."
+   ],
+   "passages": [
+    {
+     "ref": "Mark 15:16-27",
+     "label": "Mocked, and led to Golgotha"
+    },
+    {
+     "ref": "Mark 15:29-37",
+     "label": "Insults, darkness and his last cry"
+    },
+    {
+     "ref": "Mark 15:38-41",
+     "label": "The curtain is torn"
+    }
+   ],
+   "parallels": [
+    "Matthew 27:27-56",
+    "Luke 23:26-49",
+    "John 19:16-37"
+   ],
+   "also_read": [
+    "Isaiah 53:4-6",
+    "1 Peter 1:18-19"
+   ],
+   "tags": [
+    "salvation",
+    "love",
+    "grace",
+    "forgiveness",
+    "grace"
+   ],
+   "related": [
+    "the-empty-tomb"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "the-last-supper",
+   "title": "The Last Supper",
+   "also": [
+    "the Lord's Supper",
+    "Communion",
+    "the upper room",
+    "Jesus' last Passover meal"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "It is the day of Unleavened Bread, and Jesus sends Peter and John to get the Passover meal ready. He tells them a man with a water jar will lead them to a large furnished upper room, and they find everything just as he said. That evening Jesus sits at the table with his apostles and says how much he has longed to eat this Passover with them before he suffers. He gives thanks over a cup and over the bread, breaks the bread and gives it to them, saying it is his body given for them and that they should do this to remember him. After supper he takes the cup and calls it the new covenant in his blood, poured out for them. Then he says that the one who will betray him is at the table, and the apostles begin asking one another who it could be.",
+   "look_closer": "Notice how much Jesus says before the bread and cup are passed round. He has longed for this meal, and he speaks of the kingdom of God (verses 15-18). The Supper is set inside Passover, the feast of rescue, and looks ahead to the day he drinks with them again.",
+   "lessons": [
+    "Jesus knows what lies ahead and still prepares a meal for his friends, even though one of them will betray him (Luke 22:8-13, 21-22).",
+    "He gives the bread and the cup a meaning: his body given and his blood poured out for them. Everything he is about to suffer is for others (Luke 22:19-20).",
+    "He asks his followers to keep doing this to remember him, so the meal looks back to the cross and forward to the kingdom (Luke 22:16-20).",
+    "Even among the twelve the question of who will fail is real, and they begin to ask it of themselves. The meal invites honest hearts (Luke 22:21-23)."
+   ],
+   "passages": [
+    {
+     "ref": "Luke 22:7-13",
+     "label": "Getting the Passover ready"
+    },
+    {
+     "ref": "Luke 22:14-20",
+     "label": "The bread and the cup"
+    },
+    {
+     "ref": "Luke 22:21-23",
+     "label": "One of you will betray me"
+    }
+   ],
+   "whole": "Luke 22:7-23",
+   "parallels": [
+    "Matthew 26:17-30",
+    "Mark 14:12-26"
+   ],
+   "also_read": [
+    "1 Corinthians 11:23-26",
+    "Exodus 12:1-14"
+   ],
+   "tags": [
+    "covenant",
+    "salvation",
+    "worship",
+    "love",
+    "hope",
+    "forgiveness"
+   ],
+   "related": [
+    "the-road-to-emmaus",
+    "the-empty-tomb"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "needs_review",
+   "doctrine_note": "Christians keep this meal with different names (the Lord's Supper, Communion, the Eucharist) and understand the bread and the cup in different ways, including who may share it and what happens in it. This page says only what the text says: what Jesus did, what he said, and that he asked his followers to remember him.",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  },
+  {
+   "id": "water-into-wine-at-cana",
+   "title": "Water into Wine at Cana",
+   "also": [
+    "the wedding at Cana",
+    "Jesus' first miracle",
+    "turning water into wine"
+   ],
+   "testament": "NT",
+   "age": "all",
+   "summary": "On the third day there is a wedding at Cana in Galilee. Jesus' mother is there, and Jesus and his disciples are invited too. When the wine runs out, Mary tells Jesus, and although he says his hour has not yet come, she tells the servants to do whatever he asks. Six large stone water jars stand nearby, kept for Jewish washing ceremonies. Jesus tells the servants to fill them with water, and they fill them to the brim. He then tells them to scoop some out and bring it to the master of the banquet, who tastes it and finds that it has become wine. He calls the bridegroom and says most hosts serve the best wine first, but this one has kept the best until now. This is the first of Jesus' signs, and his disciples believe in him.",
+   "look_closer": "Only the servants and the disciples know where the wine came from (verses 9 and 11). The master of the banquet simply notices how good it is. John says the sign showed Jesus' glory and led his disciples to believe.",
+   "lessons": [
+    "Jesus cares about ordinary needs, even the embarrassment of a wedding that has run out of wine (John 2:3-5).",
+    "Mary points the servants to Jesus with simple advice: do whatever he tells you. Obedience comes before the miracle (John 2:5-8).",
+    "The best is not always served first. Jesus gives the finest wine last, and he gives more than anyone expects (John 2:9-10).",
+    "A sign points beyond itself. It shows Jesus' glory, and his disciples put their faith in him (John 2:11)."
+   ],
+   "passages": [
+    {
+     "ref": "John 2:1-5",
+     "label": "The wine runs out"
+    },
+    {
+     "ref": "John 2:6-11",
+     "label": "Water becomes wine"
+    }
+   ],
+   "whole": "John 2:1-11",
+   "also_read": [
+    "John 4:46-54"
+   ],
+   "tags": [
+    "miracles",
+    "faith",
+    "provision",
+    "trust",
+    "prayer"
+   ],
+   "related": [
+    "jesus-feeds-the-five-thousand",
+    "jesus-calms-the-storm"
+   ],
+   "topics": [],
+   "child_page": null,
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 2,
+    "date": "2026-11-17"
+   }
+  }
+ ]
+}

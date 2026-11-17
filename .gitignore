@@ -59,3 +59,6 @@ src-tauri/resources/voice/
 crates/bible-core/.cargo/
 crates/bible-core/Cargo.lock
 crates/bible-core/target/
+
+# Story Studio drafts: words the owner has not approved yet stay private
+/extra-pages/drafts/

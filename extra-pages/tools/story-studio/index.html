@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Story Studio</title>
+<style>
+  :root { --bg:#f4f1ea; --card:#fff; --ink:#1f2430; --muted:#6b6f7a; --line:#dcd6c8; --accent:#2f5fb3; --ok:#2e7d32; --warn:#b26a00; --bad:#b3261e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14171e; --card:#1d222c; --ink:#ece9e1; --muted:#9aa0ac; --line:#323948; --accent:#7aa2f0; --ok:#6fcf74; --warn:#e6b04a; --bad:#ff8a80; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.5 "Segoe UI", system-ui, sans-serif; }
+  header { padding:14px 22px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5; }
+  header h1 { font-size:22px; margin:0; }
+  nav button { font:inherit; border:1px solid var(--line); background:var(--bg); color:var(--ink); padding:8px 16px; border-radius:999px; cursor:pointer; margin-right:6px; }
+  nav button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  main { max-width:1100px; margin:0 auto; padding:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:16px; }
+  h2 { font-size:19px; margin:0 0 10px; }
+  .muted { color:var(--muted); }
+  .chips span { display:inline-block; padding:3px 12px; border-radius:999px; font-size:14px; border:1px solid var(--line); margin:0 6px 6px 0; }
+  .st-built-in, .st-published { color:var(--ok); border-color:var(--ok)!important; }
+  .st-approved { color:var(--accent); border-color:var(--accent)!important; }
+  .st-draft { color:var(--warn); border-color:var(--warn)!important; }
+  .row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:0; }
+  .row .t { flex:1; } .row .r { color:var(--muted); font-size:14px; min-width:150px; }
+  button.b { font:inherit; padding:8px 16px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer; }
+  button.b.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.b.good { background:var(--ok); color:#fff; border-color:var(--ok); }
+  button.b:disabled { opacity:.45; cursor:default; }
+  label { display:block; font-weight:600; margin:14px 0 4px; }
+  input[type=text], textarea, select { width:100%; font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); }
+  textarea { min-height:90px; resize:vertical; }
+  .count { font-weight:400; font-size:14px; margin-left:8px; }
+  .count.ok { color:var(--ok); } .count.bad { color:var(--bad); }
+  .grid { display:grid; grid-template-columns: 280px 1fr; gap:18px; } @media (max-width: 860px) { .grid { grid-template-columns:1fr; } }
+  .list button { display:block; width:100%; text-align:left; font:inherit; padding:9px 12px; border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; margin-bottom:6px; cursor:pointer; }
+  .list button.on { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; }
+  pre { white-space:pre-wrap; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:14px; }
+  .verse { margin:4px 0; font-family:Georgia, serif; } .verse sup { color:var(--muted); margin-right:3px; }
+  .problem { color:var(--bad); margin:4px 0; }
+  .passes { color:var(--ok); font-weight:600; }
+  .sub { margin:6px 0 0; font-size:14px; color:var(--muted); }
+  .preview h3 { margin:14px 0 4px; font-size:16px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  .preview .sum { font-size:18px; line-height:1.6; }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+  .filter label { display:inline-block; font-weight:400; margin:0 14px 0 0; }
+  .ptiles { display:flex; flex-wrap:wrap; gap:10px; } .pt { width:150px; padding:6px; border:2px solid var(--line); background:var(--card); border-radius:10px; cursor:pointer; color:var(--ink); font:inherit; font-size:12px; text-align:left; }
+  .pt img { width:100%; height:110px; object-fit:cover; border-radius:6px; display:block; margin-bottom:4px; } .pt.on { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Story Studio</h1>
+  <nav>
+    <button data-tab="board" class="on">What to write</button>
+    <button data-tab="drafts">Drafts</button>
+    <button data-tab="make">Make the file</button>
+  </nav>
+  <span class="muted" id="top"></span>
+</header>
+<main id="main"></main>
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const words = (s) => (String(s || "").trim().match(/\S+/g) || []).length;
+let S = null, tab = "board", current = null, draft = null, existing = [], checkResult = null, filter = "todo", openGroups = {};
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? undefined : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return r.json();
+}
+async function load() { S = await api("/api/state"); $("#top").textContent = `In the app: ${S.counts.builtIn} stories. Added by fetch: ${S.counts.published}. Drafts: ${S.counts.drafts}.`; render(); }
+document.querySelectorAll("nav button").forEach((b) => b.onclick = () => { tab = b.dataset.tab; document.querySelectorAll("nav button").forEach((x) => x.classList.toggle("on", x === b)); render(); });
+
+const STATUS = { "built-in": "In the app", published: "Added (fetch)", approved: "Approved", draft: "Draft", todo: "Not written" };
+
+function render() { if (!S) return; ({ board: renderBoard, drafts: renderDrafts, make: renderMake })[tab](); }
+
+// ---------------------------------------------------------------- the board
+function renderBoard() {
+  const rows = S.board.filter((w) => filter === "all" ? true : filter === "wanted" ? w.wanted : filter === "todo" ? w.status === "todo" : filter === "drafts" ? ["draft", "approved"].includes(w.status) : ["built-in", "published"].includes(w.status));
+  const groups = [...new Set(rows.map((w) => w.group))];
+  const n = (st) => S.board.filter((w) => w.status === st).length;
+  $("#main").innerHTML = `
+    <div class="card"><h2>What to write</h2>
+      <p class="muted">The owner's list of 100, suggested additions, and what is already done. Tick "I want this" to mark the stories to write next.</p>
+      <div class="chips"><span class="st-built-in">In the app: ${n("built-in")}</span><span class="st-published">Added by fetch: ${n("published")}</span><span class="st-approved">Approved: ${n("approved")}</span><span class="st-draft">Drafts: ${n("draft")}</span><span>Not written: ${n("todo")}</span><span>Wanted: ${S.board.filter((w) => w.wanted).length}</span></div>
+      <div class="filter">Show: ${[["todo", "Not written"], ["wanted", "Wanted"], ["drafts", "Drafts and approved"], ["done", "Done"], ["all", "Everything"]].map(([k, t]) => `<label><input type="radio" name="f" value="${k}" ${filter === k ? "checked" : ""}> ${t}</label>`).join("")}</div>
+    </div>
+    ${groups.map((g) => `<div class="card"><h2>${esc(g)} <span class="muted" style="font-weight:400;font-size:15px">(${rows.filter((w) => w.group === g).length})</span></h2>
+      ${rows.filter((w) => w.group === g).map((w) => `<div class="row"><input type="checkbox" data-n="${w.n}" ${w.wanted ? "checked" : ""} ${w.status !== "todo" ? "disabled" : ""} title="I want this"><span class="t">${esc(w.title)}</span><span class="r">${esc(w.ref)}</span><span class="chips"><span class="st-${w.status}">${STATUS[w.status]}</span></span></div>`).join("")}</div>`).join("") || `<div class="card muted">Nothing here.</div>`}`;
+  document.querySelectorAll("input[name=f]").forEach((r) => r.onchange = () => { filter = r.value; renderBoard(); });
+  document.querySelectorAll("input[data-n]").forEach((c) => c.onchange = async () => {
+    const all = S.board.filter((w) => w.wanted).map((w) => w.n).filter((n) => n !== +c.dataset.n);
+    if (c.checked) all.push(+c.dataset.n);
+    await api("/api/wanted", { numbers: all }); await load();
+  });
+}
+
+// ---------------------------------------------------------------- drafts
+function renderDrafts() {
+  $("#main").innerHTML = `<div class="grid"><div class="list card" id="dl"><h2>Drafts</h2>${S.drafts.map((d) => `<button data-id="${d.id}" class="${current === d.id ? "on" : ""}">${esc(d.title)}<br><span class="chips"><span class="st-${d.status}">${STATUS[d.status] || d.status}</span></span></button>`).join("") || `<p class="muted">No drafts yet. Stories marked "I want this" are written for you; they appear here.</p>`}</div><div id="ed"></div></div>`;
+  document.querySelectorAll("#dl button").forEach((b) => b.onclick = () => openDraft(b.dataset.id));
+  if (current && draft) renderEditor();
+}
+async function openDraft(id) { const d = await api(`/api/draft?id=${id}`); current = id; draft = d; existing = d.existingIds; checkResult = null; renderDrafts(); }
+
+function counter(label, n, lo, hi) { const ok = n >= lo && n <= hi; return `<span class="count ${ok ? "ok" : "bad"}">${n} words (${lo} to ${hi})</span>`; }
+
+function renderEditor() {
+  const p = draft.page, st = p.review?.status ?? "draft";
+  $("#ed").innerHTML = `<div class="card">
+    <h2>${esc(p.title)} <span class="chips"><span class="st-${st}">${STATUS[st]}</span></span></h2>
+    <label>Title <span class="count ${p.title && p.title.length <= 60 ? "ok" : "bad"}">${(p.title || "").length}/60</span></label><input type="text" id="f_title" value="${esc(p.title)}">
+    <label>Other names people search by (one per line, up to 6)</label><textarea id="f_also" style="min-height:70px">${esc((p.also || []).join("\n"))}</textarea>
+    <label>The story <span id="c_sum">${counter("", words(p.summary), 40, 170)}</span></label><textarea id="f_summary" style="min-height:230px">${esc(p.summary)}</textarea>
+    <label>Look closer (one thing to notice) <span id="c_look">${counter("", words(p.look_closer), 0, 60)}</span></label><textarea id="f_look">${esc(p.look_closer || "")}</textarea>
+    <label>What this teaches us (one lesson per line, 1 to 5, each 8 to 50 words, ending with its verse in brackets)</label><textarea id="f_lessons" style="min-height:170px">${esc((p.lessons || []).join("\n"))}</textarea>
+    <label>Passages (one per line: <code>Mark 5:25-29 | label</code>)</label><textarea id="f_passages" style="min-height:100px">${esc((p.passages || []).map((x) => `${x.ref} | ${x.label}`).join("\n"))}</textarea>
+    <label>Read first (optional: <code>Mark 5:21-24 | label</code>)</label><input type="text" id="f_context" value="${esc(p.context ? `${p.context.ref} | ${p.context.label}` : "")}">
+    <label>The whole story (optional: one chapter that holds every passage)</label><input type="text" id="f_whole" value="${esc(p.whole || "")}">
+    <label>The same event in other Gospels (references, comma separated)</label><input type="text" id="f_parallels" value="${esc((p.parallels || []).join(", "))}">
+    <label>Also read (references, comma separated)</label><input type="text" id="f_alsoread" value="${esc((p.also_read || []).join(", "))}">
+    <label>Tags (comma separated; choose from: ${esc(S.tags.join(", "))})</label><input type="text" id="f_tags" value="${esc((p.tags || []).join(", "))}">
+    <label>Related stories (ids, comma separated)</label><input type="text" id="f_related" value="${esc((p.related || []).join(", "))}">
+    <label>Hidden search words (comma separated, up to 20)</label><input type="text" id="f_keywords" value="${esc((draft.keywords || []).join(", "))}">
+    <label>Picture</label>
+    <div id="pic"></div>
+    <div class="actions">
+      <button class="b" id="save">Save</button>
+      <button class="b primary" id="check">Check the words</button>
+      <button class="b good" id="approve" ${st === "approved" ? "disabled" : ""}>I have read every word: Approve</button>
+      <button class="b" id="unapprove" ${st !== "approved" ? "disabled" : ""}>Take back my approval</button>
+    </div>
+    <div id="result"></div>
+  </div>
+  <div class="card preview"><h2>How it reads</h2><div id="pv">Loading…</div></div>`;
+  ["summary", "look"].forEach((k) => $("#f_" + k).oninput = () => { const t = $("#f_" + k).value; $("#c_" + (k === "summary" ? "sum" : "look")).innerHTML = k === "summary" ? counter("", words(t), 40, 170) : counter("", words(t), 0, 60); });
+  $("#save").onclick = save; $("#check").onclick = doCheck; $("#approve").onclick = () => approve(true); $("#unapprove").onclick = () => approve(false);
+  if (checkResult) showResult();
+  preview(); pictureBox();
+}
+
+const lines = (id) => $("#" + id).value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+const csv = (id) => $("#" + id).value.split(",").map((s) => s.trim()).filter(Boolean);
+const refLabel = (s) => { const [ref, ...rest] = s.split("|"); return { ref: ref.trim(), label: rest.join("|").trim() }; };
+
+function collect() {
+  const p = structuredClone(draft.page);
+  p.title = $("#f_title").value.trim();
+  p.also = lines("f_also");
+  p.summary = $("#f_summary").value.trim();
+  const look = $("#f_look").value.trim(); if (look) p.look_closer = look; else delete p.look_closer;
+  p.lessons = lines("f_lessons");
+  p.passages = lines("f_passages").map(refLabel);
+  const ctx = $("#f_context").value.trim(); if (ctx) p.context = refLabel(ctx); else delete p.context;
+  const whole = $("#f_whole").value.trim(); if (whole) p.whole = whole; else delete p.whole;
+  const par = csv("f_parallels"); if (par.length) p.parallels = par; else delete p.parallels;
+  const ar = csv("f_alsoread"); if (ar.length) p.also_read = ar; else delete p.also_read;
+  p.tags = csv("f_tags"); p.related = csv("f_related");
+  return { page: p, keywords: csv("f_keywords"), wanted: draft.wanted ?? null, picture: draft.picture ?? null };
+}
+async function save() {
+  const d = collect();
+  const r = await api("/api/draft", { id: current, draft: d });
+  draft = { ...d, page: { ...d.page, review: { ...(d.page.review || {}), status: r.status } }, existingIds: existing };
+  checkResult = null; await load(); renderDrafts();
+}
+async function doCheck() {
+  await save();
+  $("#result").innerHTML = `<p class="muted">Checking against the app's rules (the Bibles, the writing rules, the links between pages). This takes up to a minute…</p>`;
+  checkResult = await api("/api/check", { id: current }); showResult();
+}
+function showResult() {
+  $("#result").innerHTML = checkResult.ok ? `<p class="passes">All the app's checks passed.</p>` : `<p class="problem"><b>Not yet:</b></p>${(checkResult.lines.length ? checkResult.lines : [checkResult.raw]).map((l) => `<div class="problem">${esc(l)}</div>`).join("")}`;
+}
+async function approve(on) {
+  if (on && !checkResult?.ok && !confirm("The checks have not passed (or have not been run) in this window. Approve anyway?\n\nThe file builder will still refuse the page if it breaks a rule.")) return;
+  if (on && !confirm("Approving means you have read every word of this story and it may go to the phone.\n\nApprove it?")) return;
+  await save(); await api("/api/approve", { id: current, approve: on }); await load(); await openDraft(current);
+}
+async function preview() {
+  const p = collect().page; const out = [];
+  out.push(`<div class="sum">${esc(p.summary)}</div>`);
+  if (p.look_closer) out.push(`<h3>Look closer</h3><p>${esc(p.look_closer)}</p>`);
+  if (p.context) out.push(`<h3>Read first</h3><p><b>${esc(p.context.ref)}</b> ${esc(p.context.label)}</p>`);
+  for (const ps of p.passages) {
+    const v = await api(`/api/verses?ref=${encodeURIComponent(ps.ref)}`);
+    out.push(`<h3>${esc(ps.ref)}: ${esc(ps.label)}</h3>${v.length ? v.map((x) => `<div class="verse"><sup>${x.verse}</sup>${esc(x.text)}</div>`).join("") : `<p class="problem">This reference is not in the Bible (check the spelling: the app says Psalms, never Psalm).</p>`}`);
+  }
+  if (p.lessons?.length) out.push(`<h3>What this teaches us</h3><ul>${p.lessons.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`);
+  const el = $("#pv"); if (el) el.innerHTML = out.join("");
+}
+
+// ---------------------------------------------------------------- the picture of a story
+const chaptersOf = (p) => {
+  const out = [], seen = new Set();
+  const add = (ref) => { const m = /^(.+?) (\d+):/.exec(ref || ""); if (m && !seen.has(m[1] + m[2])) { seen.add(m[1] + m[2]); out.push([m[1], +m[2]]); } };
+  (p.passages || []).forEach((x) => add(x.ref)); if (p.context) add(p.context.ref); (p.parallels || []).forEach(add);
+  return out;
+};
+async function pictureBox() {
+  const box = $("#pic"); if (!box) return;
+  const cur = draft.picture?.id;
+  const p = collect().page; let list = [];
+  for (const [b, c] of chaptersOf(p)) list = list.concat(await api(`/api/pictures?book=${encodeURIComponent(b)}&chapter=${c}`));
+  const uniq = [...new Map(list.map((x) => [x.id, x])).values()];
+  const have = uniq.filter((x) => x.downloaded && x.collection !== "sweet");
+  const sweet = uniq.filter((x) => x.downloaded && x.collection === "sweet");
+  const tile = (x) => `<button type="button" class="pt ${x.id === cur ? "on" : ""}" data-pid="${esc(x.id)}" title="${esc(x.title)}"><img src="/api/picfile?id=${encodeURIComponent(x.id)}" loading="lazy" alt="${esc(x.title)}"><span>${esc(x.title.slice(0, 42))}</span></button>`;
+  box.innerHTML = `<p class="muted sub">${cur ? `Chosen: ${esc(cur)}` : "No picture chosen yet."} The pictures offered are the ones already downloaded on this computer (Explore, Pictures) for this story's chapters. Click one to choose it; the credit and licence are added for you. Then press Save.</p>
+    <div class="ptiles">${[...have, ...sweet].map(tile).join("") || `<span class="muted">No downloaded painting for these chapters.</span>`}</div>
+    <div class="actions"><button type="button" class="b" id="nopic" ${cur ? "" : "disabled"}>No picture</button></div>`;
+  box.querySelectorAll(".pt").forEach((b) => b.onclick = () => { draft.picture = { id: b.dataset.pid }; pictureBox(); });
+  const n = $("#nopic"); if (n) n.onclick = () => { draft.picture = null; pictureBox(); };
+}
+
+// ---------------------------------------------------------------- make the file
+function renderMake() {
+  const appr = S.drafts.filter((d) => d.status === "approved");
+  $("#main").innerHTML = `<div class="card"><h2>Make the file the phone fetches</h2>
+    <p>The file holds every story added so far (${S.counts.published}) plus the stories you have approved here (${appr.length}). The phone replaces its additional stories with exactly what the file holds.</p>
+    ${appr.length ? `<ul>${appr.map((d) => `<li>${esc(d.title)}</li>`).join("")}</ul>` : `<p class="muted">Nothing approved yet.</p>`}
+    <div class="actions"><button class="b primary" id="mk" ${appr.length ? "" : "disabled"}>Make the file</button></div>
+    <p class="sub">This only makes the file on this computer. It does NOT put it on the internet: publishing is a separate step done only when you say so, and nothing is published without your word.</p>
+    <div id="mkres"></div></div>`;
+  const b = $("#mk"); if (b) b.onclick = async () => {
+    b.disabled = true; $("#mkres").innerHTML = `<p class="muted">Making the file…</p>`;
+    const r = await api("/api/build", {});
+    $("#mkres").innerHTML = r.ok ? `<p class="passes">The file is made.</p><p>${(r.bytes / 1024).toFixed(0)} KB, in the batch folder <code>${esc(r.batch)}</code>.<br>Fingerprint: <code>${esc(r.sha)}</code></p><p>Ready to publish: <code>installer\\packs\\ready-to-upload\\extra-pages.json</code>. Say "publish the new stories" when you are happy.</p>` : `<p class="problem">${esc(r.text || r.error)}</p>`;
+    await load(); tab = "make";
+  };
+}
+load();
+</script>
+</body>
+</html>
