@@ -8,6 +8,26 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: "3.2.0",
+    items: [
+      "Concordance > Meaning: search by what words mean, in Hebrew and Greek. Type love, forgive, joy or fear (or open the groups), and see every word with that meaning, how many verses use them in each book, and the verses. Choose one word in a group to see only that word.",
+      "Concordance > Strong's number: type G26 or H157 to count the Greek or Hebrew word behind a Strong's number, book by book, and read its verses.",
+      "Interlinear: under a word's Strong's number, “Meaning here” shows the meaning the dictionary gives it in that verse and its group. The meanings are from the UBS dictionaries of Biblical Hebrew and of the Greek New Testament (CC BY-SA 4.0).",
+    ],
+  },
+  {
+    version: "3.1.1",
+    items: [
+      "Presenter > CCLI line: show the song's title, writer and CCLI number small at the foot of its slides, when you switch it on.",
+      "Slide show timing (notices and music pages, and the presenter's Auto button): slides can move on by themselves after the number of seconds you choose, start again at the end, and fade (none, short or slow) between slides. A slide can have a time of its own.",
+      "Presenter > Phone remote > The pastor's stage view: a page for a tablet or second phone with the slide and the next one large, your notes, the clock, a timer and Back, Black and Next.",
+      "Presenter > Follow along: people on the church Wi-Fi can read the words on the screen on their own phones, read only, with a QR code to show. Off until you switch it on.",
+      "Music page > OpenSong songs… and An OpenSong folder…: bring your church's songs from OpenSong into your saved songs, with their parts, order, writer and CCLI number.",
+      "Songs: words pasted with no headings are now named more closely: Chorus, Pre-Chorus, Bridge, Tag and Verse 1, 2…",
+      "Content Factory > Photos > Paintings now opens every Bible painting you have downloaded (James Tissot, Gustave Doré, Sweet Publishing) to put behind the words, not only the ones for the verse on show. Choose a collection or a book, or find a painting by words. The credit line a licence asks for is added to the picture for you.",
+    ],
+  },
+  {
     version: "3.1.0",
     items: [
       "Concordance (Reference menu): type a word and see how many times it is used in every book of the Bible, with the Old and New Testament totals. Tap a book to read its verses with the word marked. “And its forms” counts believe, believes, believed and believing together.",

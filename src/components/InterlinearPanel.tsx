@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, InterlinearWord } from "../api";
+import { api, InterlinearWord, WordMeaning } from "../api";
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "./icons";
 
 interface Props {
@@ -43,6 +43,8 @@ export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVer
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [greekText, setGreekText] = useState<GreekText>("Tyn");
+  // what each word means in this verse, from the UBS dictionaries (only where the dictionary lists this verse for a meaning)
+  const [meanings, setMeanings] = useState<Record<string, WordMeaning | null>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -101,6 +103,7 @@ export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVer
         </p>
       )}
       {loading && <p className="muted">Loading…</p>}
+      <MeaningLoader words={words} book={book} chapter={chapter} verse={verse} onLoaded={setMeanings} />
       {error && <p className="status-error">Couldn't load the interlinear: {error}</p>}
       {!loading && !error && words.length === 0 && <p className="muted">No original-language data for this verse.</p>}
       <div className="interlinear-words" dir={isHebrew ? "rtl" : "ltr"}>
@@ -121,6 +124,12 @@ export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVer
                 </button>
               ) : (
                 <span className="iw-strongs muted">—</span>
+              )}
+              {w.strongs && meanings[w.strongs] && (
+                <div className="iw-meaning" title={meanings[w.strongs]!.groups.join("\n")}>
+                  <span className="muted">Meaning here:</span> {meanings[w.strongs]!.glosses[0] ?? meanings[w.strongs]!.definition.slice(0, 40)}
+                  {meanings[w.strongs]!.groups[0] && <span className="muted"> · {meanings[w.strongs]!.groups[0].split(" > ").pop()}</span>}
+                </div>
               )}
               {w.lemma && (
                 <div className="iw-lemma" title="Dictionary form">
@@ -149,8 +158,33 @@ export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVer
       </div>
       <p className="search-hint">
         Word-by-word data: STEPBible TAHOT / TAGNT (Tyndale House, Cambridge), CC BY 4.0. Hover a grammar line for the full
-        parsing. Click a Strong's number to open Word Study.
+        parsing. Click a Strong's number to open Word Study. “Meaning here” is from the UBS dictionaries (CC BY-SA 4.0).
       </p>
     </aside>
   );
+}
+
+/** Asks the dictionary what each word of the verse means here (nothing is shown for a word it has no meaning for in this verse). */
+function MeaningLoader({ words, book, chapter, verse, onLoaded }: { words: InterlinearWord[]; book: string; chapter: number; verse: number; onLoaded: (m: Record<string, WordMeaning | null>) => void }) {
+  useEffect(() => {
+    let live = true;
+    const strongs = [...new Set(words.map((w) => w.strongs).filter(Boolean))];
+    if (strongs.length === 0) {
+      onLoaded({});
+      return;
+    }
+    Promise.all(
+      strongs.map((s) =>
+        api
+          .semanticWordMeanings(s, book, chapter, verse)
+          .then((list) => [s, list.find((m) => m.here) ?? null] as const)
+          .catch(() => [s, null] as const),
+      ),
+    ).then((pairs) => live && onLoaded(Object.fromEntries(pairs)));
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [words, book, chapter, verse]);
+  return null;
 }

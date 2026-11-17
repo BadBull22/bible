@@ -6,6 +6,8 @@ import { api, BookInfo, DeckKind, Version } from "../api";
 import type { SlideOrder } from "../slideOrder";
 import type { SlideSpec } from "../sermonOutputs";
 import { deckBody, KIND_NAME, parseDeck, PresenterDeck } from "../service";
+import { AutoPlay, NO_AUTO } from "../autoplay";
+import { AutoPlayBox } from "./AutoPlayBox";
 import { stillFor } from "../stills";
 import { SlidesEditor } from "./SlidesEditor";
 import { keepAsNotice, NoticeSidebar } from "./NoticeLibrary";
@@ -66,6 +68,7 @@ export function DeckBuilder({ kind, id, versions, books, versionCode, onBack }: 
   const [slides, setSlides] = useState<SlideSpec[]>(id ? [] : START[kind]);
   const [background, setBackground] = useState<string | null>(null);
   const [overlay, setOverlay] = useState<string | null>(null);
+  const [auto, setAuto] = useState<AutoPlay>(NO_AUTO);
   const [ready, setReady] = useState(!id);
   const [dirty, setDirty] = useState(false);
   const [state, setState] = useState<"idle" | "saving" | "saved">(id ? "saved" : "idle");
@@ -77,8 +80,8 @@ export function DeckBuilder({ kind, id, versions, books, versionCode, onBack }: 
   const [library, setLibrary] = useState(0); // changes when a notice is kept, so the list shows it
   const undoStack = useRef<Step[]>([]);
   const [undoCount, setUndoCount] = useState(0);
-  const now = useRef({ slides, background, overlay });
-  now.current = { slides, background, overlay };
+  const now = useRef({ slides, background, overlay, auto });
+  now.current = { slides, background, overlay, auto };
 
   useEffect(() => {
     if (!id) return;
@@ -92,6 +95,7 @@ export function DeckBuilder({ kind, id, versions, books, versionCode, onBack }: 
         setSlides(body.slides);
         setBackground(body.background);
         setOverlay(body.overlay ?? null);
+        setAuto(body.auto ?? NO_AUTO);
         setReady(true);
       })
       .catch((e) => live && setError(`That couldn't be opened: ${e}`));
@@ -134,7 +138,7 @@ export function DeckBuilder({ kind, id, versions, books, versionCode, onBack }: 
     }
     setState("saving");
     try {
-      const saved = await api.deckSave({ id: deckId, kind, title: title.trim(), body: deckBody(now.current.slides, now.current.background, now.current.overlay) });
+      const saved = await api.deckSave({ id: deckId, kind, title: title.trim(), body: deckBody(now.current.slides, now.current.background, now.current.overlay, now.current.auto) });
       setDeckId(saved);
       setDirty(false);
       setSavedAt(new Date());
@@ -151,7 +155,7 @@ export function DeckBuilder({ kind, id, versions, books, versionCode, onBack }: 
     if (!dirty || !ready || !title.trim()) return;
     const t = setTimeout(() => void save(true), 1000);
     return () => clearTimeout(t);
-  }, [dirty, ready, title, slides, background, overlay, save]);
+  }, [dirty, ready, title, slides, background, overlay, auto, save]);
 
   const order = useMemo(() => freeOrder(slides, changeSlides), [slides, changeSlides]);
 
@@ -193,7 +197,7 @@ export function DeckBuilder({ kind, id, versions, books, versionCode, onBack }: 
     }
   };
 
-  const deck: PresenterDeck = { kind, title: title.trim() || KIND_NAME[kind], slides, background, overlay, resumeKey: deckId ? `${kind}:${deckId}` : `${kind}:draft` };
+  const deck: PresenterDeck = { kind, title: title.trim() || KIND_NAME[kind], slides, background, overlay, auto, resumeKey: deckId ? `${kind}:${deckId}` : `${kind}:draft` };
 
   if (!ready) return <p className="muted">Opening…</p>;
   return (
@@ -236,6 +240,21 @@ export function DeckBuilder({ kind, id, versions, books, versionCode, onBack }: 
         </p>
       )}
       {note && <p className="status-ok" role="status">{note}</p>}
+      <details className="deck-auto">
+        <summary>
+          Slide show timing{auto.seconds > 0 ? `: a new slide every ${auto.seconds} seconds` : ""}
+        </summary>
+        <p className="muted">
+          For notices that run before the service: the slides move on by themselves. In the presenter, press <strong>Auto</strong> to start them. A slide can have a time of its own (under the slide, “Move on after”).
+        </p>
+        <AutoPlayBox
+          value={auto}
+          onChange={(a) => {
+            setAuto(a);
+            setDirty(true);
+          }}
+        />
+      </details>
       <div className={"deck-layout" + (kind === "music" || kind === "notices" ? " with-songs" : "")}>
         {kind === "music" && <SongSidebar onAdd={(add) => changeSlides([...now.current.slides, ...add], "added a song")} onArrange={() => setArranging(true)} />}
         {kind === "notices" && <NoticeSidebar reload={library} onAdd={(add, name) => changeSlides([...now.current.slides, ...add], `added “${name}”`)} />}

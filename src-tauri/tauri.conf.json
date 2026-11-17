@@ -39,7 +39,8 @@
       "resources/apocrypha_xrefs.json",
       "resources/simeon_outlines.json",
       "resources/illustrations.json",
-      "resources/spurgeon_sermons.json"
+      "resources/spurgeon_sermons.json",
+      "resources/semantic_domains.json"
     ],
     "icon": [
       "icons/32x32.png",

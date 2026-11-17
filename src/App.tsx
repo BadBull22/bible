@@ -1161,7 +1161,7 @@ function App() {
           <div className="main-frame" data-reading-theme={readingTheme} data-occasion={readingTheme ? readingLook.screenLook?.slug : undefined}>
           <main className={"main-pane" + (readingBook === SERMON_BUILDER || readingBook === SERVICE || readingBook === FACTORY ? " builder-pane" : "")}>
             {readingBook === FACTORY ? (
-              <ContentFactory books={books} versions={versions} chapterCounts={chapterCounts} onClose={() => setReadingBook(null)} />
+              <ContentFactory books={books} versions={versions} chapterCounts={chapterCounts} onClose={() => setReadingBook(null)} onOpenPictures={() => setPanel({ kind: "pictures", tab: "download" })} />
             ) : readingBook === SERVICE ? (
               <ServiceHome
                 versions={versions}

@@ -85,6 +85,73 @@ export function breakUp(lines: string[]): string[][] {
   return parts;
 }
 
+/**
+ * Names for the sections that were not named by the person (`auto` holds their indexes), worked out from how the song goes:
+ * - a part that comes round again, word for word or with the same first line, is the Chorus (the one sung most often);
+ * - a short part that comes round again and always leads into the chorus is the Pre-Chorus; another that comes round again is a Bridge;
+ * - a part sung once, shorter than the verses, between two choruses and after at least two verses, is the Bridge;
+ * - a part sung once at the very end, of one or two lines, straight after the third chorus, is a Tag;
+ * - everything else is Verse 1, Verse 2... in order.
+ * Returns the new label for each index in `auto`. A person can always rename a part by writing its heading.
+ */
+export function autoLabels(sections: SongSection[], arrangement: number[], auto: Set<number>): Map<number, string> {
+  const out = new Map<number, string>();
+  const order = arrangement.length ? arrangement : sections.map((_, i) => i);
+  const plays = (i: number) => order.filter((a) => a === i).length;
+  const lineCount = (i: number) => sections[i].text.split("\n").filter((l) => l.trim()).length;
+  const groups = new Map<string, number[]>();
+  for (const i of auto) {
+    const k = firstLine(sections[i].text);
+    groups.set(k, [...(groups.get(k) ?? []), i]);
+  }
+  const repeating = [...groups.values()].filter((g) => g.length > 1 || plays(g[0]) > 1).sort((x, y) => x[0] - y[0]);
+  const total = (g: number[]) => g.reduce((n, i) => n + plays(i), 0);
+  const name = (g: number[], base: string) => g.forEach((i, k) => out.set(i, k === 0 ? base : `${base} ${k + 1}`));
+  // the chorus: the repeating part sung most (the longer, then the earlier, on a tie)
+  const chorus = [...repeating].sort((x, y) => total(y) - total(x) || lineCount(y[0]) - lineCount(x[0]) || x[0] - y[0])[0];
+  if (chorus) name(chorus, "Chorus");
+  const isChorus = (i: number) => !!chorus && chorus.includes(i);
+  let bridged = false;
+  for (const g of repeating) {
+    if (g === chorus) continue;
+    // always followed by the chorus, and short: a pre-chorus
+    const lead = chorus && g.every((i) => order.every((a, p) => a !== i || (p + 1 < order.length && isChorus(order[p + 1])))) && g.every((i) => lineCount(i) <= 4);
+    if (lead) name(g, "Pre-Chorus");
+    else if (!bridged) (bridged = true), name(g, "Bridge");
+    else name(g, "Refrain");
+  }
+  // parts sung once: a bridge after two verses and two choruses (it is shorter than the verses and leads into the chorus), a tag at the end
+  const chorusSeen = (p: number) => order.slice(0, p).filter(isChorus).length;
+  const once = [...auto].filter((i) => !out.has(i)).sort((x, y) => x - y);
+  const lengths = once.map(lineCount);
+  const usual = lengths.length ? [...lengths].sort((x, y) => x - y)[Math.floor(lengths.length / 2)] : 0;
+  if (chorus) {
+    const last = order.length - 1;
+    for (const i of once) {
+      const p = order.indexOf(i);
+      if (plays(i) === 1 && p === last && p > 0 && isChorus(order[p - 1]) && chorusSeen(p) >= 3 && lineCount(i) <= 2) out.set(i, "Tag");
+    }
+    if (!bridged)
+      for (const i of once) {
+        const p = order.indexOf(i);
+        const versesBefore = once.filter((j) => !out.has(j) && order.indexOf(j) < p).length;
+        if (!out.has(i) && plays(i) === 1 && p + 1 < order.length && isChorus(order[p + 1]) && chorusSeen(p) >= 2 && versesBefore >= 2 && lineCount(i) < usual && lineCount(i) <= 4) {
+          out.set(i, "Bridge");
+          break;
+        }
+      }
+  }
+  // verses count on from any verse the person named
+  const named = new Set(sections.filter((_, i) => !auto.has(i)).map((s) => s.label.toLowerCase()));
+  let v = 0;
+  for (const i of once)
+    if (!out.has(i)) {
+      while (named.has(`verse ${++v}`));
+      out.set(i, `Verse ${v}`);
+    }
+  return out;
+}
+
 /** The words of a song, pasted or typed, as sections and an arrangement. Blocks are separated by a blank line; a
  * block may start with a heading line ("Verse 1", "[Chorus]"). A block with no heading is the next verse. A block
  * that repeats an earlier one, or is only a heading that already exists ("Chorus" on its own), is sung again
@@ -145,19 +212,10 @@ export function parseSong(text: string): { sections: SongSection[]; arrangement:
     arrangement.push(sections.length - 1);
   }
 
-  // unheaded parts that come round again are the chorus (or a refrain); the rest are verses, numbered in order
-  const sung = sections.map((_, i) => arrangement.filter((a) => a === i).length);
-  const groups = new Map<string, number[]>();
-  for (const i of auto) groups.set(firstLine(sections[i].text), [...(groups.get(firstLine(sections[i].text)) ?? []), i]);
-  const repeating = [...groups.values()].filter((g) => g.length > 1 || sung[g[0]] > 1).sort((a, b) => a[0] - b[0]);
-  // (names a heading may say, so that the words typed back in keep them)
-  const names = ["Chorus", "Refrain", "Bridge", "Tag"];
-  repeating.forEach((g, n) => {
-    const name = names[Math.min(n, names.length - 1)];
-    g.forEach((i, k) => (sections[i].label = k === 0 ? name : `${name} ${k + 1}`));
-  });
-  let v = 0;
-  for (const i of [...auto].sort((a, b) => a - b)) if (!repeating.some((g) => g.includes(i))) sections[i].label = `Verse ${++v}`;
+  // names for the parts nobody named: a part that comes round again is the chorus (or a pre-chorus, or a bridge), the rest are
+  // verses unless they are plainly a bridge or a tag
+  const names = autoLabels(sections, arrangement, auto);
+  for (const [i, name] of names) sections[i].label = name;
   return { sections, arrangement };
 }
 
@@ -195,13 +253,21 @@ export function parseSongFile(text: string, fallbackTitle = ""): Omit<SongData, 
   return { title, author, ccli, sections, arrangement };
 }
 
+/** The line for the foot of a song's slides when the church shows its CCLI details: "Amazing Grace · John Newton · CCLI Song #22025".
+ * The title always; the writer and the number when they are known. */
+export function ccliLine(song: { title: string; author?: string; ccli?: string }): string {
+  const num = (song.ccli ?? "").replace(/\D/g, "");
+  return [song.title.trim(), (song.author ?? "").trim(), num ? `CCLI Song #${num}` : ""].filter(Boolean).join(" \u00b7 ");
+}
+
 /** The slides of one song, in its arrangement, after a title slide with its name if asked. A section of more than
  * `perSlide` lines is split into slides of even length. The slides' `song` and `section` say what they are for, so the
  * show can group them by song. */
-export function songSlides(song: Pick<SongData, "title" | "sections" | "arrangement"> & { author?: string }, perSlide = 4, titleSlide = false): SlideSpec[] {
+export function songSlides(song: Pick<SongData, "title" | "sections" | "arrangement"> & { author?: string; ccli?: string }, perSlide = 4, titleSlide = false): SlideSpec[] {
   const out: SlideSpec[] = [];
+  const credit = ccliLine(song);
   // the song's name on a slide of its own first, so each song stands apart (the same song sung twice is two of them)
-  if (titleSlide) out.push({ kind: "point", title: song.title, body: song.author?.trim() ?? "", song: song.title, section: "Title" });
+  if (titleSlide) out.push({ kind: "point", title: song.title, body: song.author?.trim() ?? "", song: song.title, section: "Title", credit });
   const order = song.arrangement.length ? song.arrangement : song.sections.map((_, i) => i);
   for (const at of order) {
     const sec = song.sections[at];
@@ -217,6 +283,7 @@ export function songSlides(song: Pick<SongData, "title" | "sections" | "arrangem
         body: lines.slice(p * each, (p + 1) * each).join("\n"),
         song: song.title,
         section: sec.label,
+        credit,
       });
     }
   }

@@ -1,9 +1,11 @@
-// The Concordance: how many times a word is used in each book of the Bible. Type a word, see a count for every book (Old and New Testament, with their totals),
+// The Concordance: how many times a word is used in each book of the Bible (by word, by Strong's number, or by meaning: every word in a group such as love or forgiveness, Hebrew and Greek). Type a word, see a count for every book (Old and New Testament, with their totals),
 // tap a book to read the verses, each marked and linking into the reader, and come back with "All books". Opens beside the reading pane, like the other searches.
 
 import { useEffect, useRef, useState } from "react";
 import { api, type ConcordanceResult, type SearchHit, type Version } from "../api";
 import { bookLine, byTestament, heat, mark, summary, thousands } from "../concordance";
+import { asStrongs, meaningSummary, strongsSummary } from "../semantic";
+import { MeaningPicker, type MeaningSel } from "./MeaningPicker";
 import { CloseIcon } from "./icons";
 
 interface Props {
@@ -15,11 +17,17 @@ interface Props {
   onClose: () => void;
 }
 
+type Mode = "word" | "strongs" | "meaning";
+
 interface Ran {
+  /** what was asked: a word, a Strong's number or a meaning */
+  source: Mode;
   word: string;
   version: string;
   forms: boolean;
   result: ConcordanceResult;
+  /** the meaning chosen (source "meaning") */
+  sel?: MeaningSel;
 }
 
 interface Verses {
@@ -32,6 +40,8 @@ const PAGE = 150;
 export function ConcordancePanel({ versions, versionCode, initialWord, onJump, onClose }: Props) {
   const [word, setWord] = useState(initialWord ?? "");
   const [forms, setForms] = useState(false);
+  const [mode, setMode] = useState<Mode>("word");
+  const [sel, setSel] = useState<MeaningSel | null>(null);
   const [version, setVersion] = useState(versionCode === "ENOCH1" ? "BSB" : versionCode);
   const [ran, setRan] = useState<Ran | null>(null);
   const [verses, setVerses] = useState<Verses | null>(null);
@@ -49,7 +59,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
     try {
       const result = await api.wordConcordance(v, text, f);
       if (id !== req.current) return;
-      setRan({ word: text, version: v, forms: f, result });
+      setRan({ source: "word", word: text, version: v, forms: f, result });
       setVerses(null);
     } catch (e) {
       if (id !== req.current) return;
@@ -58,6 +68,58 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
     } finally {
       if (id === req.current) setLoading(false);
     }
+  };
+
+  /** a Strong's number (G26, H157): how often the original word behind it is used */
+  const runStrongs = async (text = word, v = version) => {
+    const s = asStrongs(text);
+    if (!s) {
+      setError("Type a Strong's number: G for Greek or H for Hebrew, then the number, like G26 or H157.");
+      return;
+    }
+    const id = ++req.current;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await api.strongsConcordance(s);
+      if (id !== req.current) return;
+      setRan({ source: "strongs", word: s, version: v, forms: false, result });
+      setVerses(null);
+    } catch (e) {
+      if (id !== req.current) return;
+      setError(String(e));
+      setRan(null);
+    } finally {
+      if (id === req.current) setLoading(false);
+    }
+  };
+
+  /** a group of meanings (or one word in it) chosen in the Meaning mode: a count of verses for every book */
+  const runMeaning = async (s: MeaningSel, v = version) => {
+    setSel(s);
+    const id = ++req.current;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await api.semanticConcordance(s.language, s.code, s.entry, s.meaning);
+      if (id !== req.current) return;
+      setRan({ source: "meaning", word: s.name, version: v, forms: false, result, sel: s });
+      setVerses(null);
+    } catch (e) {
+      if (id !== req.current) return;
+      setError(String(e));
+      setRan(null);
+    } finally {
+      if (id === req.current) setLoading(false);
+    }
+  };
+
+  const changeMode = (m: Mode) => {
+    if (m === mode) return;
+    setMode(m);
+    setRan(null);
+    setVerses(null);
+    setError(null);
   };
 
   useEffect(() => {
@@ -72,7 +134,9 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
       first.current = false;
       return;
     }
-    if (word.trim()) void run(word, forms, version);
+    if (mode === "word" && word.trim()) void run(word, forms, version);
+    else if (mode === "strongs" && ran) void runStrongs(ran.word, version);
+    else if (mode === "meaning" && sel) void runMeaning(sel, version);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forms, version]);
 
@@ -82,7 +146,14 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
     setLoading(true);
     setError(null);
     try {
-      const r = await api.wordFrequency(ran.version, ran.word, scope, ran.forms);
+      const frequencyScope = scope.kind === "book" ? { kind: "book" as const, book: scope.book } : { kind: "testament" as const, testament: scope.testament };
+      const hits =
+        ran.source === "strongs"
+          ? await api.strongsVerses(ran.version, ran.word, frequencyScope)
+          : ran.source === "meaning" && ran.sel
+            ? await api.semanticHits(ran.version, ran.sel.language, ran.sel.code, ran.sel.entry, ran.sel.meaning, scope.kind === "book" ? scope.book : null)
+            : null;
+      const r = hits ? { verses: hits } : await api.wordFrequency(ran.version, ran.word, scope, ran.forms);
       if (id !== req.current) return;
       setVerses({ title, hits: r.verses });
       setShown(PAGE);
@@ -101,10 +172,10 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
 
   const testament = (key: "OT" | "NT", label: string, t: { books: ReturnType<typeof byTestament>["ot"]["books"]; occurrences: number; verses: number }) => (
     <section className="cc-testament" aria-label={label}>
-      <button type="button" className="cc-head" disabled={t.occurrences === 0} onClick={() => void open({ kind: "testament", testament: key }, `${label}: ${thousands(t.occurrences)} time${t.occurrences === 1 ? "" : "s"} in ${thousands(t.verses)} verse${t.verses === 1 ? "" : "s"}`)} title={`Read every verse in the ${label}`}>
+      <button type="button" className="cc-head" disabled={t.occurrences === 0} onClick={() => void open({ kind: "testament", testament: key }, ran?.source === "meaning" ? `${label}: ${thousands(t.verses)} verse${t.verses === 1 ? "" : "s"}` : `${label}: ${thousands(t.occurrences)} time${t.occurrences === 1 ? "" : "s"} in ${thousands(t.verses)} verse${t.verses === 1 ? "" : "s"}`)} title={`Read every verse in the ${label}`}>
         <strong>{label}</strong>
         <span>
-          {thousands(t.occurrences)} in {thousands(t.verses)} verse{t.verses === 1 ? "" : "s"}
+          {ran?.source === "meaning" ? `${thousands(t.verses)} verse${t.verses === 1 ? "" : "s"}` : `${thousands(t.occurrences)} in ${thousands(t.verses)} verse${t.verses === 1 ? "" : "s"}`}
         </span>
       </button>
       <div className="cc-grid">
@@ -115,11 +186,11 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
             className={"cc-book" + (b.occurrences === 0 ? " none" : "")}
             style={b.occurrences ? { ["--cc-heat" as string]: `${Math.round(heat(b.occurrences, max) * 100)}%` } : undefined}
             disabled={b.occurrences === 0}
-            onClick={() => void open({ kind: "book", book: b.book }, bookLine(b.book, b.occurrences, b.verses))}
-            title={b.occurrences ? bookLine(b.book, b.occurrences, b.verses) : `${b.book}: not used`}
+            onClick={() => void open({ kind: "book", book: b.book }, ran?.source === "meaning" ? `${b.book}: ${thousands(b.verses)} verse${b.verses === 1 ? "" : "s"}` : bookLine(b.book, b.occurrences, b.verses))}
+            title={b.occurrences ? (ran?.source === "meaning" ? `${b.book}: ${thousands(b.verses)} verse${b.verses === 1 ? "" : "s"}` : bookLine(b.book, b.occurrences, b.verses)) : `${b.book}: not used`}
           >
             <span className="cc-name">{b.book}</span>
-            <span className="cc-count">{b.occurrences ? thousands(b.occurrences) : "–"}</span>
+            <span className="cc-count">{b.occurrences ? thousands(ran?.source === "meaning" ? b.verses : b.occurrences) : "–"}</span>
           </button>
         ))}
       </div>
@@ -135,17 +206,37 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
         </button>
       </div>
       <div className="search-controls">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void run();
-          }}
-        >
-          <input autoFocus value={word} onChange={(e) => setWord(e.target.value)} placeholder="A word, like grace, or a short phrase" aria-label="The word to count" />
-          <button type="submit" disabled={loading || !word.trim()}>
-            {loading && !verses ? "Counting…" : "Count"}
+        <div className="cc-forms cc-modes" role="group" aria-label="What to look up">
+          <button type="button" className={mode === "word" ? "on" : ""} aria-pressed={mode === "word"} onClick={() => changeMode("word")} title="How often a word is used in the Bible you read">
+            Word
           </button>
-        </form>
+          <button type="button" className={mode === "strongs" ? "on" : ""} aria-pressed={mode === "strongs"} onClick={() => changeMode("strongs")} title="How often the Hebrew or Greek word behind a Strong's number is used">
+            Strong's number
+          </button>
+          <button type="button" className={mode === "meaning" ? "on" : ""} aria-pressed={mode === "meaning"} onClick={() => changeMode("meaning")} title="Every Hebrew or Greek word about love, forgiveness, joy...: search by meaning">
+            Meaning
+          </button>
+        </div>
+        {mode !== "meaning" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void (mode === "strongs" ? runStrongs() : run());
+            }}
+          >
+            <input
+              autoFocus
+              value={word}
+              onChange={(e) => setWord(e.target.value)}
+              placeholder={mode === "strongs" ? "A Strong's number, like G26 or H157" : "A word, like grace, or a short phrase"}
+              aria-label={mode === "strongs" ? "The Strong's number to count" : "The word to count"}
+            />
+            <button type="submit" disabled={loading || !word.trim()}>
+              {loading && !verses ? "Counting…" : "Count"}
+            </button>
+          </form>
+        )}
+        {mode === "meaning" && <MeaningPicker selected={sel} onPick={(s) => void runMeaning(s)} />}
         <div className="cc-options">
           <select value={version} onChange={(e) => setVersion(e.target.value)} aria-label="Bible to count in">
             {versions.map((v) => (
@@ -154,6 +245,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
               </option>
             ))}
           </select>
+          {mode === "word" && (
           <div className="cc-forms" role="group" aria-label="Which words to count">
             <button type="button" className={!forms ? "on" : ""} aria-pressed={!forms} onClick={() => setForms(false)} title="Only this word, written this way">
               This word
@@ -162,6 +254,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
               And its forms
             </button>
           </div>
+          )}
         </div>
       </div>
       {error && <p className="status-error">{error}</p>}
@@ -169,7 +262,11 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
       {!verses && ran && r && split && (
         <>
           <p className="frequency-summary" role="status">
-            {summary(ran.word, r.total_occurrences, r.total_verses, ran.version, r.forms)}
+            {ran.source === "strongs"
+              ? strongsSummary(ran.word, r.total_occurrences, r.total_verses)
+              : ran.source === "meaning" && ran.sel
+                ? meaningSummary(ran.sel.word ? `${ran.sel.name}: ${ran.sel.word}` : ran.sel.name, ran.sel.language, ran.sel.words, r.total_verses)
+                : summary(ran.word, r.total_occurrences, r.total_verses, ran.version, r.forms)}
           </p>
           {r.found.length > 1 && (
             <p className="muted cc-formlist">
@@ -180,7 +277,10 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
             <>
               {testament("OT", "Old Testament", split.ot)}
               {testament("NT", "New Testament", split.nt)}
-              <p className="muted cc-note">Tap a book, or a Testament, to read the verses.</p>
+              <p className="muted cc-note">
+                Tap a book, or a Testament, to read the verses.
+                {ran.source === "meaning" ? ` The verses are shown in the ${ran.version}; the words are the Hebrew or Greek ones in each verse.` : ""}
+              </p>
             </>
           )}
         </>
@@ -205,6 +305,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
                 <div className="snippet">
                   {mark(h.text, pattern).map((p, i) => (p.hit ? <mark key={i}>{p.text}</mark> : <span key={i}>{p.text}</span>))}
                 </div>
+                {h.why && h.why.length > 0 && <div className="muted cc-whywords">{h.why.join(" · ")}</div>}
               </li>
             ))}
           </ul>
@@ -218,7 +319,17 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
         </>
       )}
 
-      {!ran && !error && !loading && (
+      {!ran && !error && !loading && mode === "strongs" && (
+        <p className="search-hint">
+          Type a Strong's number (G for Greek, H for Hebrew, then the number, like G26 for agape or H157 for to love) to see how often that Hebrew or Greek word is used in each book, and read its verses.
+        </p>
+      )}
+      {!ran && !error && !loading && mode === "meaning" && !sel && (
+        <p className="search-hint">
+          Choose a group of meanings (type love, forgive, joy or fear, or open the groups) to see every Hebrew or Greek word with that meaning, how many verses use them in each book, and the verses. Choose one word in the group to see only that word.
+        </p>
+      )}
+      {!ran && !error && !loading && mode === "word" && (
         <p className="search-hint">
           Type a word and press Count: you see how many times it is used in every book of the Bible, and can read the verses of any book. “And its forms” also counts believe, believes, believed and believing together.
         </p>

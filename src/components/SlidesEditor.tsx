@@ -230,7 +230,7 @@ function Words({ s }: { s: SlideSpec }) {
  * own heading graphic is spaced round: the heading on top, the words and the picture under it, or where the preacher put
  * them, `layout`); `bare`: the words taken off (Clear); `live`: a moving background plays (a small one shows its first
  * picture); `countTo`: the moment a countdown slide reaches zero (none: it shows its length). */
-export function Preview({ s, background, overlay, bare, live, countTo, layout }: { s: SlideSpec; background: string | null; overlay?: string | null; bare?: boolean; live?: boolean; countTo?: number | null; layout?: SlideLayout | null }) {
+export function Preview({ s, background, overlay, bare, live, countTo, layout, credit }: { s: SlideSpec; background: string | null; overlay?: string | null; bare?: boolean; live?: boolean; countTo?: number | null; layout?: SlideLayout | null; credit?: string | null }) {
   const bgFile = backgroundOf(s, background);
   const moving = !!bgFile && kindOfName(bgFile) === "video";
   const bg = useMedia(bgFile);
@@ -277,6 +277,7 @@ export function Preview({ s, background, overlay, bare, live, countTo, layout }:
           <Words s={s} />
         ))}
       {!bare && !boxed && side && <img className="slide-beside" src={side} alt="" draggable={false} />}
+      {!bare && credit && <span className="slide-ccli">{credit}</span>}
     </div>
   );
   return words;
@@ -822,6 +823,20 @@ export function SlidesEditor({ slides, edited, background, overlay, onOverlay, o
               <label>
                 <span className="muted">Your notes (only you see them, in the presenter view)</span>
                 <textarea value={cur.notes ?? ""} rows={2} onChange={(e) => update(selected, { notes: e.target.value || undefined })} />
+              </label>
+              <label className="sb-inline" title="For slides that move on by themselves (the presenter's Auto button)">
+                <span className="muted">Move on after</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={3600}
+                  className="sb-seconds"
+                  value={cur.after ?? ""}
+                  placeholder="show's time"
+                  onChange={(e) => update(selected, { after: e.target.value === "" ? undefined : Math.max(0, Math.min(3600, Math.round(Number(e.target.value) || 0))) })}
+                  aria-label="Seconds this slide stays before the next one comes by itself"
+                />
+                <span className="muted">seconds (empty: the show's time; 0: wait for a click)</span>
               </label>
               <div className="slides-row-tools">
                 <button className="text-btn" onClick={() => go(selected, order.step(selected, -1))} disabled={order.step(selected, -1) === null} title="Move it up (a point takes its slides with it, and the sermon moves the same way)">

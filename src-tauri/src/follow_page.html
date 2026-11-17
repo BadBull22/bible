@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Follow along</title>
+<style>
+  :root { color-scheme: dark; --bg: #10172b; --fg: #f4f6fc; --muted: #9aa6c7; --gold: #f2c46d; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--fg); font: 18px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  body { display: flex; flex-direction: column; min-height: 100vh; padding: 14px 16px; max-width: 760px; margin: 0 auto; }
+  header { color: var(--muted); font-size: 0.85rem; display: flex; justify-content: space-between; gap: 8px; }
+  main { flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; padding: 16px 0; }
+  #title { color: var(--gold); font-weight: 700; font-size: 1.15rem; margin: 0 0 10px; }
+  #body { white-space: pre-wrap; margin: 0; font-family: Georgia, serif; font-size: 1.7rem; line-height: 1.3; }
+  #quiet { color: var(--muted); }
+  footer { color: var(--muted); font-size: 0.75rem; text-align: center; }
+  #lost { background: #5a2a1a; border-radius: 10px; padding: 8px 12px; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+<header><span id="part">Follow along</span><span></span></header>
+<div id="lost" hidden>The connection was lost. Check you are on the church Wi-Fi.</div>
+<main><p id="title"></p><p id="body"></p></main>
+<footer>The words on the screen, as they change. You do not need to do anything.</footer>
+<script>
+(function () {
+  var base = location.pathname.replace(/\/+$/, "");
+  var $ = function (id) { return document.getElementById(id); };
+  var last = "";
+  function size(len) { return len > 360 ? "1.1rem" : len > 220 ? "1.3rem" : len > 120 ? "1.5rem" : len > 50 ? "1.8rem" : "2.2rem"; }
+  function render(s) {
+    var key = JSON.stringify(s);
+    if (key === last) return;
+    last = key;
+    if (s.idle) { $("part").textContent = "Follow along"; $("title").textContent = ""; $("body").textContent = "Waiting for the service to start…"; $("body").id = "body"; return; }
+    $("part").textContent = s.part || "Follow along";
+    var n = s.now || {};
+    if (s.black || s.clear) { $("title").textContent = ""; $("body").textContent = ""; return; }
+    $("title").textContent = n.title || "";
+    $("body").textContent = n.body || "";
+    $("body").style.fontSize = size((n.body || "").length);
+  }
+  function poll() {
+    fetch(base + "/state", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function (s) { $("lost").hidden = true; render(s); })
+      .catch(function () { $("lost").hidden = false; });
+  }
+  setInterval(poll, 1000); poll();
+})();
+</script>
+</body>
+</html>

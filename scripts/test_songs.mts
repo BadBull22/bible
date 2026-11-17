@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { parseSong, parseSongFile, songSlides, songText, tidyLabel } from "../src/songs.ts";
+import { autoLabels, ccliLine, parseSong, parseSongFile, songSlides, songText, tidyLabel } from "../src/songs.ts";
 import { groupsOf, stripKind } from "../src/presentGroups.ts";
 
 // headings are tidied
@@ -128,7 +128,7 @@ console.log("songs: ok");
   const bridge = ["Open every door", "Let the evening in"];
   const flat = [...verse1, ...chorus, ...verse2, ...chorus, ...bridge, ...chorus].join("\n");
   const got = parseSong(flat);
-  assert.deepEqual(got.sections.map((s) => s.label), ["Verse 1", "Chorus", "Verse 2", "Verse 3"]);
+  assert.deepEqual(got.sections.map((s) => s.label), ["Verse 1", "Chorus", "Verse 2", "Bridge"]);
   assert.equal(got.arrangement.length, 6, "six parts are sung");
   assert.deepEqual(got.arrangement, [0, 1, 2, 1, 3, 1], "the chorus comes round again where it was sung");
   assert.equal(got.sections[1].text, chorus.join("\n"));
@@ -171,3 +171,47 @@ console.log("songs (unbroken words): ok");
   assert.deepEqual(again.sections.map((s) => s.label), ["Chorus 2", "Verse 1"]);
 }
 console.log("songs (safety net): ok");
+
+// auto-labelling pasted lyrics: verse, pre-chorus, chorus, bridge and tag from the shape of the song (made-up lines, not a song)
+{
+  const verse = (n: number, k = 4) => Array.from({ length: k }, (_, i) => `Verse ${n} line ${i + 1} walks on`).join("\n");
+  const chorus = "Hold the lantern high\nLight the road ahead\nEvery step we take\nLeads us safely home";
+  const pre = "Wait and see\nWait and see";
+  const bridge = "Open every door\nLet the evening in";
+  const tag = "Leads us home";
+  const labels = (blocks: string[]) => parseSong(blocks.join("\n\n")).sections.map((s) => s.label);
+  // a repeated block is the chorus
+  assert.deepEqual(labels([verse(1), chorus, verse(2), chorus]), ["Verse 1", "Chorus", "Verse 2"]);
+  // a short block that always leads into the chorus is the pre-chorus
+  assert.deepEqual(labels([verse(1), pre, chorus, verse(2), pre, chorus]), ["Verse 1", "Pre-Chorus", "Chorus", "Verse 2"]);
+  // a short single block between choruses, after two verses, is the bridge
+  assert.deepEqual(labels([verse(1), chorus, verse(2), chorus, bridge, chorus]), ["Verse 1", "Chorus", "Verse 2", "Bridge"]);
+  // a third verse as long as the others is a verse, not a bridge
+  assert.deepEqual(labels([verse(1), chorus, verse(2), chorus, verse(3), chorus]), ["Verse 1", "Chorus", "Verse 2", "Verse 3"]);
+  // a short last line after the final chorus is the tag
+  assert.deepEqual(labels([verse(1), chorus, verse(2), chorus, verse(3), chorus, tag]), ["Verse 1", "Chorus", "Verse 2", "Verse 3", "Tag"]);
+  // a song with no repeated block has only verses
+  assert.deepEqual(labels([verse(1), verse(2), verse(3)]), ["Verse 1", "Verse 2", "Verse 3"]);
+  // named parts are never renamed, and the numbering of the unnamed ones carries on
+  assert.deepEqual(labels(["Verse 1\n" + verse(1), "Chorus\n" + chorus, verse(2), "Chorus"]), ["Verse 1", "Chorus", "Verse 2"]);
+  // the labels come back with the arrangement
+  const whole = parseSong([verse(1), chorus, verse(2), chorus, bridge, chorus].join("\n\n"));
+  assert.deepEqual(whole.arrangement, [0, 1, 2, 1, 3, 1]);
+  // the function itself: no choruses, nothing named
+  assert.equal(autoLabels([{ label: "", text: "a\nb" }], [0], new Set([0])).get(0), "Verse 1");
+  assert.equal(autoLabels([], [], new Set()).size, 0);
+  // saved and read back, the same names
+  const text = songText(whole);
+  assert.deepEqual(parseSong(text).sections.map((s) => s.label), whole.sections.map((s) => s.label));
+}
+console.log("songs (auto labels): ok");
+
+// the CCLI line for the foot of a song's slides
+assert.equal(ccliLine({ title: "Amazing Grace", author: "John Newton", ccli: "22025" }), "Amazing Grace \u00b7 John Newton \u00b7 CCLI Song #22025");
+assert.equal(ccliLine({ title: "Amazing Grace", author: "", ccli: "" }), "Amazing Grace", "just the title when nothing else is known");
+assert.equal(ccliLine({ title: " Song ", ccli: "CCLI Song # 7041" }), "Song \u00b7 CCLI Song #7041", "the number is cleaned to digits");
+{
+  const s = songSlides({ title: "Amazing Grace", author: "John Newton", ccli: "22025", ...p }, 4, true);
+  assert.ok(s.every((x) => x.credit === "Amazing Grace \u00b7 John Newton \u00b7 CCLI Song #22025"), "every slide of the song, the title slide too, carries the line");
+}
+console.log("songs (CCLI line): ok");

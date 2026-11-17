@@ -2124,3 +2124,20 @@
 .fx-tunemenu {
   min-width: 15rem;
 }
+
+.fx-grid button {
+  position: relative;
+}
+
+.fx-small-badge {
+  position: absolute;
+  left: 3px;
+  bottom: 3px;
+  padding: 0 0.35rem;
+  font-size: 0.65rem;
+  line-height: 1.3;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  pointer-events: none;
+}

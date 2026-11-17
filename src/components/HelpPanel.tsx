@@ -306,7 +306,7 @@ const SECTIONS: Section[] = [
   {
     id: "concordance",
     title: "Concordance: how often a word is used, book by book",
-    keywords: "concordance word count frequency how many times book old testament new testament forms believe believes believed",
+    keywords: "concordance meaning semantic domains love forgive strongs number word count frequency how many times book old testament new testament forms believe believes believed",
     body: (
       <>
         <p>
@@ -326,6 +326,23 @@ const SECTIONS: Section[] = [
             Choose which Bible to count in; a short phrase such as <em>born again</em> works too.
           </li>
         </ul>
+        <p>
+          <strong>Three ways to look:</strong> the buttons at the top choose between <strong>Word</strong> (the words of the Bible you read),{" "}
+          <strong>Strong's number</strong> (type G26 or H157 to count the Greek or Hebrew word behind it, in the original text) and{" "}
+          <strong>Meaning</strong>.
+        </p>
+        <p>
+          <strong>Meaning</strong> searches by what words mean, not how they are spelled. Choose <em>New Testament (Greek)</em> or <em>Old Testament (Hebrew)</em>,
+          type a few letters of a meaning (love, forgive, joy, fear, shepherd) or open the groups one level at a time (the small › button), and choose a
+          group. You see every word in it, how many verses use them in each book, and the verses, each showing the Hebrew or Greek words that put it there.
+          Open <strong>The words in…</strong> and click one to see only that word with that meaning. The groups come from the UBS dictionaries of Biblical Hebrew
+          and of the Greek New Testament (adapted from Louw and Nida), shared under the Creative Commons Attribution-ShareAlike 4.0 licence. The Hebrew dictionary is
+          still being finished, so a few Hebrew words have no meaning yet.
+        </p>
+        <p>
+          In the <strong>Interlinear</strong>, under a word's Strong's number, <strong>Meaning here</strong> says which meaning the dictionary gives the word in that
+          verse, and the group it belongs to (hover for the whole path).
+        </p>
       </>
     ),
   },
@@ -880,6 +897,52 @@ const SECTIONS: Section[] = [
     ),
   },
   {
+    id: "slide-show-extras",
+    title: "Slide show: stage view, follow along, the CCLI line, slides that move on by themselves, labelled lyrics",
+    keywords: "stage view tablet follow along congregation phone qr code ccli line song writer number licence autoplay auto advance timer fade transition notices loop slide show presenter paste lyrics verse chorus bridge pre-chorus tag label",
+    body: (
+      <>
+        <p>
+          <strong>The CCLI line.</strong> When a song is added from your saved songs, its slides remember the title, the writer and the
+          CCLI number you typed in the song. In the presenter, press <strong>CCLI line</strong> and that line appears small at the foot of
+          every slide of the song, on the screen the room sees. Press it again to take it off. It is off until you switch it on, and the
+          choice is remembered. (It only shows for songs that were added after this was built.)
+        </p>
+        <p>
+          <strong>Slides that move on by themselves.</strong> For the notices before the service: on the notices or music page, open{" "}
+          <strong>Slide show timing</strong> and choose how many seconds each slide stays, whether to start again at the end, and the fade between
+          slides (none, short or slow). It is saved with the notices. Under a slide, <strong>Move on after</strong> gives that slide a time of its
+          own (0 makes it wait for you). In the presenter, press <strong>Auto</strong> to start or stop; the button counts the seconds down.
+          Black, a video playing, or adding a slide pauses the timer, and a video, music or countdown slide waits for you unless it has a time of its own.
+        </p>
+        <p>
+          <strong>Songs from OpenSong.</strong> If your church kept its songs in OpenSong, open the Music page and choose <strong>OpenSong songs…</strong>
+          (pick some song files) or <strong>An OpenSong folder…</strong> (pick its Songs folder). Each song is added to your saved songs with its parts, the order
+          to sing them in, the writer and the CCLI number; chord lines are left out. A file that is not a song is skipped and counted. These are your church's
+          own songs: nothing is added unless you choose it, and a song with the same title and writer is updated, not doubled.
+        </p>
+        <p>
+          <strong>The pastor's stage view.</strong> In the presenter, <strong>Phone remote</strong> now also offers <strong>The pastor's stage view, for a tablet</strong>.
+          Open its address on a tablet or a second phone on the same Wi-Fi: the slide and the next one are large, with your notes, the clock, a timer
+          and Back, Black and Next buttons. It is for you only (your notes show), so do not share its code.
+        </p>
+        <p>
+          <strong>Follow along.</strong> In the presenter, <strong>Follow along</strong> lets people on the church Wi-Fi read the words of the slide on the
+          screen on their own phones, changing as you move on. Switch it on, show the QR code on the screen (or print it), and they point their camera at it.
+          It is read only: nobody can change the slides, and your notes and the next slide are never sent. It is off until you switch it on, works only
+          for devices on the same network that have the address, and stops when the show ends. Church guest Wi-Fi often stops phones from seeing this
+          computer; try it once beforehand.
+        </p>
+        <p>
+          <strong>Pasted lyrics get their names.</strong> When you paste the words of a song with no headings, the app now works out the
+          parts: a part that comes round again is the Chorus, a short part that always leads into it is the Pre-Chorus, a short part after two verses
+          and two choruses is the Bridge, a last line after the third chorus is the Tag, and the rest are Verse 1, Verse 2… Check the names in the song
+          editor and change any that are wrong by writing the heading yourself (for example “Bridge”) on the line above the words.
+        </p>
+      </>
+    ),
+  },
+  {
     id: "content-factory",
     title: "Content Factory: pictures and videos to post",
     keywords: "content factory picture pictures video videos post share facebook whatsapp instagram tiktok youtube story reel status social media verse image caption music name logo week series season advent christmas lent passover pentecost harvest mp4 slideshow voice narrate",
@@ -953,7 +1016,7 @@ const SECTIONS: Section[] = [
         <p>
           <strong>Changing a picture:</strong> edit the words, the layout, the letters, the size, the darkening and the colours; in the Photos tool put a picture
           behind the words: one of the 331 nature photos, one of the 55 Christian pictures (crosses, prayer, worship, stained glass, the Bible, Christmas; each is a small optional
-          download of its own, from Unsplash, free to use), a Bible painting that goes with the passage, a photograph found online (Wikimedia Commons:
+          download of its own, from Unsplash, free to use), a Bible painting (<strong>Paintings</strong> opens every Tissot, Doré and Sweet Publishing picture you have downloaded in Explore → Pictures: choose a collection or a book, or find one by words; Sweet Publishing and the Tissot Old Testament scans need a credit, so a small line is added to the picture for you), a photograph found online (Wikimedia Commons:
           only public domain, CC0, CC BY and CC BY-SA, with the credit put on the picture for you), or one of your own. <strong>Mine</strong> keeps a folder of your own
           pictures (Documents → Bible Concordance → Content Factory → My pictures): <strong>Add pictures…</strong> takes photos you downloaded (from Unsplash,
           Pexels or Pixabay, which allow free use, or any you took yourself) and makes large ones a sensible size; click one to put it behind the words. Check the
