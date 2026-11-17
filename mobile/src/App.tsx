@@ -1216,6 +1216,7 @@ export function App() {
               <button onClick={() => void openIntro()}>About {place.book}</button>
               <button onClick={() => void openChapterNotes()}>Study notes</button>
               {hasCommentary && <button onClick={() => setLibrary("commentary")}>Commentaries</button>}
+              {canRemind && !listen?.running && <button onClick={() => void startListenMode()}>Listen</button>}
               <select
                 className={second ? "on" : ""}
                 value={second ?? ""}
@@ -1232,12 +1233,6 @@ export function App() {
                   ))}
               </select>
             </div>
-            {canRemind && !listen?.running && (
-              <div className="listen-row">
-                <button onClick={() => void startListenMode()}>🎧 Listen to this chapter</button>
-                <span className="hint">Reads on, chapter after chapter, with the screen off</span>
-              </div>
-            )}
             {today && (
               <aside className="today">
                 <div className="hit-head">

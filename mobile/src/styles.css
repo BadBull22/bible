@@ -2220,6 +2220,4 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
 .prayer-text { margin: 0; white-space: pre-wrap; }
 .prayer-meta { margin: 0.2rem 0 0.4rem; }
 .prayer-answer .field { width: 100%; }
-.listen-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.6rem; margin: 0.4rem 0 0.8rem; }
-.listen-row .hint { margin: 0; }
 .playing button { margin-left: 0.3rem; }
