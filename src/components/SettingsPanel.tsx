@@ -83,6 +83,7 @@ const BUNDLED_SOURCES: { name: string; licence: string }[] = [
   { name: "kokoro-onnx (thewh1teagle) and ONNX Runtime (Microsoft) — read-aloud engine", licence: "MIT" },
   { name: "espeak-ng and phonemizer — pronunciation, inside the separate read-aloud voice program", licence: "GPL-3.0 (source: github.com/espeak-ng/espeak-ng, github.com/bootphon/phonemizer)" },
   { name: "UBS Dictionary of Biblical Hebrew and UBS Dictionary of the Greek New Testament (adapted from Louw and Nida), © United Bible Societies: the meanings of words (Concordance, Meaning)", licence: "CC BY-SA 4.0" },
+  { name: "SIL Semantic Domains (semdom.org), © SIL Global: the plain-English descriptions, related groups and everyday words beside a meaning (Concordance)", licence: "CC BY-SA 4.0" },
   { name: "Poppins Regular font (the \"Gospel\" wordmark, opening screen)", licence: "SIL Open Font License 1.1" },
 ];
 

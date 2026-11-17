@@ -1,0 +1,32 @@
+{
+ "about": "Pictures added by hand for stories the app's picture library has none for. Same entry format as src-tauri/resources/pictures.json. Only public domain, CC BY or CC BY-SA pictures; each with its credit and the page it came from.",
+ "collections": [
+  {
+   "key": "commons-pd",
+   "title": "Public domain illustrations (Wikimedia Commons)",
+   "artist": "Unknown author",
+   "licence": "Public domain",
+   "licence_url": "https://creativecommons.org/publicdomain/mark/1.0/"
+  }
+ ],
+ "pictures": [
+  {
+   "id": "commons-elisha-makes-the-axe-swim",
+   "c": "commons-pd",
+   "title": "Elisha makes the axe swim",
+   "refs": [
+    [
+     "2 Kings",
+     6,
+     1,
+     7
+    ]
+   ],
+   "credit": "The story of the Bible from Genesis to Revelation (1873)",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/5/59/Elisha_makes_the_axe_swim.jpg",
+   "page": "https://commons.wikimedia.org/wiki/File:Elisha_makes_the_axe_swim.jpg",
+   "w": 1101,
+   "h": 893
+  }
+ ]
+}

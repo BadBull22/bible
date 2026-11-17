@@ -6,7 +6,8 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { api, phone, type Verse } from "./api";
 import { useBack } from "./back";
-import { AGE_BANDS, ageLabel, parseRef, searchEntries, tagCounts, withTag, type BrowseEntry } from "../../src/browse/browseLogic";
+import { AGE_BANDS, ageLabel, bookOf, parseRef, searchEntries, tagCounts, testamentGroups, withTag, type BrowseEntry } from "../../src/browse/browseLogic";
+import { markAllUnread, useMarkRead, useReadMarks } from "../../src/browse/readMarks";
 import { ENTRIES, childPage, findBrowse, story, topic } from "../../src/browse/data";
 import type { BrowseKind, ChildPage, Story, Topic } from "../../src/browse/types";
 import { KidFigure, PictureOffer, StoryFigure, sharePicture, usePicturePack, type SharePicture } from "./Pictures";
@@ -483,18 +484,71 @@ function blurb(kind: BrowseKind, id: string): string {
   return c ? ageLabel(c.age) : "";
 }
 
-function List({ list, onOpen }: { list: BrowseEntry[]; onOpen: (e: BrowseEntry) => void }) {
+function List({ list, onOpen, tag, book }: { list: BrowseEntry[]; onOpen: (e: BrowseEntry) => void; /** a small "Old" / "New" label on each card (a search or subject mixes both testaments) */ tag?: boolean; /** small book names over each run of stories (the lists in Bible order) */ book?: boolean }) {
+  const { read } = useReadMarks();
+  let last = "";
   return (
     <ul className="browse-list">
-      {list.map((e) => (
-        <li key={e.kind + e.id}>
-          <button className="browse-card" onClick={() => onOpen(e)}>
-            <span className="browse-card-title">{e.title}</span>
-            <span className="browse-card-blurb">{blurb(e.kind, e.id)}</span>
-          </button>
-        </li>
-      ))}
+      {list.map((e) => {
+        const isRead = read(e.kind, e.id);
+        const st = e.kind === "stories" ? story(e.id) : undefined;
+        const here = book && st ? bookOf(st.passages[0]?.ref ?? "") : "";
+        const label = here && here !== last ? here : "";
+        if (here) last = here;
+        return (
+          <li key={e.kind + e.id}>
+            {label && <div className="browse-book">{label}</div>}
+            <button className={"browse-card" + (isRead ? " read" : "")} onClick={() => onOpen(e)}>
+              <span className="browse-card-title">
+                {e.title}
+                {isRead && (
+                  <span className="browse-tick" aria-label="already read">
+                    {" "}
+                    ✓
+                  </span>
+                )}
+                {tag && st && <small className="browse-testament"> · {st.testament === "OT" ? "Old Testament" : "New Testament"}</small>}
+              </span>
+              <span className="browse-card-blurb">{blurb(e.kind, e.id)}</span>
+            </button>
+          </li>
+        );
+      })}
     </ul>
+  );
+}
+
+// which section of each list is open: kept while the app runs, so Back from a page finds the list as it was left (a new start has every section closed)
+const openSection: Record<string, string | null> = {};
+
+/** Sections that open one at a time, each with its count and how many of its pages have been read. */
+function Sections({ id, groups, onOpen, book }: { id: string; groups: { key: string; title: string; kind: BrowseKind; items: BrowseEntry[] }[]; onOpen: (e: BrowseEntry) => void; book?: boolean }) {
+  const [open, setOpenState] = useState<string | null>(openSection[id] ?? null);
+  const { read, total } = useReadMarks();
+  const choose = (key: string) => {
+    const next = open === key ? null : key;
+    openSection[id] = next;
+    setOpenState(next);
+  };
+  return (
+    <div className="browse-sections">
+      {groups.map((g) => {
+        const done = total > 0 ? g.items.filter((e) => read(e.kind, e.id)).length : 0;
+        const on = open === g.key;
+        return (
+          <section key={g.key} className={"browse-group" + (on ? " on" : "")}>
+            <button className="browse-group-head" aria-expanded={on} onClick={() => choose(g.key)}>
+              <span className="browse-group-title">{g.title}</span>
+              <small>{done > 0 ? `${done} of ${g.items.length} read` : g.items.length}</small>
+              <span className="dl-chev" aria-hidden>
+                {on ? "⌃" : "⌄"}
+              </span>
+            </button>
+            {on && <List list={g.items} onOpen={onOpen} book={book} />}
+          </section>
+        );
+      })}
+    </div>
   );
 }
 
@@ -528,11 +582,16 @@ export function BrowseScreen({ open, setOpen, version, backLabel, onJump, onSear
   useBack(!!open.id, () => setOpen({ kind: tab, id: null }));
 
   const entries = ENTRIES[tab];
+  // a search or a chosen subject shows the matches in one flat list (the reader does not know which Testament a page is in)
+  const searching = query.trim() !== "" || tag !== null;
+  const { total: readTotal } = useReadMarks();
   const tags = useMemo(() => tagCounts(entries), [entries, extra]);
   const shown = useMemo(() => withTag(searchEntries(entries, query), tag), [entries, query, tag, extra]);
   const actions: Actions = { version, onJump, onSearch, onOpen: (kind, id) => setOpen({ kind, id }) };
   // a page that is not in this version of the app (a link from an older page) says so instead of showing nothing
   const present = open.id ? (tab === "stories" ? story(open.id) : tab === "topics" ? topic(open.id) : childPage(open.id)) : undefined;
+
+  useMarkRead(tab, open.id && present ? open.id : null);
 
   useEffect(() => {
     window.scrollTo?.(0, 0);
@@ -601,21 +660,29 @@ export function BrowseScreen({ open, setOpen, version, backLabel, onJump, onSear
         </div>
       )}
       {shown.length === 0 && <p className="hint">{info.empty}</p>}
-      {tab === "children" ? (
-        AGE_BANDS.map((band) => {
-          const list = shown.filter((e) => childPage(e.id)?.age === band);
-          if (list.length === 0) return null;
-          return (
-            <section key={band}>
-              <h4 className="browse-section">
-                {ageLabel(band)} · {list.length}
-              </h4>
-              <List list={list} onOpen={(e) => setOpen({ kind: e.kind, id: e.id })} />
-            </section>
-          );
-        })
+      {shown.length > 0 && (tab === "stories" || tab === "children") && !searching ? (
+        <Sections
+          id={tab}
+          groups={
+            tab === "children"
+              ? AGE_BANDS.map((band) => ({ key: band, title: ageLabel(band), kind: tab, items: shown.filter((e) => childPage(e.id)?.age === band) })).filter((g) => g.items.length > 0)
+              : testamentGroups(shown, (e) => {
+                  const s = story(e.id);
+                  return s ? { testament: s.testament, ref: s.passages[0]?.ref ?? "" } : undefined;
+                }).map((g) => ({ key: g.testament, title: g.title, kind: tab, items: g.items }))
+          }
+          onOpen={(e) => setOpen({ kind: e.kind, id: e.id })}
+          book={tab === "stories"}
+        />
       ) : (
-        <List list={shown} onOpen={(e) => setOpen({ kind: e.kind, id: e.id })} />
+        <List list={shown} onOpen={(e) => setOpen({ kind: e.kind, id: e.id })} tag={tab === "stories" && searching} />
+      )}
+      {readTotal > 0 && (
+        <p className="hint">
+          <button className="link" onClick={() => markAllUnread()}>
+            Mark all as unread
+          </button>
+        </p>
       )}
       <FetchExtras />
     </div>

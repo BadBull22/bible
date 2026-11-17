@@ -48,4 +48,15 @@ const evil = JSON.parse(mergeSettings(here, { state: { theme: "sepia", evil: "<s
 assert.equal(evil.theme, "sepia");
 assert.equal(evil.evil, undefined, "only the listed preferences come in");
 assert.equal(evil.book, "Psalms", "a file cannot move the reader");
+// the stories and children's pages read travel too (only ids of the right shape), and come back added to what is already here
+const withRead = collectSettings({ state: null, theme: null, read: JSON.stringify(["stories:jonah", "children:noah-for-children", "bad id", 7]) })!;
+assert.deepEqual(withRead.read, ["stories:jonah", "children:noah-for-children"]);
+assert.equal(collectSettings({ state: null, theme: null, read: "[]" }), null);
+assert.equal(collectSettings({ state: null, theme: null, read: "not json" }), null);
+const back = mergeSettings({ state: null, theme: null, read: JSON.stringify(["stories:ruth"]) }, withRead);
+assert.deepEqual(JSON.parse(back.read!), ["stories:ruth", "stories:jonah", "children:noah-for-children"]);
+assert.deepEqual(back.applied, ["read stories"]);
+const same = mergeSettings({ state: null, theme: null, read: JSON.stringify(["stories:jonah", "children:noah-for-children"]) }, withRead);
+assert.deepEqual(same.applied, [], "nothing new, nothing changes");
+assert.equal(mergeSettings({ state: null, theme: null }, { read: "stories:jonah" }).read, null);
 console.log("backup settings: all checks passed");

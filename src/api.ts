@@ -184,6 +184,70 @@ export interface WordMeaning {
   here: boolean;
 }
 
+/** What a group of meanings is called in everyday English: the SIL Semantic Domains entry beside it (CC BY-SA 4.0). */
+export interface SilCard {
+  code: string;
+  name: string;
+  path: string[];
+  description: string;
+  related: { code: string; name: string }[];
+  words: string[];
+  /** true for Greek (matched through the Louw-Nida numbers), false for Hebrew (matched by hand, by meaning) */
+  by_louw_nida: boolean;
+}
+
+/** One meaning of a Hebrew or Greek word, with where it is used. */
+export interface Sense {
+  entry: number;
+  meaning: number;
+  glosses: string[];
+  definition: string;
+  ln: string | null;
+  groups: string[];
+  verses: number;
+  /** verses of each of the 66 books, Genesis first */
+  by_book: number[];
+  /** the dictionary lists the verse asked about for this meaning */
+  here: boolean;
+  sil: SilCard | null;
+}
+
+export interface WordDictionary {
+  lemma: string;
+  translit: string | null;
+  definition: string;
+  kjv: string | null;
+}
+
+export interface SenseReport {
+  strongs: string;
+  language: "greek" | "hebrew";
+  lemma: string;
+  senses: Sense[];
+  dictionary: WordDictionary | null;
+}
+
+export interface SamplePart {
+  text: string;
+  mark: boolean;
+}
+
+export interface Sample {
+  book: string;
+  chapter: number;
+  verse: number;
+  parts: SamplePart[];
+}
+
+/** a Hebrew or Greek word an English word translates */
+export interface OriginalWord {
+  strongs: string;
+  lemma: string;
+  translit: string | null;
+  definition: string;
+  times: number;
+}
+
 export interface WordFrequencyResult {
   total_occurrences: number;
   verses: SearchHit[];
@@ -1201,6 +1265,12 @@ export const api = {
     invoke<SearchHit[]>("semantic_hits", { versionCode, language, code, entry, meaning, book }),
   semanticWordMeanings: (strongs: string, book: string | null = null, chapter: number | null = null, verse: number | null = null) =>
     invoke<WordMeaning[]>("semantic_word_meanings", { strongs, book, chapter, verse }),
+  semanticSenses: (strongs: string, book: string | null = null, chapter: number | null = null, verse: number | null = null) =>
+    invoke<SenseReport>("semantic_senses", { strongs, book, chapter, verse }),
+  semanticSenseSamples: (strongs: string, entry: number, meaning: number, versionCode: string, book: string | null = null, chapter: number | null = null, verse: number | null = null) =>
+    invoke<Sample[]>("semantic_sense_samples", { strongs, entry, meaning, versionCode, book, chapter, verse }),
+  semanticGroupCard: (language: "greek" | "hebrew", code: string) => invoke<SilCard | null>("semantic_group_card", { language, code }),
+  originalWordsFor: (word: string, versionCode: string) => invoke<OriginalWord[]>("original_words_for", { word, versionCode }),
   strongsConcordance: (strongs: string) => invoke<ConcordanceResult>("strongs_concordance", { strongs }),
   strongsVerses: (versionCode: string, strongs: string, scope: FrequencyScope) => invoke<SearchHit[]>("strongs_verses", { versionCode, strongs, scope }),
   followState: (json: string) => invoke<void>("follow_state", { json }),

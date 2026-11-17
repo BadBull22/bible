@@ -26,7 +26,7 @@ export interface PicturePack {
 
 export function usePicturePack(kind: PicKind): PicturePack {
   const [installed, setInstalled] = useState<boolean | null>(null);
-  const [size, setSize] = useState(kind === "stories" ? 7 : 1);
+  const [size, setSize] = useState(kind === "stories" ? 12 : 7);
   const [downloading, setDownloading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const refresh = () =>
@@ -168,8 +168,8 @@ export function PicturesScreen() {
       </p>
       <h4 className="row-label">For Bible stories and children's pages</h4>
       <div className="dl-list">
-        <DownloadRow title="Story pictures" note="31 paintings and engravings, with their credits" pack={stories} />
-        <DownloadRow title="Children's pictures" note="A drawing for each children's page, in colour and as an outline to colour in" pack={kids} />
+        <DownloadRow title="Story pictures" note="61 paintings and engravings, with their credits" pack={stories} />
+        <DownloadRow title="Children's pictures" note="A picture for each children's page, in colour and as an outline to colour in" pack={kids} />
       </div>
       <h4 className="row-label">For verse pictures</h4>
       <div className="dl-list">
@@ -301,9 +301,8 @@ export function KidFigure({ id, title }: { id: string; title: string }) {
     setPhoto(null);
     setLooked(false);
     setOutline(false);
-    const own = pack.installed
-      ? Promise.all([api.kidPicture(id, false), api.kidPicture(id, true)]).then(([colour, line]) => (colour ? { colour, outline: line } : null)).catch(() => null)
-      : Promise.resolve(null);
+    // asked whether or not the pack is current: an older download still shows what it has
+    const own = Promise.all([api.kidPicture(id, false), api.kidPicture(id, true)]).then(([colour, line]) => (colour ? { colour, outline: line } : null)).catch(() => null);
     const extra = api.kidPhoto(id).catch(() => null);
     void Promise.all([own, extra]).then(([d, p]) => {
       if (!live) return;

@@ -226,7 +226,11 @@ pub fn run() {
                 .path()
                 .resolve("resources/semantic_domains.json", tauri::path::BaseDirectory::Resource)
                 .unwrap_or_else(|_| std::path::PathBuf::from("semantic_domains.json"));
-            app.manage(semantic::SemanticState::new(semantic_path));
+            let sil_path = app
+                .path()
+                .resolve("resources/semantic_sil.json", tauri::path::BaseDirectory::Resource)
+                .unwrap_or_else(|_| std::path::PathBuf::from("semantic_sil.json"));
+            app.manage(semantic::SemanticState::new(semantic_path, sil_path));
             app.manage(factory_phone::PhoneShareState::default());
             lan::start_if_on(app.handle());
             app.manage(voice::VoiceState::default());
@@ -371,6 +375,10 @@ pub fn run() {
             semantic::semantic_concordance,
             semantic::semantic_hits,
             semantic::semantic_word_meanings,
+            semantic::semantic_senses,
+            semantic::semantic_sense_samples,
+            semantic::semantic_group_card,
+            semantic::original_words_for,
             semantic::strongs_concordance,
             semantic::strongs_verses,
             study_commands::sermon_templates,

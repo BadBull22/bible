@@ -112,11 +112,18 @@ pub struct WordMeaning {
 pub struct SemanticState {
     path: PathBuf,
     data: OnceLock<Result<Data, String>>,
+    sil_path: PathBuf,
+    sil: OnceLock<Option<RawSil>>,
 }
 
 impl SemanticState {
-    pub fn new(path: PathBuf) -> Self {
-        Self { path, data: OnceLock::new() }
+    pub fn new(path: PathBuf, sil_path: PathBuf) -> Self {
+        Self { path, data: OnceLock::new(), sil_path, sil: OnceLock::new() }
+    }
+
+    /// The everyday-English file; the Meaning screens work without it (no cards).
+    fn sil(&self) -> Option<&RawSil> {
+        self.sil.get_or_init(|| std::fs::read_to_string(&self.sil_path).ok().and_then(|t| RawSil::from_json(&t).ok())).as_ref()
     }
 
     fn get(&self) -> Result<&Data, String> {
@@ -484,6 +491,351 @@ fn strongs_hits(study: &rusqlite::Connection, conn: &rusqlite::Connection, versi
     Ok(out)
 }
 
+// ---------------------------------------------------------------- the plain-English side (SIL Semantic Domains) and the senses of one word
+
+#[derive(Deserialize)]
+struct RawSilRelated {
+    c: String,
+    n: String,
+}
+
+#[derive(Deserialize)]
+struct RawSilDomain {
+    n: String,
+    p: Vec<String>,
+    d: String,
+    r: Vec<RawSilRelated>,
+    w: Vec<String>,
+}
+
+/// resources/semantic_sil.json (scripts/build_semantic_sil.mts): which SIL domain goes with a Greek or Hebrew group, and the SIL domains themselves.
+#[derive(Deserialize)]
+pub struct RawSil {
+    greek: HashMap<String, String>,
+    hebrew: HashMap<String, String>,
+    domains: HashMap<String, RawSilDomain>,
+}
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+pub struct SilRelated {
+    pub code: String,
+    pub name: String,
+}
+
+/// What a group of meanings is called in everyday English: the SIL domain beside it.
+#[derive(Serialize, Clone, Debug, PartialEq)]
+pub struct SilCard {
+    pub code: String,
+    pub name: String,
+    /// the domains above it, "Social behavior" first
+    pub path: Vec<String>,
+    pub description: String,
+    pub related: Vec<SilRelated>,
+    /// words people use for it
+    pub words: Vec<String>,
+    /// true for Greek (matched through the Louw-Nida numbers), false for Hebrew (matched by hand, by meaning)
+    pub by_louw_nida: bool,
+}
+
+impl RawSil {
+    pub fn from_json(text: &str) -> Result<RawSil, String> {
+        serde_json::from_str(text).map_err(|e| format!("The everyday-English file could not be read: {e}"))
+    }
+
+    /// The card for the first of these groups (or the group above it) that has a match.
+    fn card(&self, hebrew: bool, groups: &[String]) -> Option<SilCard> {
+        let map = if hebrew { &self.hebrew } else { &self.greek };
+        for g in groups {
+            let mut c: &str = g;
+            while !c.is_empty() {
+                if let Some(code) = map.get(c) {
+                    let d = self.domains.get(code)?;
+                    return Some(SilCard {
+                        code: code.clone(),
+                        name: d.n.clone(),
+                        path: d.p.clone(),
+                        description: d.d.clone(),
+                        related: d.r.iter().map(|r| SilRelated { code: r.c.clone(), name: r.n.clone() }).collect(),
+                        words: d.w.clone(),
+                        by_louw_nida: !hebrew,
+                    });
+                }
+                c = parent(c);
+            }
+        }
+        None
+    }
+}
+
+/// One meaning of a word, with where it is used.
+#[derive(Serialize, Clone, Debug)]
+pub struct Sense {
+    pub entry: usize,
+    pub meaning: usize,
+    pub glosses: Vec<String>,
+    pub definition: String,
+    pub ln: Option<String>,
+    /// "Attitudes and Emotions > Love, Affection, Compassion" for each group the meaning is in
+    pub groups: Vec<String>,
+    pub verses: usize,
+    /// verses of each of the 66 books (Genesis first)
+    pub by_book: Vec<u32>,
+    /// the dictionary lists the verse asked about for this meaning
+    pub here: bool,
+    pub sil: Option<SilCard>,
+}
+
+/// The word as Strong's lexicon has it, for the words the UBS dictionaries leave out and as a line under the others.
+#[derive(Serialize, Clone, Debug)]
+pub struct WordDictionary {
+    pub lemma: String,
+    pub translit: Option<String>,
+    pub definition: String,
+    pub kjv: Option<String>,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct SenseReport {
+    pub strongs: String,
+    pub language: String,
+    pub lemma: String,
+    pub senses: Vec<Sense>,
+    pub dictionary: Option<WordDictionary>,
+}
+
+/// The meanings of a Strong's number (every entry that carries it), in the dictionary's order.
+fn senses_of(lang: &Lang, sil: Option<&RawSil>, hebrew: bool, strongs: &str, key: Option<u32>) -> (String, Vec<Sense>) {
+    let mut lemma = String::new();
+    let mut out = Vec::new();
+    for (ei, e) in lang.entries.iter().enumerate().filter(|(_, e)| e.strongs.iter().any(|s| s == strongs)) {
+        if lemma.is_empty() {
+            lemma = e.lemma.clone();
+        }
+        for (mi, m) in e.meanings.iter().enumerate() {
+            let mut by_book = vec![0u32; 66];
+            for v in &m.verses {
+                let b = (*v / 1_000_000) as usize;
+                if (1..=66).contains(&b) {
+                    by_book[b - 1] += 1;
+                }
+            }
+            out.push(Sense {
+                entry: ei,
+                meaning: mi,
+                glosses: m.glosses.clone(),
+                definition: m.definition.clone(),
+                ln: m.ln.clone(),
+                groups: m.domains.iter().map(|d| lang.path_of(d)).collect(),
+                verses: m.verses.len(),
+                by_book,
+                here: key.is_some_and(|k| m.verses.binary_search(&k).is_ok()),
+                sil: sil.and_then(|s| s.card(hebrew, &m.domains)),
+            });
+        }
+    }
+    (lemma, out)
+}
+
+fn verse_key(conn: &rusqlite::Connection, book: Option<String>, chapter: Option<i64>, verse: Option<i64>) -> Option<u32> {
+    let (Some(b), Some(c), Some(v)) = (book, chapter, verse) else { return None };
+    let order: Option<i64> = conn.query_row("SELECT order_index FROM books WHERE name = ?1", params![b], |r| r.get(0)).ok();
+    order.map(|o| (o * 1_000_000 + c * 1_000 + v) as u32)
+}
+
+/// Every meaning of a Hebrew or Greek word: how many verses use each, where in the Bible, and what the meaning is called in everyday English. The verse asked
+/// about (the one being read) marks the meaning that is used there.
+#[tauri::command]
+pub fn semantic_senses(state: State<SemanticState>, db: State<DbState>, strongs: String, book: Option<String>, chapter: Option<i64>, verse: Option<i64>) -> Result<SenseReport, String> {
+    let s = norm_strongs(&strongs).ok_or("Type a Strong's number, like G26 or H157.")?;
+    let hebrew = s.starts_with('H');
+    let data = state.get()?;
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    let key = verse_key(&conn, book, chapter, verse);
+    let (lemma, senses) = senses_of(if hebrew { &data.hebrew } else { &data.greek }, state.sil(), hebrew, &s, key);
+    let dictionary = conn
+        .query_row("SELECT lemma, xlit, strongs_def, kjv_def FROM strongs_dict WHERE strongs_number = ?1", params![s], |r| {
+            Ok(WordDictionary {
+                lemma: r.get::<_, Option<String>>(0)?.unwrap_or_default(),
+                translit: r.get::<_, Option<String>>(1)?.filter(|t| !t.trim().is_empty()),
+                definition: r.get::<_, Option<String>>(2)?.unwrap_or_default().trim().to_string(),
+                kjv: r.get::<_, Option<String>>(3)?.map(|t| t.trim().to_string()).filter(|t| !t.is_empty()),
+            })
+        })
+        .ok();
+    let lemma = if lemma.is_empty() { dictionary.as_ref().map(|d| d.lemma.clone()).unwrap_or_default() } else { lemma };
+    Ok(SenseReport { strongs: s.clone(), language: if hebrew { "hebrew" } else { "greek" }.to_string(), lemma, senses, dictionary })
+}
+
+/// The card for a whole group of meanings (the tree's selected group).
+#[tauri::command]
+pub fn semantic_group_card(state: State<SemanticState>, language: String, code: String) -> Result<Option<SilCard>, String> {
+    Ok(state.sil().and_then(|s| s.card(language == "hebrew", &[code])))
+}
+
+// ---- example verses with the word marked
+
+#[derive(Serialize, Clone, Debug, PartialEq)]
+pub struct SamplePart {
+    pub text: String,
+    pub mark: bool,
+}
+
+#[derive(Serialize, Clone, Debug)]
+pub struct Sample {
+    pub book: String,
+    pub chapter: i64,
+    pub verse: i64,
+    pub parts: Vec<SamplePart>,
+}
+
+/// A few verses to show for a meaning: the verse being read first when it is one of them, then the first, the middle and the last.
+fn pick_sample_keys(verses: &[u32], here: Option<u32>, n: usize) -> Vec<u32> {
+    let mut out: Vec<u32> = Vec::new();
+    if let Some(h) = here.filter(|h| verses.binary_search(h).is_ok()) {
+        out.push(h);
+    }
+    if !verses.is_empty() {
+        for i in [0, verses.len() / 2, verses.len() - 1] {
+            if out.len() < n && !out.contains(&verses[i]) {
+                out.push(verses[i]);
+            }
+        }
+        let mut i = 0;
+        while out.len() < n && i < verses.len() {
+            if !out.contains(&verses[i]) {
+                out.push(verses[i]);
+            }
+            i += 1;
+        }
+    }
+    out.sort_unstable();
+    out
+}
+
+/// A verse cut into pieces, the words of the original word's translation marked (the first place each is found).
+fn mark_parts(text: &str, words: &[String]) -> Vec<SamplePart> {
+    let mut spans: Vec<(usize, usize)> = words.iter().map(|w| w.trim()).filter(|w| !w.is_empty()).filter_map(|w| text.find(w).map(|i| (i, i + w.len()))).collect();
+    spans.sort_unstable();
+    let mut parts = Vec::new();
+    let mut at = 0;
+    for (s, e) in spans {
+        if s < at {
+            continue;
+        }
+        if s > at {
+            parts.push(SamplePart { text: text[at..s].to_string(), mark: false });
+        }
+        parts.push(SamplePart { text: text[s..e].to_string(), mark: true });
+        at = e;
+    }
+    if at < text.len() {
+        parts.push(SamplePart { text: text[at..].to_string(), mark: false });
+    }
+    parts
+}
+
+/// Example verses for one meaning of a word, in the Bible chosen (the words are marked where that Bible is tagged with Strong's numbers; otherwise the
+/// BSB is used). The verse being read comes first when this meaning is used in it.
+#[tauri::command]
+pub fn semantic_sense_samples(
+    state: State<SemanticState>,
+    db: State<DbState>,
+    strongs: String,
+    entry: usize,
+    meaning: usize,
+    version_code: String,
+    book: Option<String>,
+    chapter: Option<i64>,
+    verse: Option<i64>,
+) -> Result<Vec<Sample>, String> {
+    let s = norm_strongs(&strongs).ok_or("Type a Strong's number, like G26 or H157.")?;
+    let data = state.get()?;
+    let lang = if s.starts_with('G') { &data.greek } else { &data.hebrew };
+    let m = lang.entries.get(entry).and_then(|e| e.meanings.get(meaning)).ok_or("That meaning is not in the dictionary.")?;
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    let here = verse_key(&conn, book, chapter, verse);
+    samples_in(&conn, &s, &m.verses, here, &version_code)
+}
+
+fn samples_in(conn: &rusqlite::Connection, s: &str, verses: &[u32], here: Option<u32>, version_code: &str) -> Result<Vec<Sample>, String> {
+    let keys = pick_sample_keys(verses, here, 3);
+    let tagged = |code: &str| -> Option<i64> {
+        let id: i64 = conn.query_row("SELECT id FROM versions WHERE code = ?1", params![code], |r| r.get(0)).ok()?;
+        let n: i64 = conn.query_row("SELECT COUNT(*) FROM strongs_links sl JOIN verses v ON v.id = sl.verse_id WHERE v.version_id = ?1 AND v.book_id = 43 AND v.chapter = 3 AND v.verse = 16", params![id], |r| r.get(0)).ok()?;
+        (n > 0).then_some(id)
+    };
+    let version_id = tagged(version_code).or_else(|| tagged("BSB")).ok_or("The verses are not available.")?;
+    let mut out = Vec::new();
+    for k in keys {
+        let (b, c, v) = ((k / 1_000_000) as i64, ((k % 1_000_000) / 1_000) as i64, (k % 1_000) as i64);
+        let Ok((verse_id, name, text)) = conn.query_row(
+            "SELECT v.id, b.name, v.text FROM verses v JOIN books b ON b.id = v.book_id WHERE v.version_id = ?1 AND b.order_index = ?2 AND v.chapter = ?3 AND v.verse = ?4",
+            params![version_id, b, c, v],
+            |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?, r.get::<_, String>(2)?)),
+        ) else {
+            continue;
+        };
+        let words: Vec<String> = {
+            let mut stmt = conn.prepare("SELECT surface_text FROM strongs_links WHERE verse_id = ?1 AND strongs_number = ?2 AND trim(surface_text) <> ''").map_err(|e| e.to_string())?;
+            let rows = stmt.query_map(params![verse_id, s], |r| r.get::<_, String>(0)).map_err(|e| e.to_string())?;
+            rows.filter_map(|r| r.ok()).collect()
+        };
+        out.push(Sample { book: name, chapter: c, verse: v, parts: mark_parts(&text, &words) });
+    }
+    Ok(out)
+}
+
+// ---- the original words behind an English word
+
+#[derive(Serialize, Clone, Debug)]
+pub struct OriginalWord {
+    pub strongs: String,
+    pub lemma: String,
+    pub translit: Option<String>,
+    pub definition: String,
+    /// how often this English word translates it, in the Bible asked about
+    pub times: i64,
+}
+
+/// The Hebrew and Greek words an English word translates (in a Bible tagged with Strong's numbers), the most often first: "love" is agape, agapao, ahab...
+#[tauri::command]
+pub fn original_words_for(db: State<DbState>, word: String, version_code: String) -> Result<Vec<OriginalWord>, String> {
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
+    original_words_in(&conn, &word, &version_code)
+}
+
+fn original_words_in(conn: &rusqlite::Connection, word: &str, version_code: &str) -> Result<Vec<OriginalWord>, String> {
+    let w: String = word.trim().to_lowercase().chars().filter(|c| c.is_alphabetic() || *c == '\'' || *c == ' ').collect();
+    if w.is_empty() || w.len() > 40 {
+        return Ok(Vec::new());
+    }
+    let version_id: i64 = conn
+        .query_row("SELECT v.id FROM versions v WHERE v.code = ?1 AND EXISTS (SELECT 1 FROM strongs_links sl JOIN verses vv ON vv.id = sl.verse_id WHERE vv.version_id = v.id LIMIT 1)", params![version_code], |r| r.get(0))
+        .or_else(|_| conn.query_row("SELECT id FROM versions WHERE code = 'BSB'", [], |r| r.get(0)))
+        .map_err(|_| "The words are not available.".to_string())?;
+    let forms = [w.clone(), format!("{w}s"), format!("{w}d"), format!("{w}ed"), format!("{w}ing")];
+    let mut stmt = conn
+        .prepare(
+            "SELECT sl.strongs_number, COUNT(*) AS n, d.lemma, d.xlit, d.strongs_def
+             FROM strongs_links sl JOIN verses v ON v.id = sl.verse_id LEFT JOIN strongs_dict d ON d.strongs_number = sl.strongs_number
+             WHERE v.version_id = ?1 AND lower(trim(sl.surface_text)) IN (?2, ?3, ?4, ?5, ?6) AND sl.strongs_number <> 'G3588' AND d.lemma IS NOT NULL
+             GROUP BY sl.strongs_number ORDER BY n DESC LIMIT 12",
+        )
+        .map_err(|e| e.to_string())?;
+    let rows = stmt
+        .query_map(params![version_id, forms[0], forms[1], forms[2], forms[3], forms[4]], |r| {
+            Ok(OriginalWord {
+                strongs: r.get(0)?,
+                times: r.get(1)?,
+                lemma: r.get::<_, Option<String>>(2)?.unwrap_or_default(),
+                translit: r.get::<_, Option<String>>(3)?.filter(|t| !t.trim().is_empty()),
+                definition: r.get::<_, Option<String>>(4)?.unwrap_or_default().trim().to_string(),
+            })
+        })
+        .map_err(|e| e.to_string())?;
+    Ok(rows.filter_map(|r| r.ok()).collect())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -537,10 +889,115 @@ mod tests {
         }
     }
 
+
+    // ---------------------------------------------------------------- the senses of one word and the plain-English cards
+
+    const SIL: &str = r#"{"greek":{"025003":"4.3.3","044":"1.6"},"hebrew":{"002001002018":"4.3.3"},
+        "domains":{"4.3.3":{"n":"Love","p":["Social behavior"],"d":"Use this domain for words about loving someone.","r":[{"c":"3.4.1.1","n":"Like, love"}],"w":["love","adore"]},
+                   "1.6":{"n":"Animal","p":[],"d":"Animals.","r":[],"w":["beast"]}}}"#;
+
+    #[test]
+    fn a_group_gets_its_card_and_a_group_without_one_gets_none() {
+        let sil = RawSil::from_json(SIL).unwrap();
+        let card = sil.card(false, &["025003".to_string()]).unwrap();
+        assert_eq!((card.code.as_str(), card.name.as_str(), card.by_louw_nida), ("4.3.3", "Love", true));
+        assert_eq!(card.path, vec!["Social behavior".to_string()]);
+        assert_eq!(card.related, vec![SilRelated { code: "3.4.1.1".into(), name: "Like, love".into() }]);
+        // a sub-group with no match of its own uses the group above it
+        assert_eq!(sil.card(false, &["044007".to_string()]).unwrap().code, "1.6");
+        assert!(sil.card(false, &["999001".to_string()]).is_none());
+        // Hebrew is matched by hand, by meaning
+        assert!(!sil.card(true, &["002001002018".to_string()]).unwrap().by_louw_nida);
+        assert!(sil.card(true, &["002001002019".to_string()]).is_none());
+        assert!(RawSil::from_json("nope").is_err());
+    }
+
+    #[test]
+    fn the_senses_of_a_word_count_their_verses_by_book_and_mark_the_one_used_here() {
+        let d = data();
+        let sil = RawSil::from_json(SIL).unwrap();
+        // G25 has two meanings: love (John 3:16 and Genesis 0:0..) and hate (John 3:17)
+        let (lemma, senses) = senses_of(&d.greek, Some(&sil), false, "G25", Some(43003017));
+        assert_eq!(lemma, "agapao");
+        assert_eq!(senses.len(), 2);
+        assert_eq!((senses[0].entry, senses[0].meaning, senses[0].verses), (1, 0, 2));
+        assert_eq!(senses[0].by_book.len(), 66);
+        assert_eq!(senses[0].by_book[42], 2, "both verses of the love meaning are in John, book 43");
+        assert!(!senses[0].here && senses[1].here, "John 3:17 is the hate meaning");
+        assert_eq!(senses[0].sil.as_ref().map(|c| c.name.as_str()), Some("Love"));
+        assert!(senses[1].sil.is_none());
+        assert_eq!(senses[0].groups, vec!["Attitudes and Emotions > Love, Affection, Compassion".to_string()]);
+        // without a card file, or for a word that is not there
+        assert!(senses_of(&d.greek, None, false, "G25", None).1.iter().all(|s| s.sil.is_none() && !s.here));
+        assert!(senses_of(&d.greek, None, false, "G99999", None).1.is_empty());
+        let (hl, hs) = senses_of(&d.hebrew, Some(&sil), true, "H157", None);
+        assert_eq!((hl.as_str(), hs.len()), ("ahev", 1));
+        assert!(hs[0].sil.is_none(), "002001 has no card in the sample");
+    }
+
+    #[test]
+    fn example_verses_start_with_the_one_being_read_and_the_words_are_marked() {
+        let v: Vec<u32> = (1..=10).map(|n| n * 1000).collect();
+        assert_eq!(pick_sample_keys(&v, None, 3), vec![1000, 6000, 10000]);
+        assert_eq!(pick_sample_keys(&v, Some(4000), 3), vec![1000, 4000, 6000], "the verse being read is one of them");
+        assert_eq!(pick_sample_keys(&v, Some(4500), 3), vec![1000, 6000, 10000], "a verse the meaning is not used in is not added");
+        assert_eq!(pick_sample_keys(&[5], None, 3), vec![5]);
+        assert!(pick_sample_keys(&[], Some(1), 3).is_empty());
+
+        let parts = mark_parts("And forgive us our debts, as we also have forgiven our debtors.", &["forgive".into(), "have forgiven".into()]);
+        let marked: Vec<&str> = parts.iter().filter(|p| p.mark).map(|p| p.text.as_str()).collect();
+        assert_eq!(marked, vec!["forgive", "have forgiven"]);
+        assert_eq!(parts.iter().map(|p| p.text.as_str()).collect::<String>(), "And forgive us our debts, as we also have forgiven our debtors.");
+        // overlapping or missing words never break the verse
+        let p = mark_parts("In the beginning God", &["beginning".into(), "begin".into(), "".into(), "absent".into()]);
+        assert_eq!(p.iter().map(|x| x.text.as_str()).collect::<String>(), "In the beginning God");
+        assert_eq!(p.iter().filter(|x| x.mark).count(), 1);
+        assert_eq!(mark_parts("Plain.", &[]), vec![SamplePart { text: "Plain.".into(), mark: false }]);
+    }
+
+    /// The real databases: the original words behind "love", a meaning's example verses with the word marked, and the cards.
+    #[test]
+    fn the_senses_work_on_the_real_files() {
+        let res = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources");
+        let (Ok(text), Ok(sil_text), true) = (std::fs::read_to_string(res.join("semantic_domains.json")), std::fs::read_to_string(res.join("semantic_sil.json")), res.join("bible.db").exists()) else { return };
+        let d = Data::from_json(&text).unwrap();
+        let sil = RawSil::from_json(&sil_text).unwrap();
+        let bible = rusqlite::Connection::open_with_flags(res.join("bible.db"), rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY).unwrap();
+
+        // "love" is translated from several Greek and Hebrew words, the Greek agape and agapao among them
+        let love = original_words_in(&bible, "Love", "BSB").unwrap();
+        let numbers: Vec<&str> = love.iter().map(|w| w.strongs.as_str()).collect();
+        assert!(numbers.contains(&"G26") && numbers.contains(&"G25") && numbers.contains(&"H157"), "{numbers:?}");
+        assert!(love.windows(2).all(|w| w[0].times >= w[1].times), "the most often first");
+        assert!(original_words_in(&bible, "   ", "BSB").unwrap().is_empty());
+        assert!(!original_words_in(&bible, "love", "NoSuchBible").unwrap().is_empty(), "a Bible that is not tagged falls back to the BSB");
+
+        // forgive: the Greek word aphiemi has many senses, the pardon one used in Matthew 6:12, with the English word marked in the verse
+        let (lemma, senses) = senses_of(&d.greek, Some(&sil), false, "G863", Some(40006012));
+        assert!(!lemma.is_empty() && lemma.starts_with('ἀ'), "{lemma}");
+        assert!(senses.len() >= 10, "{}", senses.len());
+        let here = senses.iter().find(|s| s.here).expect("Matthew 6:12 is listed for one meaning");
+        assert!(here.glosses.iter().any(|g| g.contains("forgive")), "{:?}", here.glosses);
+        assert_eq!(here.sil.as_ref().map(|c| c.name.as_str()), Some("Forgive"));
+        let verses = &d.greek.entries[here.entry].meanings[here.meaning].verses;
+        let samples = samples_in(&bible, "G863", verses, Some(40006012), "BSB").unwrap();
+        assert_eq!(samples.len(), 3);
+        let matt = samples.iter().find(|s| s.book == "Matthew" && s.chapter == 6 && s.verse == 12).expect("the verse being read is shown");
+        assert!(matt.parts.iter().any(|p| p.mark && p.text.contains("forgive")), "{:?}", matt.parts);
+
+        // the Hebrew love word: its meaning gets a card and counts by book (all in the Old Testament)
+        let (_, h) = senses_of(&d.hebrew, Some(&sil), true, "H157", None);
+        let to_love = h.iter().find(|s| s.glosses.iter().any(|g| g == "to love")).unwrap();
+        assert_eq!(to_love.sil.as_ref().map(|c| c.name.as_str()), Some("Love"));
+        assert!(to_love.by_book[39..].iter().all(|n| *n == 0), "Hebrew words are in the Old Testament");
+        // every Greek and Hebrew match in the file points at a domain the file holds
+        assert!(sil.greek.values().chain(sil.hebrew.values()).all(|c| sil.domains.contains_key(c)));
+    }
+
     #[test]
     fn a_broken_file_is_an_error_not_a_crash() {
         assert!(Data::from_json("not json").is_err());
-        let state = SemanticState::new(PathBuf::from("does/not/exist.json"));
+        let state = SemanticState::new(PathBuf::from("does/not/exist.json"), PathBuf::from("does/not/exist-either.json"));
         assert!(state.get().is_err());
     }
 

@@ -324,7 +324,7 @@ fn kid_photo(core: State<Core>, id: String) -> Result<Option<picture_packs::KidP
 /// The additional pages fetched earlier (the file's text), or nothing.
 #[tauri::command(async)]
 fn extra_pages_load(core: State<Core>) -> Result<Option<String>, String> {
-    Ok(extra_pages::load(&core.get()?.dir))
+    Ok(extra_pages::load_light(&core.get()?.dir))
 }
 
 /// Fetches the file from the app's releases; the file is kept only when it passes the check.

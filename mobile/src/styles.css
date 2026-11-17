@@ -2221,3 +2221,16 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
 .prayer-meta { margin: 0.2rem 0 0.4rem; }
 .prayer-answer .field { width: 100%; }
 .playing button { margin-left: 0.3rem; }
+
+/* Browse: the long lists in sections that open one at a time, and pages already read */
+.browse-sections { display: grid; gap: 0.6rem; margin-top: 0.6rem; }
+.browse-group-head { display: flex; align-items: center; gap: 0.6rem; width: 100%; text-align: left; padding: 0.8rem 0.9rem; border: 1px solid var(--border); border-radius: 0.8rem; background: var(--raised); color: var(--text); font-size: 1.02rem; }
+.browse-group-title { flex: 1; font-weight: 700; }
+.browse-group-head small { color: var(--muted); }
+.browse-group.on > .browse-group-head { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.browse-group > .browse-list { margin-top: 0.5rem; }
+.browse-book { margin: 0.5rem 0 0.2rem; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.browse-card.read .browse-card-title { color: var(--muted); font-weight: 600; }
+.browse-card.read { opacity: 0.88; }
+.browse-tick { color: var(--accent, var(--muted)); font-weight: 700; }
+.browse-testament { color: var(--muted); font-weight: 400; }

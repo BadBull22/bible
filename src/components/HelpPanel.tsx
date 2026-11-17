@@ -306,7 +306,7 @@ const SECTIONS: Section[] = [
   {
     id: "concordance",
     title: "Concordance: how often a word is used, book by book",
-    keywords: "concordance meaning semantic domains love forgive strongs number word count frequency how many times book old testament new testament forms believe believes believed",
+    keywords: "concordance meaning meanings senses wheel ring tree strip everyday english sil semantic domains love forgive strongs number word count frequency how many times book old testament new testament forms believe believes believed original words behind",
     body: (
       <>
         <p>
@@ -336,12 +336,24 @@ const SECTIONS: Section[] = [
           type a few letters of a meaning (love, forgive, joy, fear, shepherd) or open the groups one level at a time (the small › button), and choose a
           group. You see every word in it, how many verses use them in each book, and the verses, each showing the Hebrew or Greek words that put it there.
           Open <strong>The words in…</strong> and click one to see only that word with that meaning. The groups come from the UBS dictionaries of Biblical Hebrew
-          and of the Greek New Testament (adapted from Louw and Nida), shared under the Creative Commons Attribution-ShareAlike 4.0 licence. The Hebrew dictionary is
-          still being finished, so a few Hebrew words have no meaning yet.
+          and of the Greek New Testament (adapted from Louw and Nida), shared under the Creative Commons Attribution-ShareAlike 4.0 licence. The group is
+          shown in its tree, with the groups beside it (press one to go to it) and the words inside it, and a card in everyday English from the SIL Semantic Domains
+          list (SIL Global, CC BY-SA 4.0).
+        </p>
+        <p>
+          A strip from Genesis to Revelation shows where the word or group is used: amber for the Old Testament, blue for the New. Press a bar to read that book's
+          verses. The numbers for each book are still there, under <em>Numbers for each book</em>.
+        </p>
+        <p>
+          <strong>Strong's number</strong> shows a word's meanings drawn as a ring, sized by how many verses use each. Press a slice or a name to see that meaning:
+          its definition, where it sits in the groups of meanings, what it is called in everyday English, where in the Bible it is used and some verses with the
+          word marked. <strong>Word</strong> shows, under the count, the Hebrew and Greek words behind the English word; press one to open its meanings. A word the
+          dictionaries leave out (mostly small words such as “to” and “all”) shows its Strong's definition instead.
         </p>
         <p>
           In the <strong>Interlinear</strong>, under a word's Strong's number, <strong>Meaning here</strong> says which meaning the dictionary gives the word in that
-          verse, and the group it belongs to (hover for the whole path).
+          verse, and the group it belongs to (hover for the whole path). <strong>All meanings</strong> opens the word's ring with the meaning used in that verse
+          chosen.
         </p>
       </>
     ),

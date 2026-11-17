@@ -591,6 +591,986 @@
       "words": ["JOSEPH", "JACOB", "BROTHERS", "EGYPT", "PHARAOH", "DREAMS", "PRISON", "GRAIN", "FORGAVE", "FAMINE"],
       "doctrine": "plain",
       "review": { "status": "approved", "rev": 1, "date": "2026-11-08" }
+    },
+    {
+      "id": "blind-bartimaeus-for-children",
+      "title": "Blind Bartimaeus",
+      "age": "6-8",
+      "story": "blind-bartimaeus",
+      "read_from": "Mark 10:46-52",
+      "retelling": ["Bartimaeus was blind. He could not see. He sat by the road in Jericho and asked people for money.", "One day he heard a big crowd coming. Someone said, “Jesus of Nazareth is here!”", "Bartimaeus shouted, “Jesus, please help me!” Some people said, “Be quiet!” But he shouted even louder.", "Jesus stopped. He said, “Call him here.” The people said, “Cheer up! Jesus is calling you!”", "Bartimaeus threw off his cloak. He jumped up and ran to Jesus.", "Jesus asked, “What can I do for you?” Bartimaeus said, “I want to see again.”", "Jesus said, “Go. Your faith has healed you.” At once Bartimaeus could see! He followed Jesus down the road."],
+      "message": "Jesus hears us when we call. He stops for us, and he cares about what we need.",
+      "memory": {
+        "ref": "Psalms 146:8",
+        "blanks_hint": ["opens", "eyes", "blind"]
+      },
+      "questions": [
+        { "q": "What was Bartimaeus's problem?", "a": "He was blind. He could not see." },
+        {
+          "q": "What did some people tell him to do, and what did he do?",
+          "a": "They told him to be quiet. He shouted even louder."
+        },
+        {
+          "q": "Bartimaeus kept calling for Jesus. What would you like to ask Jesus? You can talk to him now.",
+          "a": "There is no wrong answer. Let the child talk, then pray together."
+        }
+      ],
+      "try_this": "Close your eyes and let a friend lead you a few steps. Then thank Jesus for your eyes.",
+      "words": ["JESUS", "BARTIMAEUS", "BLIND", "JERICHO", "SHOUTED", "CLOAK", "CROWD", "SEE"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 3, "date": "2026-11-17" }
+    },
+    {
+      "id": "cain-and-abel-for-children",
+      "title": "Cain and Abel",
+      "age": "6-8",
+      "story": "cain-and-abel",
+      "read_from": "Genesis 4:1-16",
+      "retelling": ["Adam and Eve had two sons. Cain grew crops. Abel looked after sheep.", "Each brother brought a gift to God. God was pleased with Abel's gift. Cain was upset. He became very angry.", "God spoke to Cain. God said, “Do what is right, and I will be pleased with you.”", "But Cain did not listen. He let his anger grow. He did a terrible thing, and his brother Abel died.", "God asked Cain, “Where is your brother?” Cain said, “I do not know.” But God knew what had happened. Cain had to leave his home.", "Even then, God still cared for Cain. God put a mark on him to keep him safe."],
+      "message": "When we feel angry, we can talk to God. We can choose to do what is right and be kind.",
+      "memory": {
+        "ref": "Proverbs 15:1",
+        "blanks_hint": ["gentle", "answer", "anger"]
+      },
+      "questions": [
+        {
+          "q": "What did Cain and Abel bring to God?",
+          "a": "Cain brought some of his crops. Abel brought some of his sheep."
+        },
+        {
+          "q": "What did God say to Cain before he did the wrong thing?",
+          "a": "God told him to do what is right and not to let anger win."
+        },
+        {
+          "q": "When you feel very angry, what can you do? Who can you talk to?",
+          "a": "There is no wrong answer. Remind the child they can talk to Jesus, and to a grown-up they trust. Pray together."
+        }
+      ],
+      "words": ["CAIN", "ABEL", "GOD", "ANGRY", "GIFT", "SHEEP", "BROTHER", "MARK"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "When you feel angry, take three slow breaths. Then whisper a short prayer: “Help me, Jesus.”"
+    },
+    {
+      "id": "elijah-and-the-gentle-whisper-for-children",
+      "title": "Elijah and the Gentle Whisper",
+      "age": "6-8",
+      "story": "elijah-and-the-gentle-whisper",
+      "read_from": "1 Kings 19:1-18",
+      "retelling": ["Elijah was God's prophet. He had just seen God do great things. Then a queen named Jezebel said she would harm him.", "Elijah was scared. He ran far away into the desert. He sat under a bush and felt very tired and sad.", "He fell asleep. An angel woke him. The angel gave him bread and water. Elijah ate, and he slept again.", "Then Elijah walked for forty days to a mountain. He hid in a cave.", "God told him to stand on the mountain. A strong wind blew. The ground shook. A fire burned. But God was not in those things.", "Then Elijah heard a gentle whisper. It was God's quiet voice. God told Elijah he was not alone. God gave him a new job to do."],
+      "message": "God cares for us when we are tired and afraid. He can speak to us in a quiet voice.",
+      "memory": {
+        "ref": "Psalms 46:1",
+        "blanks_hint": ["refuge", "strength", "help"]
+      },
+      "questions": [
+        { "q": "Why did Elijah run away?", "a": "He was afraid of Queen Jezebel." },
+        { "q": "What did the angel give Elijah?", "a": "Bread and water, and time to rest." },
+        {
+          "q": "Elijah felt scared and alone. When do you feel that way? You can tell Jesus about it.",
+          "a": "There is no wrong answer. Let the child share, then remind them God is near and listens. Pray together."
+        }
+      ],
+      "words": ["ELIJAH", "ANGEL", "BREAD", "CAVE", "WIND", "WHISPER", "FIRE", "GOD"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Sit very quietly for one minute. Listen. Then say, “Thank you, God, that you are near.”"
+    },
+    {
+      "id": "elijah-fed-by-ravens-for-children",
+      "title": "Elijah Fed by Ravens",
+      "age": "6-8",
+      "story": "elijah-fed-by-ravens",
+      "read_from": "1 Kings 17:1-24",
+      "retelling": ["Elijah was a prophet of God. He told the king that no rain would fall for a long time.", "God told Elijah to hide by a little stream. God said, “Ravens will bring you food.”", "Elijah did what God said. Every morning and evening, ravens brought him bread and meat. Elijah drank from the stream.", "Then the stream dried up. God sent Elijah to a town to meet a poor widow.", "She had only a little flour and oil. Elijah said, “God says your flour and oil will not run out.” She shared her food with him.", "And God kept his promise. There was enough food every day."],
+      "message": "God takes care of us in surprising ways. We can trust him for what we need each day. He made everything and takes care of everything, even the birds",
+      "memory": {
+        "ref": "Philippians 4:19",
+        "blanks_hint": ["supply", "needs", "riches"]
+      },
+      "questions": [
+        { "q": "Who brought Elijah his food at the stream?", "a": "Ravens, the big black birds." },
+        {
+          "q": "What did the poor widow share with Elijah?",
+          "a": "A little bread made from her last flour and oil."
+        },
+        {
+          "q": "God gives us food and many other good things. What are you thankful for today? Tell Jesus.",
+          "a": "There is no wrong answer. Let the child name things, then thank God together."
+        }
+      ],
+      "words": ["ELIJAH", "RAVENS", "BREAD", "STREAM", "WIDOW", "FLOUR", "OIL", "GOD"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "At your next meal, say thank you to God. Then share something with someone who needs it."
+    },
+    {
+      "id": "elijah-taken-up-in-a-fiery-chariot-for-children",
+      "title": "Elijah Taken Up in a Fiery Chariot",
+      "age": "6-8",
+      "story": "elijah-taken-up-in-a-fiery-chariot",
+      "read_from": "2 Kings 2:1-18",
+      "retelling": ["Elijah was God's prophet. His helper was a man named Elisha. They walked together.", "God was about to take Elijah up to heaven. Elijah said, “Stay here, Elisha.” But Elisha said, “No! I will not leave you.”", "They came to the river Jordan. Elijah rolled up his cloak and hit the water. The water split in two! They walked across on dry ground.", "Elijah asked, “What can I do for you?” Elisha said, “Please give me a double share of God's Spirit.”", "Suddenly a chariot and horses of fire came down. They went between the two men. Elijah went up to heaven in a whirlwind.", "Elisha picked up Elijah's cloak. He hit the water, and it split again. God was with Elisha too."],
+      "message": "God is with his helpers. When one person's work ends, God helps the next one carry on.",
+      "memory": {
+        "ref": "Psalms 121:2",
+        "blanks_hint": ["help", "LORD", "Maker", "heaven"]
+      },
+      "questions": [
+        {
+          "q": "What did Elijah do to the river with his cloak?",
+          "a": "He hit the water, and it split so they could cross."
+        },
+        { "q": "What did Elisha ask for?", "a": "A double share of God's Spirit." },
+        {
+          "q": "Elisha stayed close to Elijah. Who helps you learn about God? You can thank Jesus for them.",
+          "a": "There is no wrong answer. Let the child talk about parents, teachers, or friends. Thank God for them together."
+        }
+      ],
+      "words": ["ELIJAH", "ELISHA", "CLOAK", "JORDAN", "CHARIOT", "FIRE", "HEAVEN", "RIVER"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 3, "date": "2026-11-17" },
+      "try_this": "Think of someone who teaches you about God. Say thank you to them this week."
+    },
+    {
+      "id": "elisha-and-the-widows-oil-for-children",
+      "title": "Elisha and the Widow's Oil",
+      "age": "6-8",
+      "story": "elisha-and-the-widows-oil",
+      "read_from": "2 Kings 4:1-7",
+      "retelling": ["A woman was very sad and worried. Her husband had died. She owed money to a man. He was going to take her two sons away.", "She asked God's prophet Elisha for help. Elisha asked, “What do you have in your house?” She said, “Only a little jar of oil.”", "Elisha said, “Ask your neighbors for empty jars. Get as many as you can.”", "She shut the door with her sons. She poured oil from her little jar into the empty jars. The oil kept coming!", "When all the jars were full, she asked for one more. But there were no more jars. Then the oil stopped.", "Elisha said, “Sell the oil and pay what you owe.” God took care of the woman and her sons."],
+      "message": "God can use what little we have. When we trust him, he takes care of us.",
+      "memory": {
+        "ref": "Psalms 23:1",
+        "blanks_hint": ["shepherd", "want"]
+      },
+      "questions": [
+        { "q": "What did the woman have in her house?", "a": "Just one small jar of oil." },
+        {
+          "q": "What did Elisha tell her to do?",
+          "a": "To borrow lots of empty jars and fill them with oil."
+        },
+        {
+          "q": "The woman had very little, but God gave her enough. What do you need? You can ask God.",
+          "a": "There is no wrong answer. Let the child share. Pray together and thank God for what he gives."
+        }
+      ],
+      "words": ["WOMAN", "OIL", "JARS", "ELISHA", "SONS", "NEIGHBORS", "FULL", "GOD"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 3, "date": "2026-11-17" },
+      "try_this": "Put a small cup next to a big bowl. Pour water from one into the other, and thank God for enough."
+    },
+    {
+      "id": "esther-becomes-queen-for-children",
+      "title": "Esther Becomes Queen",
+      "age": "6-8",
+      "story": "esther-becomes-queen",
+      "read_from": "Esther 2:1-23",
+      "retelling": ["Long ago, a king named Xerxes needed a new queen. He wanted a kind and good woman.", "A young woman named Esther lived in his city. She was Jewish. Her parents had died, so her cousin Mordecai took care of her.", "Esther was taken to the king's palace. A kind man named Hegai helped her. Esther listened to his advice and was polite to everyone.", "Mordecai had told Esther not to share that she was Jewish. Esther did what he said. He checked on her every day.", "The king met all the young women. He liked Esther most. He put a crown on her head. Esther was now the queen!", "Later, Mordecai heard about a bad plan to hurt the king. He told Esther, and she told the king. The king was safe."],
+      "message": "God can use quiet, kind people. Esther was ready when God had a job for her.",
+      "memory": {
+        "ref": "Proverbs 3:6",
+        "blanks_hint": ["ways", "paths", "straight"]
+      },
+      "questions": [
+        { "q": "Who took care of Esther when her parents died?", "a": "Her cousin Mordecai." },
+        {
+          "q": "How did Esther act at the palace?",
+          "a": "She listened well and was polite and kind to everyone."
+        },
+        {
+          "q": "God put Esther in the palace for a reason. How can you be kind where you are? Ask Jesus to help.",
+          "a": "There is no wrong answer. Let the child think of home or school. Pray together for kindness."
+        }
+      ],
+      "words": ["ESTHER", "QUEEN", "KING", "MORDECAI", "CROWN", "PALACE", "COUSIN", "KIND"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Do one kind thing quietly today. Do not tell anyone. Thank God for the chance."
+    },
+    {
+      "id": "jacob-and-esaus-birthright-for-children",
+      "title": "Jacob and Esau's Birthright",
+      "age": "6-8",
+      "story": "jacob-and-esaus-birthright",
+      "read_from": "Genesis 25:19-34",
+      "retelling": ["Isaac and Rebekah had twin boys. They were named Esau and Jacob. Esau was born first.", "Esau grew up to be a hunter. He loved the outdoors. Jacob liked to stay near the tents.", "One day Esau came home from hunting. He was very, very hungry! Jacob was cooking red lentil stew.", "Esau said, “Give me some stew now!” Jacob said, “First, sell me your birthright.” A birthright was something special for the oldest son.", "Esau said, “I am so hungry. What good is my birthright?” So he gave it away for a bowl of lentil stew. (A type of bean)", "Esau ate and left. He did not care about his special place. That was a sad choice and not wise at all."],
+      "message": "Some things are much more special than a snack. Think before you choose.",
+      "memory": {
+        "ref": "Proverbs 8:11",
+        "blanks_hint": ["wisdom", "rubies", "nothing"]
+      },
+      "questions": [
+        {
+          "q": "What did Esau trade for a bowl of lentil stew?",
+          "a": "His birthright, his special place as the oldest son."
+        },
+        {
+          "q": "Why did Esau make that choice?",
+          "a": "He was very hungry and wanted food right away."
+        },
+        {
+          "q": "Have you ever wanted something so much that you did not think? You can ask Jesus for help to wait.",
+          "a": "There is no wrong answer. Let the child share. Pray for patience together."
+        }
+      ],
+      "words": ["JACOB", "ESAU", "STEW", "HUNGRY", "TWIN", "HUNTER", "BIRTHRIGHT", "TENTS"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Next time you feel “I want it now,” count to ten. Then ask God to help you choose well."
+    },
+    {
+      "id": "jacobs-dream-at-bethel-for-children",
+      "title": "Jacob's Dream at Bethel",
+      "age": "6-8",
+      "story": "jacobs-dream-at-bethel",
+      "read_from": "Genesis 28:10-22",
+      "retelling": ["Jacob was traveling far from home. He was alone. When night came, he found a stone to use as a pillow, and he lay down to sleep.", "Jacob had a dream. He saw a tall stairway from the earth to heaven. Angels of God were walking up and down.", "God stood above the stairway. God said, “I am with you. I will take care of you wherever you go. I will bring you home.”", "Jacob woke up. He said, “God is here, and I did not know it!” He felt amazed and a little afraid.", "In the morning Jacob set up his stone pillow. He poured oil on it to show it was special. He named the place Bethel, which means House of God.", "Jacob made a promise to God. He said, “You will be my God.”"],
+      "message": "God is with us everywhere, even when we feel alone.",
+      "memory": {
+        "ref": "Matthew 28:20",
+        "blanks_hint": ["with", "always", "age"]
+      },
+      "questions": [
+        { "q": "What did Jacob use for a pillow?", "a": "A stone." },
+        {
+          "q": "What did Jacob see in his dream?",
+          "a": "A stairway to heaven with angels going up and down."
+        },
+        {
+          "q": "Jacob felt alone, but God was with him. When do you feel alone? You can talk to Jesus.",
+          "a": "There is no wrong answer. Let the child share. Remind them Jesus is always with them, and pray together."
+        }
+      ],
+      "words": ["JACOB", "STONE", "DREAM", "STAIRWAY", "ANGELS", "BETHEL", "HEAVEN", "PILLOW"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Before you go to sleep tonight, say, “God, I know you are with me.”"
+    },
+    {
+      "id": "jairus-daughter-for-children",
+      "title": "Jairus' Daughter",
+      "age": "6-8",
+      "story": "jairus-daughter",
+      "read_from": "Mark 5:21-43",
+      "retelling": ["A man named Jairus came to Jesus. His little girl was very sick. He fell down at the feet of Jesus.", "Jairus said, “Please come and help my daughter.” Jesus went with him.", "On the way, some people ran up. They said, “Your daughter has died. Do not trouble Jesus anymore.”", "But Jesus heard them. He told Jairus, “Don't be afraid. Only believe.”", "At the house many people were crying. Jesus said, “The girl is only asleep.” Some people laughed.", "Jesus went in with the girl's mother and father. He took her hand. He said, “Little girl, get up!” She stood up and walked! Jesus said, “Give her something to eat.”"],
+      "message": "Jesus is stronger than anything that scares us. We can trust him.",
+      "memory": {
+        "ref": "Mark 5:36",
+        "blanks_hint": ["afraid", "believe"]
+      },
+      "questions": [
+        { "q": "What did Jairus ask Jesus to do?", "a": "To come and help his sick daughter." },
+        {
+          "q": "What did Jesus say to Jairus when the people said she had died?",
+          "a": "“Do not be afraid. Just believe.”"
+        },
+        {
+          "q": "Jairus was afraid, but Jesus helped him. What makes you afraid? You can tell Jesus.",
+          "a": "There is no wrong answer. Let the child share. Pray together and remind them Jesus is stronger than fear."
+        }
+      ],
+      "words": ["JAIRUS", "JESUS", "DAUGHTER", "BELIEVE", "AFRAID", "HAND", "MOTHER", "FATHER"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Draw a picture of Jesus holding a child's hand. Say thank you for his care."
+    },
+    {
+      "id": "jesus-blesses-the-children-for-children",
+      "title": "Jesus Blesses the Children",
+      "age": "3-5",
+      "story": "jesus-blesses-the-children",
+      "read_from": "Mark 10:13-16",
+      "retelling": ["Some moms and dads brought their children to Jesus. They wanted Jesus to bless them.", "Jesus' friends said, “Stop! Do not bother Jesus.” But Jesus was not happy about that.", "Jesus said, “Let the children come to me. Do not stop them!”", "Jesus took the children in his arms. He put his hands on them. He blessed each one.", "Jesus loves children very much. He loves you!"],
+      "message": "Jesus loves children. He is glad when we come to him.",
+      "memory": {
+        "ref": "Psalms 127:3",
+        "blanks_hint": ["children", "heritage", "reward"]
+      },
+      "questions": [
+        { "q": "Who came to see Jesus?", "a": "Children, and their parents." },
+        { "q": "What did Jesus do for the children?", "a": "He hugged them and blessed them." },
+        { "q": "Jesus loves you. How can you say thank you to him?", "a": "There is no wrong answer. Let the child answer. Say a thank-you prayer together." }
+      ],
+      "words": ["JESUS", "CHILDREN", "BLESS", "ARMS", "LOVE"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Give someone a big hug today. Say, “Jesus loves you.”"
+    },
+    {
+      "id": "jesus-washes-the-disciples-feet-for-children",
+      "title": "Jesus Washes the Disciples' Feet",
+      "age": "6-8",
+      "story": "jesus-washes-the-disciples-feet",
+      "read_from": "John 13:1-17",
+      "retelling": ["Jesus was eating a special meal with his twelve friends. It was nearly time for him to go back to his Father.", "In those days, people's feet got dusty from walking. A servant usually washed them. But no servant was there.", "Jesus got up. He wrapped a towel around his waist. He poured water in a bowl. Then he began to wash his friends' feet!", "Peter said, “Lord, you should not wash my feet!” Jesus said, “If I do not wash you, you cannot be part of my family.” Peter said, “Then wash my hands and head too!”", "When Jesus finished, he sat down. He said, “I am your teacher and Lord. I washed your feet. Now you should help one another.”"],
+      "message": "Jesus shows us how to love. We can help others, even in small ways.",
+      "memory": {
+        "ref": "John 13:34",
+        "blanks_hint": ["love", "another", "loved"]
+      },
+      "questions": [
+        { "q": "What did Jesus do for his friends?", "a": "He washed their feet." },
+        {
+          "q": "Why did Jesus wash their feet?",
+          "a": "To show them how to serve and love one another."
+        },
+        {
+          "q": "How can you help someone this week? You can ask Jesus to show you.",
+          "a": "There is no wrong answer. Let the child think of ideas, like helping at home. Pray together."
+        }
+      ],
+      "words": ["JESUS", "FEET", "TOWEL", "WATER", "PETER", "FRIENDS", "HELP", "TEACHER"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Do a job for someone without being asked. It could be putting away dishes or shoes."
+    },
+    {
+      "id": "joshua-and-the-sun-standing-still-for-children",
+      "title": "Joshua and the Sun Standing Still",
+      "age": "6-8",
+      "story": "joshua-and-the-sun-standing-still",
+      "read_from": "Joshua 10:1-15",
+      "retelling": ["Joshua was the leader of God's people. The people of Gibeon were his friends. Five kings came to attack them.", "The Gibeonites sent a message. “Please come and help us!” Joshua walked all night to reach them.", "God said to Joshua, “Do not be afraid. I will help you win.”", "The battle began. God sent big hailstones from the sky. Many enemies ran away.", "Joshua needed more daylight to finish the fight. He prayed to God in front of everyone. He said, “Sun, stand still!”", "And the sun stayed in the sky! God had listened to Joshua. God's people won the battle."],
+      "message": "God hears our prayers. We can ask him for help, and he is always stronger than any enemy.",
+      "memory": {
+        "ref": "Psalms 50:15",
+        "blanks_hint": ["call", "deliver", "honor"]
+      },
+      "questions": [
+        { "q": "Who asked Joshua for help?", "a": "The people of Gibeon." },
+        { "q": "What did Joshua ask God to do?", "a": "To make the sun stand still." },
+        {
+          "q": "Joshua asked God for help. What can you ask God for today?",
+          "a": "There is no wrong answer. Let the child choose. Pray together and thank God for hearing."
+        }
+      ],
+      "words": ["JOSHUA", "SUN", "GIBEON", "BATTLE", "HAILSTONES", "PRAYED", "GOD", "HELP"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Look at the sun or sky today. Say, “Thank you, God, for the sun. You are in charge.”"
+    },
+    {
+      "id": "naaman-healed-of-leprosy-for-children",
+      "title": "Naaman Healed of Leprosy",
+      "age": "6-8",
+      "story": "naaman-healed-of-leprosy",
+      "read_from": "2 Kings 5:1-27",
+      "retelling": ["Naaman was a brave army leader. But he had a skin disease called leprosy. It was very hard for him.", "A young girl worked in his home. She had been taken from her own country. She said, “A prophet in Israel can heal you.”", "Naaman went to the prophet Elisha with his horses and chariots. Elisha did not come out. He sent a message: “Wash in the river Jordan seven times.”", "Naaman was angry. “I thought he would wave his hand! The rivers at home are better!” He turned to leave.", "His servants said, “Please try it. It is not hard.” So Naaman went down into the river. He dipped seven times.", "His skin became healthy like a child's! Naaman said, “Now I know there is only one true God.”"],
+      "message": "God can heal, and he can use anyone. When God says something, it is best to listen.",
+      "memory": {
+        "ref": "Psalms 51:7",
+        "blanks_hint": ["wash", "whiter", "snow"]
+      },
+      "questions": [
+        { "q": "Who told Naaman about the prophet?", "a": "A young girl who worked in his home." },
+        { "q": "What did Elisha tell Naaman to do?", "a": "To wash in the Jordan River seven times." },
+        {
+          "q": "Naaman did not want to do it at first. Is it hard for you to listen sometimes? Ask Jesus to help you.",
+          "a": "There is no wrong answer. Let the child share. Pray together for a listening heart."
+        }
+      ],
+      "words": ["NAAMAN", "ELISHA", "JORDAN", "SEVEN", "GIRL", "WASH", "HEAL", "RIVER"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Count to seven out loud as you wash your hands. Thank God for water and for healing."
+    },
+    {
+      "id": "nebuchadnezzars-dream-for-children",
+      "title": "Nebuchadnezzar's Dream",
+      "age": "9-12",
+      "story": "nebuchadnezzars-dream",
+      "read_from": "Daniel 2:1-49",
+      "retelling": ["King Nebuchadnezzar of Babylon had a strange dream. It troubled him so much that he could not sleep.", "He called his wise men. “Tell me my dream and what it means!” They said, “No one can do that.” The king was furious.", "Daniel heard about it. He asked for time. He and his friends prayed to God, “Please show us the secret.”", "That night God showed Daniel the dream. Daniel praised God. “Wisdom and power belong to God.”", "Daniel told the king about a huge statue. It had a gold head, silver arms, bronze belly, iron legs and feet of iron and clay. A rock hit the statue, and it fell to pieces. Then the rock grew into a mountain.", "Daniel said, “Only God can explain this. God's kingdom will last forever.” The king bowed down and said, “Your God is great.”"],
+      "message": "God knows the future. Kings come and go, but God's kingdom lasts forever.",
+      "memory": {
+        "ref": "Daniel 2:20",
+        "blanks_hint": ["name", "wisdom", "power"]
+      },
+      "questions": [
+        { "q": "What did the king dream about?", "a": "A huge statue made of different metals." },
+        { "q": "Who told the king what the dream meant?", "a": "Daniel, with God's help." },
+        {
+          "q": "Daniel prayed when he had a problem. What can you pray about? You can talk to God now.",
+          "a": "There is no wrong answer. Let the child share. Pray together."
+        }
+      ],
+      "words": ["DANIEL", "DREAM", "STATUE", "GOLD", "KING", "BABYLON", "PRAYED", "WISDOM"],
+      "doctrine": "needs_review",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Draw the statue from the dream. Write on it, “God's kingdom lasts forever.”",
+      "doctrine_note": "Christians understand the kingdoms in this dream, and how it relates to the end times and to the kingdom of God, in different ways. This page says only what the text says."
+    },
+    {
+      "id": "paul-and-silas-in-prison-for-children",
+      "title": "Paul and Silas in Prison",
+      "age": "6-8",
+      "story": "paul-and-silas-in-prison",
+      "read_from": "Acts 16:16-40",
+      "retelling": ["Paul and Silas were friends of Jesus. They told people the good news about him in a city called Philippi.", "Some angry men grabbed them. They were beaten. Then Paul and Silas were put in jail. Their feet were locked in heavy blocks.", "Late at night, Paul and Silas were praying. They were singing songs to God. The other prisoners were listening.", "Suddenly there was a big earthquake! The doors flew open. Everyone's chains fell off.", "The jailer woke up. He was very afraid. He thought the prisoners had run away. But Paul called, “We are all here!”", "The jailer asked, “What must I do to be saved?” Paul said, “Believe in the Lord Jesus.” The jailer and his family believed, and they were all very happy."],
+      "message": "We can sing and pray to God even when things are hard. God can do wonderful things.",
+      "memory": {
+        "ref": "Acts 16:31",
+        "blanks_hint": ["believe", "Lord", "saved"]
+      },
+      "questions": [
+        {
+          "q": "What did Paul and Silas do in jail at midnight?",
+          "a": "They prayed and sang songs to God."
+        },
+        {
+          "q": "What happened when the earthquake came?",
+          "a": "The doors opened and the chains fell off."
+        },
+        {
+          "q": "Paul and Silas sang when things were hard. What song makes you happy? You can sing it to Jesus.",
+          "a": "There is no wrong answer. Let the child name a song. Sing it together."
+        }
+      ],
+      "words": ["PAUL", "SILAS", "JAIL", "SINGING", "EARTHQUAKE", "CHAINS", "JAILER", "JESUS"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Sing your favorite song about Jesus out loud. Sing it to someone who feels sad."
+    },
+    {
+      "id": "rahab-and-the-spies-of-jericho-for-children",
+      "title": "Rahab and the Spies of Jericho",
+      "age": "6-8",
+      "story": "rahab-and-the-spies-of-jericho",
+      "read_from": "Joshua 2:1-24",
+      "retelling": ["God's people were about to enter a new land. Joshua sent two spies to look at the city of Jericho.", "The spies went to the house of a woman named Rahab. She had heard about God. She knew God was powerful.", "The king of Jericho heard about the spies. He sent soldiers to find them. But Rahab hid the spies on her roof, under some stalks.", "She told the soldiers, “The men went away. Hurry, you can catch them!” The soldiers left.", "Rahab said to the spies, “Please keep my family safe.” They said, “Tie a red rope in your window. We will remember.”", "Rahab let the spies down by a rope from her window. They escaped. And Rahab trusted God."],
+      "message": "God cares for people who trust him. Rahab believed in God, and he kept her family safe.",
+      "memory": {
+        "ref": "Proverbs 18:10",
+        "blanks_hint": ["name", "tower", "safe"]
+      },
+      "questions": [
+        { "q": "Where did Rahab hide the spies?", "a": "On her roof, under stalks of flax." },
+        {
+          "q": "What did Rahab tie in her window?",
+          "a": "A red rope, as a sign to keep her family safe."
+        },
+        {
+          "q": "Rahab was brave. When is it hard to be brave? You can ask Jesus to help you.",
+          "a": "There is no wrong answer. Let the child share. Pray together for courage."
+        }
+      ],
+      "words": ["RAHAB", "SPIES", "JERICHO", "ROOF", "ROPE", "WINDOW", "SAFE", "JOSHUA"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Tie a red ribbon somewhere you will see it. Remember that God keeps those who trust him."
+    },
+    {
+      "id": "samson-and-delilah-for-children",
+      "title": "Samson and Delilah",
+      "age": "6-8",
+      "story": "samson-and-delilah",
+      "read_from": "Judges 16:4-31",
+      "retelling": ["Samson was a very strong man. God gave him his strength. His long hair was a sign of a special promise to God.", "Some enemies wanted to find the secret of his strength. A woman named Delilah kept asking Samson, “Tell me your secret.”", "At first Samson did not tell the truth. But Delilah asked again and again. At last, Samson told her. “If my hair is cut, I will lose my strength.”", "His enemies cut his hair. Samson became weak. They took him away.", "Samson felt so sorry. His hair began to grow back. He prayed, “God, please make me strong once more.”", "God heard Samson's prayer. He helped Samson one last time."],
+      "message": "Our strength comes from God. If we make a mistake, we can pray and God still hears us.",
+      "memory": {
+        "ref": "Philippians 4:13",
+        "blanks_hint": ["all", "through", "strength"]
+      },
+      "questions": [
+        {
+          "q": "What was the secret of Samson's strength?",
+          "a": "God gave him strength, and his long hair was a sign of his promise to God."
+        },
+        { "q": "What did Samson do when he was weak and sorry?", "a": "He prayed to God for help." },
+        {
+          "q": "Everyone makes mistakes. What can we do when we feel sorry? You can tell Jesus.",
+          "a": "There is no wrong answer. Remind the child that Jesus forgives. Pray together."
+        }
+      ],
+      "words": ["SAMSON", "STRONG", "HAIR", "SECRET", "GOD", "PRAYED", "STRENGTH", "DELILAH"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "If you have said sorry to God lately, thank him that he forgives. If not, tell him now."
+    },
+    {
+      "id": "solomon-asks-for-wisdom-for-children",
+      "title": "Solomon Asks for Wisdom",
+      "age": "6-8",
+      "story": "solomon-asks-for-wisdom",
+      "read_from": "1 Kings 3:3-28",
+      "retelling": ["Solomon became king when he was young. He loved God and wanted to lead well.", "One night God spoke to him in a dream. God said, “Ask for anything. I will give it to you.”", "Solomon could have asked for money or a long life. But he said, “Please give me a wise and listening heart so I can help your people.”", "God was very happy with this answer. God said, “I will make you the wisest person ever. And I will give you riches too.”", "One day two mothers came to Solomon. Both said a baby was theirs. Solomon needed to find the real mother.", "Solomon wisely saw which mother truly loved the baby. The people were amazed. They saw that God had made him wise."],
+      "message": "God gives wisdom to anyone who asks. We can ask for wisdom, too.",
+      "memory": {
+        "ref": "Proverbs 9:10",
+        "blanks_hint": ["fear", "beginning", "wisdom"]
+      },
+      "questions": [
+        { "q": "What did Solomon ask God for?", "a": "A wise and listening heart." },
+        { "q": "How did God answer?", "a": "God gave Solomon wisdom and also riches." },
+        {
+          "q": "If God said, “Ask for anything,” what would you ask for? You can talk to Jesus about it.",
+          "a": "There is no wrong answer. Let the child answer. Talk about asking God for wisdom, and pray together."
+        }
+      ],
+      "words": ["SOLOMON", "WISE", "KING", "DREAM", "GOD", "BABY", "MOTHERS", "HEART"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Ask God for wisdom before a big choice this week. Say, “Please help me choose well.”"
+    },
+    {
+      "id": "spies-sent-into-canaan-for-children",
+      "title": "Spies Sent into Canaan",
+      "age": "6-8",
+      "story": "the-twelve-spies",
+      "read_from": "Numbers 13:17-33",
+      "retelling": ["God's people were near a new land. It was called Canaan. Moses sent twelve men to look at it.", "The twelve men walked all around for forty days. They saw big cities. They saw wonderful fruit. They carried back one huge bunch of grapes!", "They said, “The land is rich. But the people are big and strong. Their cities have tall walls.”", "Ten of the spies were afraid. They said, “We looked like little grasshoppers!” But Caleb and Joshua said, “God is with us! We can do it!”", "The people listened to the ten. They were scared and cried all night. They did not trust God.", "So God's people had to wait many years. Caleb and Joshua trusted God, and they got to enter the land."],
+      "message": "God is bigger than anything we fear. When we trust him, we can be brave.",
+      "memory": {
+        "ref": "Psalms 27:1",
+        "blanks_hint": ["light", "salvation", "fear"]
+      },
+      "questions": [
+        { "q": "How many spies went to look at the land?", "a": "Twelve." },
+        { "q": "What did Caleb and Joshua say?", "a": "That God was with them and they could do it." },
+        {
+          "q": "The people were scared. What scares you? You can tell Jesus about it.",
+          "a": "There is no wrong answer. Let the child share. Remind them God is bigger than fear. Pray together."
+        }
+      ],
+      "words": ["SPIES", "CANAAN", "GRAPES", "CALEB", "JOSHUA", "MOSES", "TRUST", "FRUIT"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Pick one scary thing. Say out loud, “God is bigger than this.” Say it again."
+    },
+    {
+      "id": "the-boy-jesus-in-the-temple-for-children",
+      "title": "The Boy Jesus in the Temple",
+      "age": "6-8",
+      "story": "the-boy-jesus-in-the-temple",
+      "read_from": "Luke 2:41-52",
+      "retelling": ["Every year, Mary and Joseph went to Jerusalem for a special feast. When Jesus was twelve, he went too.", "After the feast, the family walked home with many friends and relatives. Mary and Joseph thought Jesus was with them.", "But Jesus was not there! They looked for him all around. Mary and Joseph were very worried. They went back to Jerusalem.", "After three days, they found Jesus. He was at the temple, sitting with the teachers. He was listening and asking questions. Everyone was amazed at how much he knew.", "Mary said, “We were so worried!” Jesus said, “Why were you looking for me? I needed to be at my Father's house.”", "Then Jesus went home with them. He obeyed Mary and Joseph. And Jesus kept growing wiser and stronger."],
+      "message": "Jesus loved his Father and his family. We can learn and grow too.",
+      "memory": {
+        "ref": "Luke 2:52",
+        "blanks_hint": ["grew", "wisdom", "favor"]
+      },
+      "questions": [
+        { "q": "Where did Mary and Joseph find Jesus?", "a": "In the temple, with the teachers." },
+        { "q": "What was Jesus doing there?", "a": "Listening and asking questions." },
+        {
+          "q": "Jesus asked good questions. What would you like to ask God? You can talk to him now.",
+          "a": "There is no wrong answer. Let the child ask. Say that God loves our questions. Pray together."
+        }
+      ],
+      "words": ["JESUS", "MARY", "JOSEPH", "TEMPLE", "TEACHERS", "QUESTIONS", "JERUSALEM", "WORRIED"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Ask a grown-up a good question about the Bible today. Listen to the answer."
+    },
+    {
+      "id": "the-crucifixion-of-jesus-for-children",
+      "title": "The Crucifixion of Jesus",
+      "age": "9-12",
+      "story": "the-crucifixion-of-jesus",
+      "read_from": "Mark 15:29-41",
+      "retelling": ["Jesus had been arrested and treated unfairly. The soldiers made fun of him. They put a crown of thorns on his head. They led him out to be crucified.", "Jesus carried his own cross and later a  man named Simon was made to carry Jesus' cross. At a place called Golgotha, Jesus was put on the cross.", "Above him was a sign that said, “The King of the Jews.” People made fun of him. Some said, “Save yourself!”", "At noon, the sky became dark for three hours. Then Jesus cried out in a loud voice. He breathed his last breath.", "At that moment, the big curtain in the temple tore in two, from top to bottom.", "A Roman officer was standing near. He saw how Jesus died. He said, “This man really was God's Son!” Some women who loved Jesus watched from far away."],
+      "message": "Jesus loved us so much that he gave his life for us. His love is bigger than we can imagine.",
+      "memory": {
+        "ref": "John 3:16",
+        "blanks_hint": ["loved", "Son", "believes", "life"]
+      },
+      "questions": [
+        { "q": "What did the sign above Jesus say?", "a": "“The King of the Jews.”" },
+        {
+          "q": "What happened to the curtain in the temple?",
+          "a": "It tore in two, from top to bottom."
+        },
+        {
+          "q": "Jesus died because he loves us. How can you thank him? You can tell him now.",
+          "a": "There is no wrong answer. Let the child answer gently. Remind them that Jesus rose again. Pray together."
+        }
+      ],
+      "words": ["JESUS", "CROSS", "SIGN", "CURTAIN", "TEMPLE", "SOLDIER", "LOVE", "SON"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Make a small cross from sticks or paper. Put it where you will see it and remember Jesus' love."
+    },
+    {
+      "id": "the-fiery-furnace-for-children",
+      "title": "The Fiery Furnace",
+      "age": "6-8",
+      "story": "the-fiery-furnace",
+      "read_from": "Daniel 3:1-30",
+      "retelling": ["King Nebuchadnezzar made a huge gold statue. He said, “Everyone must bow down to it when the music plays.”", "Three friends, Shadrach, Meshach and Abednego, would not bow. They said, “We will only worship God.”", "The king was very angry. He said, “I will throw you into the hot furnace!” The friends said, “Our God can save us. But even if he does not, we will not bow to your statue.”", "The king ordered the fire made hotter. The three friends were tied up and thrown in.", "Then the king jumped up. “I see four men walking in the fire! They are not hurt. The fourth one looks like a heavenly being.”", "The friends came out. Not even their clothes smelled like smoke! The king said, “Praise their God!”"],
+      "message": "God is with us when we trust him. We can choose to do right, even when it is hard.",
+      "memory": {
+        "ref": "Joshua 1:9",
+        "blanks_hint": ["strong", "courageous", "afraid"]
+      },
+      "questions": [
+        { "q": "Why would the three friends not bow down?", "a": "They only wanted to worship God." },
+        {
+          "q": "Who was in the fire with them?",
+          "a": "A fourth person, who looked like a son of the gods."
+        },
+        {
+          "q": "The friends were brave. When is it hard to do the right thing? You can ask Jesus to help.",
+          "a": "There is no wrong answer. Let the child share. Pray together for courage."
+        }
+      ],
+      "words": ["FURNACE", "SHADRACH", "MESHACH", "ABEDNEGO", "KING", "FIRE", "STATUE", "BOW"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Stand up straight and say, “I will worship God only.” Then ask God to help you be brave."
+    },
+    {
+      "id": "the-first-passover-for-children",
+      "title": "The First Passover",
+      "age": "6-8",
+      "story": "the-first-passover",
+      "read_from": "Exodus 12:1-13",
+      "retelling": ["God's people were slaves in Egypt. God was going to set them free. First, God gave Moses special instructions.", "Each family had to choose a lamb. It had to be a healthy lamb with no marks.", "The families put some of the lamb's blood on their doorposts. Then they ate a meal together. They had flat bread and bitter herbs.", "They ate in a hurry. They were ready to go on a trip. They had their shoes on and their walking sticks in their hands.", "God said, “When I see the blood on your door, I will pass over your house. You will be safe.”", "God told his people to remember this night every year. We call it Passover."],
+      "message": "God keeps his people safe. The Passover lamb makes us think of Jesus, the Lamb of God.",
+      "memory": {
+        "ref": "John 1:29",
+        "blanks_hint": ["Lamb", "God", "sin"]
+      },
+      "questions": [
+        { "q": "What did the families put on their doors?", "a": "Blood from the lamb." },
+        {
+          "q": "Why did God ask them to eat in a hurry?",
+          "a": "They were about to leave Egypt and be free."
+        },
+        {
+          "q": "The lamb reminds us of Jesus. How did Jesus take care of us? You can thank him.",
+          "a": "There is no wrong answer. Let the child answer. Say that Jesus is our Lamb and thank him together."
+        }
+      ],
+      "words": ["PASSOVER", "LAMB", "BLOOD", "DOOR", "EGYPT", "MOSES", "SAFE", "BREAD"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Draw a red mark on a paper door. Say, “Thank you, Jesus, for keeping me safe.”"
+    },
+    {
+      "id": "the-golden-calf-for-children",
+      "title": "The Golden Calf",
+      "age": "6-8",
+      "story": "the-golden-calf",
+      "read_from": "Exodus 32:1-14",
+      "retelling": ["Moses went up a mountain to talk to God. He was gone for a long time.", "The people got tired of waiting. They said to Aaron, “Make us a god we can see!”", "Aaron asked them for their gold earrings. He melted the gold and made a calf. The people said, “This is our god!”", "God was sad. He told Moses what the people had done. Moses prayed, “Please, God, forgive them.”", "God listened to Moses. He did not punish the people the way he said.", "Moses came down the mountain. He saw what the people had made. He felt very upset and breaks the tablets. God had to write down the law again on new Tablets."],
+      "message": "Only God deserves our worship. If we say sorry, God listens.",
+      "memory": {
+        "ref": "Exodus 20:3",
+        "blanks_hint": ["other", "gods", "before"]
+      },
+      "questions": [
+        { "q": "What did the people make while Moses was away?", "a": "A golden calf." },
+        { "q": "What did Moses do when God was sad?", "a": "He prayed for the people." },
+        {
+          "q": "The people did not wait for God. When is it hard to wait? You can tell Jesus.",
+          "a": "There is no wrong answer. Let the child share. Pray together for patience and trust."
+        }
+      ],
+      "words": ["MOSES", "GOLD", "CALF", "AARON", "PEOPLE", "MOUNTAIN", "PRAYED", "GOD"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Think of something you love a lot. Tell God, “You are more important than anything.”"
+    },
+    {
+      "id": "the-handwriting-on-the-wall-for-children",
+      "title": "The Handwriting on the Wall",
+      "age": "9-12",
+      "story": "the-handwriting-on-the-wall",
+      "read_from": "Daniel 5:1-31",
+      "retelling": ["King Belshazzar gave a huge party for a thousand people. He ordered the gold cups from God's temple to be brought out. They drank wine from them and praised false gods.", "Suddenly a hand appeared. It wrote strange words on the palace wall. The king turned pale, and his knees shook.", "None of his wise men could read the words. The queen remembered Daniel. “He can explain it,” she said.", "Daniel told the king, “God made your grandfather great. But he became proud, and God made him humble. You knew this, but you still did not honor God.”", "Daniel read the words. He said, “God has counted your days. You have been weighed and found lacking. Your kingdom will be given to others.”", "That very night, the kingdom did change hands."],
+      "message": "Pride leads to a fall. We should honor God and treat holy things with respect.",
+      "memory": {
+        "ref": "Proverbs 16:18",
+        "blanks_hint": ["pride", "destruction", "fall"]
+      },
+      "questions": [
+        {
+          "q": "What did Belshazzar do with the cups from God's temple?",
+          "a": "He used them at his party to praise false gods."
+        },
+        { "q": "Who could read the writing?", "a": "Daniel." },
+        {
+          "q": "Belshazzar knew about God but ignored him. How can we honor God each day? Ask Jesus to help.",
+          "a": "There is no wrong answer. Let the child answer. Pray together for a humble heart."
+        }
+      ],
+      "words": ["BELSHAZZAR", "DANIEL", "WALL", "HAND", "WROTE", "KING", "PROUD", "GOD"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Write one thing on paper that you can do each day to honor God. Put it on your wall."
+    },
+    {
+      "id": "the-last-supper-for-children",
+      "title": "The Last Supper",
+      "age": "9-12",
+      "story": "the-last-supper",
+      "read_from": "Luke 22:7-23",
+      "retelling": ["It was the time of Passover. Jesus sent two of his friends to get a room ready. He told them, “A man with a water jug will show you the place.” Everything happened just as he said.", "That evening Jesus sat at the table with his twelve friends. He said, “I have wanted so much to eat this meal with you before I suffer.”", "Jesus took bread and gave thanks. He broke it and gave it to them. “This is my body, given for you. Remember me when you eat it.”", "After the meal, he took a cup. He said, “This cup is a new promise from God. It is made with my blood.”", "Then Jesus said sadly, “One of you will turn against me.” The friends were shocked. They asked each other who it could be."],
+      "message": "Jesus wanted his friends to remember him. We remember what he did for us when we share the bread and the cup.",
+      "memory": {
+        "ref": "Psalms 34:8",
+        "blanks_hint": ["taste", "see", "good", "refuge"]
+      },
+      "questions": [
+        {
+          "q": "What did Jesus do with the bread?",
+          "a": "He thanked God, broke it and gave it to his friends."
+        },
+        { "q": "What did Jesus ask his friends to do?", "a": "To remember him." },
+        {
+          "q": "Jesus wanted his friends to remember him. What do you want to remember about Jesus?",
+          "a": "There is no wrong answer. Let the child share. Thank Jesus together for what he has done."
+        }
+      ],
+      "words": ["JESUS", "BREAD", "CUP", "PASSOVER", "MEAL", "FRIENDS", "REMEMBER", "TABLE"],
+      "doctrine": "needs_review",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "At your next meal, pause and say, “Jesus, thank you for loving me.”",
+      "doctrine_note": "Christians keep this meal with different names, such as the Lord's Supper, Communion or the Eucharist, and understand the bread and the cup in different ways. This page says only what the text says."
+    },
+    {
+      "id": "the-lost-sheep-and-the-lost-coin-for-children",
+      "title": "The Lost Sheep and the Lost Coin",
+      "age": "6-8",
+      "story": "the-lost-sheep-and-the-lost-coin",
+      "read_from": "Luke 15:1-10",
+      "retelling": ["Jesus told a story. A shepherd had one hundred sheep. One sheep ran away.", "The shepherd left the ninety-nine sheep safe in the field. He went to look for the lost sheep.", "He looked and looked. At last, he found it! He put the sheep on his shoulders and carried it home. He called his friends, “Let's celebrate! I found my lost sheep!”", "Then Jesus told another story. A woman had ten coins. She lost one.", "She lit a lamp and swept the house. She searched and searched. When she found the coin, she was so happy! She told her friends.", "Jesus said, “That is how God feels when one person comes back to him. All heaven celebrates!”"],
+      "message": "God loves every one of us. He is happy when someone who is lost is found.",
+      "memory": {
+        "ref": "Luke 15:10",
+        "blanks_hint": ["joy", "angels", "repents"]
+      },
+      "questions": [
+        {
+          "q": "What did the shepherd do when he lost a sheep?",
+          "a": "He went to look for it until he found it."
+        },
+        {
+          "q": "How did the woman feel when she found her coin?",
+          "a": "Very happy. She called her friends."
+        },
+        {
+          "q": "Jesus loves it when people come to him. How can you tell him you love him?",
+          "a": "There is no wrong answer. Let the child answer. Pray a thank-you prayer together."
+        }
+      ],
+      "words": ["SHEEP", "SHEPHERD", "COIN", "LOST", "FOUND", "WOMAN", "FRIENDS", "JESUS"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Hide a small coin and look for it with a friend. When you find it, say, “God finds us too!”"
+    },
+    {
+      "id": "the-parable-of-the-talents-for-children",
+      "title": "The Parable of the Talents",
+      "age": "6-8",
+      "story": "the-parable-of-the-talents",
+      "read_from": "Matthew 25:14-30",
+      "retelling": ["Jesus told a story about a man who was going on a trip. He called three servants. He gave them each some money to look after.", "To the first, he gave five bags of money. To the second, two. To the third, one.", "The first servant used his money well. He made five more bags. The second servant did too. He made two more.", "But the third servant was afraid. He dug a hole and hid the money in the ground.", "When the man came home, he was happy with the first two. He said, “Well done! You did a good job.”", "He was not happy with the third. He said, “You should have tried.” Jesus wants us to use what we have for him."],
+      "message": "God gives each of us gifts. When we use them well, God is pleased.",
+      "memory": {
+        "ref": "Colossians 3:23",
+        "blanks_hint": ["whatever", "whole", "Lord"]
+      },
+      "questions": [
+        { "q": "How many servants were there?", "a": "Three." },
+        { "q": "What did the third servant do with his money?", "a": "He hid it in the ground." },
+        {
+          "q": "What are you good at? You can ask Jesus to show you how to use it to help others.",
+          "a": "There is no wrong answer. Let the child name something. Pray together and thank God for gifts."
+        }
+      ],
+      "words": ["SERVANTS", "MONEY", "BAGS", "TRIP", "FIVE", "HID", "AFRAID", "WELL"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Use something you are good at to help someone this week. Draw, sing, build, or share."
+    },
+    {
+      "id": "the-ten-commandments-at-sinai-for-children",
+      "title": "The Ten Commandments at Sinai",
+      "age": "9-12",
+      "story": "the-ten-commandments-at-sinai",
+      "read_from": "Exodus 20:1-17",
+      "retelling": ["God had just rescued his people from slavery in Egypt. Now they were camped at Mount Sinai. God spoke to them from the mountain.", "God said, “I rescued you. Here is how to live in my way.” These are the Ten Commandments.", "The first commands are about loving God. Worship only God. Do not make idols. Respect God's name. Keep the Sabbath as a day of rest.", "The other commands are about loving people. Honor your father and mother. Do not hurt others. Be faithful. Do not steal. Do not tell lies. Do not be jealous of what other people have.", "The people saw thunder and lightning on the mountain. They were afraid. They stood far away.", "God gave these laws to help his people live well and know him."],
+      "message": "God's rules are a gift. They show us how to love God and love people.",
+      "memory": {
+        "ref": "Matthew 22:37",
+        "blanks_hint": ["love", "heart", "soul", "mind"]
+      },
+      "questions": [
+        {
+          "q": "What did God do for his people before he gave the Commandments?",
+          "a": "He rescued them from slavery in Egypt."
+        },
+        { "q": "What are the first commands about?", "a": "Loving God." },
+        {
+          "q": "Which commandment is hard for you? You can ask Jesus to help you.",
+          "a": "There is no wrong answer. Let the child share honestly. Remind them that Jesus helps and forgives. Pray together."
+        }
+      ],
+      "words": ["COMMAND", "GOD", "SINAI", "SLAVERY", "MOUNTAIN", "LAW", "WORSHIP", "RESCUED"],
+      "doctrine": "needs_review",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Pick one commandment to practice this week. Ask God to help you every day.",
+      "doctrine_note": "Christians number the commandments in different ways, and understand the Sabbath and the place of the law in Christian life in different ways. This page says only what the text says."
+    },
+    {
+      "id": "the-ten-lepers-for-children",
+      "title": "The Ten Lepers",
+      "age": "6-8",
+      "story": "the-ten-lepers",
+      "read_from": "Luke 17:11-19",
+      "retelling": ["One day Jesus was walking into a village. Ten men were standing far away. They had a sickness called leprosy.", "They shouted, “Jesus! Please help us!” Jesus said, “Go and show yourselves to the priests.”", "As they were on their way, something wonderful happened. They were all healed! Their skin was clean.", "One man came back. He was so thankful. He fell at Jesus' feet and said thank you in a loud voice. This man was from Samaria.", "Jesus asked, “Were not ten healed? Where are the other nine?” Then Jesus said to the man, “Get up. Your faith has made you well.”"],
+      "message": "Saying thank you to God is important. Jesus loves a thankful heart.",
+      "memory": {
+        "ref": "Psalms 107:1",
+        "blanks_hint": ["thanks", "good", "forever"]
+      },
+      "questions": [
+        { "q": "How many men did Jesus heal?", "a": "Ten." },
+        { "q": "How many came back to say thank you?", "a": "Only one." },
+        {
+          "q": "What are you thankful for? You can thank Jesus now.",
+          "a": "There is no wrong answer. Let the child name things. Say a thank-you prayer together."
+        }
+      ],
+      "words": ["JESUS", "TEN", "HEALED", "THANK", "SAMARIA", "FEET", "PRIEST", "VILLAGE"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Write a thank-you note to someone. Then say thank you to God out loud."
+    },
+    {
+      "id": "the-ten-plagues-of-egypt-for-children",
+      "title": "The Ten Plagues of Egypt",
+      "age": "9-12",
+      "story": "the-ten-plagues-of-egypt",
+      "read_from": "Exodus 7:14-24",
+      "retelling": ["God's people were slaves in Egypt. God sent Moses and Aaron to speak to the king, called Pharaoh. They said, “Let God's people go.”", "Pharaoh said no. So God sent ten plagues, one after another. The first was that the river turned to blood.", "Then came frogs, gnats and flies. After that, the animals got sick, and people got sores. Then hail fell, locusts came, and darkness covered the land.", "Pharaoh said he would let the people go. Then he changed his mind again and again. His heart was hard.", "In the land of Goshen, where God's people lived, God kept them safe from many plagues.", "The last plague was the saddest. After it, Pharaoh told God's people to leave."],
+      "message": "God is stronger than any king. He hears his people and sets them free.",
+      "memory": {
+        "ref": "Psalms 147:5",
+        "blanks_hint": ["great", "mighty", "power"]
+      },
+      "questions": [
+        { "q": "What was the first plague?", "a": "The river turned to blood." },
+        {
+          "q": "What did Pharaoh do each time the plague stopped?",
+          "a": "He changed his mind and would not let the people go."
+        },
+        {
+          "q": "God heard his people when they were in trouble. What can you talk to God about? You can pray now.",
+          "a": "There is no wrong answer. Let the child share. Pray together and thank God for hearing."
+        }
+      ],
+      "words": ["PLAGUES", "EGYPT", "MOSES", "PHARAOH", "FROGS", "LOCUSTS", "DARKNESS", "GOSHEN"],
+      "doctrine": "needs_review",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Count the plagues on your fingers. Say, “God is stronger than anything.”",
+      "doctrine_note": "Christians understand how God hardened Pharaoh's heart, and how that relates to Pharaoh's own choices, in different ways. This page says only what the text says."
+    },
+    {
+      "id": "the-tower-of-babel-for-children",
+      "title": "The Tower of Babel",
+      "age": "6-8",
+      "story": "the-tower-of-babel",
+      "read_from": "Genesis 11:1-9",
+      "retelling": ["Long ago, all the people in the world spoke one language. They moved to a flat valley and made their home there.", "The people said, “Let's build a city! Let's build a tower to the sky!” They made bricks and baked them hard.", "They said, “We will be famous. Everyone will know us.” They wanted to be great without God.", "God looked down. He saw their plans. God knew they were proud.", "So God mixed up their languages. Now they could not understand each other. They had to stop building.", "The people spread out all over the earth. The city was named Babel."],
+      "message": "God is greater than anything we build. We should give God the honor.",
+      "memory": {
+        "ref": "Psalms 24:1",
+        "blanks_hint": ["earth", "LORD", "world"]
+      },
+      "questions": [
+        { "q": "What were the people building?", "a": "A city and a tall tower." },
+        { "q": "What did God do to their words?", "a": "He mixed up their languages." },
+        {
+          "q": "The people wanted to be famous. What can we do to give God honor?",
+          "a": "There is no wrong answer. Let the child think. Talk about thanking God and being kind. Pray together."
+        }
+      ],
+      "words": ["BABEL", "TOWER", "BRICKS", "LANGUAGE", "CITY", "GOD", "SKY", "PEOPLE"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Build a tower of blocks. Then say, “God, you are greater than anything I can build.”"
+    },
+    {
+      "id": "the-valley-of-dry-bones-for-children",
+      "title": "The Valley of Dry Bones",
+      "age": "9-12",
+      "story": "the-valley-of-dry-bones",
+      "read_from": "Ezekiel 37:1-14",
+      "retelling": ["God's Spirit took Ezekiel to a valley. It was full of old, dry bones. They covered the ground.", "God asked, “Can these bones live again?” Ezekiel said, “Lord, only you know.”", "God said, “Speak to the bones. Tell them to hear my words.” Ezekiel did. There was a loud rattling sound. The bones came together!", "Then muscles and skin covered the bones. But the bodies had no breath. God told Ezekiel to call for the breath.", "Ezekiel spoke again. Breath came into the bodies. They stood up. It was a huge army!", "God said, “The bones are my people. They think they have no hope. But I will give them my Spirit and new life.”"],
+      "message": "God brings new life when it seems there is no hope. His Spirit gives life.",
+      "memory": {
+        "ref": "Ezekiel 36:26",
+        "blanks_hint": ["new", "heart", "spirit"]
+      },
+      "questions": [
+        { "q": "What did God show Ezekiel?", "a": "A valley full of dry bones that came to life." },
+        { "q": "What did the bones stand for?", "a": "God's people, who felt they had no hope." },
+        {
+          "q": "God can bring life where there seems to be none. When do you feel hopeless? You can pray.",
+          "a": "There is no wrong answer. Let the child share. Pray together for hope."
+        }
+      ],
+      "words": ["EZEKIEL", "BONES", "VALLEY", "BREATH", "SPIRIT", "LIFE", "GOD", "ARMY"],
+      "doctrine": "needs_review",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Write “HOPE” on a paper. Put it where you can see it. Thank God for giving new life.",
+      "doctrine_note": "Christians understand this vision, including how it relates to the restoration of Israel and to the resurrection of the dead, in different ways. This page says only what the text says."
+    },
+    {
+      "id": "the-visit-of-the-wise-men-for-children",
+      "title": "The Visit of the Wise Men",
+      "age": "3-5",
+      "story": "the-visit-of-the-wise-men",
+      "read_from": "Matthew 2:1-12",
+      "retelling": ["Some wise men lived far away. They saw a bright new star. They knew it was a sign for a new king.", "They followed the star. It was a long trip. They came to a king named Herod. “Where is the baby king?” they asked.", "The star led them to Bethlehem. It stopped over a house. They went in and saw the little child Jesus with his mother, Mary.", "They bowed down and worshiped Jesus. They gave him gifts: gold, frankincense and myrrh.", "God warned them in a dream not to go back to Herod. So they went home a new way."],
+      "message": "People came from far away to worship Jesus. We can worship him too.",
+      "memory": {
+        "ref": "Psalms 95:6",
+        "blanks_hint": ["bow", "worship", "kneel"]
+      },
+      "questions": [
+        { "q": "What did the wise men follow?", "a": "A bright star." },
+        { "q": "What gifts did they bring Jesus?", "a": "Gold, frankincense and myrrh." },
+        {
+          "q": "The wise men gave gifts to Jesus. What can you give Jesus?",
+          "a": "There is no wrong answer. Let the child answer, like love, songs or kindness. Pray together."
+        }
+      ],
+      "words": ["STAR", "WISE", "JESUS", "GIFTS", "GOLD", "KING"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Make a card for Jesus. Draw a star on it. Say thank you for sending Jesus."
+    },
+    {
+      "id": "the-widows-offering-for-children",
+      "title": "The Widow's Offering",
+      "age": "6-8",
+      "story": "the-widows-offering",
+      "read_from": "Mark 12:41-44",
+      "retelling": ["Jesus sat near the place in the temple where people gave money. He watched as people put in their gifts.", "Rich people came. They put in a lot of money. The coins made a loud clink.", "Then a poor widow came. She put in two tiny coins. They were worth very little.", "Jesus called his friends. He said, “This poor woman gave more than all the others!”", "The rich people gave only part of what they had. But the widow gave all she had. She trusted God to take care of her."],
+      "message": "God loves a cheerful giver. A small gift given with love is special to him.",
+      "memory": {
+        "ref": "2 Corinthians 9:7",
+        "blanks_hint": ["cheerful", "giver", "loves"]
+      },
+      "questions": [
+        { "q": "What did the poor widow give?", "a": "Two tiny coins." },
+        {
+          "q": "Why did Jesus say her gift was more?",
+          "a": "She gave all she had, and she trusted God."
+        },
+        {
+          "q": "What can you give to God, even if you have only a little?",
+          "a": "There is no wrong answer. Let the child think about time, kindness and coins. Pray together."
+        }
+      ],
+      "words": ["WIDOW", "COINS", "JESUS", "TEMPLE", "GAVE", "TRUST", "POOR", "RICH"],
+      "doctrine": "plain",
+      "review": { "status": "approved", "rev": 2, "date": "2026-11-17" },
+      "try_this": "Put a few coins in a jar. Give it to someone in need, or put it in a church offering."
     }
   ]
 }

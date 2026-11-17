@@ -1,0 +1,116 @@
+{
+ "format": 1,
+ "pages": [
+  {
+   "id": "the-woman-who-touched-the-cloak",
+   "title": "The Woman Who Touched the Cloak",
+   "age": "6-8",
+   "story": "the-woman-who-touched-jesus-cloak",
+   "read_from": "Mark 5:25-34",
+   "retelling": [
+    "A big crowd was following Jesus. They pushed and squeezed to get close to him.",
+    "In the crowd was a woman who had been sick for twelve years. All her money had gone on doctors, but she only got worse.",
+    "The woman had heard about Jesus. “If I can just touch his clothes,” she thought, “I will be well.”",
+    "She crept up behind Jesus and touched his cloak. At once she felt strong and well again.",
+    "Jesus stopped. “Who touched my clothes?” he asked. His friends said, “Look at all these people! How can you ask who touched you?” But Jesus kept looking around.",
+    "The woman was shaking with fear. She came and knelt in front of Jesus, and she told him everything.",
+    "Jesus was not cross. He spoke kindly to her. “Daughter,” he said, “you trusted me, and now you are well. Go in peace.”"
+   ],
+   "message": "Jesus is never too busy for us. When we trust him and come close, he cares for us.",
+   "memory": {
+    "ref": "Psalms 147:3",
+    "blanks_hint": [
+     "heals",
+     "wounds"
+    ]
+   },
+   "questions": [
+    {
+     "q": "How long had the woman been sick?",
+     "a": "Twelve years."
+    },
+    {
+     "q": "What did the woman touch, and where was she standing?",
+     "a": "She touched Jesus' cloak. She was behind him in the crowd."
+    },
+    {
+     "q": "The woman was afraid, but she still came to Jesus. When have you felt shy about asking for help? Who could you ask?",
+     "a": "There is no wrong answer. Let the child talk, then remind them that they can always talk to Jesus, and pray together."
+    }
+   ],
+   "try_this": "Hold the corner of a cloth and say, “Thank you, Jesus, for noticing me.” Then say hello to someone who is often left out.",
+   "words": [
+    "WOMAN",
+    "JESUS",
+    "CLOAK",
+    "CROWD",
+    "TWELVE",
+    "WELL",
+    "DOCTORS",
+    "PEACE"
+   ],
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 1,
+    "date": "2026-11-11"
+   }
+  },
+  {
+   "id": "the-soldier-and-his-servant",
+   "title": "The Soldier and His Servant",
+   "age": "6-8",
+   "story": "jesus-heals-the-centurions-servant",
+   "read_from": "Luke 7:1-10",
+   "retelling": [
+    "In the town of Capernaum lived a Roman soldier. He was an officer, and a hundred soldiers took orders from him.",
+    "The officer had a servant he cared about very much. The servant was very sick, and he was close to dying.",
+    "The officer heard that Jesus was nearby. He asked some Jewish leaders to go and ask Jesus for help.",
+    "Jesus set off with them. But before he reached the house, the officer sent some friends with a message.",
+    "“Lord, you do not need to come inside,” they said. “I am not good enough to have you in my home. Only say the word, and my servant will get well.”",
+    "The officer knew about orders. When he told a soldier to go, the soldier went. He believed Jesus could give an order to sickness too.",
+    "Jesus was amazed. He turned to the crowd. “I have not found anyone with faith as big as this,” he said.",
+    "The friends went back to the house. The servant was well again!"
+   ],
+   "message": "Jesus has power to help, and we can trust his word. He is glad when we believe him.",
+   "memory": {
+    "ref": "Psalms 107:20",
+    "blanks_hint": [
+     "word",
+     "healed"
+    ]
+   },
+   "questions": [
+    {
+     "q": "What was the matter with the officer's servant?",
+     "a": "He was very sick, and he was close to dying."
+    },
+    {
+     "q": "What did the officer say Jesus could do?",
+     "a": "That Jesus only had to say the word, and his servant would get well. Jesus did not even need to come to the house."
+    },
+    {
+     "q": "The officer trusted what Jesus said. What is something Jesus has told us that we can trust?",
+     "a": "There is no wrong answer. It might be “Do not be afraid” or “I am with you always.” Help the child pick one and say it together."
+    }
+   ],
+   "try_this": "Make a card that says “Jesus loves you.” Give it to someone, and then pray together for someone who is sick.",
+   "words": [
+    "SOLDIER",
+    "SERVANT",
+    "JESUS",
+    "SICK",
+    "CAPERNAUM",
+    "WORD",
+    "FAITH",
+    "WELL"
+   ],
+   "doctrine": "plain",
+   "review": {
+    "status": "approved",
+    "rev": 1,
+    "date": "2026-11-11"
+   }
+  }
+ ]
+}

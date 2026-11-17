@@ -157,3 +157,80 @@ export function strongsSummary(strongs: string, occurrences: number, verses: num
 
 /** Is what was typed a Strong's number (G26, h0157)? The number in the app's own form, or "". */
 export const asStrongs = (text: string): string => (/^\s*[GgHh]\s*0*\d{1,5}\s*$/.test(text) ? normStrongs(text.replace(/\s+/g, "")) : "");
+
+// ---- drawing the senses of a word and the tree of a group (the Meaning screens; the pictures are drawn in components/SensePanel.tsx and MeaningTree.tsx)
+
+/** The colour of the n-th of `total` senses in the wheel and its list: evenly spaced hues, the same in the wheel and beside it. */
+export const senseColour = (i: number, total: number): string => `hsl(${(Math.round((i * 360) / Math.max(total, 1)) + 8) % 360} 62% 56%)`;
+
+/** The order senses are listed in: the most verses first (the dictionary's own order breaks a tie). */
+export function senseOrder(verses: number[]): number[] {
+  return verses.map((v, i) => [v, i] as const).sort((a, b) => b[0] - a[0] || a[1] - b[1]).map(([, i]) => i);
+}
+
+export interface Arc {
+  /** index into the senses, in the order given */
+  index: number;
+  /** radians, 0 at the top, clockwise */
+  from: number;
+  to: number;
+}
+
+/** The slices of the ring: each sense gets the share of the circle its verses are of all the verses; a small gap keeps neighbours apart. */
+export function senseArcs(verses: number[], gap = 0.012): Arc[] {
+  const total = verses.reduce((n, v) => n + v, 0);
+  if (total <= 0) return [];
+  const many = verses.length > 1;
+  let at = 0;
+  return verses.map((v, index) => {
+    const span = (v / total) * Math.PI * 2;
+    const from = at + (many ? gap / 2 : 0);
+    const to = Math.max(at + span - (many ? gap / 2 : 0), from + 0.015);
+    at += span;
+    return { index, from, to: Math.min(to, Math.PI * 2 - 0.0001) };
+  });
+}
+
+/** The path of a slice of a ring (centre cx,cy; inner radius r0, outer r1; angles in radians from the top, clockwise). */
+export function arcPath(cx: number, cy: number, r0: number, r1: number, a0: number, a1: number): string {
+  const p = (r: number, a: number): [number, number] => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+  const large = a1 - a0 > Math.PI ? 1 : 0;
+  const [x0, y0] = p(r1, a0);
+  const [x1, y1] = p(r1, a1);
+  const [x2, y2] = p(r0, a1);
+  const [x3, y3] = p(r0, a0);
+  const f = (n: number) => Math.round(n * 100) / 100;
+  return `M${f(x0)},${f(y0)} A${r1},${r1} 0 ${large} 1 ${f(x1)},${f(y1)} L${f(x2)},${f(y2)} A${r0},${r0} 0 ${large} 0 ${f(x3)},${f(y3)} Z`;
+}
+
+/** One column of the tree: the groups that share a parent, with the one on the way to the chosen group marked. A level with very many groups shows only the group on the path. */
+export interface TreeColumn {
+  parent: string;
+  selected: string;
+  nodes: DomainNode[];
+  /** how many other groups the column leaves out */
+  others: number;
+}
+
+export function treeColumns(all: DomainNode[], code: string, collapseOver = 20): TreeColumn[] {
+  const out: TreeColumn[] = [];
+  for (let len = 3; len <= code.length; len += 3) {
+    const parent = code.slice(0, len - 3);
+    const selected = code.slice(0, len);
+    const kids = all.filter((n) => n.code.length === len && n.code.startsWith(parent)).sort((a, b) => a.code.localeCompare(b.code));
+    const here = kids.find((n) => n.code === selected);
+    const last = len === code.length;
+    if (kids.length > collapseOver && !last && here) out.push({ parent, selected, nodes: [here], others: kids.length - 1 });
+    else out.push({ parent, selected, nodes: kids, others: 0 });
+  }
+  return out;
+}
+
+/** The height of a bar in the book strip: nothing for 0, at least a few pixels for anything, the tallest for the most. */
+export const barHeight = (n: number, max: number, full: number): number => (n <= 0 || max <= 0 ? 0 : Math.max(3, (n / max) * full));
+
+/** The English word a search was for, cleaned for the lookup of the Hebrew and Greek words behind it: one lower-case word or a short phrase; "" when there is nothing to look up. */
+export function wordToLookUp(text: string): string {
+  const t = text.trim().toLowerCase().replace(/[^\p{L}' ]/gu, "").replace(/\s+/g, " ");
+  return t.length > 0 && t.length <= 40 ? t : "";
+}

@@ -14,4 +14,6 @@
 
 **Pictures:** the draft editor has a Picture box (the paintings already downloaded on this computer for the story's chapters; credit and licence are added for you).
 
-**Not built yet (next):** children's pages (with picture and outline), a size warning for the file's limits (6 MB, 40 pictures), and a publish button with a confirmation phrase. The board list is `wanted.txt` (one line per story; edit it to add more).
+**Children's pages:** in a story's editor press "Write a children's page for this story". The form has the age band, the retelling (with word and sentence-length counters), the big idea, memory verse, three questions, try this and the word-search words; the picture box offers the story's Sweet Publishing illustrations (a picture not yet on this computer is fetched once from Wikimedia Commons into `extra-pages/drafts/_pics`, git-ignored) and makes the outline to colour in (OpenCV if installed, otherwise a Pillow-only version in `outline.py`: LOOK at it). Check, Approve and Make the file work as for stories; a story and its children's page are checked together.
+
+**Not built yet (next):** a size warning for the file's limits (24 MB, 150 pictures), and a publish button with a confirmation phrase. The board list is `wanted.txt` (one line per story; edit it to add more).

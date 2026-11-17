@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Bible Concordance",
-  "version": "3.1.1",
+  "version": "3.1.3",
   "identifier": "com.local.bibleconcordance",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -40,7 +40,8 @@
       "resources/simeon_outlines.json",
       "resources/illustrations.json",
       "resources/spurgeon_sermons.json",
-      "resources/semantic_domains.json"
+      "resources/semantic_domains.json",
+      "resources/semantic_sil.json"
     ],
     "icon": [
       "icons/32x32.png",
