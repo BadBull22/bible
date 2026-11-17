@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { SlideKind, SlideSpec } from "../sermonOutputs";
 import type { SlideOrder } from "../slideOrder";
+import { ccliOn, setCcliOn } from "../ccliExport";
 import { groupsOf } from "../presentGroups";
 import { leftText, startText } from "../countdown";
 import { type BBox, type Box, canHavePicture, clampBox, DECORATION_AREA, hasWords, overlayPlacement, planOf, type SlideLayout, solidPart } from "../slideLayout";
@@ -353,6 +354,8 @@ function EditablePreview({ s, background, overlay, onLayout }: { s: SlideSpec; b
  * photo. Saved as PowerPoint. */
 export function SlidesEditor({ slides, edited, background, overlay, onOverlay, onChange, onBackground, verseNumbers, onVerseNumbers, deck, onKeepSlide, versions, books, versionCode, onSave, onSaveProPresenter, saving, onPresent, order, undo }: Props) {
   const [selected, setSelected] = useState(0);
+  /** the CCLI line goes into the saved PowerPoint and ProPresenter files (the presenter's own remembered switch) */
+  const [ccliSwitch, setCcliSwitch] = useState(ccliOn);
   // a song from the library, or a verse found by its reference, to put on the slides
   const [songs, setSongs] = useState(false);
   // the look picker: for all the slides or for the one selected, opening on backgrounds, moving ones, or the headings
@@ -635,6 +638,19 @@ export function SlidesEditor({ slides, edited, background, overlay, onOverlay, o
           <button className="outline-btn" onClick={() => onPresent(selected)} disabled={slides.length === 0} title={`Start the show at slide ${selected + 1}`}>
             From this slide
           </button>
+          {slides.some((s) => s.credit) && (
+            <label className="sb-inline" title="Put each song's title, writer and CCLI number at the foot of its slides in the PowerPoint and ProPresenter files. The same switch as the presenter's CCLI line.">
+              <input
+                type="checkbox"
+                checked={ccliSwitch}
+                onChange={(e) => {
+                  setCcliOn(e.target.checked);
+                  setCcliSwitch(e.target.checked);
+                }}
+              />
+              <span className="muted">CCLI line in the files</span>
+            </label>
+          )}
           <button className="outline-btn" onClick={save} disabled={saving || slides.length === 0}>
             {saving ? "Saving…" : "Save as PowerPoint"}
           </button>

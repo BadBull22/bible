@@ -413,9 +413,14 @@ pub fn build_probundle(title: &str, slides: &[Slide], media: &dyn Fn(&str) -> Op
 
         // the cues this slide makes: (cue name, its actions)
         let mut made: Vec<(String, Vec<Pb>)> = Vec::new();
+        // the CCLI line (when the church has it switched on) is a second, small text element at the foot of the slide
+        let credit = s.credit.as_deref().map(str::trim).filter(|c| !c.is_empty()).map(str::to_string);
         let words = |ids: &mut Ids, runs: Vec<Run>, notes: &str| -> Vec<Pb> {
-            let text = text_element(ids, "Text", words_bounds(), &runs, 1);
-            vec![slide_action(ids, vec![text], notes)]
+            let mut elements = vec![text_element(ids, "Text", words_bounds(), &runs, 1)];
+            if let Some(c) = &credit {
+                elements.push(text_element(ids, "CCLI line", (96.0, SLIDE_H - 64.0, SLIDE_W - 192.0, 48.0), &[Run { text: c.clone(), size: 24, bold: false, color: 2 }], 1));
+            }
+            vec![slide_action(ids, elements, notes)]
         };
         let with_background = |ids: &mut Ids, mut actions: Vec<Pb>, bg: &Option<(String, String, MediaKind)>| -> Vec<Pb> {
             if let Some((entry, ext, kind)) = bg {
@@ -720,6 +725,28 @@ mod tests {
         assert_eq!(names.last().unwrap(), "Faith that works.pro");
         assert!(names.iter().all(|n| !n.contains('/') && !n.contains('\\')), "flat names: {names:?}");
         assert!(warnings.is_empty(), "{warnings:?}");
+    }
+
+    #[test]
+    fn a_songs_ccli_line_goes_in_as_a_second_small_text_only_when_sent() {
+        let pro = |credit: Option<&str>| -> Vec<u8> {
+            let mut slides = sample_slides();
+            for s in slides.iter_mut().filter(|s| s.kind == "song") {
+                s.credit = credit.map(str::to_string);
+            }
+            let (bytes, _) = build_probundle("Faith that works", &slides, &media).unwrap();
+            let mut z = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+            let mut out = Vec::new();
+            std::io::Read::read_to_end(&mut z.by_name("Faith that works.pro").unwrap(), &mut out).unwrap();
+            out
+        };
+        let has = |hay: &[u8], needle: &str| hay.windows(needle.len()).any(|w| w == needle.as_bytes());
+        let with = pro(Some("Amazing Grace - John Newton - CCLI Song #22025"));
+        assert!(has(&with, "CCLI Song #22025"), "the line is in the presentation");
+        assert!(has(&with, "CCLI line"), "as an element of its own");
+        let without = pro(None);
+        assert!(!has(&without, "CCLI Song"), "nothing when it is not sent");
+        assert!(with.len() > without.len());
     }
 
     #[test]

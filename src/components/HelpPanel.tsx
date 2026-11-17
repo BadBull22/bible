@@ -906,7 +906,8 @@ const SECTIONS: Section[] = [
           <strong>The CCLI line.</strong> When a song is added from your saved songs, its slides remember the title, the writer and the
           CCLI number you typed in the song. In the presenter, press <strong>CCLI line</strong> and that line appears small at the foot of
           every slide of the song, on the screen the room sees. Press it again to take it off. It is off until you switch it on, and the
-          choice is remembered. (It only shows for songs that were added after this was built.)
+          choice is remembered. The same switch decides whether the line goes into the <strong>PowerPoint</strong> and <strong>ProPresenter</strong> files you save: tick{" "}
+          <strong>CCLI line in the files</strong> beside the save buttons, and each song slide carries it at the foot. (It only shows for songs that were added after this was built.)
         </p>
         <p>
           <strong>Slides that move on by themselves.</strong> For the notices before the service: on the notices or music page, open{" "}

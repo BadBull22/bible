@@ -8,6 +8,7 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { CCLI_KEY } from "../ccliExport";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { availableMonitors, currentMonitor, getCurrentWindow, type Monitor } from "@tauri-apps/api/window";
@@ -219,7 +220,6 @@ function ClipPlayer({ s, clip, seek, volume }: { s: SlideSpec; clip: Clip; seek:
 
 const SCREEN_KEY = "bc-slides-screen";
 const VIEW_KEY = "bc-present-view";
-const CCLI_KEY = "bc-present-ccli";
 const sameScreen = (a: Monitor | null | undefined, b: Monitor | null | undefined) => !!a && !!b && a.position.x === b.position.x && a.position.y === b.position.y;
 /** The screens other than the one the app is on, left to right. */
 async function otherScreens(): Promise<Monitor[]> {
