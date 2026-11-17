@@ -1,0 +1,133 @@
+# The Story Studio's "What to write" board. One line per story: number | group | title | passage | covered-by (the id of the built-in story that already tells it, or empty)
+# Numbers 1 to 100 are the owner's own list (2026-11-17); 101 and up are additions suggested for the owner to decide.
+1|Creation and early history|The Creation of the World|Genesis 1-2|the-creation
+2|Creation and early history|Adam and Eve in the Garden of Eden|Genesis 2|adam-and-eve-in-the-garden
+3|Creation and early history|The First Sin and the Fall of Man|Genesis 3|adam-and-eve-in-the-garden
+4|Creation and early history|Cain and Abel|Genesis 4|
+5|Creation and early history|Noah and the Ark|Genesis 6-8|noah-and-the-flood
+6|Creation and early history|The Tower of Babel|Genesis 11|
+7|Creation and early history|The Call of Abraham|Genesis 12|the-call-of-abraham
+8|Creation and early history|Abraham and Lot Separate|Genesis 13|
+9|Creation and early history|The Birth of Ishmael|Genesis 16|
+10|Creation and early history|Sodom and Gomorrah|Genesis 19|
+11|Creation and early history|The Birth of Isaac|Genesis 21|
+12|Creation and early history|The Testing of Abraham (Offering Isaac)|Genesis 22|abraham-and-isaac
+13|Creation and early history|Finding a Wife for Isaac (Rebekah)|Genesis 24|
+14|Creation and early history|Jacob and Esau's Birthright|Genesis 25|
+15|Creation and early history|Jacob's Dream at Bethel|Genesis 28|
+16|Creation and early history|Jacob Wrestles with God|Genesis 32|
+17|Creation and early history|Joseph and His Coat of Many Colors|Genesis 37|joseph-and-his-brothers
+18|Creation and early history|Joseph in Egypt (Potiphar's House and Prison)|Genesis 39|joseph-and-his-brothers
+19|Creation and early history|Joseph Interprets Pharaoh's Dreams|Genesis 41|joseph-and-his-brothers
+20|Creation and early history|Joseph Forgives His Brothers|Genesis 45|joseph-and-his-brothers
+21|Moses and the Exodus|Baby Moses in the Bulrushes|Exodus 2|moses-in-the-basket
+22|Moses and the Exodus|The Burning Bush|Exodus 3|the-burning-bush
+23|Moses and the Exodus|The Ten Plagues of Egypt|Exodus 7-11|
+24|Moses and the Exodus|The First Passover|Exodus 12|
+25|Moses and the Exodus|Crossing the Red Sea|Exodus 14|crossing-the-red-sea
+26|Moses and the Exodus|Manna and Quail in the Wilderness|Exodus 16|
+27|Moses and the Exodus|Water from the Rock at Rephidim|Exodus 17|
+28|Moses and the Exodus|The Ten Commandments Given at Sinai|Exodus 20|
+29|Moses and the Exodus|The Golden Calf|Exodus 32|
+30|Moses and the Exodus|Spies Sent into Canaan|Numbers 13-14|
+31|Moses and the Exodus|Balaam's Donkey|Numbers 22|
+32|Moses and the Exodus|The Death of Moses on Mount Nebo|Deuteronomy 34|
+33|Conquest, judges and kingdoms|Rahab and the Spies of Jericho|Joshua 2|
+34|Conquest, judges and kingdoms|Crossing the Jordan River|Joshua 3|
+35|Conquest, judges and kingdoms|The Fall of Jericho|Joshua 6|the-fall-of-jericho
+36|Conquest, judges and kingdoms|Joshua and the Sun Standing Still|Joshua 10|
+37|Conquest, judges and kingdoms|Deborah the Prophetess and Judge|Judges 4|
+38|Conquest, judges and kingdoms|Gideon and His 300 Soldiers|Judges 7|
+39|Conquest, judges and kingdoms|Samson and Delilah|Judges 16|
+40|Conquest, judges and kingdoms|Ruth and Boaz|Ruth 1-4|ruth-and-naomi
+41|Conquest, judges and kingdoms|The Boy Samuel Hears God's Voice|1 Samuel 3|samuel-hears-god
+42|Conquest, judges and kingdoms|Eli and the Ark Captured|1 Samuel 4|
+43|Conquest, judges and kingdoms|Saul Becomes Israel's First King|1 Samuel 10|
+44|Conquest, judges and kingdoms|David and Goliath|1 Samuel 17|david-and-goliath
+45|Conquest, judges and kingdoms|David and Jonathan's Friendship|1 Samuel 18-20|
+46|Conquest, judges and kingdoms|David Spares Saul's Life|1 Samuel 24|
+47|Conquest, judges and kingdoms|David Becomes King over Israel|2 Samuel 5|
+48|Conquest, judges and kingdoms|David and Bathsheba|2 Samuel 11|
+49|Conquest, judges and kingdoms|Absalom's Rebellion|2 Samuel 15-18|
+50|Conquest, judges and kingdoms|Solomon Asks for Wisdom|1 Kings 3|
+51|Conquest, judges and kingdoms|The Building of Solomon's Temple|1 Kings 6|
+52|Conquest, judges and kingdoms|The Queen of Sheba Visits Solomon|1 Kings 10|
+53|Prophets, exile and return|Elijah Fed by Ravens|1 Kings 17|
+54|Prophets, exile and return|Elijah and the Prophets of Baal on Mount Carmel|1 Kings 18|
+55|Prophets, exile and return|Elijah Appears in a Gentle Whisper|1 Kings 19|
+56|Prophets, exile and return|Elijah Taken Up in a Fiery Chariot|2 Kings 2|
+57|Prophets, exile and return|Elisha and the Widow's Oil|2 Kings 4|
+58|Prophets, exile and return|Naaman Healed of Leprosy|2 Kings 5|
+59|Prophets, exile and return|Isaiah's Vision in the Temple|Isaiah 6|
+60|Prophets, exile and return|Jeremiah's Call from God|Jeremiah 1|
+61|Prophets, exile and return|The Fiery Furnace (Shadrach, Meshach and Abednego)|Daniel 3|
+62|Prophets, exile and return|The Handwriting on the Wall (Belshazzar's Feast)|Daniel 5|
+63|Prophets, exile and return|Daniel in the Lions' Den|Daniel 6|daniel-in-the-lions-den
+64|Prophets, exile and return|Jonah and the Great Fish|Jonah 1-4|jonah-and-the-great-fish
+65|Prophets, exile and return|Esther Becomes Queen|Esther 2|
+66|Prophets, exile and return|Esther Saves Her People (For such a time as this)|Esther 4-7|
+67|Prophets, exile and return|Job's Trials and Faithfulness|Job 1-2, 42|
+68|Prophets, exile and return|Nehemiah Rebuilds the Walls of Jerusalem|Nehemiah 2-6|
+69|Prophets, exile and return|Ezra Reads the Law to the People|Ezra 8|
+70|The life and ministry of Jesus|The Angel Gabriel Visits Mary (The Annunciation)|Luke 1|the-birth-of-jesus
+71|The life and ministry of Jesus|The Birth of Jesus in Bethlehem|Luke 2|the-birth-of-jesus
+72|The life and ministry of Jesus|The Shepherds and the Angels|Luke 2|the-birth-of-jesus
+73|The life and ministry of Jesus|The Visit of the Wise Men (Magi)|Matthew 2|
+74|The life and ministry of Jesus|Jesus Presented at the Temple (Simeon and Anna)|Luke 2|
+75|The life and ministry of Jesus|The Boy Jesus in the Temple|Luke 2|
+76|The life and ministry of Jesus|The Baptism of Jesus|Matthew 3|the-baptism-of-jesus
+77|The life and ministry of Jesus|The Temptation of Jesus in the Wilderness|Matthew 4|the-temptation-of-jesus
+78|The life and ministry of Jesus|Jesus Turns Water into Wine at Cana|John 2|
+79|The life and ministry of Jesus|Jesus Calls His First Disciples|Luke 5|
+80|The life and ministry of Jesus|The Sermon on the Mount (The Beatitudes)|Matthew 5-7|
+81|The life and ministry of Jesus|Jesus Calms the Storm|Mark 4|jesus-calms-the-storm
+82|The life and ministry of Jesus|Jesus Heals a Paralytic|Mark 2|
+83|The life and ministry of Jesus|Jesus Feeds the 5,000|John 6|jesus-feeds-the-five-thousand
+84|The life and ministry of Jesus|Jesus Walks on Water|Matthew 14|jesus-walks-on-water
+85|The life and ministry of Jesus|The Transfiguration|Matthew 17|
+86|The life and ministry of Jesus|Jesus Heals a Man Born Blind|John 9|
+87|The life and ministry of Jesus|The Parable of the Good Samaritan|Luke 10|the-good-samaritan
+88|The life and ministry of Jesus|The Parable of the Prodigal Son|Luke 15|the-prodigal-son
+89|The life and ministry of Jesus|Jesus Raises Lazarus from the Dead|John 11|the-raising-of-lazarus
+90|The life and ministry of Jesus|Zacchaeus the Tax Collector|Luke 19|zacchaeus-meets-jesus
+91|The life and ministry of Jesus|Mary Anoints Jesus' Feet|John 12|
+92|The life and ministry of Jesus|The Triumphal Entry (Palm Sunday)|Matthew 21|
+93|The life and ministry of Jesus|The Last Supper|Luke 22|
+94|The life and ministry of Jesus|Jesus Prays in the Garden of Gethsemane|Matthew 26|
+95|The life and ministry of Jesus|The Crucifixion of Jesus|Mark 15|
+96|The life and ministry of Jesus|The Resurrection of Jesus|Matthew 28|the-empty-tomb
+97|The life and ministry of Jesus|The Road to Emmaus|Luke 24|the-road-to-emmaus
+98|The early church and missions|The Ascension of Jesus|Acts 1|
+99|The early church and missions|The Day of Pentecost (The Coming of the Holy Spirit)|Acts 2|the-day-of-pentecost
+100|The early church and missions|Paul's Conversion on the Road to Damascus|Acts 9|
+101|Suggested additions: Gospels|Jairus' Daughter|Mark 5|
+102|Suggested additions: Gospels|The Ten Lepers|Luke 17|
+103|Suggested additions: Gospels|Blind Bartimaeus|Mark 10|
+104|Suggested additions: Gospels|The Lost Sheep and the Lost Coin|Luke 15|
+105|Suggested additions: Gospels|The Rich Young Ruler|Mark 10|
+106|Suggested additions: Gospels|Martha and Mary|Luke 10|
+107|Suggested additions: Gospels|The Widow's Offering|Mark 12|
+108|Suggested additions: Gospels|The Parable of the Talents|Matthew 25|
+109|Suggested additions: Gospels|The Ten Virgins|Matthew 25|
+110|Suggested additions: Gospels|The Miraculous Catch of Fish|Luke 5|
+111|Suggested additions: Gospels|Jesus Washes the Disciples' Feet|John 13|
+112|Suggested additions: Gospels|Peter's Denial|Luke 22|
+113|Suggested additions: Gospels|Jesus Blesses the Children|Mark 10|
+114|Suggested additions: Gospels|The Widow of Nain's Son|Luke 7|
+115|Suggested additions: Gospels|The Woman Caught in Adultery|John 8|
+116|Suggested additions: Early church|Peter and Cornelius|Acts 10|
+117|Suggested additions: Early church|Philip and the Ethiopian|Acts 8|
+118|Suggested additions: Early church|Stephen, the First Martyr|Acts 7|
+119|Suggested additions: Early church|Peter Freed from Prison|Acts 12|
+120|Suggested additions: Early church|Paul and Silas in Prison|Acts 16|
+121|Suggested additions: Early church|Paul's Shipwreck|Acts 27|
+122|Suggested additions: Old Testament|Hannah and Samuel|1 Samuel 1|
+123|Suggested additions: Old Testament|The Valley of Dry Bones|Ezekiel 37|
+124|Suggested additions: Old Testament|Nebuchadnezzar's Dream|Daniel 2|
+125|Suggested additions: Old Testament|Joshua and Achan|Joshua 7|
+126|Suggested additions: Old Testament|Elisha and the Shunammite's Son|2 Kings 4|
+127|Already written, not on the list|The Woman at the Well|John 4|the-woman-at-the-well
+128|Already written, not on the list|Nicodemus Visits Jesus|John 3|nicodemus-visits-jesus
+129|Already written, not on the list|The Parable of the Sower|Mark 4|the-sower
+130|Already written (additional stories)|The Woman Who Touched Jesus' Cloak|Mark 5|the-woman-who-touched-jesus-cloak
+131|Already written (additional stories)|Jesus Heals the Centurion's Servant|Luke 7|jesus-heals-the-centurions-servant
