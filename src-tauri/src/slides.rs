@@ -53,6 +53,9 @@ pub struct Slide {
     /// the written heading is left off the slide (the graphic is the heading, or a song's name is not wanted in the corner)
     #[serde(default, rename = "noHeading")]
     pub no_heading: bool,
+    /// a song's CCLI line (the title, the writer and the CCLI number) for the foot of the slide: sent only when the church has the CCLI line switched on
+    #[serde(default)]
+    pub credit: Option<String>,
 }
 
 /// A video or music file PowerPoint can play from inside the file: its type and whether it
@@ -269,6 +272,14 @@ fn background(bg: Option<(&str, u32, u32)>) -> (String, String) {
     (bg, shade)
 }
 
+/// The CCLI line, small and centred at the foot of the slide (nothing when the slide has none).
+fn credit_box(s: &Slide) -> String {
+    match s.credit.as_deref().map(str::trim).filter(|c| !c.is_empty()) {
+        Some(c) => text_box(7, "CCLI line", 400_000, H - 480_000, W - 800_000, 380_000, c, 12, "C9D6EE", false, false, "ctr"),
+        None => String::new(),
+    }
+}
+
 fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
     let (bg, shade) = background(refs.background);
     // a layer over the background and under the words, filling the slide
@@ -313,7 +324,7 @@ fn slide_xml(s: &Slide, refs: &SlideRefs) -> String {
             (if s.no_heading { String::new() } else { text_box(2, "Point", 700_000, 1_600_000, tw(W - 1_400_000), 2_200_000, &s.title, if side.is_some() { 40 } else { 48 }, "FFFFFF", true, false, "b") })
                 + &text_box(3, "Under the point", 700_000, 4_000_000, tw(W - 1_400_000), 2_000_000, &s.body, 28, "C9D6EE", false, true, "t")
         }
-    } + &beside;
+    } + &beside + &credit_box(s);
     format!(
         r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld>{bg}<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>{shade}{shapes}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>{timing}</p:sld>"#,
@@ -588,6 +599,28 @@ mod tests {
         std::io::Read::read_to_string(&mut z.by_name("ppt/slides/slide3.xml").unwrap(), &mut s3).unwrap();
         assert!(s3.contains("dead &amp; &lt;gone&gt;"), "escaped");
         assert!(build_pptx(&[], &|_| None).is_err());
+    }
+
+    #[test]
+    fn a_songs_ccli_line_is_at_the_foot_of_its_slide_only_when_sent() {
+        let line = "Amazing Grace - John Newton - CCLI Song #22025";
+        let with = Slide { kind: "song".into(), title: "Amazing Grace - Verse 1".into(), body: "Amazing grace, how sweet the sound".into(), credit: Some(line.into()), ..Default::default() };
+        let without = Slide { credit: None, ..with.clone() };
+        let blank = Slide { credit: Some("   ".into()), ..with.clone() };
+        let xml = |s: Slide| {
+            let bytes = build_pptx(&[s], &|_| None).unwrap();
+            let mut z = zip::ZipArchive::new(Cursor::new(bytes)).unwrap();
+            let mut out = String::new();
+            std::io::Read::read_to_string(&mut z.by_name("ppt/slides/slide1.xml").unwrap(), &mut out).unwrap();
+            out
+        };
+        let x = xml(with);
+        assert!(x.contains("CCLI Song #22025") && x.contains("name=\"CCLI line\""), "the line is on the slide");
+        // it sits near the bottom edge: its top is below four fifths of the slide's height
+        let y: i64 = x.split("name=\"CCLI line\"").nth(1).unwrap().split("<a:off x=\"").nth(1).unwrap().split("y=\"").nth(1).unwrap().split('"').next().unwrap().parse().unwrap();
+        assert!(y > H * 8 / 10, "at the foot: {y}");
+        assert!(!xml(without).contains("CCLI"), "nothing when the line is not sent");
+        assert!(!xml(blank).contains("CCLI line"), "an empty line adds nothing");
     }
 
     /// A 2x1 PNG, the smallest picture there is to test with.

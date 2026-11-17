@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api, BookInfo, SavedSermon, SermonStage, SermonUsage, Version } from "../api";
+import { withCcli } from "../ccliExport";
 import {
   gather,
   isScripture,
@@ -666,7 +667,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     setSavingSlides(true);
     try {
       const ready = await Promise.all(
-        slides.map(async (s) => ({
+        withCcli(slides).map(async (s) => ({
           ...s,
           background: (s.background === undefined ? work.slideBackground : s.background) || undefined,
           link: s.link?.startsWith("media:") ? undefined : s.link,
@@ -688,7 +689,7 @@ export function SermonBuilder({ versionCode, versions, books, chapterCounts, onJ
     try {
       // a kept file a slide opens: its full path on this computer
       const ready = await Promise.all(
-        slides.map(async (s) => ({
+        withCcli(slides).map(async (s) => ({
           ...s,
           // a slide's own background ("" is plain navy), or the one chosen for all of them (a moving one as a still picture from it)
           background: await stillFor(s.background === undefined ? work.slideBackground : s.background),

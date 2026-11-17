@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, BookInfo, DeckKind, Version } from "../api";
+import { withCcli } from "../ccliExport";
 import type { SlideOrder } from "../slideOrder";
 import type { SlideSpec } from "../sermonOutputs";
 import { deckBody, KIND_NAME, parseDeck, PresenterDeck } from "../service";
@@ -165,7 +166,7 @@ export function DeckBuilder({ kind, id, versions, books, versionCode, onBack }: 
   };
   const forExport = async (embed: boolean, forPowerPoint: boolean) =>
     Promise.all(
-      slides.map(async (s) => ({
+      withCcli(slides).map(async (s) => ({
         ...s,
         // (a PowerPoint file holds a moving background as a still picture from it; the ProPresenter bundle holds the video)
         background: forPowerPoint ? await stillFor(s.background === undefined ? background : s.background) : (s.background === undefined ? background : s.background) || undefined,

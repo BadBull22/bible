@@ -8,17 +8,12 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
-    version: "3.2.0",
+    version: "3.1.1",
     items: [
       "Concordance > Meaning: search by what words mean, in Hebrew and Greek. Type love, forgive, joy or fear (or open the groups), and see every word with that meaning, how many verses use them in each book, and the verses. Choose one word in a group to see only that word.",
       "Concordance > Strong's number: type G26 or H157 to count the Greek or Hebrew word behind a Strong's number, book by book, and read its verses.",
       "Interlinear: under a word's Strong's number, “Meaning here” shows the meaning the dictionary gives it in that verse and its group. The meanings are from the UBS dictionaries of Biblical Hebrew and of the Greek New Testament (CC BY-SA 4.0).",
-    ],
-  },
-  {
-    version: "3.1.1",
-    items: [
-      "Presenter > CCLI line: show the song's title, writer and CCLI number small at the foot of its slides, when you switch it on.",
+      "Presenter > CCLI line: show the song's title, writer and CCLI number small at the foot of its slides, when you switch it on. The same switch puts the line at the foot of the song slides in the PowerPoint and ProPresenter files you save.",
       "Slide show timing (notices and music pages, and the presenter's Auto button): slides can move on by themselves after the number of seconds you choose, start again at the end, and fade (none, short or slow) between slides. A slide can have a time of its own.",
       "Presenter > Phone remote > The pastor's stage view: a page for a tablet or second phone with the slide and the next one large, your notes, the clock, a timer and Back, Black and Next.",
       "Presenter > Follow along: people on the church Wi-Fi can read the words on the screen on their own phones, read only, with a QR code to show. Off until you switch it on.",
