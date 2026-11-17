@@ -140,6 +140,10 @@ export interface SlideSpec {
   section?: string;
   /** the title slide stays at the top: it can't be moved (only a title slide can be pinned) */
   pinned?: boolean;
+  /** a song's slide: the line for the foot of the screen (the title, the writer and the CCLI number), shown when the presenter switches it on */
+  credit?: string;
+  /** seconds this slide stays before the next comes by itself (0: it waits for a click); absent: the show's own time */
+  after?: number;
 }
 
 /** Slides from the sermon: the title, the big idea, each point, and each Scripture passage
