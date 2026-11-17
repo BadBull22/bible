@@ -2,10 +2,14 @@
 // tap a book to read the verses, each marked and linking into the reader, and come back with "All books". Opens beside the reading pane, like the other searches.
 
 import { useEffect, useRef, useState } from "react";
-import { api, type ConcordanceResult, type SearchHit, type Version } from "../api";
+import { api, type ConcordanceResult, type OriginalWord, type SearchHit, type Version } from "../api";
+import { BIBLE_BOOKS } from "../browse/browseLogic";
 import { bookLine, byTestament, heat, mark, summary, thousands } from "../concordance";
-import { asStrongs, meaningSummary, strongsSummary } from "../semantic";
+import { asStrongs, meaningSummary, strongsSummary, wordToLookUp } from "../semantic";
+import { BookStrip, type StripBook } from "./BookStrip";
 import { MeaningPicker, type MeaningSel } from "./MeaningPicker";
+import { MeaningTree } from "./MeaningTree";
+import { SensePanel, type VerseAt } from "./SensePanel";
 import { CloseIcon } from "./icons";
 
 interface Props {
@@ -13,6 +17,8 @@ interface Props {
   versionCode: string;
   /** a word to count as soon as the panel opens */
   initialWord?: string;
+  /** a Strong's number to open with its meanings, and the verse it is being read in (the meaning used there is chosen) */
+  initialStrongs?: { strongs: string; at?: VerseAt };
   onJump: (book: string, chapter: number, verse: number) => void;
   onClose: () => void;
 }
@@ -37,10 +43,13 @@ interface Verses {
 
 const PAGE = 150;
 
-export function ConcordancePanel({ versions, versionCode, initialWord, onJump, onClose }: Props) {
-  const [word, setWord] = useState(initialWord ?? "");
+export function ConcordancePanel({ versions, versionCode, initialWord, initialStrongs, onJump, onClose }: Props) {
+  const [word, setWord] = useState(initialStrongs?.strongs ?? initialWord ?? "");
   const [forms, setForms] = useState(false);
-  const [mode, setMode] = useState<Mode>("word");
+  const [mode, setMode] = useState<Mode>(initialStrongs ? "strongs" : "word");
+  /** the verse a Strong's number is being read in: the meaning used there is the one chosen */
+  const [senseAt, setSenseAt] = useState<VerseAt | null>(initialStrongs?.at ?? null);
+  const [originals, setOriginals] = useState<OriginalWord[]>([]);
   const [sel, setSel] = useState<MeaningSel | null>(null);
   const [version, setVersion] = useState(versionCode === "ENOCH1" ? "BSB" : versionCode);
   const [ran, setRan] = useState<Ran | null>(null);
@@ -71,7 +80,8 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
   };
 
   /** a Strong's number (G26, H157): how often the original word behind it is used */
-  const runStrongs = async (text = word, v = version) => {
+  const runStrongs = async (text = word, v = version, keepVerse = false) => {
+    if (!keepVerse) setSenseAt(null);
     const s = asStrongs(text);
     if (!s) {
       setError("Type a Strong's number: G for Greek or H for Hebrew, then the number, like G26 or H157.");
@@ -117,15 +127,31 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
   const changeMode = (m: Mode) => {
     if (m === mode) return;
     setMode(m);
+    // a word is not a Strong's number: the box starts empty in each mode
+    setWord("");
     setRan(null);
     setVerses(null);
     setError(null);
   };
 
   useEffect(() => {
-    if (initialWord) void run(initialWord);
+    if (initialStrongs) void runStrongs(initialStrongs.strongs, version, true);
+    else if (initialWord) void run(initialWord);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // the Hebrew and Greek words behind a counted English word (a Bible tagged with Strong's numbers; the BSB when the chosen one is not)
+  useEffect(() => {
+    setOriginals([]);
+    if (!ran || ran.source !== "word") return;
+    const w = wordToLookUp(ran.word);
+    if (!w) return;
+    let live = true;
+    api.originalWordsFor(w, ran.version).then((o) => live && setOriginals(o)).catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [ran?.source, ran?.word, ran?.version]);
 
   // changing the Bible or "and its forms" counts again, if a word is in the box
   const first = useRef(true);
@@ -135,7 +161,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
       return;
     }
     if (mode === "word" && word.trim()) void run(word, forms, version);
-    else if (mode === "strongs" && ran) void runStrongs(ran.word, version);
+    else if (mode === "strongs" && ran) void runStrongs(ran.word, version, true);
     else if (mode === "meaning" && sel) void runMeaning(sel, version);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forms, version]);
@@ -165,8 +191,20 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
     }
   };
 
+  /** an original word behind the English word counted: open it with its meanings */
+  const openOriginal = (s: string) => {
+    setMode("strongs");
+    setWord(s);
+    void runStrongs(s);
+  };
+
   const r = ran?.result;
   const split = r ? byTestament(r.books) : null;
+  const byName = new Map((r?.books ?? []).map((b) => [b.book, b]));
+  const strip: StripBook[] = BIBLE_BOOKS.map((name, i) => {
+    const b = byName.get(name);
+    return { name, testament: i < 39 ? "OT" : "NT", count: b ? (ran?.source === "meaning" ? b.verses : b.occurrences) : 0 };
+  });
   const max = r ? Math.max(0, ...r.books.map((b) => b.occurrences)) : 0;
   const pattern = r?.pattern ?? "";
 
@@ -178,6 +216,8 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
           {ran?.source === "meaning" ? `${thousands(t.verses)} verse${t.verses === 1 ? "" : "s"}` : `${thousands(t.occurrences)} in ${thousands(t.verses)} verse${t.verses === 1 ? "" : "s"}`}
         </span>
       </button>
+      <details className="cc-numbers">
+        <summary>Numbers for each book</summary>
       <div className="cc-grid">
         {t.books.map((b) => (
           <button
@@ -194,8 +234,15 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
           </button>
         ))}
       </div>
+      </details>
     </section>
   );
+
+  const pickBook = (name: string) => {
+    const b = byName.get(name);
+    if (!b || !ran) return;
+    void open({ kind: "book", book: name }, ran.source === "meaning" ? `${name}: ${thousands(b.verses)} verse${b.verses === 1 ? "" : "s"}` : bookLine(name, b.occurrences, b.verses));
+  };
 
   return (
     <aside className="side-panel wide concordance-panel">
@@ -268,6 +315,25 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
                 ? meaningSummary(ran.sel.word ? `${ran.sel.name}: ${ran.sel.word}` : ran.sel.name, ran.sel.language, ran.sel.words, r.total_verses)
                 : summary(ran.word, r.total_occurrences, r.total_verses, ran.version, r.forms)}
           </p>
+          {ran.source === "strongs" && <SensePanel strongs={ran.word} version={ran.version} at={senseAt} onJump={onJump} />}
+          {ran.source === "meaning" && ran.sel && <MeaningTree language={ran.sel.language} code={ran.sel.code} name={ran.sel.name} onPick={(s) => void runMeaning(s)} />}
+          {ran.source === "word" && originals.length > 0 && (
+            <div className="original-words">
+              <h4>The Hebrew and Greek words behind “{ran.word}”</h4>
+              <div className="chips">
+                {originals.map((o) => (
+                  <button key={o.strongs} type="button" onClick={() => openOriginal(o.strongs)} title={o.definition || undefined}>
+                    <span className="ow-lemma" lang={o.strongs.startsWith("H") ? "he" : "grc"}>
+                      {o.lemma}
+                    </span>
+                    <span className="muted">
+                      {o.strongs} · {o.times}×
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {r.found.length > 1 && (
             <p className="muted cc-formlist">
               Counted: {r.found.map((f) => `${f.word} (${thousands(f.count)})`).join(", ")}.
@@ -275,6 +341,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, onJump, o
           )}
           {r.total_occurrences > 0 && (
             <>
+              <BookStrip books={strip} unit={ran.source === "meaning" ? "verse" : "time"} label={`Where it is used, book by book`} onPick={pickBook} />
               {testament("OT", "Old Testament", split.ot)}
               {testament("NT", "New Testament", split.nt)}
               <p className="muted cc-note">

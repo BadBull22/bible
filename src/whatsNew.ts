@@ -8,6 +8,24 @@ export interface WhatsNewEntry {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: "3.1.3",
+    items: [
+      "Concordance > Strong's number: a Hebrew or Greek word's meanings drawn as a ring, sized by how many verses use each, with what each meaning is called in everyday English, where in the Bible it is used and some verses with the word marked. Open it from the Interlinear with All meanings, and the meaning used in that verse is chosen.",
+      "Concordance > Word: type love, forgive or Christ and see the Hebrew and Greek words behind it; press one to see its meanings.",
+      "Concordance > Meaning: a group of meanings shown in its tree, with the groups beside it and the words inside it. Press a neighbouring group to go to it.",
+      "A strip from Genesis to Revelation shows where a word, meaning or group is used, instead of the 66 boxes (the numbers are still there under it). Press a bar to read that book's verses.",
+      "Plain-English descriptions, related groups and everyday words come from the SIL Semantic Domains list (SIL Global, CC BY-SA 4.0), matched to every Greek group and to most Hebrew groups. A word the UBS dictionaries leave out shows its Strong's definition.",
+    ],
+  },
+  {
+    version: "3.1.2",
+    items: [
+      "Browse: 36 more Bible stories come with the app, each with a children's page and a picture (67 stories and 56 children's pages in all). The children's pages' pictures are paintings with an outline to colour in, for the activity sheet.",
+      "Browse > Bible stories and For children: the lists are in sections (Old Testament and New Testament; ages 3 to 5, 6 to 8, 9 to 12), closed until you open one, and the stories are in the order of the Bible.",
+      "Browse: the stories and children's pages you have opened show a tick and a quieter colour, each section says how many you have read, and Mark all as unread starts again. A search still shows every match in one list.",
+    ],
+  },
+  {
     version: "3.1.1",
     items: [
       "Concordance > Meaning: search by what words mean, in Hebrew and Greek. Type love, forgive, joy or fear (or open the groups), and see every word with that meaning, how many verses use them in each book, and the verses. Choose one word in a group to see only that word.",

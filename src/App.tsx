@@ -86,7 +86,7 @@ type SidePanel =
   | { kind: "settings"; focus?: "online" | "appearance" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
-  | { kind: "concordance"; word?: string }
+  | { kind: "concordance"; word?: string; strongs?: string; at?: { book: string; chapter: number; verse: number } }
   | { kind: "map"; atlas?: boolean }
   | { kind: "timeline"; focusPersonId?: string }
   // commentary / entities follow the reader's current book+chapter (so paging keeps them in sync)
@@ -1392,6 +1392,7 @@ function App() {
                 if (panel.book === book && panel.chapter === chapter) setTargetVerse(v);
               }}
               onWordStudy={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
+              onOpenMeanings={(strongs, at) => setPanel({ kind: "concordance", strongs, at })}
               onClose={() => setPanel(null)}
             />
           )}
@@ -1481,7 +1482,17 @@ function App() {
             </Suspense>
           )}
           {panel?.kind === "firsts" && <FirstsPanel onClose={() => setPanel(null)} onJump={jumpTo} />}
-          {panel?.kind === "concordance" && <ConcordancePanel key={panel.word ?? ""} versions={versions} versionCode={versionCode} initialWord={panel.word} onJump={jumpTo} onClose={() => setPanel(null)} />}
+          {panel?.kind === "concordance" && (
+            <ConcordancePanel
+              key={`${panel.word ?? ""}|${panel.strongs ?? ""}|${panel.at ? `${panel.at.book} ${panel.at.chapter}:${panel.at.verse}` : ""}`}
+              versions={versions}
+              versionCode={versionCode}
+              initialWord={panel.word}
+              initialStrongs={panel.strongs ? { strongs: panel.strongs, at: panel.at } : undefined}
+              onJump={jumpTo}
+              onClose={() => setPanel(null)}
+            />
+          )}
           {panel?.kind === "map" && (
             <Suspense fallback={<PanelFallback />}>
               <MapPanel

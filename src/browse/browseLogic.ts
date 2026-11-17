@@ -133,3 +133,54 @@ export function findNamed<T extends BrowseEntry>(named: T[], query: string, limi
   const top = scored.filter((x) => x.found === scored[0].found);
   return top.length > tooMany ? [] : top.slice(0, limit).map((x) => x.e);
 }
+
+// ---- the long list of stories: Old and New Testament, in Bible order ------------------------------------------------------------
+
+/** the books in the Bible's own order, spelled as the app spells them ("Psalms", "Song of Solomon") */
+export const BIBLE_BOOKS = [
+  "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles",
+  "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations",
+  "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi",
+  "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians",
+  "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John",
+  "3 John", "Jude", "Revelation",
+] as const;
+
+/** where a story sits in the Bible: its testament and the passage it begins with */
+export interface StoryPlace {
+  testament: "OT" | "NT";
+  ref: string;
+}
+
+/** a number that sorts references into Bible order (unknown books last) */
+export function refRank(ref: string): number {
+  const r = parseRef(ref);
+  if (!r) return Number.MAX_SAFE_INTEGER;
+  const b = (BIBLE_BOOKS as readonly string[]).indexOf(r.book);
+  return (b < 0 ? 99 : b) * 1_000_000 + r.chapter * 1000 + r.verse;
+}
+
+export interface TestamentGroup<T> {
+  testament: "OT" | "NT";
+  title: string;
+  items: T[];
+}
+
+/** The stories split into Old and New Testament (an empty one is left out), each in Bible order by the passage it begins with; stories with the same start keep their own order. */
+export function testamentGroups<T extends { id: string }>(list: T[], place: (item: T) => StoryPlace | undefined): TestamentGroup<T>[] {
+  const rows = list.map((item, order) => ({ item, order, p: place(item) }));
+  const make = (testament: "OT" | "NT", title: string): TestamentGroup<T> => ({
+    testament,
+    title,
+    items: rows
+      .filter((r) => (r.p?.testament ?? "OT") === testament)
+      .sort((a, b) => refRank(a.p?.ref ?? "") - refRank(b.p?.ref ?? "") || a.order - b.order)
+      .map((r) => r.item),
+  });
+  return [make("OT", "Old Testament"), make("NT", "New Testament")].filter((g) => g.items.length > 0);
+}
+
+/** the book a story begins in, for the small label over a run of stories ("1 Kings") */
+export function bookOf(ref: string): string {
+  return parseRef(ref)?.book ?? "";
+}

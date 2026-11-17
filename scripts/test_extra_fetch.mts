@@ -50,8 +50,10 @@ if (existsSync(real)) {
   const r = readExtraFile(readFileSync(real, "utf8"));
   assert.equal(r.skipped.length, 0, JSON.stringify(r.skipped));
   assert.ok(r.pages.stories.length + r.pages.children.length > 0);
-  for (const s of r.pages.stories) assert.ok(r.pictures.stories[s.id], `a picture for ${s.id}`);
-  for (const c of r.pages.children) assert.ok(r.pictures.children[c.id], `a picture for ${c.id}`);
-  console.log(`extra fetch: the real file reads (${r.pages.stories.length} stories, ${r.pages.children.length} children's pages, all with pictures)`);
+  // a story or page may come without a picture, but every picture belongs to a page in the file
+  assert.ok(Object.keys(r.pictures.stories).length > 0, "the file has story pictures");
+  for (const id of Object.keys(r.pictures.stories)) assert.ok(r.pages.stories.some((s) => s.id === id), `a story for the picture ${id}`);
+  for (const id of Object.keys(r.pictures.children)) assert.ok(r.pages.children.some((c) => c.id === id), `a children's page for the picture ${id}`);
+  console.log(`extra fetch: the real file reads (${r.pages.stories.length} stories, ${r.pages.children.length} children's pages, ${Object.keys(r.pictures.stories).length} story pictures)`);
 }
 console.log("extra fetch: all checks passed");

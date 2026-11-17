@@ -258,11 +258,28 @@ for (const code of ["BSB", "KJV", "ASV", "WEB", "YLT"]) {
 // ---------------------------------------------------------------- the children's pictures (original SVG artwork: colour and outline)
 {
   const dir = new URL("../src/browse/pictures/kids/", import.meta.url);
+  const kidCredits: Record<string, Any> = existsSync(new URL("credits.json", dir)) ? JSON.parse(readFileSync(new URL("credits.json", dir), "utf-8")) : {};
+  for (const id of Object.keys(kidCredits)) if (!children.pages.some((c: Any) => c.id === id)) bad("pictures/kids/credits.json", `has an entry for "${id}", which is not a children's page`);
   let without = 0;
   for (const c of children.pages) {
     const where = `child ${c.id}`;
     const colour = new URL(`${c.id}.svg`, dir);
     const line = new URL(`${c.id}-line.svg`, dir);
+    // a painting (JPEG) with an outline to colour in (PNG) and its credit, for the pages that came after the app's own drawings
+    const photo = new URL(`${c.id}.jpg`, dir);
+    if (!existsSync(colour) && existsSync(photo)) {
+      const bytes = readFileSync(photo);
+      if (!(bytes[0] === 0xff && bytes[1] === 0xd8)) bad(where, "the picture file is not a JPEG");
+      if (bytes.length > 3_000_000) bad(where, `the picture is ${bytes.length} bytes (3,000,000 at most)`);
+      const ol = new URL(`${c.id}-line.png`, dir);
+      if (!existsSync(ol)) bad(where, "has a picture but no outline to colour in (<id>-line.png)");
+      else if (readFileSync(ol)[1] !== 0x50) bad(where, "the outline is not a PNG");
+      const cr = kidCredits[c.id];
+      if (!cr) bad(where, "the picture has no entry in pictures/kids/credits.json");
+      else for (const f of ["title", "artist", "credit", "licence", "licence_url", "page"]) if (!cr[f]) bad(where, `the credit for the picture has no ${f}`);
+      if (cr && !/public domain|CC BY/i.test(cr.licence ?? "")) bad(where, `the picture's licence "${cr.licence}" is not one the app may bundle (public domain, CC BY, CC BY-SA)`);
+      continue;
+    }
     if (!existsSync(colour)) {
       without++;
       if (release) bad(where, "has no picture");

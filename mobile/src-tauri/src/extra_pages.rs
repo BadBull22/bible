@@ -21,13 +21,14 @@ pub const URL: &str = match option_env!("BC_EXTRA_PAGES_URL") {
 };
 const FOLDER: &str = "extra-pages";
 const FILE: &str = "pages.json";
-/// the largest file the app takes (the built-in pages are about 0.5 MB in all)
-pub const MAX_BYTES: u64 = 6 << 20;
+/// the largest file the app takes (the built-in pages are about 0.5 MB in all). Raised from 6 to 24 MB for the next version, so that many pictured stories
+/// and children's pages fit in one file; the pictures are NOT handed to the page (see `load_light`), so the page's memory does not grow with them.
+pub const MAX_BYTES: u64 = 24 << 20;
 /// the most pages the file may hold
 pub const MAX_PAGES: usize = 1000;
 /// the most pictures the file may carry in each of its two lists (`pictures` for stories, `child_pictures` for children's pages), and the largest one
-/// (a painting at about 1500 pixels is 100 to 400 KB)
-pub const MAX_PICTURES: usize = 40;
+/// (a painting at about 1500 pixels is 100 to 400 KB). Raised from 40 to 150 for the next version.
+pub const MAX_PICTURES: usize = 150;
 pub const MAX_PICTURE_BYTES: usize = 600_000;
 /// a children's page's picture may come with an outline to colour in (a PNG of black lines on white, 30 to 100 KB)
 pub const MAX_OUTLINE_BYTES: usize = 300_000;
@@ -39,6 +40,48 @@ fn path(data: &Path) -> PathBuf {
 /// The file as it was last fetched (None if nothing was ever fetched).
 pub fn load(data: &Path) -> Option<String> {
     std::fs::read_to_string(path(data)).ok()
+}
+
+/// The file's pages without its pictures (what the page needs to list and show them): the pictures are big, are read one at a time by `picture` and
+/// `child_picture`, and would only fill the web view's memory. A file without pictures is returned exactly as it is.
+pub fn light(text: &str) -> String {
+    if !text.contains("\"pictures\"") && !text.contains("\"child_pictures\"") {
+        return text.to_string();
+    }
+    match serde_json::from_str::<Value>(text) {
+        Ok(mut v) => {
+            if let Some(o) = v.as_object_mut() {
+                o.remove("pictures");
+                o.remove("child_pictures");
+            }
+            serde_json::to_string(&v).unwrap_or_else(|_| text.to_string())
+        }
+        Err(_) => text.to_string(),
+    }
+}
+
+/// `load`, without the pictures (see `light`).
+pub fn load_light(data: &Path) -> Option<String> {
+    load(data).map(|t| light(&t))
+}
+
+/// The parsed file, kept in memory while the file on the phone does not change, so that showing each picture does not read and parse a big file again.
+static PARSED: std::sync::Mutex<Option<(PathBuf, u64, std::time::SystemTime, std::sync::Arc<Value>)>> = std::sync::Mutex::new(None);
+
+fn parsed(data: &Path) -> Option<std::sync::Arc<Value>> {
+    let p = path(data);
+    let meta = std::fs::metadata(&p).ok()?;
+    let (len, modified) = (meta.len(), meta.modified().ok()?);
+    let mut guard = PARSED.lock().ok()?;
+    if let Some((cp, cl, cm, v)) = guard.as_ref() {
+        if *cp == p && *cl == len && *cm == modified {
+            return Some(v.clone());
+        }
+    }
+    let v: Value = serde_json::from_str(&std::fs::read_to_string(&p).ok()?).ok()?;
+    let v = std::sync::Arc::new(v);
+    *guard = Some((p, len, modified, v.clone()));
+    Some(v)
 }
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -146,7 +189,7 @@ fn picture_in(data: &Path, list: &str, id: &str) -> Option<(String, Option<Strin
     if !safe_id(id) {
         return None;
     }
-    let v: Value = serde_json::from_str(&load(data)?).ok()?;
+    let v = parsed(data)?;
     let pic = v.get(list)?.get(id)?;
     let (image, credit) = picture_of(pic)?;
     Some((image.to_string(), pic.get("outline").and_then(Value::as_str).map(str::to_string), credit.clone()))
@@ -175,7 +218,7 @@ pub fn fetch_from(data: &Path, url: &str, max: u64) -> Result<Fetched, String> {
         std::fs::write(&part, &text).map_err(|e| e.to_string())?;
         std::fs::rename(&part, path(data)).map_err(|e| e.to_string())?;
     }
-    Ok(Fetched { text, unchanged })
+    Ok(Fetched { text: light(&text), unchanged })
 }
 
 pub fn fetch(data: &Path) -> Result<Fetched, String> {
@@ -343,6 +386,25 @@ mod tests {
         for bad in ["", "../a-new-story", "A-New-Story", "a/b"] {
             assert!(picture(&dir, bad).is_none(), "{bad}");
         }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+    #[test]
+    fn the_page_gets_the_text_without_the_pictures_and_the_picture_is_still_read_back() {
+        let dir = temp("light");
+        let body: &'static str = Box::leak(with_picture(&CREDIT, JPEG_B64).into_boxed_str());
+        let got = fetch_from(&dir, &serve(200, body), MAX_BYTES).unwrap();
+        assert!(!got.text.contains(JPEG_B64), "the picture is not handed to the page");
+        assert!(!got.text.contains("\"pictures\""));
+        assert!(got.text.contains("a-new-story"), "the pages themselves are kept");
+        assert!(!load_light(&dir).unwrap().contains(JPEG_B64));
+        assert!(load(&dir).unwrap().contains(JPEG_B64), "the file on the phone keeps its pictures");
+        assert_eq!(picture(&dir, "a-new-story").unwrap().0, JPEG_B64);
+        // the kept copy follows a changed file
+        let other: &'static str = Box::leak(with_picture(&CREDIT, JPEG_B64).replace("a-new-story", "a-second-story").into_boxed_str());
+        fetch_from(&dir, &serve(200, other), MAX_BYTES).unwrap();
+        assert!(picture(&dir, "a-new-story").is_none());
+        assert!(picture(&dir, "a-second-story").is_some());
+        assert_eq!(light("{\"pages\":[]}"), "{\"pages\":[]}");
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

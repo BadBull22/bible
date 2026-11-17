@@ -5,13 +5,17 @@
 Reads  src/browse/pictures/stories (31 paintings and engravings, with credits.json) and src/browse/pictures/kids
 (the children's pictures, original artwork), and writes into installer/packs:
 
-  story-pictures-v1.zip   the story pictures, shown at a smaller file size (the long side at most 1500 pixels, JPEG), otherwise unchanged,
+  story-pictures-v2.zip   the story pictures, shown at a smaller file size (the long side at most 1500 pixels, JPEG), otherwise unchanged,
                           with credits.json (who made each, where it is from, the licence)
-  kids-pictures-v1.zip    the children's pictures (SVG, in colour and as an outline to colour in)
+  kids-pictures-v2.zip    the children's pictures: the app's own drawings (SVG, in colour and as an outline to colour in) and the paintings of the
+                          later pages (JPEG, with a PNG outline to colour in), with credits.json for those
+
+Each zip also holds pack-version.txt (the pack's name), which the app reads to know the pictures on the phone are the current ones; v1 packs, which
+have none, are offered again.
 
 and prints each file's size and SHA-256, which go into mobile/src-tauri/src/picture_packs.rs. The zips are made the same way every time
 (fixed file order and times), so the same pictures give the same checksum. They are uploaded to the app's GitHub releases
-(story-pictures-v1, kids-pictures-v1) only when the owner says so.
+(story-pictures-v2, kids-pictures-v2) only when the owner says so.
 """
 import hashlib
 import io
@@ -56,7 +60,7 @@ def sha(path: Path) -> str:
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     credits = json.loads((STORIES / "credits.json").read_text(encoding="utf-8"))
-    stories = OUT / "story-pictures-v1.zip"
+    stories = OUT / "story-pictures-v2.zip"
     kept = {}
     with zipfile.ZipFile(stories, "w") as z:
         for f in sorted(STORIES.glob("*.jpg")):
@@ -66,12 +70,24 @@ def main() -> None:
             add(z, f.name, shrink(f))
             kept[f.stem] = credits[f.stem]
         add(z, "credits.json", json.dumps(kept, ensure_ascii=False, indent=1).encode("utf-8"))
-    kids = OUT / "kids-pictures-v1.zip"
+        add(z, "pack-version.txt", b"story-pictures-v2\n")
+    kids = OUT / "kids-pictures-v2.zip"
     with zipfile.ZipFile(kids, "w") as z:
         for f in sorted(KIDS.glob("*.svg")):
             add(z, f.name, f.read_bytes())
+        kid_credits = json.loads((KIDS / "credits.json").read_text(encoding="utf-8")) if (KIDS / "credits.json").exists() else {}
+        painted = 0
+        for f in sorted(KIDS.glob("*.jpg")):
+            if f.stem not in kid_credits or not (KIDS / f"{f.stem}-line.png").exists():
+                print("no credit or outline for", f.name, "- left out")
+                continue
+            add(z, f.name, f.read_bytes())
+            add(z, f"{f.stem}-line.png", (KIDS / f"{f.stem}-line.png").read_bytes())
+            painted += 1
+        add(z, "credits.json", json.dumps(kid_credits, ensure_ascii=False, indent=1).encode("utf-8"))
         add(z, "ready.txt", b"children's pictures\n")
-    for p, n in ((stories, len(kept)), (kids, len(list(KIDS.glob("*.svg"))))):
+        add(z, "pack-version.txt", b"kids-pictures-v2\n")
+    for p, n in ((stories, len(kept)), (kids, len(list(KIDS.glob("*.svg"))) // 2 + painted)):
         print(f"{p.name}: {n} pictures, {p.stat().st_size / 1048576:.2f} MB, sha256 {sha(p)}")
 
 

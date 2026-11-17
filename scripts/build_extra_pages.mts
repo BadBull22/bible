@@ -134,7 +134,7 @@ function readPictures(folder: string, ids: Set<string>, what: string, withOutlin
     }
   }
   for (const id of Object.keys(credits)) if (!found[id]) problems.push(`${folder}/credits.json: has an entry for "${id}" without a ${id}.jpg`);
-  if (Object.keys(found).length > 40) problems.push(`more than 40 pictures in ${folder} (the phone takes at most 40)`);
+  if (Object.keys(found).length > 150) problems.push(`more than 150 pictures in ${folder} (the phone takes at most 150)`);
   return found;
 }
 const pictures = readPictures("pictures", theirs.stories, "stories", false);
@@ -148,7 +148,7 @@ for (const s of checked.skipped) problems.push(`the phone would leave out ${s.wh
 const total = file.stories.length + file.topics.length + file.children.length;
 if (total === 0) problems.push("there are no pages in the folder");
 if (total > 1000) problems.push(`${total} pages (the phone takes at most 1000)`);
-if (Buffer.byteLength(text) > 6 << 20) problems.push(`the file is ${(Buffer.byteLength(text) / 1048576).toFixed(1)} MB (the phone takes at most 6 MB)`);
+if (Buffer.byteLength(text) > 24 << 20) problems.push(`the file is ${(Buffer.byteLength(text) / 1048576).toFixed(1)} MB (the phone takes at most 24 MB)`);
 
 if (problems.length) {
   for (const p of problems) console.error("  PROBLEM: " + p);

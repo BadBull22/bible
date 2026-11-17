@@ -3,6 +3,8 @@
 // where the reader is in the Bible, what the page happens to remember, or anything a file could use to change how the app works. Pure, so Node tests it
 // (scripts/test_backup_settings.mts); the page reads and writes the browser's storage around it.
 
+import { cleanReadIds, READ_KEY } from "../../src/browse/readMarks.ts";
+
 export const STATE_KEY = "pocket:state";
 export const THEME_KEY = "theme:state";
 
@@ -10,12 +12,15 @@ export const THEME_KEY = "theme:state";
 export interface RawSettings {
   state: string | null;
   theme: string | null;
+  /** the stories and children's pages read (a list of ids) */
+  read?: string | null;
 }
 
 /** what goes into the file */
 export interface BackupSettings {
   state?: Record<string, unknown>;
   theme?: Record<string, unknown>;
+  read?: string[];
 }
 
 type Any = Record<string, unknown>;
@@ -29,6 +34,17 @@ const parse = (t: string | null): Any | null => {
     return null;
   }
 };
+
+const parseList = (t: string | null): unknown => {
+  if (!t) return null;
+  try {
+    return JSON.parse(t);
+  } catch {
+    return null;
+  }
+};
+
+export { READ_KEY };
 
 const THEMES = ["system", "light", "dark", "sepia"];
 const TEXT_COLORS = ["default", "strong", "sepia", "blue"];
@@ -79,17 +95,20 @@ export function collectSettings(raw: RawSettings): BackupSettings | null {
   const out: BackupSettings = {};
   if (Object.keys(state).length) out.state = state;
   if (Object.keys(theme).length) out.theme = theme;
+  const read = cleanReadIds(parseList(raw.read ?? null));
+  if (read.length) out.read = read;
   return Object.keys(out).length ? out : null;
 }
 
 /** The storage after a restore: the file's preferences checked and laid over what is there (the place in the Bible and everything else stay as they are). */
-export function mergeSettings(raw: RawSettings, file: unknown): { state: string | null; theme: string | null; applied: string[] } {
+export function mergeSettings(raw: RawSettings, file: unknown): { state: string | null; theme: string | null; read: string | null; applied: string[] } {
   const applied: string[] = [];
   const f = isObj(file) ? file : {};
   const theirState = checkState(f.state);
   const theirTheme = checkTheme(f.theme);
   let state = raw.state;
   let theme = raw.theme;
+  let read = raw.read ?? null;
   if (Object.keys(theirState).length) {
     state = JSON.stringify({ ...(parse(raw.state) ?? {}), ...theirState });
     applied.push("settings");
@@ -98,5 +117,15 @@ export function mergeSettings(raw: RawSettings, file: unknown): { state: string 
     theme = JSON.stringify({ ...(parse(raw.theme) ?? {}), ...theirTheme });
     if (!applied.includes("settings")) applied.push("settings");
   }
-  return { state, theme, applied };
+  // the pages read: what the file lists is added to what is here
+  const theirRead = cleanReadIds(f.read);
+  if (theirRead.length) {
+    const mine = cleanReadIds(parseList(raw.read ?? null));
+    const all = cleanReadIds([...mine, ...theirRead]);
+    if (all.length > mine.length) {
+      read = JSON.stringify(all);
+      applied.push("read stories");
+    }
+  }
+  return { state, theme, read, applied };
 }

@@ -33,7 +33,17 @@
   textarea { min-height:90px; resize:vertical; }
   .count { font-weight:400; font-size:14px; margin-left:8px; }
   .count.ok { color:var(--ok); } .count.bad { color:var(--bad); }
-  .grid { display:grid; grid-template-columns: 280px 1fr; gap:18px; } @media (max-width: 860px) { .grid { grid-template-columns:1fr; } }
+  .grid { display:grid; grid-template-columns: 300px 1fr; gap:18px; } @media (max-width: 860px) { .grid { grid-template-columns:1fr; } }
+  /* the list of drafts and the draft itself scroll separately, so the list stays where it is while a story is read and approved */
+  @media (min-width: 861px) {
+    .grid.drafts { height: calc(100vh - 118px); align-items: stretch; }
+    .grid.drafts > .list, .grid.drafts > #ed { height: 100%; overflow-y: auto; overscroll-behavior: contain; margin-bottom: 0; }
+    .grid.drafts > .list { padding-right: 10px; }
+  }
+  .li { display:flex; gap:8px; align-items:flex-start; margin-bottom:6px; }
+  .li input[type=checkbox] { margin-top:12px; width:18px; height:18px; flex:none; }
+  .li button { margin-bottom:0 !important; flex:1; }
+  .li .kidnote { font-size:12px; color:var(--muted); }
   .list button { display:block; width:100%; text-align:left; font:inherit; padding:9px 12px; border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; margin-bottom:6px; cursor:pointer; }
   .list button.on { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; }
   pre { white-space:pre-wrap; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px; font-size:14px; }
@@ -64,7 +74,7 @@
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const words = (s) => (String(s || "").trim().match(/\S+/g) || []).length;
-let S = null, tab = "board", current = null, draft = null, existing = [], checkResult = null, filter = "todo", openGroups = {};
+let S = null, tab = "board", current = null, draft = null, kidDraft = null, kidId = null, kidResult = null, existing = [], checkResult = null, filter = "todo", openGroups = {}, listMode = "kids";
 
 async function api(path, body) {
   const r = await fetch(path, body === undefined ? undefined : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -99,12 +109,37 @@ function renderBoard() {
 }
 
 // ---------------------------------------------------------------- drafts
+let lastShown = null;
 function renderDrafts() {
-  $("#main").innerHTML = `<div class="grid"><div class="list card" id="dl"><h2>Drafts</h2>${S.drafts.map((d) => `<button data-id="${d.id}" class="${current === d.id ? "on" : ""}">${esc(d.title)}<br><span class="chips"><span class="st-${d.status}">${STATUS[d.status] || d.status}</span></span></button>`).join("") || `<p class="muted">No drafts yet. Stories marked "I want this" are written for you; they appear here.</p>`}</div><div id="ed"></div></div>`;
-  document.querySelectorAll("#dl button").forEach((b) => b.onclick = () => openDraft(b.dataset.id));
-  if (current && draft) renderEditor();
+  const keepList = $("#dl") ? $("#dl").scrollTop : 0;
+  const keepEd = $("#ed") && lastShown === current ? $("#ed").scrollTop : 0;
+  const kw = new Set(S.kidsWanted || []);
+  const kidOf = (d) => S.children.find((c) => c.story === d.id || c.id === d.child);
+  const item = (d, kind) => {
+    const k = kind === "story" ? kidOf(d) : null;
+    const box = kind === "story" ? (k ? `<input type="checkbox" checked disabled title="This story has a children's page">` : `<input type="checkbox" data-kw="${d.id}" ${kw.has(d.id) ? "checked" : ""} title="Tick: this story needs a children's page">`) : "";
+    const note = kind === "story" ? (k ? `<span class="kidnote">children's page: ${STATUS[k.status] || k.status}</span>` : kw.has(d.id) ? `<span class="kidnote">children's page: to be written</span>` : "") : "";
+    return `<div class="li">${box}<button data-id="${d.id}" data-kind="${kind}" class="${current === d.id ? "on" : ""}">${esc(d.title)}<br><span class="chips"><span class="st-${d.status}">${STATUS[d.status] || d.status}</span></span> ${note}</button></div>`;
+  };
+  const nWanted = S.drafts.filter((d) => kw.has(d.id) && !kidOf(d)).length;
+  const kidsOnly = listMode === "kids";
+  const modeBar = `<div class="actions" style="margin:0 0 8px"><button type="button" class="b ${kidsOnly ? "primary" : ""}" id="mkids">Children's pages only</button> <button type="button" class="b ${kidsOnly ? "" : "primary"}" id="mall">Stories and children's pages</button></div>`;
+  $("#main").innerHTML = `<div class="grid drafts"><div class="list card" id="dl">${modeBar}${kidsOnly ? "" : `<h2>Stories</h2><p class="muted sub" style="margin-top:-4px">Tick the small box on a story that needs a children's page: ${nWanted} ticked. Tell the helper to write them, and each story is then read together with its children's page.</p>${S.drafts.map((d) => item(d, "story")).join("") || `<p class="muted">No drafts yet. Stories marked "I want this" are written for you and appear here.</p>`}`}${S.children.length ? `<h2 style="margin-top:14px">Children's pages</h2>${S.children.map((d) => item(d, "child")).join("")}` : ""}</div><div id="ed"></div></div>`;
+  $("#mkids").onclick = () => { listMode = "kids"; renderDrafts(); }; $("#mall").onclick = () => { listMode = "all"; renderDrafts(); };
+  document.querySelectorAll("#dl button[data-kind]").forEach((b) => b.onclick = () => (b.dataset.kind === "child" ? openChild(b.dataset.id) : openDraft(b.dataset.id)));
+  document.querySelectorAll("#dl input[data-kw]").forEach((c) => c.onchange = async () => {
+    const ids = new Set(S.kidsWanted || []);
+    if (c.checked) ids.add(c.dataset.kw); else ids.delete(c.dataset.kw);
+    S.kidsWanted = [...ids];
+    await api("/api/kidswanted", { ids: S.kidsWanted });
+    const y = $("#dl").scrollTop; renderDrafts(); $("#dl").scrollTop = y;
+  });
+  if (current && kidDraft && kidId === current) renderChild(); else if (current && draft) renderEditor();
+  $("#dl").scrollTop = keepList;
+  if ($("#ed")) $("#ed").scrollTop = keepEd;
+  lastShown = current;
 }
-async function openDraft(id) { const d = await api(`/api/draft?id=${id}`); current = id; draft = d; existing = d.existingIds; checkResult = null; renderDrafts(); }
+async function openDraft(id) { const d = await api(`/api/draft?id=${id}`); d.kid = d.page && d.page.child_page ? await api(`/api/cdraft?id=${d.page.child_page}`) : null; if (d.kid && !d.kid.page) d.kid = null; current = id; draft = d; kidDraft = null; kidId = null; existing = d.existingIds; checkResult = null; lastShown = null; renderDrafts(); }
 
 function counter(label, n, lo, hi) { const ok = n >= lo && n <= hi; return `<span class="count ${ok ? "ok" : "bad"}">${n} words (${lo} to ${hi})</span>`; }
 
@@ -132,11 +167,17 @@ function renderEditor() {
       <button class="b primary" id="check">Check the words</button>
       <button class="b good" id="approve" ${st === "approved" ? "disabled" : ""}>I have read every word: Approve</button>
       <button class="b" id="unapprove" ${st !== "approved" ? "disabled" : ""}>Take back my approval</button>
+      ${draft.kid ? `<button class="b good" id="approveboth" ${st === "approved" && draft.kid.page.review?.status === "approved" ? "disabled" : ""}>Approve the story AND its children's page</button>` : ""}
+      <button class="b good" id="approvenext" ${st === "approved" ? "disabled" : ""}>Approve and open the next draft</button>
+      <button class="b" id="kids">${p.child_page ? "Open its children's page" : "Start a children's page for this story"}</button>
     </div>
     <div id="result"></div>
   </div>
   <div class="card preview"><h2>How it reads</h2><div id="pv">Loading…</div></div>`;
   ["summary", "look"].forEach((k) => $("#f_" + k).oninput = () => { const t = $("#f_" + k).value; $("#c_" + (k === "summary" ? "sum" : "look")).innerHTML = k === "summary" ? counter("", words(t), 40, 170) : counter("", words(t), 0, 60); });
+  $("#kids").onclick = async () => { await save(); const r = p.child_page ? { id: p.child_page } : await api("/api/cnew", { story: current }); if (r.id) { await load(); await openChild(r.id); } else alert(r.error || "Could not start it."); };
+  const ab = $("#approveboth"); if (ab) ab.onclick = approveBoth;
+  const an = $("#approvenext"); if (an) an.onclick = approveNext;
   $("#save").onclick = save; $("#check").onclick = doCheck; $("#approve").onclick = () => approve(true); $("#unapprove").onclick = () => approve(false);
   if (checkResult) showResult();
   preview(); pictureBox();
@@ -164,7 +205,7 @@ function collect() {
 async function save() {
   const d = collect();
   const r = await api("/api/draft", { id: current, draft: d });
-  draft = { ...d, page: { ...d.page, review: { ...(d.page.review || {}), status: r.status } }, existingIds: existing };
+  draft = { ...d, page: { ...d.page, review: { ...(d.page.review || {}), status: r.status } }, existingIds: existing, kid: draft.kid };
   checkResult = null; await load(); renderDrafts();
 }
 async function doCheck() {
@@ -180,6 +221,22 @@ async function approve(on) {
   if (on && !confirm("Approving means you have read every word of this story and it may go to the phone.\n\nApprove it?")) return;
   await save(); await api("/api/approve", { id: current, approve: on }); await load(); await openDraft(current);
 }
+async function approveBoth() {
+  if (!checkResult?.ok && !confirm("The checks have not passed (or have not been run) in this window. Approve anyway?")) return;
+  if (!confirm("Approving means you have read every word of the story AND its children's page and both may go to the phone.\n\nApprove both?")) return;
+  await save(); await api("/api/approve", { id: current, approve: true }); await api("/api/capprove", { id: draft.page.child_page, approve: true });
+  await load(); await openDraft(current);
+}
+async function approveNext() {
+  if (!checkResult?.ok && !confirm("The checks have not passed (or have not been run) in this window. Approve anyway?")) return;
+  if (!confirm("Approving means you have read every word of this story and it may go to the phone.\n\nApprove it and open the next draft?")) return;
+  const here = current;
+  await save(); await api("/api/approve", { id: here, approve: true }); await load();
+  const i = S.drafts.findIndex((d) => d.id === here);
+  const next = S.drafts.slice(i + 1).concat(S.drafts.slice(0, i)).find((d) => d.status !== "approved");
+  await openDraft(next ? next.id : here);
+  const btn = document.querySelector(`#dl button[data-id="${(next || { id: here }).id}"]`); if (btn) btn.scrollIntoView({ block: "nearest" });
+}
 async function preview() {
   const p = collect().page; const out = [];
   out.push(`<div class="sum">${esc(p.summary)}</div>`);
@@ -190,6 +247,12 @@ async function preview() {
     out.push(`<h3>${esc(ps.ref)}: ${esc(ps.label)}</h3>${v.length ? v.map((x) => `<div class="verse"><sup>${x.verse}</sup>${esc(x.text)}</div>`).join("") : `<p class="problem">This reference is not in the Bible (check the spelling: the app says Psalms, never Psalm).</p>`}`);
   }
   if (p.lessons?.length) out.push(`<h3>What this teaches us</h3><ul>${p.lessons.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`);
+  if (draft.kid && draft.kid.page && draft.kid.page.retelling) {
+    const k = draft.kid.page;
+    out.push(`<hr><h2>Its children's page (ages ${esc(k.age)}): ${esc(k.title)} <span class="chips"><span class="st-${k.review?.status || "draft"}">${STATUS[k.review?.status || "draft"]}</span></span></h2>`);
+    out.push((k.retelling || []).map((x) => `<p class="sum">${esc(x)}</p>`).join(""));
+    out.push(`<h3>The big idea</h3><p>${esc(k.message)}</p><h3>Memory verse: ${esc(k.memory?.ref)}</h3><h3>Talk about it</h3><ol>${(k.questions || []).map((q) => `<li>${esc(q.q)}<br><span class="muted">${esc(q.a)}</span></li>`).join("")}</ol>${k.try_this ? `<h3>Try this</h3><p>${esc(k.try_this)}</p>` : ""}`);
+  }
   const el = $("#pv"); if (el) el.innerHTML = out.join("");
 }
 
@@ -216,13 +279,139 @@ async function pictureBox() {
   const n = $("#nopic"); if (n) n.onclick = () => { draft.picture = null; pictureBox(); };
 }
 
+
+// ---------------------------------------------------------------- children's pages
+async function openChild(id) { const d = await api(`/api/cdraft?id=${id}`); current = id; kidId = id; kidDraft = d; draft = null; kidResult = null; lastShown = null; renderDrafts(); }
+const sentences = (s) => String(s || "").split(/(?<=[.!?])["'”’)]*\s+/).map((x) => x.trim()).filter(Boolean);
+const avgLen = (s) => { const n = sentences(s); return n.length ? words(s) / n.length : 0; };
+const AGE_AVG = { "3-5": 12, "6-8": 12, "9-12": 16 }, AGE_WORDS = { "3-5": 6, "6-8": 8, "9-12": 10 };
+const kv = (id) => $("#" + id).value;
+
+function renderChild() {
+  const p = kidDraft.page, st = p.review?.status ?? "draft", q = p.questions || [{}, {}, {}];
+  $("#ed").innerHTML = `<div class="card">
+    <h2>${esc(p.title)} <span class="chips"><span class="st-${st}">${STATUS[st]}</span></span></h2>
+    <p class="muted sub">A children's page for the story <b>${esc(p.story)}</b>. Write for the child: short sentences, concrete, warm; Jesus is "he"; nothing frightening.</p>
+    ${(p.retelling || []).join("").trim() ? "" : `<p class="problem"><b>This page starts empty.</b> The words are written in the chat: say "write the children's page for ${esc(p.title)}, ages ${esc(p.age)}" and it fills in here (press the story's name in the list again to see it). Or write it yourself in the boxes below.</p>`}
+    <label>Title</label><input type="text" id="k_title" value="${esc(p.title)}">
+    <label>Age</label><select id="k_age">${["3-5", "6-8", "9-12"].map((a) => `<option ${a === p.age ? "selected" : ""}>${a}</option>`).join("")}</select>
+    <label>Read the real story together (one chapter, for example <code>Luke 2:41-52</code>)</label><input type="text" id="k_read" value="${esc(p.read_from)}">
+    <label>The story in your own words (one short paragraph per line) <span id="k_c1"></span></label><textarea id="k_retelling" style="min-height:260px">${esc((p.retelling || []).join("\n"))}</textarea>
+    <label>The big idea (1 to 3 short sentences) <span id="k_c2"></span></label><textarea id="k_message" style="min-height:70px">${esc(p.message)}</textarea>
+    <label>Memory verse: one verse, for example <code>Psalms 147:3</code></label><input type="text" id="k_mem" value="${esc(p.memory?.ref)}">
+    <label>Up to 4 words from that verse the app may blank (comma separated)</label><input type="text" id="k_blanks" value="${esc((p.memory?.blanks_hint || []).join(", "))}">
+    ${[0, 1, 2].map((i) => `<label>Question ${i + 1}${i === 2 ? " (open: starts the answer with 'There is no wrong answer.' and points to Jesus or prayer)" : ""}</label><input type="text" id="k_q${i}" value="${esc(q[i]?.q)}"><label>Note for the helper: answer ${i + 1}</label><textarea id="k_a${i}" style="min-height:60px">${esc(q[i]?.a)}</textarea>`).join("")}
+    <label>Try this (optional, up to 30 words) <span id="k_c3"></span></label><textarea id="k_try" style="min-height:60px">${esc(p.try_this)}</textarea>
+    <label>Word-search words (capital letters, each must appear in the story; <span id="k_wmax"></span>) </label><input type="text" id="k_words" value="${esc((p.words || []).join(", "))}">
+    <label>Do Christians differ about anything on this page?</label><select id="k_doc"><option value="plain" ${p.doctrine !== "needs_review" ? "selected" : ""}>No</option><option value="needs_review" ${p.doctrine === "needs_review" ? "selected" : ""}>Yes (write a short neutral note)</option></select>
+    <textarea id="k_docnote" style="min-height:60px;${p.doctrine === "needs_review" ? "" : "display:none"}" placeholder="Christians differ about... This page says only what the text says.">${esc(p.doctrine_note || "")}</textarea>
+    <label>Picture and outline to colour in</label><div id="kpic"></div>
+    <div class="actions">
+      <button class="b" id="ksave">Save</button>
+      <button class="b primary" id="kcheck">Check the words</button>
+      <button class="b good" id="kapprove" ${st === "approved" ? "disabled" : ""}>I have read every word: Approve</button>
+      <button class="b" id="kunapprove" ${st !== "approved" ? "disabled" : ""}>Take back my approval</button>
+    </div>
+    <div id="kresult"></div>
+  </div>
+  <div class="card preview"><h2>How it reads</h2><div id="kpv"></div></div>`;
+  const counts = () => {
+    const r = kv("k_retelling"), age = kv("k_age"), n = words(r), av = avgLen(r);
+    $("#k_c1").innerHTML = `<span class="count ${n >= 60 && n <= 220 ? "ok" : "bad"}">${n} words (60 to 220)</span> <span class="count ${av <= AGE_AVG[age] ? "ok" : "bad"}">average sentence ${av.toFixed(1)} (at most ${AGE_AVG[age]})</span>`;
+    const m = words(kv("k_message")); $("#k_c2").innerHTML = `<span class="count ${m >= 6 && m <= 35 ? "ok" : "bad"}">${m} words (6 to 35)</span>`;
+    const tr = words(kv("k_try")); $("#k_c3").innerHTML = `<span class="count ${tr <= 30 ? "ok" : "bad"}">${tr}/30</span>`;
+    $("#k_wmax").textContent = `3 to ${AGE_WORDS[age]} words`;
+  };
+  ["k_retelling", "k_message", "k_try", "k_age"].forEach((id) => $("#" + id).oninput = counts); counts();
+  $("#k_doc").onchange = () => { $("#k_docnote").style.display = $("#k_doc").value === "needs_review" ? "" : "none"; };
+  $("#ksave").onclick = ksave; $("#kcheck").onclick = kcheck; $("#kapprove").onclick = () => kapprove(true); $("#kunapprove").onclick = () => kapprove(false);
+  if (kidResult) kshow();
+  kpreview(); kpicture();
+}
+const klines = (id) => $("#" + id).value.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+const kcsv = (id) => $("#" + id).value.split(",").map((s) => s.trim()).filter(Boolean);
+function kcollect() {
+  const p = structuredClone(kidDraft.page);
+  p.title = kv("k_title").trim(); p.age = kv("k_age"); p.read_from = kv("k_read").trim();
+  p.retelling = klines("k_retelling"); p.message = kv("k_message").trim();
+  p.memory = { ref: kv("k_mem").trim(), blanks_hint: kcsv("k_blanks") };
+  p.questions = [0, 1, 2].map((i) => ({ q: kv("k_q" + i).trim(), a: kv("k_a" + i).trim() }));
+  const tr = kv("k_try").trim(); if (tr) p.try_this = tr; else delete p.try_this;
+  p.words = kcsv("k_words").map((w) => w.toUpperCase());
+  p.doctrine = kv("k_doc"); if (p.doctrine === "needs_review") p.doctrine_note = kv("k_docnote").trim(); else delete p.doctrine_note;
+  return { page: p, picture: kidDraft.picture ?? null };
+}
+async function ksave() {
+  const d = kcollect(); const r = await api("/api/cdraft", { id: kidId, draft: d });
+  kidDraft = { ...kidDraft, ...d, page: { ...d.page, review: { ...(d.page.review || {}), status: r.status } } }; kidResult = null; await load(); renderDrafts();
+}
+async function kcheck() {
+  await ksave();
+  $("#kresult").innerHTML = `<p class="muted">Checking against the app's rules. This takes up to a minute…</p>`;
+  kidResult = await api("/api/check", { id: kidId, kind: "child" }); kshow();
+}
+function kshow() { $("#kresult").innerHTML = kidResult.ok ? `<p class="passes">All the app's checks passed.</p>` : `<p class="problem"><b>Not yet:</b></p>${(kidResult.lines.length ? kidResult.lines : [kidResult.raw]).map((l) => `<div class="problem">${esc(l)}</div>`).join("")}`; }
+async function kapprove(on) {
+  if (on && !kidResult?.ok && !confirm("The checks have not passed (or have not been run) in this window. Approve anyway?")) return;
+  if (on && !confirm("Approving means you have read every word of this children's page and it may go to the phone.\n\nApprove it?")) return;
+  await ksave(); await api("/api/capprove", { id: kidId, approve: on }); await load(); await openChild(kidId);
+}
+async function kpreview() {
+  const p = kcollect().page; const out = [];
+  out.push(`<p class="muted">Ages ${esc(p.age)}</p>`);
+  out.push(p.retelling.map((x) => `<p class="sum">${esc(x)}</p>`).join(""));
+  out.push(`<h3>The big idea</h3><p>${esc(p.message)}</p>`);
+  const v = await api(`/api/verses?ref=${encodeURIComponent(p.read_from)}`);
+  out.push(`<h3>Read the real story together: ${esc(p.read_from)}</h3>${v.length ? `<p class="muted">${v.length} verses from the Bible are shown here.</p>` : `<p class="problem">This reference is not in the Bible (one chapter, for example Luke 2:41-52).</p>`}`);
+  const mv = await api(`/api/verses?ref=${encodeURIComponent(p.memory.ref)}`);
+  out.push(`<h3>Memory verse: ${esc(p.memory.ref)}</h3>${mv.length === 1 ? `<div class="verse">${esc(mv[0].text)}</div>` : `<p class="problem">The memory verse must be ONE verse that exists in the Bible.</p>`}`);
+  out.push(`<h3>Talk about it</h3><ol>${p.questions.map((q) => `<li>${esc(q.q)}<br><span class="muted">${esc(q.a)}</span></li>`).join("")}</ol>`);
+  if (p.try_this) out.push(`<h3>Try this</h3><p>${esc(p.try_this)}</p>`);
+  const el = $("#kpv"); if (el) el.innerHTML = out.join("");
+}
+async function kpicture() {
+  const box = $("#kpic"); if (!box) return;
+  const sp = kidDraft.storyPage || { passages: [], parallels: [] };
+  const cur = kidDraft.picture?.id; let list = [];
+  for (const [b, c] of chaptersOf(sp)) list = list.concat(await api(`/api/pictures?book=${encodeURIComponent(b)}&chapter=${c}`));
+  const uniq = [...new Map(list.map((x) => [x.id, x])).values()];
+  // the children's illustrations first, then the adult story's pictures (Tissot, Dore), then more from the same book, so there are always some to choose from
+  let sweet = uniq.filter((x) => x.collection === "sweet");
+  let adult = uniq.filter((x) => x.collection !== "sweet");
+  let more = [];
+  if (sweet.length + adult.length < 6) {
+    const seen = new Set(uniq.map((x) => x.id)), books = [...new Set(chaptersOf(sp).map((c) => c[0]))];
+    for (const b of books) more = more.concat(await api(`/api/pictures?book=${encodeURIComponent(b)}&chapter=0`));
+    more = [...new Map(more.filter((x) => !seen.has(x.id)).map((x) => [x.id, x])).values()].slice(0, 24);
+  }
+  // the picture chosen for the adult page goes first
+  const adultPick = kidDraft.adultPicture && kidDraft.adultPicture.id;
+  if (adultPick) adult = [...adult.filter((x) => x.id === adultPick), ...adult.filter((x) => x.id !== adultPick)];
+  const tile = (x) => `<button type="button" class="pt ${x.id === cur ? "on" : ""}" data-pid="${esc(x.id)}" title="${esc(x.title)}"><img src="${x.downloaded ? `/api/picfile?id=${encodeURIComponent(x.id)}` : esc(x.thumb || "")}" loading="lazy" alt=""><span>${esc(x.title.slice(0, 40))}${x.downloaded ? "" : " (online)"}</span></button>`;
+  const group = (title, arr) => arr.length ? `<div class="muted sub" style="margin-top:8px"><b>${title}</b></div><div class="ptiles">${arr.map(tile).join("")}</div>` : "";
+  const ol = cur ? `<div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0"><div><div class="muted sub">Colour picture</div><img src="/api/picfile?id=${encodeURIComponent(cur)}" style="max-width:260px;border-radius:8px"></div><div><div class="muted sub">Outline to colour in (look at it: faces can be rough)</div><img src="/api/outlinefile?id=${encodeURIComponent(cur)}&t=${Date.now()}" onerror="this.replaceWith(document.createTextNode('No outline yet.'))" style="max-width:260px;border-radius:8px;border:1px solid var(--line);background:#fff"></div></div>` : "";
+  box.innerHTML = `${ol}<p class="muted sub">${cur ? `Chosen: ${esc(cur)}.` : "No picture chosen yet."} These are the illustrations for the story's chapters, then the paintings the adult story uses, then more from the same book. Click one to choose it: if it is not on this computer yet it is fetched once (a few seconds), and the outline is made. Then press Save.</p>
+    ${group("Children's illustrations for this story", sweet)}${group("The same paintings as the adult story (Tissot, Dore)", adult)}${group("More from the same book", more)}${sweet.length + adult.length + more.length ? "" : `<span class="muted">No pictures are listed for this book.</span>`}
+    <div class="actions"><button type="button" class="b" id="knopic" ${cur ? "" : "disabled"}>No picture</button></div><div id="kpmsg" class="muted sub"></div>`;
+  box.querySelectorAll(".pt").forEach((b) => b.onclick = async () => {
+    $("#kpmsg").textContent = "Fetching the picture and making the outline…";
+    const r = await api("/api/fetchpic", { id: b.dataset.pid, outline: true });
+    if (!r.ok) { $("#kpmsg").innerHTML = `<span class="problem">${esc(r.error)}</span>`; return; }
+    kidDraft.picture = { id: b.dataset.pid };
+    await kpicture();
+    if (r.outline && !r.outline.ok) $("#kpmsg").innerHTML = `<span class="problem">The outline could not be made: ${esc(r.outline.text)}</span>`;
+  });
+  const n = $("#knopic"); if (n) n.onclick = () => { kidDraft.picture = null; kpicture(); };
+}
+
 // ---------------------------------------------------------------- make the file
 function renderMake() {
-  const appr = S.drafts.filter((d) => d.status === "approved");
+  const appr = S.drafts.filter((d) => d.status === "approved"), apprKids = S.children.filter((d) => d.status === "approved");
   $("#main").innerHTML = `<div class="card"><h2>Make the file the phone fetches</h2>
-    <p>The file holds every story added so far (${S.counts.published}) plus the stories you have approved here (${appr.length}). The phone replaces its additional stories with exactly what the file holds.</p>
-    ${appr.length ? `<ul>${appr.map((d) => `<li>${esc(d.title)}</li>`).join("")}</ul>` : `<p class="muted">Nothing approved yet.</p>`}
-    <div class="actions"><button class="b primary" id="mk" ${appr.length ? "" : "disabled"}>Make the file</button></div>
+    <p>The file holds every story added so far (${S.counts.published}) plus the stories you have approved here (${appr.length}) and the children's pages (${apprKids.length}). The phone replaces its additional stories with exactly what the file holds.</p>
+    ${appr.length || apprKids.length ? `<ul>${appr.map((d) => `<li>${esc(d.title)}</li>`).join("")}${apprKids.map((d) => `<li>${esc(d.title)} (children)</li>`).join("")}</ul>` : `<p class="muted">Nothing approved yet.</p>`}
+    <div class="actions"><button class="b primary" id="mk" ${appr.length || apprKids.length ? "" : "disabled"}>Make the file</button></div>
+    ${S.capacity ? `<p class="${S.capacity.pictures > S.capacity.maxPictures || (S.capacity.kidPictures || 0) > S.capacity.maxPictures || S.capacity.bytes > S.capacity.maxBytes ? "problem" : "muted"}"><b>How full the phone's file would be:</b> ${S.capacity.pictures} story pictures and ${S.capacity.kidPictures || 0} children's pictures (the phone takes at most ${S.capacity.maxPictures} of each) and about ${(S.capacity.bytes / 1048576).toFixed(1)} MB (at most ${(S.capacity.maxBytes / 1048576).toFixed(0)} MB).${S.capacity.pictures > S.capacity.maxPictures || (S.capacity.kidPictures || 0) > S.capacity.maxPictures || S.capacity.bytes > S.capacity.maxBytes ? " <b>Too many for one file: approve fewer stories with pictures for now, or the next phone version must raise the limits.</b>" : ""}</p>` : ""}
     <p class="sub">This only makes the file on this computer. It does NOT put it on the internet: publishing is a separate step done only when you say so, and nothing is published without your word.</p>
     <div id="mkres"></div></div>`;
   const b = $("#mk"); if (b) b.onclick = async () => {

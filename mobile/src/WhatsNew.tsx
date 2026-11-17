@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 // already had the app (a fresh install has nothing "new" to be told about), and that can be read again from More > About. The notes are plain
 // sentences for people who are not developers.
 
-export const WHATS_NEW_VERSION = "3.0.0";
+export const WHATS_NEW_VERSION = "3.1.2";
 
 const SEEN_KEY = "pocket:whats-new-seen";
 const SAVED_KEY = "pocket:state"; // the app's saved settings: there from the second start of any install
@@ -30,6 +30,8 @@ if (read(SEEN_KEY) !== WHATS_NEW_VERSION) write(SEEN_KEY, WHATS_NEW_VERSION);
 
 /** The notes, the newest first: a short title and one or two plain sentences. */
 export const WHATS_NEW: { title: string; text: string }[] = [
+  { title: "36 more Bible stories, each with a children's page", text: "The app now comes with 67 Bible stories and 56 children's pages: Cain and Abel, the Ten Plagues, Samson, Esther, Elijah, the Fiery Furnace, the Last Supper, the Crucifixion and many more, each with a painting and, for the children's page, an outline to colour in. The Story pictures and Children's pictures downloads (More > Downloads) bring the pictures; download them again to get the new ones." },
+  { title: "Stories in order, and the ones you have read", text: "Bible stories are now in two sections, Old Testament and New Testament, closed until you open one, with the stories in the order of the Bible. A tick and a quieter colour show the stories and children's pages you have opened, and each section says how many you have read. Searching still shows every match in one list. The list of what you have read goes into your backup." },
   { title: "Daily Scroll", text: "Extras > Daily Scroll: twenty cards a day, one idea on each, on a photo: a verse, a Bible story, who wrote a book, a Bible fact. Swipe up for the next card. Quick share sends the card as a picture, Save keeps it in your pictures, and Edit opens the picture studio. A new set comes each day, and Show me more adds ten." },
   { title: "Picture studio", text: "More > Make a picture, and Edit on any card, make a picture of a verse or your own words: portrait or square, five fonts, your own photo or ours behind the words, your logo wherever you drag it, and a set of several pictures at once." },
   { title: "How are you today?", text: "Extras > How are you today? Tap what is closest (anxious, tired, thankful…) and read a verse for it, with the story behind it one tap away. Pray about it, or learn the verse by heart, from the same screen." },
@@ -67,14 +69,14 @@ export function WhatsNewBanner({ mode, showAll, close }: { mode: "banner" | "all
   return (
     <aside className={mode === "all" ? "whatsnew all" : "whatsnew"} role="status" aria-label="What's new">
       <div className="whatsnew-head">
-        <strong>What's new in version 3</strong>
+        <strong>What's new in this version</strong>
         <button className="remove" onClick={close} aria-label="Close">
           ×
         </button>
       </div>
       {mode === "banner" ? (
         <>
-          <p>Themes you can preview, Bible stories and maps you can share, more stories on request, better answers in Ask and a tidier More.</p>
+          <p>A Daily Scroll of verse cards, your own verse pictures, a prayer list and memory verses, Listen with the screen off, and 36 more Bible stories with children's pages.</p>
           <div className="actions">
             <button onClick={showAll}>See everything new</button>
             <button className="primary" onClick={close}>

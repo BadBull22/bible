@@ -27,7 +27,7 @@ import {
   Verse,
   Version,
 } from "./api";
-import { mergeSettings, STATE_KEY, THEME_KEY } from "./backupSettings";
+import { mergeSettings, READ_KEY, STATE_KEY, THEME_KEY } from "./backupSettings";
 import { backUpNow, lastBackupAt, makeBackup, readSettings, useAutoBackup } from "./autoBackup";
 import { backupFileName } from "./backupPlan";
 import { applyAppearance, Contrast, DEFAULT_APPEARANCE, Font, TextColor, Theme, watchSystemTheme } from "./appearance";
@@ -50,7 +50,7 @@ import { BackupRestore } from "./Backup";
 import { LinkRow } from "./Downloads";
 import { OtherLinks } from "./OtherLinks";
 import { ComputerPictures } from "./ComputerPictures";
-import { useWhatsNew, WhatsNewBanner, WHATS_NEW_VERSION } from "./WhatsNew";
+import { useWhatsNew, WhatsNewBanner } from "./WhatsNew";
 import { Library, VerseCommentaries } from "./Library";
 import { MakePicture, VersePicture } from "./VersePicture";
 import { DailyScroll, DailyScrollEntry, type ScrollOpen, type ScrollShare } from "./ScrollFeed";
@@ -1029,6 +1029,7 @@ export function App() {
       try {
         if (merged.state != null) localStorage.setItem(STATE_KEY, merged.state);
         if (merged.theme != null) localStorage.setItem(THEME_KEY, merged.theme);
+        if (merged.read != null) localStorage.setItem(READ_KEY, merged.read);
       } catch {
         /* a convenience only */
       }
@@ -1867,7 +1868,7 @@ export function App() {
                 About <small>Version {updates.current || "…"}</small>
               </summary>
             <button className="link whatsnew-link" onClick={whatsNew.showAll}>
-              What's new in version {WHATS_NEW_VERSION.split(".")[0]}
+              What's new in this version
             </button>
             <ul className="about">
               {versions.map((v) => (

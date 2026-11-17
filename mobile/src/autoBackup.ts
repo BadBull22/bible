@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from "react";
 import { api, phone, type Counts } from "./api";
-import { collectSettings, STATE_KEY, THEME_KEY } from "./backupSettings";
+import { collectSettings, READ_KEY, STATE_KEY, THEME_KEY } from "./backupSettings";
 import { backupFileName, hashOf, isEmpty, timeForCopy } from "./backupPlan";
 import { todayIso } from "./plans";
 
@@ -28,7 +28,7 @@ const set = (k: string, v: string) => {
 
 /** the stored preferences, as text */
 export function readSettings() {
-  return { state: get(STATE_KEY), theme: get(THEME_KEY) };
+  return { state: get(STATE_KEY), theme: get(THEME_KEY), read: get(READ_KEY) };
 }
 
 /** when the last copy was made (ms), 0 if never */

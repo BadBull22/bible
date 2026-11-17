@@ -9,6 +9,8 @@ interface Props {
   verseCount: number;
   onChangeVerse: (verse: number) => void;
   onWordStudy: (strongsNumbers: string[], surfaceText: string) => void;
+  /** open a word's meanings (the Concordance's Strong's number view), with the verse it is read in */
+  onOpenMeanings?: (strongs: string, at: { book: string; chapter: number; verse: number }) => void;
   onClose: () => void;
 }
 
@@ -38,7 +40,7 @@ function cleanGloss(g: string) {
   return g.replace(/[<>]/g, "").replace(/\/\s*/g, " ").trim();
 }
 
-export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVerse, onWordStudy, onClose }: Props) {
+export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVerse, onWordStudy, onOpenMeanings, onClose }: Props) {
   const [words, setWords] = useState<InterlinearWord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +132,11 @@ export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVer
                   <span className="muted">Meaning here:</span> {meanings[w.strongs]!.glosses[0] ?? meanings[w.strongs]!.definition.slice(0, 40)}
                   {meanings[w.strongs]!.groups[0] && <span className="muted"> · {meanings[w.strongs]!.groups[0].split(" > ").pop()}</span>}
                 </div>
+              )}
+              {w.strongs && onOpenMeanings && (
+                <button className="link-btn iw-senses" onClick={() => onOpenMeanings(w.strongs, { book, chapter, verse })} title="Every meaning of this word, drawn, with the one used in this verse chosen">
+                  All meanings
+                </button>
               )}
               {w.lemma && (
                 <div className="iw-lemma" title="Dictionary form">

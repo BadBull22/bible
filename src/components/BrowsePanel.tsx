@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { AGE_BANDS, ageLabel, flaggedFirst, searchEntries, tagCounts, withTag, BrowseEntry } from "../browse/browseLogic";
+import { AGE_BANDS, ageLabel, bookOf, flaggedFirst, searchEntries, tagCounts, testamentGroups, withTag, BrowseEntry } from "../browse/browseLogic";
+import { markAllUnread, useMarkRead, useReadMarks } from "../browse/readMarks";
 import { CHILDREN, ENTRIES, STORIES, TOPICS, childPage, story, topic } from "../browse/data";
 import { REVIEW_ON, reviewKey, reviewedCount, useReviewMarks } from "../browse/review";
 import type { BrowseKind } from "../browse/types";
@@ -58,6 +59,10 @@ export function BrowsePanel({ initial, versionCode, onJump, onOpenDictionary, on
   const extra = useExtraPages();
 
   const entries = ENTRIES[tab];
+  // a search or a chosen subject shows the matches in one flat list (the reader does not know which Testament a page is in)
+  const searching = query.trim() !== "" || tag !== null;
+  const { total: readTotal } = useReadMarks();
+  useMarkRead(open?.kind ?? tab, open && TITLE_OF[open.kind](open.id) ? open.id : null);
   const tags = useMemo(() => tagCounts(entries), [entries, extra]);
   const shown = useMemo(() => {
     let list = withTag(searchEntries(entries, query), tag);
@@ -168,20 +173,30 @@ export function BrowsePanel({ initial, versionCode, onJump, onOpenDictionary, on
             </div>
           )}
           {shown.length === 0 && <p className="muted">{info.empty}</p>}
-          {tab === "children"
-            ? AGE_BANDS.map((band) => {
-                const list = shown.filter((e) => childPage(e.id)?.age === band);
-                if (list.length === 0) return null;
-                return (
-                  <section key={band}>
-                    <h4 className="section-label">
-                      {ageLabel(band)} &middot; {list.length}
-                    </h4>
-                    <List list={list} onOpen={(e) => setOpen({ kind: e.kind, id: e.id })} />
-                  </section>
-                );
-              })
-            : <List list={shown} onOpen={(e) => setOpen({ kind: e.kind, id: e.id })} />}
+          {shown.length > 0 && (tab === "stories" || tab === "children") && !searching ? (
+            <Sections
+              id={tab}
+              groups={
+                tab === "children"
+                  ? AGE_BANDS.map((band) => ({ key: band, title: ageLabel(band), items: shown.filter((e) => childPage(e.id)?.age === band) })).filter((g) => g.items.length > 0)
+                  : testamentGroups(shown, (e) => {
+                      const s = story(e.id);
+                      return s ? { testament: s.testament, ref: s.passages[0]?.ref ?? "" } : undefined;
+                    }).map((g) => ({ key: g.testament, title: g.title, items: g.items }))
+              }
+              onOpen={(e) => setOpen({ kind: e.kind, id: e.id })}
+              book={tab === "stories"}
+            />
+          ) : (
+            <List list={shown} onOpen={(e) => setOpen({ kind: e.kind, id: e.id })} tag={tab === "stories" && searching} />
+          )}
+          {readTotal > 0 && (
+            <p className="muted">
+              <button className="link-btn" onClick={() => markAllUnread()}>
+                Mark all as unread
+              </button>
+            </p>
+          )}
           <FetchExtras />
         </>
       )}
@@ -212,17 +227,64 @@ function FetchExtras() {
   );
 }
 
-function List({ list, onOpen }: { list: BrowseEntry[]; onOpen: (e: BrowseEntry) => void }) {
+// which section of each list is open: kept while the app runs, so Back from a page finds the list as it was left (a new start has every section closed)
+const openSection: Record<string, string | null> = {};
+
+/** Sections that open one at a time, each with its count and how many of its pages have been read. */
+function Sections({ id, groups, onOpen, book }: { id: string; groups: { key: string; title: string; items: BrowseEntry[] }[]; onOpen: (e: BrowseEntry) => void; book?: boolean }) {
+  const [open, setOpenState] = useState<string | null>(openSection[id] ?? null);
+  const { read, total } = useReadMarks();
+  const choose = (key: string) => {
+    const next = open === key ? null : key;
+    openSection[id] = next;
+    setOpenState(next);
+  };
+  return (
+    <div className="browse-sections">
+      {groups.map((g) => {
+        const done = total > 0 ? g.items.filter((e) => read(e.kind, e.id)).length : 0;
+        const on = open === g.key;
+        return (
+          <section key={g.key} className={"browse-group" + (on ? " on" : "")}>
+            <button className="browse-group-head" aria-expanded={on} onClick={() => choose(g.key)}>
+              <span className="browse-group-title">{g.title}</span>
+              <span className="muted">{done > 0 ? `${done} of ${g.items.length} read` : g.items.length}</span>
+              <span aria-hidden>{on ? "⌃" : "⌄"}</span>
+            </button>
+            {on && <List list={g.items} onOpen={onOpen} book={book} />}
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function List({ list, onOpen, tag, book }: { list: BrowseEntry[]; onOpen: (e: BrowseEntry) => void; /** a small "Old" / "New" label on each card (a search or subject mixes both testaments) */ tag?: boolean; /** small book names over each run of stories (the lists in Bible order) */ book?: boolean }) {
   const marks = useReviewMarks();
+  const { read } = useReadMarks();
+  let last = "";
   return (
     <ul className="browse-list">
       {list.map((e) => {
         const m = REVIEW_ON ? marks[reviewKey(e.kind, e.id)] : undefined;
+        const isRead = read(e.kind, e.id);
+        const st = e.kind === "stories" ? story(e.id) : undefined;
+        const here = book && st ? bookOf(st.passages[0]?.ref ?? "") : "";
+        const label = here && here !== last ? here : "";
+        if (here) last = here;
         return (
           <li key={e.kind + e.id}>
-            <button className="browse-card" onClick={() => onOpen(e)}>
+            {label && <div className="browse-book">{label}</div>}
+            <button className={"browse-card" + (isRead ? " read" : "")} onClick={() => onOpen(e)}>
               <span className="browse-card-title">
                 {e.title}
+                {isRead && (
+                  <span className="browse-tick" aria-label="already read">
+                    {" "}
+                    ✓
+                  </span>
+                )}
+                {tag && st && <span className="muted"> · {st.testament === "OT" ? "Old Testament" : "New Testament"}</span>}
                 {REVIEW_ON && e.flagged && <span className="browse-card-flag" title="Needs special attention (doctrine or a viewpoint)">needs attention</span>}
                 {m?.verdict && <span className={"browse-card-mark " + m.verdict}>{m.verdict}</span>}
               </span>
