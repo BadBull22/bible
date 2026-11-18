@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download | Bible Concordance</title>
+<meta name="description" content="Download Bible Concordance free for Windows from the Microsoft Store, or for Android from Google Play or as a direct file.">
+<meta name="theme-color" content="#1c2440">
+<link rel="canonical" href="https://bible4me.org/download.html">
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="stylesheet" href="assets/new.css">
+</head>
+<body data-page="download">
+<main id="main">
+<div class="phead"><div class="wrap">
+  <div class="crumbs"><a href="index.html">Home</a> &rsaquo; Download</div>
+  <h1>Download</h1>
+  <p>Free, with no account and no adverts. Choose your device.</p>
+</div></div>
+
+<div class="wrap">
+  <div class="dl-grid">
+
+    <section class="dl" id="windows">
+      <span class="you">This looks like your device</span>
+      <h2><span class="ic-big" data-ic="win"></span>Windows</h2>
+      <p class="muted">The full study app for your computer.</p>
+      <div class="main-btns">
+        <a class="badge-img" href="https://apps.microsoft.com/detail/9NWNL186FS6W" rel="noopener"><img src="assets/ms-store-badge.svg" alt="Get it from the Microsoft Store" width="205" height="56"></a>
+      </div>
+      <ul class="facts"><li>Windows 10 or 11, 64-bit</li><li>about 700 MB</li><li>Free updates through the Store</li></ul>
+      <details>
+        <summary>How to install it</summary>
+        <div class="body"><ol><li>Press the Microsoft Store button. The Store opens on your computer.</li><li>Press <b>Get</b> (or <b>Install</b>).</li><li>When it finishes, open Bible Concordance from the Start menu.</li></ol></div>
+      </details>
+      <details>
+        <summary>What is in the free extras</summary>
+        <div class="body">The Bibles and study books that come with the app work straight away. Extra translations, commentaries, books and pictures are free optional downloads from inside the app, so the first install stays small.</div>
+      </details>
+    </section>
+
+    <section class="dl android" id="android">
+      <span class="you">This looks like your device</span>
+      <h2><span class="ic-big" data-ic="phone"></span>Android</h2>
+      <p class="muted">A pocket companion for every day.</p>
+      <div class="main-btns">
+        <a class="btn btn-green" href="https://github.com/BadBull22/bible/releases/download/android-v3.0.0/BibleConcordance_Android_3.0.0.apk" data-ic="down">Direct download (.apk)</a>
+      </div>
+      <div class="qr-block"><img src="assets/qr-android.svg" alt="QR code that opens the Android page on your phone" width="132" height="132"><div><b>On a computer?</b><span>Point your phone's camera at this code to open the Android page on your phone, then download it there.</span></div></div>
+      <ul class="facts"><li>Android 7 or newer</li><li>about 90 MB</li><li>Updates itself</li></ul>
+      <details>
+        <summary>How to install the direct download</summary>
+        <div class="body"><ol>
+          <li>Tap <b>Direct download</b> on your phone. If the browser warns that the file might be harmful, choose <b>Download anyway</b>: it says that about every app that does not come from a store.</li>
+          <li>When it finishes, tap <b>Open</b>, or find the file in your Files app under Downloads and tap it.</li>
+          <li>If Android asks, allow your browser to install apps, then tap <b>Install</b>.</li>
+        </ol></div>
+      </details>
+      <details>
+        <summary>Check the file is genuine</summary>
+        <div class="body">Each release lists the file's fingerprint (SHA-256). Compare it with the one shown on the release page: <code>sha256: (shown here for each release)</code></div>
+      </details>
+    </section>
+  </div>
+</div>
+
+<section class="block alt" id="faq">
+  <div class="wrap faq">
+    <h2>Questions and answers</h2>
+    <details><summary>Is it really free?</summary><div class="body">Yes. Bible Concordance is free to use and share. It will never be sold or charged for.</div></details>
+    <details><summary>Do I need an account or the internet?</summary><div class="body">No account. No internet needed to read, search and study: the Bibles and study tools are on your device. You only need the internet to download optional extras.</div></details>
+    <details><summary>Does it collect anything about me?</summary><div class="body">No. Your bookmarks, highlights, notes and prayers stay on your device. See the <a href="https://bible4me.org/privacy/">privacy page</a>.</div></details>
+    <details><summary>Can I use it on both my computer and my phone?</summary><div class="body">Yes. At home on your Wi-Fi the two keep your bookmarks, highlights and notes the same. Nothing goes through any cloud or account of ours.</div></details>
+    <details><summary>Is there an iPhone or Mac version?</summary><div class="body">Not at the moment: Windows and Android only.</div></details>
+    <details><summary>How do I update?</summary><div class="body">Windows updates through the Microsoft Store. Android updates through Google Play, or the direct-download version tells you when a new one is ready.</div></details>
+  </div>
+</section>
+</main>
+<script src="assets/shots.js"></script>
+<script src="assets/new.js"></script>
+<script>
+(function () {
+  /* highlight the card for the device this person is on, and put it first on a phone */
+  var id = window.myDevice === "android" ? "android" : window.myDevice === "windows" ? "windows" : null;
+  if (id) { document.getElementById(id).classList.add("mine"); }
+  if (location.hash === "#faq" || location.hash === "#windows" || location.hash === "#android") { /* the browser scrolls to it */ }
+  var t = document.querySelectorAll(".dl.mine details"); if (t[0]) t[0].open = false;
+})();
+</script>
+</body>
+</html>

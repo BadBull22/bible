@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Screenshots | Bible Concordance</title>
+<meta name="description" content="Real screens from Bible Concordance on Windows and on Android.">
+<meta name="theme-color" content="#1c2440">
+<link rel="canonical" href="https://bible4me.org/screenshots.html">
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<link rel="stylesheet" href="assets/new.css">
+</head>
+<body data-page="screenshots">
+<main id="main">
+<div class="phead"><div class="wrap">
+  <div class="crumbs"><a href="index.html">Home</a> &rsaquo; Screenshots</div>
+  <h1>Screenshots</h1>
+  <p>Real screens from the app. Choose a device, narrow by subject, and tap a picture to see it larger.</p>
+</div></div>
+
+<div class="wrap">
+  <div class="gbar">
+    <div class="tabs" role="tablist" aria-label="Device">
+      <button role="tab" id="t-win" aria-selected="true">Windows <small id="n-win"></small></button>
+      <button role="tab" id="t-phone" aria-selected="false">Phone <small id="n-phone"></small></button>
+    </div>
+    <div class="filt" id="filt" role="group" aria-label="Subject"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</div>
+</main>
+<script src="assets/shots.js"></script>
+<script src="assets/new.js"></script>
+<script>
+(function () {
+  var dev = "win", topic = "all";
+  var grid = document.getElementById("grid"), filt = document.getElementById("filt");
+  var tw = document.getElementById("t-win"), tp = document.getElementById("t-phone");
+  document.getElementById("n-win").textContent = "(" + window.SHOTS.filter(function (s) { return s.dev === "win"; }).length + ")";
+  document.getElementById("n-phone").textContent = "(" + window.SHOTS.filter(function (s) { return s.dev === "phone"; }).length + ")";
+  if (location.hash === "#phone" || (!location.hash && window.innerWidth < 700)) dev = "phone";
+  function draw() {
+    var forDev = window.SHOTS.filter(function (s) { return s.dev === dev; });
+    var topics = window.TOPICS.filter(function (t) { return t[0] === "all" || forDev.some(function (s) { return s.topic === t[0]; }); });
+    if (!topics.some(function (t) { return t[0] === topic; })) topic = "all";
+    filt.innerHTML = "";
+    topics.forEach(function (t) {
+      var b = document.createElement("button"); b.textContent = t[1]; b.setAttribute("aria-pressed", t[0] === topic);
+      b.onclick = function () { topic = t[0]; draw(); }; filt.appendChild(b);
+    });
+    var items = forDev.filter(function (s) { return topic === "all" || s.topic === topic; });
+    grid.className = "grid" + (dev === "phone" ? " phones" : "");
+    grid.innerHTML = "";
+    items.forEach(function (s, i) {
+      var c = document.createElement("button"); c.className = "card"; c.type = "button";
+      c.innerHTML = '<img loading="lazy" alt=""><div class="cap"><b></b><span></span></div>';
+      c.querySelector("img").src = window.shotSrc(s); c.querySelector("img").alt = s.t;
+      c.querySelector("b").textContent = s.t; c.querySelector("span").textContent = s.c;
+      c.onclick = function () { window.openShot(items, i, c); };
+      grid.appendChild(c);
+    });
+    tw.setAttribute("aria-selected", dev === "win"); tp.setAttribute("aria-selected", dev === "phone");
+  }
+  tw.onclick = function () { dev = "win"; topic = "all"; draw(); }; tp.onclick = function () { dev = "phone"; topic = "all"; draw(); };
+  draw();
+})();
+</script>
+</body>
+</html>
