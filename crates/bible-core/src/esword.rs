@@ -1249,6 +1249,22 @@ mod tests {
     }
 
     #[test]
+    fn a_mysword_bible_keeps_its_strongs_words_and_drops_its_notes_from_the_text() {
+        let w = |s: &str, n: &[&str]| (s.to_string(), n.iter().map(|x| x.to_string()).collect::<Vec<_>>());
+        let p = db("CREATE TABLE Bible(Book INT, Chapter INT, Verse INT, Scripture TEXT);
+             CREATE TABLE Details(Description TEXT, Abbreviation TEXT, Comments TEXT, Language TEXT, Strong INT);
+             INSERT INTO Details VALUES ('Tagged MySword', 'TMS', 'Free to share.', 'en', 1);
+             INSERT INTO Bible VALUES (1,1,1,'In the beginning<WH7225> God<WH430> created<WH1254><WH853> the heaven<WH8064><RF>a note<Rf>.'),
+               (43,3,16,'For<WG1063> God<WG2316> so<WG3779> loved<WG25> the world<WG2889>.'), (66,22,21,'Grace.');");
+        let m = read(&p, Some("tms.bbl.mybible")).unwrap();
+        assert_eq!((m.kind, m.program, m.strongs), ("bible", "MySword", true));
+        assert_eq!(m.verses[0].3, "In the beginning God created the heaven.", "the tags and the note are not part of the text");
+        assert_eq!(m.words.len(), 2, "Revelation 22:21 has no tags: {:?}", m.words);
+        assert_eq!(m.words[0].3, vec![w("In the beginning", &["H7225"]), w("God", &["H430"]), w("created", &["H1254", "H853"]), w("the heaven", &["H8064"])]);
+        assert_eq!(m.words[1].3[1], w("God", &["G2316"]));
+    }
+
+    #[test]
     fn a_locked_module_is_refused() {
         let p = db("CREATE TABLE Bible(Book INT, Chapter INT, Verse INT, Scripture BLOB_TEXT); CREATE TABLE sqliteplus_license(Name TEXT);
              INSERT INTO sqliteplus_license VALUES ('e-Sword'); INSERT INTO Bible VALUES (1, 1, 1, x'031ea46c3190e29458bbf2a490838207ad2b28955c650814');");

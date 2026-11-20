@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { api, type DomainNode, type MeaningWord } from "../api";
+import { PlayWord } from "./PlayWord";
 import { breadcrumb, childrenOf, searchDomains } from "../semantic";
 
 export type Language = "greek" | "hebrew";
@@ -26,12 +27,14 @@ export interface MeaningSel {
 interface Props {
   selected: MeaningSel | null;
   onPick: (sel: MeaningSel) => void;
+  /** a word's Strong's number was pressed: open its meanings */
+  onStrongs?: (strongs: string) => void;
 }
 
 /** the groups of each language, kept for the visit */
 const trees = new Map<Language, DomainNode[]>();
 
-export function MeaningPicker({ selected, onPick }: Props) {
+export function MeaningPicker({ selected, onPick, onStrongs }: Props) {
   const [language, setLanguage] = useState<Language>(selected?.language ?? "greek");
   const [nodes, setNodes] = useState<DomainNode[] | null>(trees.get(language) ?? null);
   const [at, setAt] = useState(selected && selected.language === language ? selected.code.slice(0, Math.max(0, selected.code.length - 3)) : "");
@@ -152,6 +155,7 @@ export function MeaningPicker({ selected, onPick }: Props) {
           <ul className="cc-wordlist">
             {words.map((w) => (
               <li key={`${w.entry}-${w.meaning}`}>
+                <PlayWord compact text={w.speak || w.lemma} label={w.lemma} />{" "}
                 <button type="button" className="link-btn" onClick={() => pickWord(w)} title="See only this word, with this meaning">
                   <span className="cc-lemma" lang={language === "greek" ? "el" : "he"}>
                     {w.lemma}
@@ -160,7 +164,19 @@ export function MeaningPicker({ selected, onPick }: Props) {
                 </button>
                 <span className="muted">
                   {" "}
-                  {w.strongs.join(", ")}
+                  {w.strongs.map((n, i) => (
+                    <span key={n}>
+                      {i > 0 && ", "}
+                      {onStrongs ? (
+                        <button type="button" className="link-btn cc-strongs-btn" onClick={() => onStrongs(n)} title="See all the meanings of this word and its definition">
+                          {n}
+                        </button>
+                      ) : (
+                        n
+                      )}
+                    </span>
+                  ))}
+                  {w.translit ? ` · ${w.translit}` : ""}
                   {w.ln ? ` · Louw-Nida ${w.ln}` : ""} · {w.verses.toLocaleString("en-US")} verse{w.verses === 1 ? "" : "s"}
                 </span>
                 {w.definition && <div className="muted cc-def">{w.definition}</div>}

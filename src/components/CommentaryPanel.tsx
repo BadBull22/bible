@@ -7,6 +7,7 @@ import { Line, plainText } from "./RichText";
 import { ListenButton } from "./ListenButton";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   book: string;
   chapter: number;
@@ -115,6 +116,7 @@ export function CommentaryPanel({ book, chapter, focusVerse, verseCount, initial
   return (
     <aside className="side-panel wide commentary-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>
           Commentary: {book} {chapter}
         </h3>

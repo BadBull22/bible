@@ -7,6 +7,7 @@ import { ListenButton } from "./ListenButton";
 import { CloseIcon, CopyIcon } from "./icons";
 import { plainText, RichText } from "./RichText";
 
+import { PanelBack } from "../panelNav";
 interface VerseRef {
   book: string;
   chapter: number;
@@ -103,6 +104,7 @@ export function DictionaryPanel({ verse, initialQuery, onJump, onClose }: Props)
   return (
     <aside className="side-panel wide dictionary-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>{verseMode && !query.trim() && !entry ? `Topics & dictionary: ${verseMode.book} ${verseMode.chapter}:${verseMode.verse}` : "Bible Dictionary & Topics"}</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

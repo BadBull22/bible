@@ -46,9 +46,9 @@ if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
 New-Item -ItemType Directory -Force $dest | Out-Null
 Copy-Item -Recurse "$work\voice-dist\voice-sidecar" "$dest\voice-sidecar"
 Copy-Item "$models\kokoro-v1.0.fp16.onnx", "$models\voices-en.bin" $dest
-# espeak-ng only needs its English pronunciation dictionary here; the other ~100 languages'
+# espeak-ng only needs its English pronunciation dictionary here, and the Ancient Greek one (grc_dict, 3 KB: it says Greek words aloud, see original_words.py); the other ~100 languages'
 # dictionaries are ~16 MB we'd otherwise ship for nothing.
 Get-ChildItem "$dest\voice-sidecar\_internal\espeakng_loader\espeak-ng-data" -Filter "*_dict" |
-    Where-Object { $_.Name -ne "en_dict" } | Remove-Item -Force
+    Where-Object { $_.Name -notin @("en_dict", "grc_dict") } | Remove-Item -Force
 $size = (Get-ChildItem -Recurse $dest | Measure-Object Length -Sum).Sum / 1MB
 Write-Host ("Done: {0:N0} MB in {1}" -f $size, (Resolve-Path $dest))

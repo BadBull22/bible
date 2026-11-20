@@ -171,6 +171,10 @@ export interface MeaningWord {
   /** the Louw-Nida number of a Greek meaning */
   ln: string | null;
   verses: number;
+  /** how the word is written in English letters (Hebrew words), when known */
+  translit: string | null;
+  /** the form to say aloud (a Hebrew word with its vowel points) */
+  speak: string;
 }
 
 /** what a word means in a verse (the dictionary lists this verse for the meaning when `here`) */
@@ -204,6 +208,8 @@ export interface Sense {
   definition: string;
   ln: string | null;
   groups: string[];
+  /** the codes of those groups */
+  domains: string[];
   verses: number;
   /** verses of each of the 66 books, Genesis first */
   by_book: number[];
@@ -1336,9 +1342,11 @@ export const api = {
   logRecent: (lines = 200) => invoke<string>("log_recent", { lines }),
   logPath: () => invoke<string | null>("log_path"),
   openLogFolder: () => invoke<void>("open_log_folder"),
+  /** a QR code (SVG picture) for a secure web address */
+  qrForUrl: (url: string) => invoke<string>("qr_for_url", { url }),
   voiceStatus: () => invoke<VoiceStatus>("voice_status"),
-  /** the natural voice speaks `text`: WAV audio */
-  voiceSpeak: (text: string, voice: string, speed: number) => invoke<ArrayBuffer>("voice_speak", { text, voice, speed }),
+  /** the natural voice speaks `text`: WAV audio. `lang` "grc" or "he" says a Greek or Hebrew word instead of English text. */
+  voiceSpeak: (text: string, voice: string, speed: number, lang?: "grc" | "he") => invoke<ArrayBuffer>("voice_speak", { text, voice, speed, lang: lang ?? null }),
   /** progress arrives as "voice-progress" events, "voice-changed" when it's ready */
   voiceDownload: () => invoke<void>("voice_download"),
   voiceCancelDownload: () => invoke<void>("voice_cancel_download"),

@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, InterlinearWord, WordMeaning } from "../api";
 import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "./icons";
-
+
+import { PanelBack } from "../panelNav";
+import { PlayWord } from "./PlayWord";
+import { tidyOriginal } from "../speakWord";
 interface Props {
   book: string;
   chapter: number;
@@ -73,6 +76,7 @@ export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVer
   return (
     <aside className="side-panel wide interlinear-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>
           Interlinear: {book} {chapter}:{verse}
         </h3>
@@ -115,31 +119,41 @@ export function InterlinearPanel({ book, chapter, verse, verseCount, onChangeVer
           const notInAll = isGreek && w.editions.length < 8;
           return (
             <div key={`${w.word_pos}-${i}`} className={"iw" + (notInAll && greekText === "all" ? " iw--variant" : "")} dir="ltr">
-              <div className="iw-original" lang={isHebrew ? "he" : "grc"} dir={isHebrew ? "rtl" : "ltr"}>
-                {w.original.replace(/\//g, "")}
+              <div className="iw-original-row">
+                {isHebrew && <PlayWord compact text={w.original} label={tidyOriginal(w.original)} />}
+                <div className="iw-original" lang={isHebrew ? "he" : "grc"} dir={isHebrew ? "rtl" : "ltr"}>
+                  {tidyOriginal(w.original)}
+                </div>
+                {!isHebrew && <PlayWord compact text={w.original} label={tidyOriginal(w.original)} />}
               </div>
               <div className="iw-translit">{w.translit.replace(/\//g, "")}</div>
               <div className="iw-gloss">{cleanGloss(w.gloss)}</div>
               {w.strongs ? (
-                <button className="link-btn iw-strongs" onClick={() => onWordStudy([w.strongs], w.original)} title="Open in Word Study">
+                <button className="link-btn iw-strongs" onClick={() => onWordStudy([w.strongs], tidyOriginal(w.original))} title="Open the definition in Word Study">
                   {w.strongs}
                 </button>
               ) : (
                 <span className="iw-strongs muted">—</span>
               )}
               {w.strongs && meanings[w.strongs] && (
-                <div className="iw-meaning" title={meanings[w.strongs]!.groups.join("\n")}>
+                <button
+                  type="button"
+                  className="iw-meaning iw-meaning-btn"
+                  title={`${meanings[w.strongs]!.groups.join("\n")}\nEvery meaning of this word, drawn, with the one used in this verse chosen`}
+                  onClick={() => onOpenMeanings?.(w.strongs, { book, chapter, verse })}
+                >
                   <span className="muted">Meaning here:</span> {meanings[w.strongs]!.glosses[0] ?? meanings[w.strongs]!.definition.slice(0, 40)}
                   {meanings[w.strongs]!.groups[0] && <span className="muted"> · {meanings[w.strongs]!.groups[0].split(" > ").pop()}</span>}
-                </div>
+                </button>
               )}
-              {w.strongs && onOpenMeanings && (
-                <button className="link-btn iw-senses" onClick={() => onOpenMeanings(w.strongs, { book, chapter, verse })} title="Every meaning of this word, drawn, with the one used in this verse chosen">
-                  All meanings
+              {w.strongs && !meanings[w.strongs] && onOpenMeanings && (
+                <button className="link-btn iw-senses" onClick={() => onOpenMeanings(w.strongs, { book, chapter, verse })} title="Every meaning of this word">
+                  Meanings
                 </button>
               )}
               {w.lemma && (
                 <div className="iw-lemma" title="Dictionary form">
+                  <PlayWord compact text={w.lemma} label={w.lemma} />
                   <span lang={isHebrew ? "he" : "grc"}>{w.lemma}</span>
                   {w.lemma_gloss && <span className="muted"> · {w.lemma_gloss.replace(/_/g, " ")}</span>}
                 </div>

@@ -6,6 +6,7 @@ import { RecommendedBibles } from "./RecommendedBibles";
 import { clearLibraryRed } from "../redLetter";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
+import { PanelBack } from "../panelNav";
 /** Files the app can add: books, SWORD modules, e-Sword and MySword modules (also in a .gz). */
 const ACCEPTED = /\.(epub|pdf|zip|gz|bblx|cmtx|dctx|topx|lexx|devx|refx|bbli|cmti|dcti|topi|lexi|devi|mybible|sqlite3)$/i;
 
@@ -340,6 +341,7 @@ export function LibraryPanel({ initialTab, onlyKind, onUseVersion, onOpenComment
   return (
     <aside className="side-panel wide library-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Library</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

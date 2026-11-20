@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { api, TimelineData, TimelineRibbon } from "../api";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   /** Opens with this genealogy person already selected (used when arriving from Genealogy). */
   focusPersonId?: string;
@@ -231,6 +232,7 @@ export function TimelinePanel({ focusPersonId, onClose, onJump }: Props) {
       className={`side-panel wide timeline-panel${view === "facsimile" ? " is-facsimile" : ""}${fullscreen ? " is-fullscreen" : ""}`}
     >
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Timeline</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

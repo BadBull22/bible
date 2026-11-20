@@ -61,7 +61,11 @@ pub fn list_versions(state: State<DbState>, lib: State<LibraryState>) -> Result<
 fn list_bundled_versions(state: &DbState) -> Result<Vec<Version>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
     let mut stmt = conn
-        .prepare("SELECT code, name, language, is_original_language FROM versions ORDER BY id")
+        .prepare(
+            "SELECT code, name, language, is_original_language,
+                    EXISTS (SELECT 1 FROM verses v JOIN strongs_links sl ON sl.verse_id = v.id WHERE v.version_id = versions.id LIMIT 1)
+             FROM versions ORDER BY id",
+        )
         .map_err(|e| e.to_string())?;
     let rows = stmt
         .query_map([], |r| {
@@ -70,7 +74,8 @@ fn list_bundled_versions(state: &DbState) -> Result<Vec<Version>, String> {
                 name: r.get(1)?,
                 language: r.get(2)?,
                 is_original_language: r.get::<_, i64>(3)? != 0,
-                has_strongs: false,
+                // the Bible's verses are tagged with Strong's numbers: the word study, meanings and original words can use it
+                has_strongs: r.get::<_, i64>(4)? != 0,
             })
         })
         .map_err(|e| e.to_string())?;
@@ -372,10 +377,16 @@ pub fn strongs_lookup(state: State<DbState>, strongs_number: String) -> Result<O
 #[tauri::command]
 pub fn strongs_occurrences(
     state: State<DbState>,
+    lib: State<LibraryState>,
     strongs_number: String,
     version_code: String,
 ) -> Result<Vec<SearchHit>, String> {
     let conn = state.0.lock().map_err(|e| e.to_string())?;
+    if !is_bundled_version(&conn, &version_code) {
+        // a Bible added to the Library keeps its Strong's-numbered words with each verse
+        drop(conn);
+        return library::strongs_verses(&*lib_conn(&lib)?, &version_code, &strongs_number);
+    }
     let mut stmt = conn
         .prepare(
             "SELECT DISTINCT ver.code, b.name, v.chapter, v.verse, v.text

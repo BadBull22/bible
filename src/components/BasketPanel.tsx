@@ -5,6 +5,7 @@ import { ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "./icons";
 import { SheetOutput } from "./SheetOutput";
 import { usePictureUrl } from "../pictures";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   onJump: (book: string, chapter: number, verse: number) => void;
   onClose: () => void;
@@ -107,6 +108,7 @@ export function BasketPanel({ onJump, onClose }: Props) {
   return (
     <aside className="side-panel wide basket-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Study basket{items.length ? ` (${items.length})` : ""}</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

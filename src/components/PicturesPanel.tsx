@@ -5,6 +5,7 @@ import { pictureRefLabel, usePictureUrl } from "../pictures";
 import { CloseIcon } from "./icons";
 import { PictureViewer } from "./PictureViewer";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   book: string;
   chapter: number;
@@ -99,6 +100,7 @@ export function PicturesPanel({ book, chapter, initialTab, onJump, onClose }: Pr
   return (
     <aside className="side-panel wide pictures-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Pictures</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

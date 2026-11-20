@@ -3,6 +3,9 @@ import { api, OriginalSearchResult, WordCandidate } from "../api";
 import { CopyButton } from "./CopyButton";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
+import { PlayWord } from "./PlayWord";
+import { tidyOriginal } from "../speakWord";
 interface Props {
   /** open straight on this word (e.g. from Word Study) */
   initialStrongs?: string;
@@ -92,6 +95,7 @@ export function OriginalSearchPanel({ initialStrongs, onJump, onWordStudy, onClo
   return (
     <aside className="side-panel wide original-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Hebrew &amp; Greek search</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />
@@ -126,7 +130,8 @@ export function OriginalSearchPanel({ initialStrongs, onJump, onWordStudy, onClo
           )}
           <ul className="original-candidates">
             {candidates.map((c) => (
-              <li key={c.strongs}>
+              <li key={c.strongs} className="oc-row">
+                <PlayWord compact text={c.lemma || ""} label={c.lemma || c.strongs} />
                 <button className="original-candidate" onClick={() => choose(c.strongs)}>
                   <span className="original-lemma" lang={c.language === "Hebrew" ? "he" : "grc"} dir={c.language === "Hebrew" ? "rtl" : "ltr"}>
                     {c.lemma || c.strongs}
@@ -144,6 +149,7 @@ export function OriginalSearchPanel({ initialStrongs, onJump, onWordStudy, onClo
       {strongs && word && (
         <div className="original-word">
           <div className="original-word-head">
+            <PlayWord text={word.lemma} label={word.lemma} />
             <span className="original-lemma big" lang={hebrew ? "he" : "grc"} dir={hebrew ? "rtl" : "ltr"}>
               {word.lemma}
             </span>
@@ -214,8 +220,9 @@ export function OriginalSearchPanel({ initialStrongs, onJump, onWordStudy, onClo
                     <button className="link-btn" onClick={() => onJump(h.book, h.chapter, h.verse)}>
                       {h.book} {h.chapter}:{h.verse}
                     </button>
+                    <PlayWord compact text={h.original} label={tidyOriginal(h.original)} />
                     <span className="original-form" lang={hebrew ? "he" : "grc"}>
-                      {h.original}
+                      {tidyOriginal(h.original)}
                     </span>
                     <span className="votes">{h.parsing}</span>
                   </div>

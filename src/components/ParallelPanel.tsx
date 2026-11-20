@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api, OnlineVersionInfo, SearchHit, Version } from "../api";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   book: string;
   chapter: number;
@@ -74,6 +75,7 @@ export function ParallelPanel({ book, chapter, verse, versions, onClose }: Props
   return (
     <aside className="side-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>
           Compare: {book} {chapter}:{verse}
         </h3>

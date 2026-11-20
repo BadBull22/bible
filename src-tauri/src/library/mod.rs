@@ -356,6 +356,37 @@ pub fn chapter_words(conn: &Connection, code: &str, book: &str, chapter: i64) ->
     Ok(out)
 }
 
+/// Does this Library Bible keep Strong's-numbered words with its verses?
+pub fn is_tagged_bible(conn: &Connection, code: &str) -> bool {
+    conn.query_row("SELECT features FROM modules WHERE name = ?1 AND kind = 'bible'", params![code], |r| r.get::<_, String>(0))
+        .optional()
+        .ok()
+        .flatten()
+        .is_some_and(|f| f.split(',').any(|f| f == STRONGS_WORDS))
+}
+
+/// Every verse of a Library Bible that has a word tagged with this Strong's number, in the Bible's order (empty for a Bible without tags). The tags are kept with each
+/// verse as JSON, so a text match finds the candidates and the list is read to be sure ("H15" is not "H157").
+pub fn strongs_verses(conn: &Connection, code: &str, strongs: &str) -> Result<Vec<SearchHit>, String> {
+    let s = strongs.trim().to_uppercase();
+    let like = format!("%\"{s}\"%");
+    let mut stmt = conn
+        .prepare("SELECT book, chapter, verse, text, words FROM lib_verses WHERE module = ?1 AND words IS NOT NULL AND words LIKE ?2 ORDER BY id")
+        .map_err(err)?;
+    let rows = stmt
+        .query_map(params![code, like], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)?, r.get::<_, i64>(2)?, r.get::<_, String>(3)?, r.get::<_, String>(4)?)))
+        .map_err(err)?;
+    let mut out = Vec::new();
+    for row in rows {
+        let (book, chapter, verse, text, json) = row.map_err(err)?;
+        let Ok(list) = serde_json::from_str::<Vec<(String, Vec<String>)>>(&json) else { continue };
+        if list.iter().any(|(_, nums)| nums.iter().any(|n| n.eq_ignore_ascii_case(&s))) {
+            out.push(SearchHit { version_code: code.to_string(), book, chapter, verse, text, ..Default::default() });
+        }
+    }
+    Ok(out)
+}
+
 pub fn is_bible(conn: &Connection, code: &str) -> bool {
     conn.query_row("SELECT 1 FROM modules WHERE name = ?1 AND kind = 'bible'", params![code], |_| Ok(())).optional().ok().flatten().is_some()
 }
@@ -1111,6 +1142,36 @@ pub fn topic_passages(conn: &Connection, query: &str, per_module: usize, limit: 
 mod tests {
     use super::*;
     use std::io::Cursor;
+
+    /// A Bible added from a file with Strong's numbers keeps them, is marked as having them, and its verses can be found by a Strong's number; one without is not.
+    #[test]
+    fn a_library_bible_with_strongs_numbers_is_found_by_them() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        migrate(&conn, Path::new(".")).unwrap();
+        let w = |s: &str, n: &[&str]| (s.to_string(), n.iter().map(|x| x.to_string()).collect::<Vec<_>>());
+        let mut tagged = esword::Module { kind: "bible", program: "MyBible", abbreviation: "TG".into(), title: "Tagged".into(), lang: "en".into(), ..Default::default() };
+        let mut plain = esword::Module { kind: "bible", program: "MyBible", abbreviation: "PL".into(), title: "Plain".into(), lang: "en".into(), ..Default::default() };
+        for v in 1..=25 {
+            let text = format!("In the beginning God created {v}.");
+            tagged.verses.push(("Genesis", 1, v, text.clone()));
+            plain.verses.push(("Genesis", 1, v, text));
+        }
+        tagged.words.push(("Genesis", 1, 1, vec![w("God", &["H430"]), w("created", &["H1254"])]));
+        tagged.words.push(("Genesis", 1, 7, vec![w("God", &["H430"]), w("heaven", &["H8064"])]));
+        tagged.words.push(("Genesis", 1, 9, vec![w("God", &["H4301"])]));
+        install_esword(&mut conn, &tagged, Some("TG.SQLite3"), true, &[]).unwrap();
+        install_esword(&mut conn, &plain, Some("PL.SQLite3"), true, &[]).unwrap();
+
+        assert!(is_tagged_bible(&conn, "TG") && !is_tagged_bible(&conn, "PL") && !is_tagged_bible(&conn, "Nothing"));
+        let listed: Vec<(String, bool)> = versions(&conn).unwrap().into_iter().map(|v| (v.code, v.has_strongs)).collect();
+        assert!(listed.contains(&("TG".into(), true)) && listed.contains(&("PL".into(), false)), "{listed:?}");
+        let found = strongs_verses(&conn, "TG", "H430").unwrap();
+        assert_eq!(found.iter().map(|h| (h.book.as_str(), h.chapter, h.verse)).collect::<Vec<_>>(), vec![("Genesis", 1, 1), ("Genesis", 1, 7)], "H4301 is not H430");
+        assert_eq!(strongs_verses(&conn, "TG", "h8064").unwrap().len(), 1);
+        assert!(strongs_verses(&conn, "PL", "H430").unwrap().is_empty());
+        assert!(strongs_verses(&conn, "Nothing", "H430").unwrap().is_empty());
+    }
 
     #[test]
     fn finds_what_the_books_say_on_a_subject() {

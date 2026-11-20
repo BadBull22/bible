@@ -53,6 +53,15 @@ pub struct RemoteInfo {
     pub stage_qr_svg: Option<String>,
 }
 
+/// A QR code (an SVG picture) for a web address, to scan with a phone. Only https addresses.
+#[tauri::command]
+pub fn qr_for_url(url: String) -> Result<String, String> {
+    if !url.starts_with("https://") || url.len() > 300 {
+        return Err("Only secure web addresses can be turned into a code.".into());
+    }
+    qr_of(&url)
+}
+
 fn qr_of(url: &str) -> Result<String, String> {
     use qrcode::render::svg;
     let qr = qrcode::QrCode::new(url.as_bytes()).map_err(err)?;

@@ -4,6 +4,7 @@ import { buildSheet, passageLabel, SheetOptions } from "../studySheet";
 import { CloseIcon } from "./icons";
 import { SheetOutput } from "./SheetOutput";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   book: string;
   chapter: number;
@@ -103,6 +104,7 @@ export function StudySheetPanel({ book, chapter, verseStart, verseEnd, verseCoun
   return (
     <aside className="side-panel wide sheet-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Study sheet: {defaultTitle}</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

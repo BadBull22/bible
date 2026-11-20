@@ -3,6 +3,7 @@ import cytoscape, { Core } from "cytoscape";
 import { api, LineagePerson, PersonSummary, parseCitation } from "../api";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   onClose: () => void;
   onJump: (book: string, chapter: number, verse: number) => void;
@@ -102,6 +103,7 @@ export function GenealogyPanel({ onClose, onJump, onShowTimeline }: Props) {
   return (
     <aside className="side-panel wide">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Genealogy</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

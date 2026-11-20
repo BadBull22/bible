@@ -17,7 +17,8 @@ this app:
   or killed app never leaves it running (or holding files an installer wants to replace).
 
 Usage: voice-sidecar --model <kokoro .onnx> --voices <voices .bin> [--parent-pid <pid>]
-Endpoints: GET /health, GET /voices, POST /speak {"text", "voice", "speed"} -> audio/wav
+Endpoints: GET /health, GET /voices, POST /speak {"text", "voice", "speed", "lang"?} -> audio/wav
+  "lang": "grc" (Greek) or "he" (Hebrew) says a Hebrew or Greek word with the same voice (see original_words.py); left out, the text is English.
 """
 import argparse
 import ctypes
@@ -51,14 +52,42 @@ _load_espeak_in_place()
 import numpy as np  # noqa: E402
 from kokoro_onnx import Kokoro  # noqa: E402
 
+import original_words  # noqa: E402
+
 kokoro: Kokoro | None = None
 voice_names: list[str] = []
 synth_lock = threading.Lock()  # kokoro/espeak are not thread-safe; /health stays responsive
 
 
-def synthesize(text: str, voice: str, speed: float) -> bytes:
+_greek_backend = None
+
+
+def original_word_sounds(text: str, lang: str) -> str:
+    """The sounds (IPA) of a Greek ("grc") or Hebrew ("he") word, only those the voice has."""
+    global _greek_backend
+    if lang == "grc":
+        if _greek_backend is None:
+            from phonemizer.backend import EspeakBackend
+            _greek_backend = EspeakBackend("grc", preserve_punctuation=False, with_stress=True)
+        ph = original_words.greek_phonemes(_greek_backend, text)
+    elif lang == "he":
+        ph = original_words.hebrew_phonemes(text)
+        if ph is None:
+            raise ValueError("this Hebrew word has no vowel points, so it cannot be said")
+    else:
+        raise ValueError(f"unknown language {lang}")
+    kept = kokoro.tokenizer.known(ph or "")
+    if not kept.strip():
+        raise ValueError("no sounds for this word")
+    return kept
+
+
+def synthesize(text: str, voice: str, speed: float, lang: str = "") -> bytes:
     with synth_lock:
-        samples, rate = kokoro.create(text, voice=voice, speed=speed, lang="en-us")
+        if lang:
+            samples, rate = kokoro.create(original_word_sounds(text, lang), voice=voice, speed=speed, is_phonemes=True)
+        else:
+            samples, rate = kokoro.create(text, voice=voice, speed=speed, lang="en-us")
     pcm = (np.clip(samples, -1.0, 1.0) * 32767).astype("<i2").tobytes()
     buf = io.BytesIO()
     with wave.open(buf, "wb") as w:
@@ -82,7 +111,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/health":
-            self._json(200, {"ok": kokoro is not None, "voices": len(voice_names)})
+            self._json(200, {"ok": kokoro is not None, "voices": len(voice_names), "original_words": True})  # original_words: can say Greek and Hebrew words ("lang")
         elif self.path == "/voices":
             self._json(200, {"voices": voice_names})
         else:
@@ -97,6 +126,9 @@ class Handler(BaseHTTPRequestHandler):
             text = str(req.get("text", "")).strip()
             voice = str(req.get("voice") or "am_michael")
             speed = min(2.0, max(0.5, float(req.get("speed") or 1.0)))
+            lang = str(req.get("lang") or "")
+            if lang not in ("", "grc", "he"):
+                return self._json(400, {"error": f"unknown language {lang}"})
         except Exception as e:  # noqa: BLE001
             return self._json(400, {"error": f"bad request: {e}"})
         if not text:
@@ -104,7 +136,9 @@ class Handler(BaseHTTPRequestHandler):
         if voice not in voice_names:
             return self._json(400, {"error": f"unknown voice {voice}"})
         try:
-            self._send(200, synthesize(text, voice, speed), "audio/wav")
+            self._send(200, synthesize(text, voice, speed, lang), "audio/wav")
+        except ValueError as e:  # a word that cannot be said (no vowel points, no sounds)
+            self._json(422, {"error": str(e)})
         except Exception as e:  # noqa: BLE001
             self._json(500, {"error": f"synthesis failed: {e}"})
 

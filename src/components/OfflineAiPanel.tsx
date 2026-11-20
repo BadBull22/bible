@@ -7,7 +7,8 @@ import { listen } from "@tauri-apps/api/event";
 import { parseCitation } from "../api";
 import { ai, AiChat, AiMessage, AiStatus } from "../offlineAi";
 import { CloseIcon } from "./icons";
-
+
+import { PanelBack } from "../panelNav";
 interface Props {
   /** a question to ask at once (from the search results' button) */
   initialQuestion?: string;
@@ -127,6 +128,7 @@ export function OfflineAiPanel({ initialQuestion, fresh, onJump, onClose, onTurn
   return (
     <aside className="side-panel wide offline-ai-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Offline Assistant</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

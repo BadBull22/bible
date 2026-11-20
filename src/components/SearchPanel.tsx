@@ -6,6 +6,7 @@ import { BrowseMatches } from "./BrowseMatches";
 import type { BrowseKind } from "../browse/types";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   versions: Version[];
   versionCode: string;
@@ -151,6 +152,7 @@ export function SearchPanel({ versions, versionCode, initialQuery, onJump, onOpe
   return (
     <aside className="side-panel search-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Search</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

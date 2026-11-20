@@ -1,6 +1,7 @@
 import { ReactNode, useMemo, useState } from "react";
 import { CloseIcon } from "./icons";
-
+
+import { PanelBack } from "../panelNav";
 interface Props {
   onBack: () => void;
   onClose: () => void;
@@ -352,8 +353,13 @@ const SECTIONS: Section[] = [
         </p>
         <p>
           In the <strong>Interlinear</strong>, under a word's Strong's number, <strong>Meaning here</strong> says which meaning the dictionary gives the word in that
-          verse, and the group it belongs to (hover for the whole path). <strong>All meanings</strong> opens the word's ring with the meaning used in that verse
+          verse, and the group it belongs to (hover for the whole path). Press it to open the word's page on its Meanings, with the meaning used in that verse
           chosen.
+        </p>
+        <p>
+          <strong>Every Hebrew or Greek word has a speaker button</strong> (▶) beside it: press it to hear the word said with the natural voice, Greek the classical
+          way it is taught and Hebrew the modern way, from its vowel marks. The natural voice is in Settings &rarr; Read aloud. <strong>Every Strong's number is a
+          button</strong> that opens the word's page. If the Bible you read has no Strong's numbers loaded, the screens say so and the examples come from the BSB.
         </p>
       </>
     ),
@@ -367,7 +373,9 @@ const SECTIONS: Section[] = [
         <p>
           ⋯ → <strong>Interlinear</strong> shows every original word of the verse: the Hebrew or Greek, how to say it, its
           English meaning, its dictionary form, its Strong's number, and its grammar in plain English (e.g. "Verb · Aorist
-          Active Indicative · 3rd Singular" — hover for the full breakdown). Click the Strong's number for a word study.
+          Active Indicative · 3rd Singular" — hover for the full breakdown). Press the speaker to hear a word, and the Strong's number to open the word's page
+          (definition, meanings, where it is used, the words of the same meaning and your Library). The <strong>Back</strong> in a panel's header takes you back to
+          the Interlinear, at the same verse.
         </p>
         <p>
           In the New Testament, choose <em>Critical text</em> or <em>Textus Receptus</em> to see where the Greek behind modern
@@ -398,13 +406,13 @@ const SECTIONS: Section[] = [
             places it would leave. The chips underneath show which books it's found in.
           </li>
           <li>
-            Click a reference to go there. <em>Word Study</em> opens the dictionary entry; the copy button copies the whole
+            Click a reference to go there. <em>Word page</em> opens the word's entry; the copy button copies the whole
             list.
           </li>
           <li>
-            From any <strong>Word Study</strong>, <em>Search by grammar</em> opens this search on that word. If you've
+            From any <strong>word page</strong>, <em>Search by grammar</em> opens this search on that word. If you've
             installed Greek or Hebrew lexicons from the <strong>Library</strong> (Abbott-Smith, Dodson, BDB and others),
-            their entries for the word appear in the Word Study too, under <em>From your Library</em>.
+            their entries for the word appear on its page too, under <em>Library</em>.
           </li>
         </ul>
       </>
@@ -1176,6 +1184,7 @@ export function HelpPanel({ onBack, onClose }: Props) {
   return (
     <aside className="side-panel wide help-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Help &amp; user guide</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />
