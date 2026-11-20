@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api, FirstsCategory, FirstsEntry, parseCitation } from "../api";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   onClose: () => void;
   onJump: (book: string, chapter: number, verse: number) => void;
@@ -87,6 +88,7 @@ export function FirstsPanel({ onClose, onJump }: Props) {
   return (
     <aside className="side-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Firsts &amp; Milestones</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

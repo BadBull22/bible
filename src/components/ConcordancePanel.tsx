@@ -12,6 +12,9 @@ import { MeaningTree } from "./MeaningTree";
 import { SensePanel, type VerseAt } from "./SensePanel";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
+import { PlayWord } from "./PlayWord";
+import { NoStrongsNote, hasStrongs, versionLabel } from "./NoStrongsNote";
 interface Props {
   versions: Version[];
   versionCode: string;
@@ -19,7 +22,13 @@ interface Props {
   initialWord?: string;
   /** a Strong's number to open with its meanings, and the verse it is being read in (the meaning used there is chosen) */
   initialStrongs?: { strongs: string; at?: VerseAt };
+  /** a group of meanings to open with its tree */
+  initialMeaning?: MeaningSel;
+  /** a word (its Strong's number) was pressed in a list: open its page, on its meanings */
+  onWordPage?: (strongs: string) => void;
   onJump: (book: string, chapter: number, verse: number) => void;
+  /** open a word's dictionary entry (Word Study) */
+  onWordStudy?: (strongsNumbers: string[], surfaceText: string) => void;
   onClose: () => void;
 }
 
@@ -43,10 +52,10 @@ interface Verses {
 
 const PAGE = 150;
 
-export function ConcordancePanel({ versions, versionCode, initialWord, initialStrongs, onJump, onClose }: Props) {
+export function ConcordancePanel({ versions, versionCode, initialWord, initialStrongs, initialMeaning, onWordPage, onJump, onWordStudy: openWordStudy, onClose }: Props) {
   const [word, setWord] = useState(initialStrongs?.strongs ?? initialWord ?? "");
   const [forms, setForms] = useState(false);
-  const [mode, setMode] = useState<Mode>(initialStrongs ? "strongs" : "word");
+  const [mode, setMode] = useState<Mode>(initialStrongs ? "strongs" : initialMeaning ? "meaning" : "word");
   /** the verse a Strong's number is being read in: the meaning used there is the one chosen */
   const [senseAt, setSenseAt] = useState<VerseAt | null>(initialStrongs?.at ?? null);
   const [originals, setOriginals] = useState<OriginalWord[]>([]);
@@ -136,6 +145,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, initialSt
 
   useEffect(() => {
     if (initialStrongs) void runStrongs(initialStrongs.strongs, version, true);
+    else if (initialMeaning) void runMeaning(initialMeaning, version);
     else if (initialWord) void run(initialWord);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -247,6 +257,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, initialSt
   return (
     <aside className="side-panel wide concordance-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Concordance</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />
@@ -283,7 +294,7 @@ export function ConcordancePanel({ versions, versionCode, initialWord, initialSt
             </button>
           </form>
         )}
-        {mode === "meaning" && <MeaningPicker selected={sel} onPick={(s) => void runMeaning(s)} />}
+        {mode === "meaning" && <MeaningPicker selected={sel} onPick={(s) => void runMeaning(s)} onStrongs={(s) => (onWordPage ? onWordPage(s) : openOriginal(s))} />}
         <div className="cc-options">
           <select value={version} onChange={(e) => setVersion(e.target.value)} aria-label="Bible to count in">
             {versions.map((v) => (
@@ -315,21 +326,27 @@ export function ConcordancePanel({ versions, versionCode, initialWord, initialSt
                 ? meaningSummary(ran.sel.word ? `${ran.sel.name}: ${ran.sel.word}` : ran.sel.name, ran.sel.language, ran.sel.words, r.total_verses)
                 : summary(ran.word, r.total_occurrences, r.total_verses, ran.version, r.forms)}
           </p>
-          {ran.source === "strongs" && <SensePanel strongs={ran.word} version={ran.version} at={senseAt} onJump={onJump} />}
-          {ran.source === "meaning" && ran.sel && <MeaningTree language={ran.sel.language} code={ran.sel.code} name={ran.sel.name} onPick={(s) => void runMeaning(s)} />}
+          {ran.source === "strongs" && <SensePanel strongs={ran.word} version={ran.version} strongsReady={hasStrongs(versions, ran.version)} versionName={versionLabel(versions, ran.version)} at={senseAt} onJump={onJump} onWordStudy={openWordStudy ? (s, text) => openWordStudy([s], text) : undefined} />}
+          {ran.source === "meaning" && ran.sel && <MeaningTree language={ran.sel.language} code={ran.sel.code} name={ran.sel.name} onPick={(s) => void runMeaning(s)} onWord={(s) => (onWordPage ? onWordPage(s) : openOriginal(s))} />}
+          {ran.source === "word" && !hasStrongs(versions, ran.version) && (
+            <NoStrongsNote name={versionLabel(versions, ran.version)} what={originals.length > 0 ? "the Hebrew and Greek words behind this word below are counted in the BSB" : "the Hebrew and Greek words behind this word cannot be listed"} />
+          )}
           {ran.source === "word" && originals.length > 0 && (
             <div className="original-words">
               <h4>The Hebrew and Greek words behind “{ran.word}”</h4>
               <div className="chips">
                 {originals.map((o) => (
-                  <button key={o.strongs} type="button" onClick={() => openOriginal(o.strongs)} title={o.definition || undefined}>
-                    <span className="ow-lemma" lang={o.strongs.startsWith("H") ? "he" : "grc"}>
-                      {o.lemma}
-                    </span>
-                    <span className="muted">
-                      {o.strongs} · {o.times}×
-                    </span>
-                  </button>
+                  <span key={o.strongs} className="ow-chip">
+                    <PlayWord compact text={o.lemma} label={o.lemma} />
+                    <button type="button" onClick={() => (onWordPage ? onWordPage(o.strongs) : openOriginal(o.strongs))} title={o.definition || "Open this word's page"}>
+                      <span className="ow-lemma" lang={o.strongs.startsWith("H") ? "he" : "grc"}>
+                        {o.lemma}
+                      </span>
+                      <span className="muted">
+                        {o.strongs} · {o.times}×
+                      </span>
+                    </button>
+                  </span>
                 ))}
               </div>
             </div>

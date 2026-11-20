@@ -11,6 +11,7 @@ import { ApocryphaRefsBody, ApocryphaRefsSection } from "./ApocryphaRefs";
 import { LibraryMentionsSection, SpurgeonSection } from "./LibraryMentions";
 import type { LibraryMention } from "../api";
 
+import { PanelBack } from "../panelNav";
 cytoscape.use(cola);
 
 interface Props {
@@ -253,6 +254,7 @@ export function CrossRefGraph({ book, chapter, verse, books, versionCode, onOpen
   return (
     <aside className="side-panel wide">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>
           Cross-reference web: {book} {chapter}:{verse}
         </h3>

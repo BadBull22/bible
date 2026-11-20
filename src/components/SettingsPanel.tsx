@@ -12,11 +12,13 @@ import { STORE_PAGE } from "../reviewAsk";
 import { VoiceDownload } from "./VoiceDownload";
 import { UpdateSettings } from "./Updates";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { AndroidCard } from "./AndroidCard";
 import { open as openFolderDialog } from "@tauri-apps/plugin-dialog";
 import { autoBackupOn, backupFolder, setAutoBackupOn, setBackupFolder } from "../autoBackup";
 import { collectDesktopExtras } from "../backupExtras";
 import { restoreFromChosenFile, restoreLatest } from "../restoreRun";
-
+
+import { PanelBack } from "../panelNav";
 const SHARE_TEXT = "Bible Concordance: a free Bible study app for Windows and Android that works offline, with no account and no adverts. https://bible4me.org";
 
 /** Plays a short sample in the chosen voice ("Preparing…" the first time, while the
@@ -329,6 +331,7 @@ export function SettingsPanel({
   return (
     <aside className="side-panel settings-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>Settings</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />
@@ -596,6 +599,7 @@ export function SettingsPanel({
               What's new in this version
             </button>
           </div>
+          <AndroidCard />
           <div className="note-editor-actions">
             <button className="outline-btn" onClick={() => void openUrl(STORE_PAGE).catch(() => undefined)} title="Opens the app's page in the Microsoft Store, where you can leave a rating and write a review">
               Write a review on the Microsoft Store

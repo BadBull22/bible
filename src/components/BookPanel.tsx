@@ -8,6 +8,7 @@ import { BOOKMARK_HERE_EVENT, chunkText, LISTEN_FINISHED_EVENT, LISTEN_FROM_EVEN
 import { keepInView, sentencesIn, showReading, textMap, watchForManualScroll } from "../readHighlight";
 import { plainText, RichText } from "./RichText";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   name: string;
   /** "main": fills the reading pane in place of the Bible text; "panel" (default): a side panel */
@@ -561,6 +562,7 @@ export function BookPanel({ name, layout = "panel", onJump, onOpenLibrary, onClo
         </div>
       ) : (
         <div className="side-panel-header">
+          <PanelBack />
           <h3>{info?.title ?? name}</h3>
           <button onClick={onClose} aria-label="Close panel">
             <CloseIcon size={14} />

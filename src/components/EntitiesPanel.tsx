@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, ChapterEntities, EntityDetail, EntityKind, EntityLink, EntitySummary } from "../api";
 import { BackIcon, CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   book: string;
   chapter: number;
@@ -100,6 +101,7 @@ export function EntitiesPanel({ book, chapter, onJump, onClose, onFocusPlace }: 
     return (
       <aside className="side-panel entities-panel">
         <div className="side-panel-header">
+          <PanelBack />
           <h3>
             <button className="icon-btn inline" onClick={() => setDetail(null)} aria-label="Back to list" title="Back">
               <BackIcon size={15} />
@@ -183,6 +185,7 @@ export function EntitiesPanel({ book, chapter, onJump, onClose, onFocusPlace }: 
   return (
     <aside className="side-panel entities-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>
           People &amp; Places: {book} {chapter}
         </h3>

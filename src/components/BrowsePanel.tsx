@@ -8,6 +8,7 @@ import { extraTotal, useExtraPages, useFetchExtras } from "../browse/extraPages"
 import { BrowseActions, ChildView, StoryView, TopicView } from "./BrowsePages";
 import { BackIcon, CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 export interface BrowseOpen {
   tab?: BrowseKind;
   /** a page to open straight away */
@@ -96,6 +97,7 @@ export function BrowsePanel({ initial, versionCode, onJump, onOpenDictionary, on
   return (
     <aside className={"side-panel wide browse-panel" + (open?.kind === "children" ? " kids" : "")}>
       <div className="side-panel-header">
+        <PanelBack />
         {open ? (
           <button className="browse-back" onClick={() => setOpen(null)} aria-label={`Back to ${TABS.find((t) => t.kind === open.kind)!.label}`}>
             <BackIcon size={14} /> {TABS.find((t) => t.kind === open.kind)!.label}

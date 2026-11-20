@@ -460,6 +460,7 @@ pub fn run() {
             assistant_stories::ai_stories,
             assistant_structure::ai_structure,
             assistant_questions::ai_group_questions,
+            remote::qr_for_url,
             voice::voice_status,
             voice::voice_start,
             voice::voice_speak,

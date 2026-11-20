@@ -9,6 +9,7 @@ import { CopyButton } from "./CopyButton";
 import { ChevronDownIcon, CloseIcon } from "./icons";
 import { confirmAsk } from "../confirm";
 
+import { PanelBack } from "../panelNav";
 type Tab = "notes" | "highlights" | "bookmarks" | "plans";
 
 interface Props {
@@ -171,6 +172,7 @@ export function StudyPanel({ books, chapterCounts, initialTab, refreshKey, onJum
   return (
     <aside className="side-panel wide study-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>My Study</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

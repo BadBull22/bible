@@ -8,6 +8,8 @@ import { api, type Sample, type Sense, type SenseReport } from "../api";
 import { BIBLE_BOOKS } from "../browse/browseLogic";
 import { arcPath, senseArcs, senseColour, senseOrder } from "../semantic";
 import { BookStrip, type StripBook } from "./BookStrip";
+import { PlayWord } from "./PlayWord";
+import { NoStrongsNote } from "./NoStrongsNote";
 import { SilCardView } from "./SilCardView";
 
 export interface VerseAt {
@@ -23,11 +25,21 @@ interface Props {
   /** the verse the word is being read in, if any */
   at?: VerseAt | null;
   onJump: (book: string, chapter: number, verse: number) => void;
+  /** does the Bible the verses are shown in have Strong's numbers loaded (if not, the examples come from the BSB), and what is it called */
+  strongsReady?: boolean;
+  versionName?: string;
+  /** the word page shows the word itself above: leave the heading out */
+  hideHead?: boolean;
+  /** open the word's dictionary entry (Word Study) */
+  onWordStudy?: (strongs: string, surfaceText: string) => void;
 }
 
-const stripBooks = (counts: number[]): StripBook[] => BIBLE_BOOKS.map((name, i) => ({ name, testament: i < 39 ? "OT" : "NT", count: counts[i] ?? 0 }));
+export const stripBooks = (counts: number[]): StripBook[] => BIBLE_BOOKS.map((name, i) => ({ name, testament: i < 39 ? "OT" : "NT", count: counts[i] ?? 0 }));
 
-export function SensePanel({ strongs, version, at, onJump }: Props) {
+/** the form of the word to say: a Hebrew word needs its vowel points, which Strong's lemma always has */
+const speakForm = (r: SenseReport) => (r.language === "hebrew" && !/[ְ-ֽֿ-ׇ]/.test(r.lemma) ? r.dictionary?.lemma || r.lemma : r.lemma || r.dictionary?.lemma || "");
+
+export function SensePanel({ strongs, version, at, onJump, strongsReady = true, versionName, hideHead = false, onWordStudy }: Props) {
   const [report, setReport] = useState<SenseReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sel, setSel] = useState(0);
@@ -77,12 +89,20 @@ export function SensePanel({ strongs, version, at, onJump }: Props) {
   if (error) return <p className="status-error">{error}</p>;
   if (!report) return <p className="muted">Loading the meanings…</p>;
   const lang = report.language === "hebrew" ? "he" : "grc";
-  const head = (
+  const head = hideHead ? null : (
     <h3 className="sense-head">
       <span lang={lang} dir={lang === "he" ? "rtl" : "ltr"} className="sense-lemma">
         {report.lemma || report.dictionary?.lemma}
-      </span>{" "}
-      <span className="muted">{[report.strongs, report.dictionary?.translit, report.language === "hebrew" ? "Hebrew" : "Greek"].filter(Boolean).join(" · ")}</span>
+      </span>
+      <PlayWord text={speakForm(report)} label={report.lemma || report.dictionary?.lemma || report.strongs} />{" "}
+      {onWordStudy ? (
+        <button type="button" className="link-btn sense-strongs-btn" onClick={() => onWordStudy(report.strongs, report.lemma)} title="Open the definition in Word Study">
+          {report.strongs}
+        </button>
+      ) : (
+        <span className="muted">{report.strongs}</span>
+      )}
+      <span className="muted">{[report.dictionary?.translit, report.language === "hebrew" ? "Hebrew" : "Greek"].filter(Boolean).map((t) => ` · ${t}`).join("")}</span>
     </h3>
   );
 
@@ -200,6 +220,7 @@ export function SensePanel({ strongs, version, at, onJump }: Props) {
           <h4>Where it is used</h4>
           <BookStrip books={stripBooks(current.by_book)} unit="verse" label={`Verses with this meaning, by book`} />
           <h4>Examples</h4>
+          {!strongsReady && <NoStrongsNote name={versionName ?? version} what="the examples below are shown in the BSB, with the word marked" />}
           {samples === null && <p className="muted">Loading…</p>}
           {samples?.length === 0 && <p className="muted">The verses are not available.</p>}
           {samples?.map((s) => (

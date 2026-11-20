@@ -1,6 +1,6 @@
 import { startAutoSync } from "./syncFolder";
 import logo from "./assets/logo.png";
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api, BookInfo, ChapterMarks, InstalledModule, LibraryKind, LibraryMention, resolveReference, Version, VerseWithWords } from "./api";
 import { addSearchHistory } from "./searchHistory";
 import { Sidebar } from "./components/Sidebar";
@@ -11,7 +11,8 @@ import { BrowsePanel } from "./components/BrowsePanel";
 import { printBrowsePage } from "./browse/printBridge";
 import { effectiveLook, useThemeState } from "./themes/themeStore";
 import type { BrowseKind } from "./browse/types";
-import { WordStudyPanel } from "./components/WordStudyPanel";
+import { WordPanel, type WordTab } from "./components/WordPanel";
+import type { MeaningSel } from "./components/MeaningPicker";
 import { ParallelPanel } from "./components/ParallelPanel";
 import { SearchPanel } from "./components/SearchPanel";
 import { OfflineAiPanel } from "./components/OfflineAiPanel";
@@ -30,6 +31,8 @@ import { ReviewPrompt } from "./components/ReviewPrompt";
 import { afterAnswer as afterReviewAnswer, afterShown as afterReviewShown, countOpen, due as reviewDue, load as loadReviewAsk, ReviewAnswer, save as saveReviewAsk } from "./reviewAsk";
 import { WHATS_NEW, WhatsNewEntry, whatsNewFor } from "./whatsNew";
 import { runAutoBackup } from "./autoBackup";
+import { PanelNavContext } from "./panelNav";
+import { hasStrongs, versionLabel } from "./components/NoStrongsNote";
 import { loadExtraPages } from "./browse/extraPages";
 import { todayIso } from "./readingPlans";
 import { getVersion } from "@tauri-apps/api/app";
@@ -79,14 +82,14 @@ function PanelFallback() {
 }
 
 type SidePanel =
-  | { kind: "word"; strongsNumbers: string[]; surfaceText: string }
+  | { kind: "word"; strongsNumbers: string[]; surfaceText: string; at?: { book: string; chapter: number; verse: number }; tab?: WordTab }
   | { kind: "xref"; book: string; chapter: number; verse: number }
   | { kind: "parallel"; book: string; chapter: number; verse: number }
   | { kind: "search"; initialQuery?: string }
   | { kind: "settings"; focus?: "online" | "appearance" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
-  | { kind: "concordance"; word?: string; strongs?: string; at?: { book: string; chapter: number; verse: number } }
+  | { kind: "concordance"; word?: string; strongs?: string; at?: { book: string; chapter: number; verse: number }; meaning?: MeaningSel }
   | { kind: "map"; atlas?: boolean }
   | { kind: "timeline"; focusPersonId?: string }
   // commentary / entities follow the reader's current book+chapter (so paging keeps them in sync)
@@ -105,6 +108,32 @@ type SidePanel =
   | { kind: "authors" }
   | { kind: "browse"; tab?: BrowseKind; page?: string }
   | null;
+
+/** What a panel is called on the Back button that returns to it. */
+function panelTitle(p: NonNullable<SidePanel>): string {
+  switch (p.kind) {
+    case "interlinear":
+      return `Interlinear ${p.book} ${p.chapter}:${p.verse}`;
+    case "word":
+      return p.strongsNumbers[0] ? `Word ${p.strongsNumbers[0]}` : "Word";
+    case "concordance":
+      return p.meaning ? `Tree: ${p.meaning.name}` : p.strongs ? `Meanings of ${p.strongs}` : "Concordance";
+    case "original":
+      return "Original words";
+    case "dictionary":
+      return "Dictionary";
+    case "commentary":
+      return "Commentary";
+    case "search":
+      return "Search";
+    case "parallel":
+      return "Side by side";
+    case "xref":
+      return "Cross references";
+    default:
+      return "the last panel";
+  }
+}
 
 const NO_MARKS: ChapterMarks = { bookmarks: [], highlights: [], notes: [], note_spans: [] };
 
@@ -207,7 +236,31 @@ function App() {
   const [verses, setVerses] = useState<VerseWithWords[]>([]);
   const [loadingChapter, setLoadingChapter] = useState(true);
   const [chapterError, setChapterError] = useState<string | null>(null);
-  const [panel, setPanel] = useState<SidePanel>(null);
+  const [panel, setPanelRaw] = useState<SidePanel>(null);
+  // the side panels you came through (Interlinear -> Word Study -> meanings), for the Back in a panel's header; a panel opened from the menus starts afresh
+  const [trail, setTrail] = useState<NonNullable<SidePanel>[]>([]);
+  const panelNow = useRef<SidePanel>(null);
+  panelNow.current = panel;
+  const setPanel = useCallback((p: SidePanel) => {
+    if (!p || p.kind !== panelNow.current?.kind) setTrail([]); // a verse change in the same panel keeps the way back
+    setPanelRaw(p);
+  }, []);
+  /** a link inside a panel (or a word tapped while a panel is open): open the next panel and remember this one */
+  const openLinked = useCallback((p: SidePanel, backTo?: SidePanel) => {
+    const cur = backTo ?? panelNow.current; // `backTo`: where Back goes when the panel itself did not keep what you were looking at (the Concordance)
+    if (cur) setTrail((t) => [...t, cur].slice(-12));
+    setPanelRaw(p);
+  }, []);
+  const panelNav = useMemo(() => {
+    const prev = trail[trail.length - 1];
+    return {
+      backLabel: prev ? panelTitle(prev) : null,
+      back: () => {
+        setTrail((t) => t.slice(0, -1));
+        if (prev) setPanelRaw(prev);
+      },
+    };
+  }, [trail]);
   // Offline Assistant: hidden until unlocked from the search bar
   const [aiOn, setAiOn] = useState(false);
   useEffect(() => {
@@ -958,7 +1011,7 @@ function App() {
   ];
 
   return (
-    <>
+    <PanelNavContext.Provider value={panelNav}>
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
       {welcomeOpen && (
         <WelcomeWindow
@@ -1214,7 +1267,7 @@ function App() {
                 prev={adjacent.prev}
                 next={adjacent.next}
                 onNavigate={flipChapter}
-                onWordClick={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
+                onWordClick={(strongsNumbers, surfaceText) => openLinked({ kind: "word", strongsNumbers, surfaceText })}
                 onShowCrossRefs={(verse) => setPanel({ kind: "xref", book, chapter, verse })}
                 onShowParallel={(verse) => setPanel({ kind: "parallel", book, chapter, verse })}
                 onShowCommentary={(verse) => setPanel({ kind: "commentary", verse })}
@@ -1278,13 +1331,20 @@ function App() {
             />
           )}
           {panel?.kind === "word" && (
-            <WordStudyPanel
+            <WordPanel
               strongsNumbers={panel.strongsNumbers}
               surfaceText={panel.surfaceText}
+              at={panel.at}
+              tab={panel.tab}
               versionCode={versionCode}
+              strongsReady={hasStrongs(versions, versionCode)}
+              versionName={versionLabel(versions, versionCode)}
               onClose={() => setPanel(null)}
               onJump={jumpTo}
-              onSearchGrammar={(strongs) => setPanel({ kind: "original", strongs })}
+              onSearchGrammar={(strongs) => openLinked({ kind: "original", strongs })}
+              onShowInterlinear={(at) => openLinked({ kind: "interlinear", book: at.book, chapter: at.chapter, verse: at.verse })}
+              onOpenWord={(strongs) => openLinked({ kind: "word", strongsNumbers: [strongs], surfaceText: "" })}
+              onOpenTree={(sel) => openLinked({ kind: "concordance", meaning: sel })}
               onOpenLibrary={() => setPanel({ kind: "library", tab: "more" })}
             />
           )}
@@ -1391,8 +1451,10 @@ function App() {
                 setPanel({ kind: "interlinear", book: panel.book, chapter: panel.chapter, verse: v });
                 if (panel.book === book && panel.chapter === chapter) setTargetVerse(v);
               }}
-              onWordStudy={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
-              onOpenMeanings={(strongs, at) => setPanel({ kind: "concordance", strongs, at })}
+              onWordStudy={(strongsNumbers, surfaceText) =>
+                openLinked({ kind: "word", strongsNumbers, surfaceText, at: { book: panel.book, chapter: panel.chapter, verse: panel.verse } })
+              }
+              onOpenMeanings={(strongs, at) => openLinked({ kind: "word", strongsNumbers: [strongs], surfaceText: "", at, tab: "meanings" })}
               onClose={() => setPanel(null)}
             />
           )}
@@ -1468,7 +1530,7 @@ function App() {
               key={panel.strongs ?? ""}
               initialStrongs={panel.strongs}
               onJump={jumpTo}
-              onWordStudy={(strongsNumbers, surfaceText) => setPanel({ kind: "word", strongsNumbers, surfaceText })}
+              onWordStudy={(strongsNumbers, surfaceText) => openLinked({ kind: "word", strongsNumbers, surfaceText })}
               onClose={() => setPanel(null)}
             />
           )}
@@ -1484,12 +1546,17 @@ function App() {
           {panel?.kind === "firsts" && <FirstsPanel onClose={() => setPanel(null)} onJump={jumpTo} />}
           {panel?.kind === "concordance" && (
             <ConcordancePanel
-              key={`${panel.word ?? ""}|${panel.strongs ?? ""}|${panel.at ? `${panel.at.book} ${panel.at.chapter}:${panel.at.verse}` : ""}`}
+              key={`${panel.word ?? ""}|${panel.strongs ?? ""}|${panel.meaning?.code ?? ""}|${panel.at ? `${panel.at.book} ${panel.at.chapter}:${panel.at.verse}` : ""}`}
               versions={versions}
               versionCode={versionCode}
               initialWord={panel.word}
               initialStrongs={panel.strongs ? { strongs: panel.strongs, at: panel.at } : undefined}
+              initialMeaning={panel.meaning}
+              onWordPage={(strongs) => openLinked({ kind: "word", strongsNumbers: [strongs], surfaceText: "", tab: "meanings" })}
               onJump={jumpTo}
+              onWordStudy={(strongsNumbers, surfaceText) =>
+                openLinked({ kind: "word", strongsNumbers, surfaceText }, { kind: "concordance", strongs: strongsNumbers[0], at: panel.at })
+              }
               onClose={() => setPanel(null)}
             />
           )}
@@ -1511,7 +1578,7 @@ function App() {
           )}
         </div>
       </div>
-    </>
+    </PanelNavContext.Provider>
   );
 }
 

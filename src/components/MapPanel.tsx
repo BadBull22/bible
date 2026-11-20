@@ -6,6 +6,7 @@ import { CloseIcon } from "./icons";
 import { AtlasView } from "./AtlasView";
 import { BibleMapsView } from "./BibleMapsView";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   onClose: () => void;
   onJump: (book: string, chapter: number, verse: number) => void;
@@ -526,6 +527,7 @@ export function MapPanel({ onClose, onJump, initialFocusId, onFocusPlace, startO
   return (
     <aside className="side-panel wide">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>{view === "atlas" ? "Maps: your atlas" : view === "bible" ? "Bible maps" : "Interactive map: places of the biblical world"}</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

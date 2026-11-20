@@ -94,6 +94,10 @@ pub struct MeaningWord {
     /// the Louw-Nida number of a Greek meaning
     pub ln: Option<String>,
     pub verses: usize,
+    /// how the word is written in English letters (Strong's), when its Strong's number is known
+    pub translit: Option<String>,
+    /// the form to say aloud: a Hebrew word needs its vowel points, so a lemma without them is replaced by Strong's pointed one
+    pub speak: String,
 }
 
 /// What a word means in a verse, or everywhere it is used when the verse is not known to the dictionary.
@@ -262,19 +266,42 @@ pub fn semantic_tree(state: State<SemanticState>, language: String) -> Result<Ve
 
 /// The words (and their meanings) inside a group, the most used first.
 #[tauri::command]
-pub fn semantic_words(state: State<SemanticState>, language: String, code: String) -> Result<Vec<MeaningWord>, String> {
+pub fn semantic_words(state: State<SemanticState>, db: State<DbState>, language: String, code: String) -> Result<Vec<MeaningWord>, String> {
     let lang = state.get()?.lang(&language)?;
+    let conn = db.0.lock().map_err(|e| e.to_string())?;
     let mut out = Vec::new();
     for (ei, e) in lang.entries.iter().enumerate() {
         for (mi, m) in e.meanings.iter().enumerate() {
             if m.domains.iter().any(|d| d.starts_with(&code)) {
-                out.push(MeaningWord { entry: ei, meaning: mi, strongs: e.strongs.clone(), lemma: e.lemma.clone(), glosses: m.glosses.clone(), definition: m.definition.clone(), ln: m.ln.clone(), verses: m.verses.len() });
+                out.push(MeaningWord { entry: ei, meaning: mi, strongs: e.strongs.clone(), lemma: e.lemma.clone(), glosses: m.glosses.clone(), definition: m.definition.clone(), ln: m.ln.clone(), verses: m.verses.len(), translit: None, speak: e.lemma.clone() });
             }
         }
     }
     out.sort_by(|a, b| b.verses.cmp(&a.verses).then(a.lemma.cmp(&b.lemma)));
     out.truncate(600);
+    // Strong's transliteration and, for a Hebrew lemma without vowel points, Strong's pointed lemma (one lookup per Strong's number)
+    let mut cache: std::collections::HashMap<String, (Option<String>, String)> = std::collections::HashMap::new();
+    for w in out.iter_mut() {
+        let Some(s) = w.strongs.first().cloned() else { continue };
+        let (xlit, lemma) = cache.entry(s.clone()).or_insert_with(|| strongs_xlit_lemma(&conn, &s)).clone();
+        w.translit = xlit;
+        if language == "hebrew" && !has_hebrew_points(&w.lemma) && has_hebrew_points(&lemma) {
+            w.speak = lemma;
+        }
+    }
     Ok(out)
+}
+
+/// Does a Hebrew word carry vowel points? (Without them it cannot be said aloud.)
+fn has_hebrew_points(text: &str) -> bool {
+    text.chars().any(|c| ('\u{05B0}'..='\u{05C7}').contains(&c) && c != '\u{05BE}')
+}
+
+fn strongs_xlit_lemma(conn: &rusqlite::Connection, strongs: &str) -> (Option<String>, String) {
+    conn.query_row("SELECT xlit, lemma FROM strongs_dict WHERE strongs_number = ?1", params![strongs], |r| {
+        Ok((r.get::<_, Option<String>>(0)?.map(|t| t.trim().to_string()).filter(|t| !t.is_empty()), r.get::<_, Option<String>>(1)?.unwrap_or_default()))
+    })
+    .unwrap_or((None, String::new()))
 }
 
 fn books_of(conn: &rusqlite::Connection) -> Result<Vec<ConcordanceBook>, String> {
@@ -577,6 +604,8 @@ pub struct Sense {
     pub ln: Option<String>,
     /// "Attitudes and Emotions > Love, Affection, Compassion" for each group the meaning is in
     pub groups: Vec<String>,
+    /// the codes of those groups (to list the other words in a group)
+    pub domains: Vec<String>,
     pub verses: usize,
     /// verses of each of the 66 books (Genesis first)
     pub by_book: Vec<u32>,
@@ -626,6 +655,7 @@ fn senses_of(lang: &Lang, sil: Option<&RawSil>, hebrew: bool, strongs: &str, key
                 definition: m.definition.clone(),
                 ln: m.ln.clone(),
                 groups: m.domains.iter().map(|d| lang.path_of(d)).collect(),
+                domains: m.domains.clone(),
                 verses: m.verses.len(),
                 by_book,
                 here: key.is_some_and(|k| m.verses.binary_search(&k).is_ok()),
@@ -740,6 +770,7 @@ fn mark_parts(text: &str, words: &[String]) -> Vec<SamplePart> {
 pub fn semantic_sense_samples(
     state: State<SemanticState>,
     db: State<DbState>,
+    lib: State<crate::library::LibraryState>,
     strongs: String,
     entry: usize,
     meaning: usize,
@@ -754,7 +785,36 @@ pub fn semantic_sense_samples(
     let m = lang.entries.get(entry).and_then(|e| e.meanings.get(meaning)).ok_or("That meaning is not in the dictionary.")?;
     let conn = db.0.lock().map_err(|e| e.to_string())?;
     let here = verse_key(&conn, book, chapter, verse);
+    // a Bible added to the Library with Strong's numbers is used as it is
+    if let Ok(lc) = lib.conn.lock() {
+        if crate::library::is_tagged_bible(&lc, &version_code) {
+            return library_samples(&conn, &lc, &s, &m.verses, here, &version_code);
+        }
+    }
     samples_in(&conn, &s, &m.verses, here, &version_code)
+}
+
+/// The same for a Library Bible: its verses carry their Strong's-numbered words, so the word is marked in them.
+fn library_samples(bible: &rusqlite::Connection, lib: &rusqlite::Connection, s: &str, verses: &[u32], here: Option<u32>, code: &str) -> Result<Vec<Sample>, String> {
+    let mut out = Vec::new();
+    for k in pick_sample_keys(verses, here, 3) {
+        let (b, c, v) = ((k / 1_000_000) as i64, ((k % 1_000_000) / 1_000) as i64, (k % 1_000) as i64);
+        let Ok(name) = bible.query_row("SELECT name FROM books WHERE order_index = ?1", params![b], |r| r.get::<_, String>(0)) else { continue };
+        let Ok((text, json)) = lib.query_row(
+            "SELECT text, words FROM lib_verses WHERE module = ?1 AND book = ?2 AND chapter = ?3 AND verse = ?4",
+            params![code, name, c, v],
+            |r| Ok((r.get::<_, String>(0)?, r.get::<_, Option<String>>(1)?)),
+        ) else {
+            continue;
+        };
+        let list: Vec<(String, Vec<String>)> = json.and_then(|j| serde_json::from_str(&j).ok()).unwrap_or_default();
+        let words: Vec<String> = list.into_iter().filter(|(_, nums)| nums.iter().any(|n| n.eq_ignore_ascii_case(s))).map(|(w, _)| w).collect();
+        out.push(Sample { book: name, chapter: c, verse: v, parts: mark_parts(&text, &words) });
+    }
+    if out.is_empty() {
+        return Err("The verses are not available.".into());
+    }
+    Ok(out)
 }
 
 fn samples_in(conn: &rusqlite::Connection, s: &str, verses: &[u32], here: Option<u32>, version_code: &str) -> Result<Vec<Sample>, String> {
@@ -799,9 +859,51 @@ pub struct OriginalWord {
 
 /// The Hebrew and Greek words an English word translates (in a Bible tagged with Strong's numbers), the most often first: "love" is agape, agapao, ahab...
 #[tauri::command]
-pub fn original_words_for(db: State<DbState>, word: String, version_code: String) -> Result<Vec<OriginalWord>, String> {
+pub fn original_words_for(db: State<DbState>, lib: State<crate::library::LibraryState>, word: String, version_code: String) -> Result<Vec<OriginalWord>, String> {
     let conn = db.0.lock().map_err(|e| e.to_string())?;
+    if let Ok(lc) = lib.conn.lock() {
+        if crate::library::is_tagged_bible(&lc, &version_code) {
+            return library_original_words(&conn, &lc, &word, &version_code);
+        }
+    }
     original_words_in(&conn, &word, &version_code)
+}
+
+/// The same for a Library Bible with Strong's numbers: the tagged words of every verse are read once and counted.
+fn library_original_words(bible: &rusqlite::Connection, lib: &rusqlite::Connection, word: &str, code: &str) -> Result<Vec<OriginalWord>, String> {
+    let w: String = word.trim().to_lowercase().chars().filter(|c| c.is_alphabetic() || *c == '\'' || *c == ' ').collect();
+    if w.is_empty() || w.len() > 40 {
+        return Ok(Vec::new());
+    }
+    let forms = [w.clone(), format!("{w}s"), format!("{w}d"), format!("{w}ed"), format!("{w}ing")];
+    let mut counts: HashMap<String, i64> = HashMap::new();
+    let mut stmt = lib.prepare("SELECT words FROM lib_verses WHERE module = ?1 AND words IS NOT NULL").map_err(|e| e.to_string())?;
+    let rows = stmt.query_map(params![code], |r| r.get::<_, String>(0)).map_err(|e| e.to_string())?;
+    for json in rows.flatten() {
+        let Ok(list) = serde_json::from_str::<Vec<(String, Vec<String>)>>(&json) else { continue };
+        for (surface, nums) in list {
+            if forms.contains(&surface.trim().to_lowercase()) {
+                for n in nums {
+                    if n != "G3588" {
+                        *counts.entry(n).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+    }
+    let mut out = Vec::new();
+    for (n, times) in counts {
+        let Ok((lemma, xlit, def)) = bible.query_row("SELECT lemma, xlit, strongs_def FROM strongs_dict WHERE strongs_number = ?1", params![n], |r| {
+            Ok((r.get::<_, Option<String>>(0)?, r.get::<_, Option<String>>(1)?, r.get::<_, Option<String>>(2)?))
+        }) else {
+            continue;
+        };
+        let Some(lemma) = lemma else { continue };
+        out.push(OriginalWord { strongs: n, lemma, translit: xlit.filter(|t| !t.trim().is_empty()), definition: def.unwrap_or_default().trim().to_string(), times });
+    }
+    out.sort_by(|a, b| b.times.cmp(&a.times).then(a.strongs.cmp(&b.strongs)));
+    out.truncate(12);
+    Ok(out)
 }
 
 fn original_words_in(conn: &rusqlite::Connection, word: &str, version_code: &str) -> Result<Vec<OriginalWord>, String> {
@@ -953,6 +1055,42 @@ mod tests {
         assert_eq!(p.iter().map(|x| x.text.as_str()).collect::<String>(), "In the beginning God");
         assert_eq!(p.iter().filter(|x| x.mark).count(), 1);
         assert_eq!(mark_parts("Plain.", &[]), vec![SamplePart { text: "Plain.".into(), mark: false }]);
+    }
+
+    /// A Bible added to the Library with Strong's numbers: its words are counted for an English word, and marked in its example verses.
+    #[test]
+    fn a_library_bible_is_used_for_original_words_and_examples() {
+        let bible = rusqlite::Connection::open_in_memory().unwrap();
+        bible
+            .execute_batch(
+                "CREATE TABLE books(id INTEGER PRIMARY KEY, name TEXT, order_index INTEGER);
+                 CREATE TABLE strongs_dict(strongs_number TEXT, lemma TEXT, xlit TEXT, strongs_def TEXT);
+                 INSERT INTO books VALUES (1, 'Genesis', 1), (43, 'John', 43);
+                 INSERT INTO strongs_dict VALUES ('G26', 'ἀγάπη', NULL, 'love'), ('G25', 'ἀγαπάω', NULL, 'to love'), ('G3588', 'ὁ', NULL, 'the');",
+            )
+            .unwrap();
+        let lib = rusqlite::Connection::open_in_memory().unwrap();
+        lib.execute_batch("CREATE TABLE lib_verses(id INTEGER PRIMARY KEY, module TEXT, book TEXT, chapter INT, verse INT, text TEXT, red TEXT, words TEXT);").unwrap();
+        for (book, c, v, text, words) in [
+            ("John", 3, 16, "For God so loved the world.", r#"[["so",["G3779"]],["loved",["G25"]],["the",["G3588"]],["world",["G2889"]]]"#),
+            ("John", 13, 34, "Love one another.", r#"[["Love",["G25"]],["another",["G240"]]]"#),
+            ("John", 15, 13, "Greater love has no one.", r#"[["love",["G26"]]]"#),
+            ("Genesis", 1, 1, "In the beginning.", "null"),
+        ] {
+            lib.execute("INSERT INTO lib_verses(module, book, chapter, verse, text, words) VALUES ('TG', ?1, ?2, ?3, ?4, ?5)", params![book, c, v, text, if words == "null" { None } else { Some(words) }]).unwrap();
+        }
+        let found = library_original_words(&bible, &lib, "Love", "TG").unwrap();
+        let numbers: Vec<(&str, i64)> = found.iter().map(|w| (w.strongs.as_str(), w.times)).collect();
+        assert_eq!(numbers, vec![("G25", 2), ("G26", 1)], "counted from the Bible's own words, 'the' left out");
+        assert!(library_original_words(&bible, &lib, "  ", "TG").unwrap().is_empty());
+
+        // examples: the verse being read, with the word marked
+        let samples = library_samples(&bible, &lib, "G25", &[43003016, 43013034], Some(43003016), "TG").unwrap();
+        assert_eq!(samples.len(), 2);
+        let first = &samples[0];
+        assert_eq!((first.book.as_str(), first.chapter, first.verse), ("John", 3, 16));
+        assert!(first.parts.iter().any(|p| p.mark && p.text == "loved"), "{:?}", first.parts);
+        assert!(library_samples(&bible, &lib, "G25", &[1002002], None, "TG").is_err(), "a verse with no text is an error, not an empty list");
     }
 
     /// The real databases: the original words behind "love", a meaning's example verses with the word marked, and the cards.

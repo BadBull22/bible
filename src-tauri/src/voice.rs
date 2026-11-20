@@ -339,9 +339,10 @@ pub async fn voice_start(app: AppHandle) -> Result<(), String> {
     .map_err(|e| e.to_string())?
 }
 
-/// Speaks `text`; returns WAV audio (delivered to the page as an ArrayBuffer).
+/// Speaks `text`; returns WAV audio (delivered to the page as an ArrayBuffer). `lang` "grc" or "he" says a Greek or Hebrew word (a pointed Hebrew word) instead
+/// of English text.
 #[tauri::command]
-pub async fn voice_speak(app: AppHandle, text: String, voice: String, speed: f32) -> Result<tauri::ipc::Response, String> {
+pub async fn voice_speak(app: AppHandle, text: String, voice: String, speed: f32, lang: Option<String>) -> Result<tauri::ipc::Response, String> {
     let app2 = app.clone();
     let port = tauri::async_runtime::spawn_blocking(move || {
         let state = app2.state::<VoiceState>();
@@ -349,12 +350,22 @@ pub async fn voice_speak(app: AppHandle, text: String, voice: String, speed: f32
     })
     .await
     .map_err(|e| e.to_string())??;
+    // a voice downloaded before Greek and Hebrew words were added would read them as English text: say so instead
+    if lang.as_deref().is_some_and(|l| !l.is_empty()) {
+        let health: Option<serde_json::Value> = match reqwest::Client::new().get(format!("http://127.0.0.1:{port}/health")).timeout(Duration::from_secs(10)).send().await {
+            Ok(r) => r.json().await.ok(),
+            Err(_) => None,
+        };
+        if !health.is_some_and(|h| h["original_words"].as_bool() == Some(true)) {
+            return Err("The natural voice you downloaded is an older version that cannot say Hebrew or Greek words. In Settings > Read aloud, remove it and download it again.".into());
+        }
+    }
     // what was asked, for the log if it fails (the text itself is kept short; it is scripture)
     let asked = format!("{} characters, voice {voice}, speed {speed}: \"{}\"", text.chars().count(), text.chars().take(60).collect::<String>());
     let started = std::time::Instant::now();
     let resp = reqwest::Client::new()
         .post(format!("http://127.0.0.1:{port}/speak"))
-        .json(&serde_json::json!({ "text": text, "voice": voice, "speed": speed }))
+        .json(&serde_json::json!({ "text": text, "voice": voice, "speed": speed, "lang": lang.unwrap_or_default() }))
         .timeout(Duration::from_secs(120))
         .send()
         .await
@@ -365,7 +376,9 @@ pub async fn voice_speak(app: AppHandle, text: String, voice: String, speed: f32
         })?;
     if !resp.status().is_success() {
         let status = resp.status();
-        let msg = resp.text().await.unwrap_or_default();
+        let body = resp.text().await.unwrap_or_default();
+        // the voice answers {"error": "..."}: show the reason, not the JSON
+        let msg = serde_json::from_str::<serde_json::Value>(&body).ok().and_then(|v| v["error"].as_str().map(str::to_string)).unwrap_or(body);
         crate::logging::write("warn", "voice", &format!("the voice answered {status}: {msg} (after {:.1} s; {asked})", started.elapsed().as_secs_f32()));
         return Err(format!("The voice couldn't read that: {msg}"));
     }

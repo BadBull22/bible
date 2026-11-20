@@ -11114,3 +11114,75 @@ body.show-body {
 .original-words button:hover { border-color: var(--accent-500); }
 .original-words .ow-lemma { font-family: var(--serif); font-size: 1.05rem; }
 .iw-senses { font-size: 0.72rem; }
+
+/* the words of a group of meanings: a speaker, the word, its Strong's number, its meaning and its verses */
+.tree-node.word.pressable .tree-wordtext:hover text, .tree-node.word .tree-wordtext:focus-visible text { fill: var(--accent-500); }
+.tree-wordtext { outline: none; }
+.tree-hit { fill: transparent; }
+.tree-node.word.pressable .tree-wordtext:hover .tree-hit, .tree-node.word .tree-wordtext:focus-visible .tree-hit { fill: var(--accent-500); opacity: 0.1; }
+.tree-lemma { font-weight: 600; font-size: 13px; }
+.tree-strongs { fill: var(--text-muted) !important; font-size: 11px !important; }
+.tree-count { fill: var(--text-muted) !important; font-variant-numeric: tabular-nums; }
+.tree-node.word circle { opacity: 0.6; }
+.tree-play { cursor: pointer; outline: none; }
+.tree-play circle { fill: var(--paper-raised); stroke: var(--border); stroke-width: 1.2; opacity: 1 !important; }
+.tree-play:hover circle, .tree-play:focus-visible circle { stroke: var(--accent-500); fill: var(--accent-500); fill-opacity: 0.15; }
+.tree-play-glyph { fill: var(--accent-500) !important; font-size: 12px !important; font-weight: 700; }
+.tree-play[aria-disabled="true"] { cursor: not-allowed; opacity: 0.4; }
+.tree-play.playing circle { stroke: var(--accent-500); }
+.tree-wordnote { margin: 0.4rem 0 0; font-size: 0.82rem; }
+.play-word { display: inline-flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; border-radius: 50%; border: 1px solid var(--border); background: var(--paper-raised); color: var(--accent-500); cursor: pointer; font-size: 0.8rem; vertical-align: middle; margin-left: 0.4rem; padding: 0; }
+.play-word:hover, .play-word:focus-visible { border-color: var(--accent-500); background: var(--accent-500); background: color-mix(in srgb, var(--accent-500) 15%, transparent); }
+.play-word:disabled { opacity: 0.5; cursor: wait; }
+
+/* Back inside the side panel (the panels you came through) */
+.side-panel-header .panel-back { display: inline-flex; align-items: center; gap: 0.2rem; flex: 0 1 auto; max-width: 11rem; margin-right: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.78rem; font-weight: 600; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--paper-raised); color: var(--accent-500); cursor: pointer; width: auto; height: auto; }
+.side-panel-header .panel-back span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-panel-header .panel-back:hover { border-color: var(--accent-500); }
+.play-word-wrap { position: relative; display: inline-flex; align-items: center; }
+.play-word.compact { width: 1.35rem; height: 1.35rem; font-size: 0.62rem; margin-left: 0; }
+.play-word.error { color: var(--danger, #c0392b); border-color: var(--danger, #c0392b); }
+.play-word.playing { border-color: var(--accent-500); background: color-mix(in srgb, var(--accent-500) 22%, transparent); }
+.play-word-wrap.compact .play-word-error { position: absolute; top: 100%; inset-inline-start: 0; z-index: 5; width: max-content; max-width: 14rem; margin-top: 2px; padding: 0.25rem 0.45rem; border-radius: var(--radius-md); border: 1px solid var(--danger, #c0392b); background: var(--paper-raised); color: var(--text); font-size: 0.72rem; font-weight: 400; line-height: 1.3; text-transform: none; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+.play-word-wrap:not(.compact) .play-word-error { margin-left: 0.4rem; color: var(--danger, #c0392b); font-size: 0.8rem; }
+.iw-original-row { display: flex; align-items: center; justify-content: space-between; gap: 0.3rem; }
+.iw-lemma .play-word-wrap, .ow-chip .play-word-wrap, .oc-row .play-word-wrap { margin-inline-end: 0.3rem; }
+.oc-row { display: flex; align-items: center; }
+.oc-row .original-candidate { flex: 1; }
+.ow-chip { display: inline-flex; align-items: center; gap: 0.15rem; }
+.cc-strongs-btn { padding: 0; font-size: inherit; }
+.no-strongs-note { margin: 0.5rem 0; padding: 0.5rem 0.7rem; border: 1px solid var(--border); border-inline-start: 3px solid var(--accent-500); border-radius: var(--radius-md); background: var(--paper-raised); font-size: 0.85rem; line-height: 1.4; }
+.lemma-row { display: flex; align-items: center; gap: 0.4rem; }
+.sense-strongs-btn { font-size: 0.9rem; padding: 0 0.2rem; font-weight: 600; }
+
+/* The word page (a Hebrew or Greek word: overview, meanings, where used, same meaning, library) */
+.word-head { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin: 0.4rem 0 0.2rem; }
+.word-lemma { font-family: var(--serif); font-size: 1.8rem; line-height: 1.2; }
+.word-number { font: 600 0.82rem var(--sans); color: var(--accent-500); background: color-mix(in srgb, var(--accent-500) 16%, transparent); border: 0; border-radius: 6px; padding: 0.1rem 0.5rem; }
+.word-number.small { font-size: 0.74rem; cursor: pointer; }
+.word-number.small:disabled { cursor: default; opacity: 0.7; }
+.word-meta { font-size: 0.82rem; }
+.word-tabs { display: flex; flex-wrap: wrap; gap: 0.2rem; margin: 0.6rem 0 0.8rem; padding: 0.2rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--paper-raised); }
+.word-tabs button { flex: 1 1 auto; border: 0; background: none; color: var(--text-muted); font: 600 0.8rem var(--sans); padding: 0.35rem 0.5rem; border-radius: var(--radius-sm, 6px); cursor: pointer; }
+.word-tabs button.on { background: var(--accent-500); color: #fff; }
+.word-tabs small { opacity: 0.8; font-weight: 500; }
+.word-card { border: 1px dashed var(--border); border-radius: var(--radius-md); padding: 0.5rem 0.7rem; margin: 0.6rem 0; font-size: 0.88rem; }
+.word-card h4 { margin: 0 0 0.25rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
+.word-group-list { list-style: none; padding: 0; margin: 0.5rem 0; display: grid; gap: 0.2rem; }
+.word-group-list li { display: grid; grid-template-columns: auto minmax(4rem, auto) auto 1fr auto; gap: 0.5rem; align-items: center; padding: 0.15rem 0.3rem; border-radius: 6px; font-size: 0.85rem; }
+.word-group-list li.me { background: color-mix(in srgb, var(--accent-500) 14%, transparent); font-weight: 600; }
+.word-group-list .word-gloss { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.word-group-list .word-count { font-variant-numeric: tabular-nums; }
+.word-verses { list-style: none; padding: 0; margin: 0; }
+.word-verses li { padding: 0.35rem 0; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+.iw-meaning-btn { display: block; text-align: start; width: 100%; background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; }
+.iw-meaning-btn:hover, .iw-meaning-btn:focus-visible { text-decoration: underline; text-underline-offset: 2px; }
+
+/* "The Android app is now live too": a QR code beside the words */
+.android-card { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin: 0.6rem 0 1rem; padding: 0.8rem 1rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--paper-raised); }
+.android-qr { flex: none; width: 150px; height: 150px; border-radius: 8px; overflow: hidden; background: #fff; }
+.android-qr svg { width: 100%; height: 100%; display: block; }
+.android-text { flex: 1 1 14rem; min-width: 0; }
+.android-text h3 { margin: 0 0 0.3rem; font-size: 1rem; }
+.android-text p { margin: 0.25rem 0; font-size: 0.88rem; line-height: 1.45; }
+.android-actions { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }

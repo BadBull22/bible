@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { BASIS_LABEL, BIBLE_AUTHORS, BibleAuthor } from "../bibleAuthors";
 import { CloseIcon } from "./icons";
 
+import { PanelBack } from "../panelNav";
 interface Props {
   onClose: () => void;
   onJump: (book: string, chapter: number, verse: number) => void;
@@ -21,6 +22,7 @@ export function AuthorsPanel({ onClose, onJump }: Props) {
   return (
     <aside className="side-panel">
       <div className="side-panel-header">
+        <PanelBack />
         <h3>The {BIBLE_AUTHORS.length} authors of the Bible</h3>
         <button onClick={onClose} aria-label="Close panel">
           <CloseIcon size={14} />

@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { WhatsNewEntry } from "../whatsNew";
 import { CloseIcon } from "./icons";
+import { AndroidCard } from "./AndroidCard";
+import { ANDROID_NOTICE_VERSION } from "../androidNotice";
 
 interface Props {
   entry: WhatsNewEntry;
@@ -24,6 +26,7 @@ export function WhatsNewWindow({ entry, onClose }: Props) {
             <CloseIcon size={16} />
           </button>
         </div>
+        {entry.version === ANDROID_NOTICE_VERSION && <AndroidCard />}
         <ul className="whatsnew-list">
           {entry.items.map((item) => (
             <li key={item}>{item}</li>
