@@ -56,6 +56,9 @@ p { margin: 0 0 .9em; }
 .btn-block { width: 100%; }
 .badge-img { display: inline-block; height: 56px; }
 .badge-img img { height: 56px; width: auto; }
+/* Google's official Google Play badge, shown as supplied: its picture has a clear margin around the black badge, so the picture is larger and pulled in */
+.badge-img.play { height: 64px; margin: -4px -10px; vertical-align: middle; }
+.badge-img.play img { height: 64px; width: auto; }
 
 /* ---------- header ---------- */
 .hdr { position: sticky; top: 0; z-index: 50; background: rgba(28,36,64,.96); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.08); }
