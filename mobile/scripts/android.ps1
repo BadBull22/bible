@@ -93,7 +93,7 @@ Copy-Item "$root\src-tauri\src\sermon.rs" "$Mirror\src-tauri\src\sermon.rs" -For
 # spelling help and family questions (people_qa.rs, with the name spellings in name_aliases.json)
 foreach ($f in "qa.rs", "qa_parser.rs", "firsts.rs", "answer_gate.rs", "spell.rs", "people_qa.rs") { Copy-Item "$root\src-tauri\src\$f" "$Mirror\src-tauri\src\$f" -Force }
 New-Item -ItemType Directory -Force "$Mirror\src-tauri\resources" | Out-Null
-foreach ($f in "qa.json", "qa_index.json", "firsts.json", "name_aliases.json") { Copy-Item "$root\src-tauri\resources\$f" "$Mirror\src-tauri\resources\$f" -Force }
+foreach ($f in "qa.json", "qa_index.json", "firsts.json", "name_aliases.json", "semantic_domains.json", "semantic_sil.json") { Copy-Item "$root\src-tauri\resources\$f" "$Mirror\src-tauri\resources\$f" -Force }
 # what the desktop and the phone app share (module readers, references, keeping in step)
 Mirror-Dir "$root\crates" "$Mirror\crates" @("target", ".cargo")
 # Browse (since 3.0.0): the desktop's pages (JSON) and the rules that find them, used from their source (mobile\src\Browse.tsx imports ..\..\src\browse);

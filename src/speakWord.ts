@@ -21,12 +21,18 @@ export function stopSpeaking() {
   }
 }
 
+/** True when the reason is the voice itself (not installed, or an older one), which the person can fix in Settings > Read aloud. */
+export const voiceNeedsSettings = (reason: string | null | undefined): boolean => !!reason && /natural voice/i.test(reason) && /older one|not installed/i.test(reason);
+
+/** Opens Settings at Read aloud (the voice) from anywhere: the app listens for this. */
+export const openVoiceSettings = () => window.dispatchEvent(new CustomEvent("open-voice-settings"));
+
 /** The reason in plain words, for the person who pressed the button. */
 function friendly(e: unknown): string {
   const t = String(e);
   if (/vowel points/i.test(t)) return "This Hebrew word has no vowel marks in the dictionary, so its sound is not known.";
   if (/voice program|isn't available|not installed|No natural voice|available/i.test(t) && !/couldn't read/i.test(t)) return "The natural voice is not installed. Settings > Read aloud has it.";
-  if (/older version/i.test(t)) return "The natural voice you downloaded is an older version that cannot say Hebrew or Greek words. In Settings > Read aloud, remove it and download it again.";
+  if (/older version/i.test(t)) return "The natural voice on this computer is an older one: it reads the Bible but cannot say Hebrew or Greek words.";
   if (/no sounds/i.test(t)) return "No sound could be made for this word.";
   return "The natural voice could not say this word. " + t.replace(/^Error:\s*/, "").slice(0, 120);
 }

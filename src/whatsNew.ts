@@ -10,9 +10,10 @@ export const WHATS_NEW: WhatsNewEntry[] = [
   {
     version: "3.1.4",
     items: [
-      "Bible Concordance for Android is now live too, free in Google Play: scan the code above with your phone's camera. Your notes, highlights and reading plans can keep in step with this app over your own Wi-Fi.",
+      "Bible Concordance for Android is now on Google Play, free: scan the code above with your phone's camera. Your notes, highlights and reading plans can keep in step with this app over your own Wi-Fi.",
       "One page for every Hebrew or Greek word (it replaces Word Study): press a word's Strong's number anywhere (the Interlinear, a Meaning list, the words behind an English word, a tapped word in the Bible text) and its page opens with Overview, Meanings, Where used, Same meaning and Library. Same meaning lists every word in the group, and Open the whole tree goes to the tree of meanings.",
       "Hear a word: a speaker button beside every Hebrew or Greek word says it with the natural voice, a little slowly. Greek is said the classical way it is taught, Hebrew the modern way, from its vowel marks. The natural voice is in Settings > Read aloud.",
+      "The natural voice now comes inside the Microsoft Store version, so there is nothing to download. If you downloaded the voice with an earlier version, the app uses the newer one built into it by itself, and Settings > Read aloud tells you plainly what is on your computer, with one button to remove or update the old copy. If a speaker button cannot speak because the voice is missing or old, its message has a button that opens Settings > Read aloud for you.",
       "Back: the Back button in a side panel's header takes you back through the panels you came from (Interlinear, then a word's page, then its meanings), at the same verse.",
       "Concordance > Meaning: every word of a group is listed (the 40 used in the most verses, then Show all), each with its Strong's number, its meaning and the verses it is used in. Press a word to open its page.",
       "If the Bible you read has no Strong's numbers loaded, the screens now say so and use the BSB for the examples (the BSB and KJV have them). A Bible you add from a file that carries Strong's numbers keeps them, and now works in the word page, the meanings and the words behind an English word.",

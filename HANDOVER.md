@@ -4,7 +4,9 @@ Saved here (not in a per-machine memory) because this project lives on `V:\Code\
 a network share, and the next session may run from a different PC. Read this file first when
 resuming.
 
-**NEWEST (2026-11-17 evening): read `HANDOVER_2026-11-17_BUNDLE_AND_NEW_BUILD.md` first (all stories approved; half bundled in the app, half extras; new build on the other PC).**
+**NEWEST (2026-11-18): read HANDOVER_2026-11-18_WEBSITE_LIVE_STORE_3_1_3.md first (new website live, old Windows and Android pages redirected on 2026-11-20, Windows 3.1.3 submitted, Android website APK 3.1.2 published).**
+
+Before that (2026-11-17 evening, superseded): read `HANDOVER_2026-11-17_BUNDLE_AND_NEW_BUILD.md` first (all stories approved; half bundled in the app, half extras; new build on the other PC).**
 
 **Newest (2026-11-17): the Story Studio is built, see `HANDOVER_2026-11-17_STORY_STUDIO.md`; installers: read `HANDOVER_2026-11-16_BUILD_INSTALLERS_TOMORROW.md` (the installers were built on 2026-11-17; its end is the true state), then `HANDOVER_2026-11-14_PHONE_BACKUP_IN_PROGRESS.md` for the phone log.**
 

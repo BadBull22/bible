@@ -11186,3 +11186,8 @@ body.show-body {
 .android-text h3 { margin: 0 0 0.3rem; font-size: 1rem; }
 .android-text p { margin: 0.25rem 0; font-size: 0.88rem; line-height: 1.45; }
 .android-actions { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+
+/* Settings > Read aloud: the notes about the voice must be seen without pressing "?" (the plain hints are hidden until then) */
+.voice-note { margin: 0.3rem 0 0.6rem; font-size: 0.85rem; line-height: 1.45; color: var(--text-secondary, inherit); }
+.voice-download.voice-old { border-left: 4px solid var(--accent-500); }
+.voice-download.voice-ok { border-left: 4px solid var(--accent-500); }

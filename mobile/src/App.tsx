@@ -1880,7 +1880,7 @@ export function App() {
             <UpdateSettings updates={updates} enabled={autoUpdates} onEnabled={setAutoUpdates} />
             <p className="licence">
               Topics: Nave's Topical Bible and Torrey's New Topical Textbook. Dictionary: Easton's and Smith's Bible Dictionaries. Word study: Strong's Exhaustive Concordance; the optional Original words: STEPBible (Tyndale House, Cambridge; CC BY 4.0).
-              Cross-references: OpenBible.info (CC BY 4.0).{" "}
+              Cross-references: OpenBible.info (CC BY 4.0). Meanings of Hebrew and Greek words: the UBS Dictionary of Biblical Hebrew and the UBS Dictionary of the Greek New Testament (United Bible Societies, CC BY-SA 4.0), and, in everyday English, SIL Semantic Domains (SIL Global, CC BY-SA 4.0).{" "}
               {about && about.name ? `Study notes and book introductions: ${about.name} (${about.licence}), ${about.website}.` : ""} The rest is public domain. Everything works offline;
               only downloading more translations (from eBible.org), the nature backgrounds and a new version of the app needs the internet.
             </p>

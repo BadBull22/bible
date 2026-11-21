@@ -19,9 +19,9 @@ export function AndroidCard() {
     <div className="android-card">
       {svg && <div className="android-qr" role="img" aria-label="QR code for the Android app in Google Play" dangerouslySetInnerHTML={{ __html: svg }} />}
       <div className="android-text">
-        <h3>The Android app is now live too</h3>
+        <h3>Bible Concordance is now on Google Play</h3>
         <p>
-          Scan the code with your phone's camera to open Bible Concordance in Google Play. It is free, works offline and has no account and no adverts. Your notes, highlights and
+          Scan the code with your phone's camera to open Bible Concordance for Android in Google Play. It is free, works offline and has no account and no adverts. Your notes, highlights and
           reading plans can keep in step with this app over your own Wi-Fi (Settings &rarr; Keep in step).
         </p>
         <p className="android-actions">

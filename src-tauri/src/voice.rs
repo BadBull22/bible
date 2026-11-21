@@ -38,9 +38,20 @@ pub struct VoiceState {
 }
 
 struct VoicePaths {
+    /// the folder holding the program, the model and the voices
+    dir: PathBuf,
     exe: PathBuf,
     model: PathBuf,
     voices: PathBuf,
+}
+
+/// The Greek sounds file the voice program needs to say a Greek word. The first voice (2.4.0) was made without it, so a voice that lacks it cannot say Hebrew
+/// or Greek words (it reads the Bible fine).
+const GREEK_SOUNDS: &str = "voice-sidecar/_internal/espeakng_loader/espeak-ng-data/grc_dict";
+
+/// Can this voice say Hebrew and Greek words?
+fn says_original_words(dir: &Path) -> bool {
+    dir.join(GREEK_SOUNDS).is_file()
 }
 
 const EXE: &str = if cfg!(windows) { "voice-sidecar.exe" } else { "voice-sidecar" };
@@ -48,6 +59,7 @@ const EXE: &str = if cfg!(windows) { "voice-sidecar.exe" } else { "voice-sidecar
 /// The voice files in `dir`, if they're all there.
 fn paths_in(dir: &Path) -> Option<VoicePaths> {
     let p = VoicePaths {
+        dir: dir.to_path_buf(),
         exe: dir.join("voice-sidecar").join(EXE),
         model: dir.join("kokoro-v1.0.fp16.onnx"),
         voices: dir.join("voices-en.bin"),
@@ -59,13 +71,32 @@ fn data_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path().app_data_dir().map_err(|e| e.to_string())
 }
 
-/// The downloaded voice, else one shipped inside the app; and which it is.
-fn paths(app: &AppHandle) -> Option<(VoicePaths, &'static str)> {
-    if let Some(p) = data_dir(app).ok().and_then(|d| paths_in(&d.join("voice"))) {
-        return Some((p, "downloaded"));
-    }
+fn downloaded_voice(app: &AppHandle) -> Option<VoicePaths> {
+    data_dir(app).ok().and_then(|d| paths_in(&d.join("voice")))
+}
+
+fn bundled_voice(app: &AppHandle) -> Option<VoicePaths> {
     let dir = app.path().resolve("resources/voice", tauri::path::BaseDirectory::Resource).ok()?;
-    paths_in(&dir).map(|p| (p, "bundled"))
+    paths_in(&dir)
+}
+
+/// The voice to use, and which it is: the one downloaded, else the one shipped inside the app. When an older downloaded voice (which cannot say Hebrew or Greek words)
+/// is on the computer and the app carries a newer one inside, the newer one is used and nothing has to be removed or downloaded.
+fn paths(app: &AppHandle) -> Option<(VoicePaths, &'static str)> {
+    let downloaded = downloaded_voice(app);
+    let bundled = bundled_voice(app);
+    match (downloaded, bundled) {
+        (Some(d), Some(b)) => {
+            if !says_original_words(&d.dir) && says_original_words(&b.dir) {
+                Some((b, "bundled"))
+            } else {
+                Some((d, "downloaded"))
+            }
+        }
+        (Some(d), None) => Some((d, "downloaded")),
+        (None, Some(b)) => Some((b, "bundled")),
+        (None, None) => None,
+    }
 }
 
 /// One platform's voice archive (written by scripts/package_voice.py).
@@ -74,6 +105,9 @@ struct VoiceDownload {
     url: String,
     sha256: String,
     bytes: u64,
+    /// this archive's voice can say Hebrew and Greek words (the voice made for 3.1.4 and after)
+    #[serde(default)]
+    original_words: bool,
 }
 
 #[derive(Deserialize)]
@@ -189,18 +223,31 @@ pub struct VoiceStatus {
     /// Size of the download, when there is one for this computer.
     pub download_bytes: Option<u64>,
     pub downloading: bool,
+    /// the voice in use can say Hebrew and Greek words (the little speaker buttons)
+    pub original_words: bool,
+    /// an older downloaded voice is still on the computer although the app uses the newer one inside it (it can be removed to free the space)
+    pub unused_old_copy: bool,
+    /// the download on offer can say Hebrew and Greek words, so an older downloaded voice can be updated in one step
+    pub update_available: bool,
 }
 
 #[tauri::command]
 pub fn voice_status(app: AppHandle, state: State<VoiceState>) -> VoiceStatus {
     let running = state.running.lock().map(|mut r| r.as_mut().is_some_and(|r| matches!(r.child.try_wait(), Ok(None)))).unwrap_or(false);
     let found = paths(&app);
+    let original_words = found.as_ref().is_some_and(|(p, _)| says_original_words(&p.dir));
+    let source = found.as_ref().map(|(_, s)| *s);
+    let old_copy = downloaded_voice(&app).is_some_and(|d| !says_original_words(&d.dir));
+    let info = download_info(&app);
     VoiceStatus {
         available: found.is_some(),
         running,
-        source: found.map(|(_, s)| s),
-        download_bytes: download_info(&app).map(|d| d.bytes),
+        source,
+        download_bytes: info.as_ref().map(|d| d.bytes),
         downloading: state.downloading.load(Ordering::SeqCst),
+        original_words,
+        unused_old_copy: source == Some("bundled") && old_copy,
+        update_available: source == Some("downloaded") && !original_words && info.as_ref().is_some_and(|d| d.original_words),
     }
 }
 
@@ -450,6 +497,26 @@ mod tests {
         let _ = std::fs::remove_dir_all(&data);
     }
 
+    #[test]
+    fn a_voice_without_the_greek_sounds_cannot_say_original_words() {
+        let root = std::env::temp_dir().join(format!("voice-marker-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let old = root.join("old");
+        let new = root.join("new");
+        for d in [&old, &new] {
+            std::fs::create_dir_all(d.join("voice-sidecar/_internal/espeakng_loader/espeak-ng-data")).unwrap();
+        }
+        std::fs::write(new.join(GREEK_SOUNDS), b"x").unwrap();
+        assert!(!says_original_words(&old));
+        assert!(says_original_words(&new));
+        // the real folder the app ships: its voice must say them
+        let shipped = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources").join("voice");
+        if shipped.join("voice-sidecar").is_dir() {
+            assert!(says_original_words(&shipped), "the voice packed with the app lacks the Greek sounds");
+        }
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
     /// End-to-end: start the real voice sidecar from `resources/voice` (built by
     /// voice-sidecar\build.ps1), speak a verse, check a WAV comes back. Ignored by default
     /// (needs the 274 MB voice folder):  cargo test voice -- --ignored --nocapture
@@ -458,6 +525,7 @@ mod tests {
     fn sidecar_speaks() {
         let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources").join("voice");
         let p = VoicePaths {
+            dir: dir.clone(),
             exe: dir.join("voice-sidecar").join("voice-sidecar.exe"),
             model: dir.join("kokoro-v1.0.fp16.onnx"),
             voices: dir.join("voices-en.bin"),

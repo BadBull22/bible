@@ -21,6 +21,7 @@ pub mod extra_pages;
 pub mod lan;
 pub mod library;
 pub mod meaning_pack;
+pub mod meanings;
 pub mod original_pack;
 pub mod picture_packs;
 pub mod modules;
@@ -507,6 +508,45 @@ fn strongs_uses(core: State<Core>, version: String, number: String) -> Result<Ve
         }
     }
     study_extra::strongs_uses(&*core.db.lock().map_err(err)?, &version, &number, 300)
+}
+
+// ---------------------------------------------------------------- the meanings of a Hebrew or Greek word (since 3.2.0)
+
+/// Every meaning of a Hebrew or Greek word, where each is used and what it is called in everyday English; the verse being read marks the one used there.
+#[tauri::command(async)]
+fn word_senses(core: State<Core>, strongs: String, book: Option<String>, chapter: Option<i64>, verse: Option<i64>) -> Result<bible_core::semantic::SenseReport, String> {
+    meanings::senses(&*core.get()?.db.lock().map_err(err)?, &strongs, book, chapter, verse)
+}
+
+/// The other words in a group of meanings, the most used first.
+#[tauri::command(async)]
+fn group_words(core: State<Core>, language: String, code: String) -> Result<Vec<bible_core::semantic::MeaningWord>, String> {
+    meanings::group_words(&*core.get()?.db.lock().map_err(err)?, &language, &code)
+}
+
+/// The everyday-English card for a group of meanings.
+#[tauri::command(async)]
+fn group_card(language: String, code: String) -> Option<bible_core::semantic::SilCard> {
+    meanings::group_card(&language, &code)
+}
+
+/// Example verses for one meaning of a word, the word marked where the Bible carries Strong's numbers.
+#[tauri::command(async)]
+fn sense_samples(
+    core: State<Core>,
+    strongs: String,
+    entry: usize,
+    meaning: usize,
+    version: String,
+    book: Option<String>,
+    chapter: Option<i64>,
+    verse: Option<i64>,
+) -> Result<Vec<bible_core::semantic::Sample>, String> {
+    let core = core.get()?;
+    let db = core.db.lock().map_err(err)?;
+    let here = meanings::verse_key(&db, book, chapter, verse);
+    let bibles = core.bibles.lock().map_err(err)?;
+    meanings::samples(&db, &bibles, &strongs, entry, meaning, &version, here)
 }
 
 #[tauri::command(async)]
@@ -1216,6 +1256,10 @@ pub fn run() {
             verse_words,
             strongs_entry,
             strongs_uses,
+            word_senses,
+            group_words,
+            group_card,
+            sense_samples,
             chapter_notes,
             verse_notes,
             book_intro,

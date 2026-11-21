@@ -176,6 +176,67 @@ export interface StrongsEntry {
   counts: [string, number, number][];
 }
 
+/** What a group of meanings is called in everyday English (SIL Semantic Domains, CC BY-SA 4.0). */
+export interface SilCard {
+  code: string;
+  name: string;
+  path: string[];
+  description: string;
+  related: { code: string; name: string }[];
+  words: string[];
+  by_louw_nida: boolean;
+}
+
+/** One meaning of a Hebrew or Greek word (UBS dictionaries, CC BY-SA 4.0), with where it is used. */
+export interface Sense {
+  entry: number;
+  meaning: number;
+  glosses: string[];
+  definition: string;
+  ln: string | null;
+  groups: string[];
+  domains: string[];
+  verses: number;
+  /** verses of each of the 66 books, Genesis first */
+  by_book: number[];
+  /** the verse being read uses this meaning */
+  here: boolean;
+  sil: SilCard | null;
+}
+
+export interface SenseReport {
+  strongs: string;
+  language: "greek" | "hebrew";
+  lemma: string;
+  senses: Sense[];
+  dictionary: { lemma: string; translit: string | null; definition: string; kjv: string | null } | null;
+}
+
+export interface MeaningWord {
+  entry: number;
+  meaning: number;
+  strongs: string[];
+  lemma: string;
+  glosses: string[];
+  definition: string;
+  ln: string | null;
+  verses: number;
+  translit: string | null;
+  speak: string;
+}
+
+export interface SamplePart {
+  text: string;
+  mark: boolean;
+}
+
+export interface Sample {
+  book: string;
+  chapter: number;
+  verse: number;
+  parts: SamplePart[];
+}
+
 export interface StrongsUse {
   book: string;
   chapter: number;
@@ -398,6 +459,12 @@ export const api = {
   verseWords: (version: string, book: string, chapter: number, verse: number) => invoke<[string, Word[]]>("verse_words", { version, book, chapter, verse }),
   strongsEntry: (number: string) => invoke<StrongsEntry | null>("strongs_entry", { number }),
   strongsUses: (version: string, number: string) => invoke<StrongsUse[]>("strongs_uses", { version, number }),
+  /** every meaning of a Hebrew or Greek word (since 3.2.0) */
+  wordSenses: (strongs: string, book: string | null, chapter: number | null, verse: number | null) => invoke<SenseReport>("word_senses", { strongs, book, chapter, verse }),
+  groupWords: (language: string, code: string) => invoke<MeaningWord[]>("group_words", { language, code }),
+  groupCard: (language: string, code: string) => invoke<SilCard | null>("group_card", { language, code }),
+  senseSamples: (strongs: string, entry: number, meaning: number, version: string, book: string | null, chapter: number | null, verse: number | null) =>
+    invoke<Sample[]>("sense_samples", { strongs, entry, meaning, version, book, chapter, verse }),
   chapterNotes: (book: string, chapter: number) => invoke<CommentaryNote[]>("chapter_notes", { book, chapter }),
   verseNotes: (book: string, chapter: number, verse: number) => invoke<CommentaryNote[]>("verse_notes", { book, chapter, verse }),
   bookIntro: (book: string) => invoke<string>("book_intro", { book }),

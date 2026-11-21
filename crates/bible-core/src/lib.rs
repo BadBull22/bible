@@ -12,5 +12,6 @@ pub mod markup;
 #[cfg(feature = "meaning")]
 pub mod meaning;
 pub mod refs;
+pub mod semantic;
 pub mod sword;
 pub mod sync;
