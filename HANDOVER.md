@@ -4,7 +4,9 @@ Saved here (not in a per-machine memory) because this project lives on `V:\Code\
 a network share, and the next session may run from a different PC. Read this file first when
 resuming.
 
-**NEWEST (2026-11-18): read HANDOVER_2026-11-18_WEBSITE_LIVE_STORE_3_1_3.md first (new website live, old Windows and Android pages redirected on 2026-11-20, Windows 3.1.3 submitted, Android website APK 3.1.2 published).**
+**NEWEST (2026-11-21): read HANDOVER_2026-11-21_ALL_DONE_START_HERE.md first (Android 3.2.0 live on Google Play, Windows 3.1.4 Store package ready, website points to Google Play, no installers left on GitHub).**
+
+Before that (2026-11-18, superseded): read HANDOVER_2026-11-18_WEBSITE_LIVE_STORE_3_1_3.md first (new website live, old Windows and Android pages redirected on 2026-11-20, Windows 3.1.3 submitted, Android website APK 3.1.2 published).**
 
 Before that (2026-11-17 evening, superseded): read `HANDOVER_2026-11-17_BUNDLE_AND_NEW_BUILD.md` first (all stories approved; half bundled in the app, half extras; new build on the other PC).**
 
