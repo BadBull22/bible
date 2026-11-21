@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { api, LibEntry, StrongsEntry, StrongsUse, Word } from "./api";
 import { LinkedText } from "./Library";
 import { OriginalOffer, OriginalPack, OriginalWords } from "./OriginalWords";
+import { WordMeanings } from "./WordMeanings";
+import { stepBack, useBack } from "./back";
 
 interface Props {
   book: string;
@@ -38,7 +40,7 @@ export function WordStudy({ book, chapter, verse, version, pack, onGo, onLibrary
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book, chapter, verse, version]);
 
-  if (numbers) return <Entry numbers={numbers} version={used} onBack={() => setNumbers(null)} onGo={onGo} onLibrary={onLibrary} fail={fail} />;
+  if (numbers) return <Entry numbers={numbers} version={used} asked={version} at={{ book, chapter, verse }} onBack={() => setNumbers(null)} onGo={onGo} onLibrary={onLibrary} fail={fail} />;
   const showing = mode ?? (pack.installed ? "original" : "english");
   return (
     <>
@@ -85,9 +87,19 @@ export function WordStudy({ book, chapter, verse, version, pack, onGo, onLibrary
   );
 }
 
+type Tab = "overview" | "meanings" | "uses" | "library";
+
+/** One step of the phone's Back button, for as long as it is on the screen. */
+function BackStep({ onBack }: { onBack: () => void }) {
+  useBack(true, onBack);
+  return null;
+}
+
 function Entry({
   numbers,
   version,
+  asked,
+  at,
   onBack,
   onGo,
   onLibrary,
@@ -95,42 +107,69 @@ function Entry({
 }: {
   numbers: string[];
   version: string;
+  /** the Bible being read (the words may be those of the BSB when it has no Strong's numbers) */
+  asked: string;
+  at: { book: string; chapter: number; verse: number };
   onBack: () => void;
   onGo: Props["onGo"];
   onLibrary: Props["onLibrary"];
   fail: Props["fail"];
 }) {
-  // the number shown; a "from G25" in an entry opens that one in place of it
+  // the number shown; a "from G25" in an entry, or another word of a group, opens that one in place of it
   const [shown, setShown] = useState(numbers);
   const [active, setActive] = useState(0);
+  const [tab, setTab] = useState<Tab>("overview");
+  // the words opened from one another, for Back
+  const [trail, setTrail] = useState<{ numbers: string[]; tab: Tab }[]>([]);
   useEffect(() => {
     setShown(numbers);
     setActive(0);
+    setTab("overview");
+    setTrail([]);
   }, [numbers]);
   const number = shown[Math.min(active, shown.length - 1)];
+  const open = (n: string[]) => {
+    setTrail((t) => [...t, { numbers: shown, tab }]);
+    setShown(n);
+    setActive(0);
+    setTab("overview");
+  };
+  const popTrail = () => {
+    setTrail((t) => {
+      if (t.length === 0) return t;
+      setShown(t[t.length - 1].numbers);
+      setActive(0);
+      setTab(t[t.length - 1].tab);
+      return t.slice(0, -1);
+    });
+  };
+  // the phone's Back button: one layer for this page (Back returns to the list of words) and one more for every word opened from another, so Back steps through them
+  useBack(true, onBack);
+  const back = () => {
+    if (trail.length > 0) stepBack();
+    else onBack();
+  };
 
   const [entry, setEntry] = useState<StrongsEntry | null | undefined>(undefined);
   const [uses, setUses] = useState<StrongsUse[] | null>(null);
-  const [showUses, setShowUses] = useState(false);
 
   useEffect(() => {
     setEntry(undefined);
     setUses(null);
-    setShowUses(false);
     api.strongsEntry(number).then(setEntry).catch(fail);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [number]);
 
   useEffect(() => {
-    if (showUses && !uses) api.strongsUses(version, number).then(setUses).catch(fail);
+    if (tab === "uses" && !uses) api.strongsUses(version, number).then(setUses).catch(fail);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showUses]);
+  }, [tab, number]);
 
   // "from G25 (ἀγαπάω)": the numbers it comes from are links
   const linked = (text: string) =>
     text.split(/\b([HG]\d{1,5})\b/).map((part, i) =>
       i % 2 ? (
-        <button key={i} className="link" onClick={() => setShown([part])}>
+        <button key={i} className="link" onClick={() => open([part])}>
           {part}
         </button>
       ) : (
@@ -138,10 +177,20 @@ function Entry({
       ),
     );
 
+  const tabs: [Tab, string][] = [
+    ["overview", "Overview"],
+    ["meanings", "Meanings"],
+    ["uses", "Where used"],
+    ["library", "Library"],
+  ];
+
   return (
     <div className="entry">
-      <button className="link" onClick={onBack}>
-        ‹ Words
+      {trail.map((_, i) => (
+        <BackStep key={i} onBack={popTrail} />
+      ))}
+      <button className="link" onClick={back}>
+        {trail.length > 0 ? `‹ ${trail[trail.length - 1].numbers[0]}` : "‹ Words"}
       </button>
       {shown.length > 1 && (
         <div className="seg" role="tablist" aria-label="The Hebrew or Greek words behind this word">
@@ -164,43 +213,66 @@ function Entry({
             {entry.xlit && ` · ${entry.xlit}`}
             {entry.pronunciation && ` · “${entry.pronunciation}”`}
           </p>
-          <dl>
-            {entry.definition && (
-              <>
-                <dt>Meaning</dt>
-                <dd>{linked(entry.definition)}</dd>
-              </>
-            )}
-            {entry.kjv_usage && (
-              <>
-                <dt>Translated in the KJV as</dt>
-                <dd>{entry.kjv_usage}</dd>
-              </>
-            )}
-            {entry.derivation && (
-              <>
-                <dt>Comes from</dt>
-                <dd>{linked(entry.derivation)}</dd>
-              </>
-            )}
-          </dl>
-          <Lexicons number={number} greek={entry.language !== "Hebrew"} onGo={onGo} onLibrary={onLibrary} fail={fail} />
-          {entry.counts.length > 0 && (
-            <div className="counts">
-              {entry.counts.map(([v, verses, times]) => (
-                <span key={v}>
-                  {v}: {times} time{times === 1 ? "" : "s"} in {verses} verse{verses === 1 ? "" : "s"}
-                </span>
-              ))}
-            </div>
-          )}
-          {!showUses ? (
-            <button className="primary" onClick={() => setShowUses(true)}>
-              Every verse with this word ({version})
-            </button>
-          ) : (
+          <div className="seg wtabs" role="tablist" aria-label="About this word">
+            {tabs.map(([id, label]) => (
+              <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {tab === "overview" && (
             <>
-              <h3>Every verse with {entry.number} <small>{version}{uses ? ` · ${uses.length}${uses.length >= 300 ? "+" : ""}` : ""}</small></h3>
+              <dl>
+                {entry.definition && (
+                  <>
+                    <dt>Meaning</dt>
+                    <dd>{linked(entry.definition)}</dd>
+                  </>
+                )}
+                {entry.kjv_usage && (
+                  <>
+                    <dt>Translated in the KJV as</dt>
+                    <dd>{entry.kjv_usage}</dd>
+                  </>
+                )}
+                {entry.derivation && (
+                  <>
+                    <dt>Comes from</dt>
+                    <dd>{linked(entry.derivation)}</dd>
+                  </>
+                )}
+              </dl>
+              {entry.counts.length > 0 && (
+                <div className="counts">
+                  {entry.counts.map(([v, verses, times]) => (
+                    <span key={v}>
+                      {v}: {times} time{times === 1 ? "" : "s"} in {verses} verse{verses === 1 ? "" : "s"}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="hint">
+                <button className="link" onClick={() => setTab("meanings")}>
+                  See every meaning of this word
+                </button>{" "}
+                ·{" "}
+                <button className="link" onClick={() => setTab("uses")}>
+                  every verse that uses it
+                </button>
+              </p>
+              <p className="attribution">Strong’s Exhaustive Concordance (public domain), with the words of the {version} tagged by number.</p>
+            </>
+          )}
+          {tab === "meanings" && <WordMeanings strongs={number} version={version} asked={asked} at={at} onGo={onGo} onWord={(n) => open([n])} fail={fail} />}
+          {tab === "uses" && (
+            <>
+              <h3>
+                Every verse with {entry.number}{" "}
+                <small>
+                  {version}
+                  {uses ? ` · ${uses.length}${uses.length >= 300 ? "+" : ""}` : ""}
+                </small>
+              </h3>
               {!uses && <p className="hint">Loading…</p>}
               <ul className="hits">
                 {(uses ?? []).map((u) => (
@@ -216,7 +288,7 @@ function Entry({
               </ul>
             </>
           )}
-          <p className="attribution">Strong's Exhaustive Concordance (public domain), with the words of the {version} tagged by number.</p>
+          {tab === "library" && <Lexicons number={number} greek={entry.language !== "Hebrew"} onGo={onGo} onLibrary={onLibrary} fail={fail} />}
         </>
       )}
     </div>

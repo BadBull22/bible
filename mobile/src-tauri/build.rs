@@ -32,11 +32,25 @@ fn pack_qa_index() {
     std::fs::File::create(dest).and_then(|mut f| f.write_all(&out)).expect("qa_index.bin");
 }
 
+/// The meanings of the Hebrew and Greek words (UBS dictionaries, SIL Semantic Domains), packed with gzip (meanings.rs opens them).
+fn pack_meanings() {
+    for name in ["semantic_domains.json", "semantic_sil.json"] {
+        let src = format!("../../src-tauri/resources/{name}");
+        println!("cargo:rerun-if-changed={src}");
+        let bytes = std::fs::read(&src).unwrap_or_else(|_| panic!("the desktop's resources/{name}"));
+        let dest = std::path::Path::new(&std::env::var("OUT_DIR").unwrap()).join(format!("{name}.gz"));
+        let mut enc = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::best());
+        enc.write_all(&bytes).expect("gzip");
+        std::fs::write(dest, enc.finish().expect("gzip")).expect("write the packed meanings");
+    }
+}
+
 fn main() {
     // the database is compiled into the app (see lib.rs), so a new one means a rebuild
     println!("cargo:rerun-if-changed=resources/phone.db.gz");
     println!("cargo:rerun-if-changed=../../src-tauri/resources/qa.json");
     println!("cargo:rerun-if-changed=../../src-tauri/resources/firsts.json");
     pack_qa_index();
+    pack_meanings();
     tauri_build::build()
 }

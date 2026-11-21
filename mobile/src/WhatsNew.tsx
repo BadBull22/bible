@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 // already had the app (a fresh install has nothing "new" to be told about), and that can be read again from More > About. The notes are plain
 // sentences for people who are not developers.
 
-export const WHATS_NEW_VERSION = "3.1.2";
+export const WHATS_NEW_VERSION = "3.2.0";
 
 const SEEN_KEY = "pocket:whats-new-seen";
 const SAVED_KEY = "pocket:state"; // the app's saved settings: there from the second start of any install
@@ -30,6 +30,8 @@ if (read(SEEN_KEY) !== WHATS_NEW_VERSION) write(SEEN_KEY, WHATS_NEW_VERSION);
 
 /** The notes, the newest first: a short title and one or two plain sentences. */
 export const WHATS_NEW: { title: string; text: string }[] = [
+  { title: "What a Hebrew or Greek word means", text: "Tap a verse, then Word study, then a word: its page now has Overview, Meanings, Where used and Library. Meanings shows every meaning the word has as a ring sized by how often each is used, with the one used in your verse chosen, what it is called in everyday English, example verses with the word marked, and the other words that share the meaning (tap one to open it). The phone's Back button steps back through the words you opened one from another." },
+  { title: "Colouring pages to print", text: "On a children's page, Outline to colour in shows the drawing as an outline, and Print or share the outline opens your phone's share list: choose Print for a printer, or send it by WhatsApp or e-mail to print elsewhere." },
   { title: "36 more Bible stories, each with a children's page", text: "The app now comes with 67 Bible stories and 56 children's pages: Cain and Abel, the Ten Plagues, Samson, Esther, Elijah, the Fiery Furnace, the Last Supper, the Crucifixion and many more, each with a painting and, for the children's page, an outline to colour in. The Story pictures and Children's pictures downloads (More > Downloads) bring the pictures; download them again to get the new ones." },
   { title: "Stories in order, and the ones you have read", text: "Bible stories are now in two sections, Old Testament and New Testament, closed until you open one, with the stories in the order of the Bible. A tick and a quieter colour show the stories and children's pages you have opened, and each section says how many you have read. Searching still shows every match in one list. The list of what you have read goes into your backup." },
   { title: "Daily Scroll", text: "Extras > Daily Scroll: twenty cards a day, one idea on each, on a photo: a verse, a Bible story, who wrote a book, a Bible fact. Swipe up for the next card. Quick share sends the card as a picture, Save keeps it in your pictures, and Edit opens the picture studio. A new set comes each day, and Show me more adds ten." },
@@ -76,7 +78,7 @@ export function WhatsNewBanner({ mode, showAll, close }: { mode: "banner" | "all
       </div>
       {mode === "banner" ? (
         <>
-          <p>A Daily Scroll of verse cards, your own verse pictures, a prayer list and memory verses, Listen with the screen off, and 36 more Bible stories with children's pages.</p>
+          <p>What every Hebrew and Greek word means, with a ring of its meanings and example verses; a Daily Scroll of verse cards, your own verse pictures, a prayer list and memory verses, Listen with the screen off, and 36 more Bible stories with children's pages.</p>
           <div className="actions">
             <button onClick={showAll}>See everything new</button>
             <button className="primary" onClick={close}>

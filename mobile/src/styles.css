@@ -2234,3 +2234,203 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
 .browse-card.read { opacity: 0.88; }
 .browse-tick { color: var(--accent, var(--muted)); font-weight: 700; }
 .browse-testament { color: var(--muted); font-weight: 400; }
+
+/* ---------- the word page: meanings (3.2.0) ---------- */
+
+.wtabs {
+  margin-top: 0.5rem;
+}
+
+.wtabs button {
+  font-size: 0.78rem;
+  padding: 0.25rem 0.2rem;
+}
+
+.meanings h3 {
+  margin: 1rem 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+.meanings-count {
+  margin: 0.2rem 0 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.sense-ring {
+  display: block;
+  width: min(100%, 17rem);
+  margin: 0 auto 0.4rem;
+}
+
+.sense-ring path {
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.ring-mid {
+  fill: var(--text);
+}
+
+.ring-mid.faint {
+  fill: var(--muted);
+}
+
+.sense-legend {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sense-legend button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.4rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--raised);
+  color: var(--text);
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.sense-legend button.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 700;
+}
+
+.sense-dot {
+  flex: none;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+}
+
+.sense-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.sense-n {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.sense-here {
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.sense-gloss {
+  margin: 0 0 0.2rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0.3rem 0;
+  font-size: 0.78rem;
+}
+
+.crumbs span,
+.crumbs strong,
+.crumbs em {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+
+.crumbs span:not(:last-child)::after {
+  content: " ›";
+  color: var(--muted);
+}
+
+.sil-card {
+  margin: 0.8rem 0;
+  padding: 0.2rem 0.8rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--raised);
+}
+
+.sil-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0.3rem 0;
+}
+
+.sil-words span {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+}
+
+.top-books {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  margin: 0.2rem 0;
+  font-size: 0.88rem;
+}
+
+.sense-verse {
+  margin: 0.4rem 0;
+  line-height: 1.5;
+}
+
+.same-words {
+  list-style: none;
+  margin: 0.3rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.same-words button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--raised);
+  color: var(--text);
+  text-align: left;
+}
+
+.same-words .sw-lemma {
+  flex: none;
+  min-width: 4.5rem;
+  font-family: var(--reading);
+  font-size: 1.1rem;
+}
+
+.same-words .sw-gloss {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.same-words .sw-n {
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 700;
+}

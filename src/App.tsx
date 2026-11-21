@@ -86,7 +86,7 @@ type SidePanel =
   | { kind: "xref"; book: string; chapter: number; verse: number }
   | { kind: "parallel"; book: string; chapter: number; verse: number }
   | { kind: "search"; initialQuery?: string }
-  | { kind: "settings"; focus?: "online" | "appearance" }
+  | { kind: "settings"; focus?: "online" | "appearance" | "voice" }
   | { kind: "genealogy" }
   | { kind: "firsts" }
   | { kind: "concordance"; word?: string; strongs?: string; at?: { book: string; chapter: number; verse: number }; meaning?: MeaningSel }
@@ -221,6 +221,12 @@ function App() {
     [baseBooks, extraBooks],
   );
   const chapterCounts = useMemo(() => ({ ...baseCounts, ...Object.fromEntries(extraBooks.list) }), [baseCounts, extraBooks]);
+  // a speaker button that finds the natural voice missing or too old sends the person straight to Settings > Read aloud
+  useEffect(() => {
+    const open = () => setPanel({ kind: "settings", focus: "voice" });
+    window.addEventListener("open-voice-settings", open);
+    return () => window.removeEventListener("open-voice-settings", open);
+  }, []);
   const [versionCode, setVersionCode] = useState(readStoredVersion);
   useEffect(() => {
     if (versionCode === ENOCH_VERSION) return;

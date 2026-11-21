@@ -12,7 +12,7 @@ export type PicKind = "stories" | "kids";
 const listeners: Record<PicKind, Set<() => void>> = { stories: new Set(), kids: new Set() };
 const NAME: Record<PicKind, { title: string; blurb: string; offer: string }> = {
   stories: { title: "Story pictures", blurb: "A painting or engraving for each Bible story (James Tissot, Gustave Doré and others), with its credit.", offer: "Add the story pictures" },
-  kids: { title: "Children's pictures", blurb: "A picture for each children's page, in colour and as an outline to colour in.", offer: "Add the children's pictures" },
+  kids: { title: "Children's pictures", blurb: "A picture for each children's page, in colour and as an outline to print and colour in.", offer: "Add the children's pictures" },
 };
 
 export interface PicturePack {
@@ -169,7 +169,7 @@ export function PicturesScreen() {
       <h4 className="row-label">For Bible stories and children's pages</h4>
       <div className="dl-list">
         <DownloadRow title="Story pictures" note="61 paintings and engravings, with their credits" pack={stories} />
-        <DownloadRow title="Children's pictures" note="A picture for each children's page, in colour and as an outline to colour in" pack={kids} />
+        <DownloadRow title="Children's pictures" note="A picture for each children's page, in colour and as an outline to print and colour in" pack={kids} />
       </div>
       <h4 className="row-label">For verse pictures</h4>
       <div className="dl-list">
@@ -295,8 +295,11 @@ export function KidFigure({ id, title }: { id: string; title: string }) {
   const [photo, setPhoto] = useState<{ image: string; outline: string | null; credit: StoryCredit } | null>(null);
   const [looked, setLooked] = useState(false);
   const [outline, setOutline] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
+    setProblem(null);
     setDrawing(null);
     setPhoto(null);
     setLooked(false);
@@ -315,12 +318,33 @@ export function KidFigure({ id, title }: { id: string; title: string }) {
     };
   }, [id, pack.installed]);
   const hasOutline = !!(drawing ? drawing.outline : photo?.outline);
+  // the outline is for colouring on paper: it goes to the phone's share sheet, which has Print, Save to Photos, WhatsApp and e-mail
+  const sendOutline = async () => {
+    setSending(true);
+    setProblem(null);
+    try {
+      const png = drawing?.outline ? await drawingToPng(drawing.outline, 1600) : (photo?.outline ?? null);
+      if (!png) throw new Error("no outline");
+      await phone.shareImage(`${id}-outline.png`, png, `${title}: a page to colour in. https://bible4me.org`, "image/png", `${title}: colouring page`);
+    } catch {
+      setProblem("Couldn't open the share sheet. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
   const toggle = hasOutline && (
-    <p className="picture-switch">
-      <button className="browse-pill quiet" aria-pressed={outline} onClick={() => setOutline(!outline)}>
-        {outline ? "Show it in colour" : "Outline to colour in"}
-      </button>
-    </p>
+    <div className="picture-switch">
+      <p>
+        <button className="browse-pill quiet" aria-pressed={outline} onClick={() => setOutline(!outline)}>
+          {outline ? "Show it in colour" : "Outline to colour in"}
+        </button>{" "}
+        <button className="browse-pill quiet" disabled={sending} onClick={() => void sendOutline()}>
+          {sending ? "Opening…" : "Print or share the outline"}
+        </button>
+      </p>
+      {outline && <p className="hint">The outline is for colouring on paper: choose Print in the list that opens, or send it to a computer or printer.</p>}
+      {problem && <p className="status-error">{problem}</p>}
+    </div>
   );
   if (drawing) {
     const shown = outline && drawing.outline ? drawing.outline : drawing.colour;

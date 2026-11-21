@@ -628,6 +628,12 @@ export interface VoiceStatus {
   source: "downloaded" | "bundled" | null;
   download_bytes: number | null;
   downloading: boolean;
+  /** the voice in use can say Hebrew and Greek words */
+  original_words: boolean;
+  /** an older downloaded voice is still on the computer although the newer one inside the app is used */
+  unused_old_copy: boolean;
+  /** the download on offer can say Hebrew and Greek words, so an older downloaded voice can be updated in one step */
+  update_available: boolean;
 }
 
 export interface UpdateInfo {

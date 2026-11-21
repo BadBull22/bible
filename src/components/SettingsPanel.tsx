@@ -147,7 +147,7 @@ interface Props {
   /** a restore brought data in: the screens that show it draw again */
   onStudyChanged: () => void;
   /** open scrolled to this section (used by Getting started's "Show me") */
-  focus?: "online" | "appearance";
+  focus?: "online" | "appearance" | "voice";
   onClose: () => void;
 }
 
@@ -305,6 +305,7 @@ export function SettingsPanel({
     // opened from Getting started's "Show me": the keys group is open
     if (focus === "online") s.add("online");
     if (focus === "appearance") s.add("appearance");
+    if (focus === "voice") s.add("voice");
     return s;
   });
   const toggle = (id: string, open: boolean) =>
@@ -322,7 +323,12 @@ export function SettingsPanel({
     });
   const onlineBox = useRef<HTMLDetailsElement>(null);
   const appearanceBox = useRef<HTMLDetailsElement>(null);
+  const voiceBox = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
+    if (focus === "voice") {
+      toggle("voice", true);
+      window.setTimeout(() => voiceBox.current?.scrollIntoView({ block: "start" }), 60);
+    }
     if (focus === "online") onlineBox.current?.scrollIntoView({ block: "start" });
     if (focus === "appearance") appearanceBox.current?.scrollIntoView({ block: "start" });
   }, [focus]);
@@ -436,7 +442,7 @@ export function SettingsPanel({
         </p>
       </Group>
 
-      <Group {...g("voice")} title="Read aloud (voice)">
+      <Group {...g("voice")} title="Read aloud (voice)" boxRef={voiceBox}>
         <div className="reading-prefs">
           <label>
             <span>Voice</span>
@@ -463,6 +469,7 @@ export function SettingsPanel({
         <VoiceDownload onChange={setVoiceAvailable} />
         <p className="search-hint">
           Press <strong>Listen</strong> beside a chapter's title (or ⋯ → <em>Listen from here</em> on a verse) to hear it read in a natural voice, fully offline once it's downloaded.
+          The same voice says Hebrew and Greek words: press the little <strong>▶</strong> speaker beside a word in Word Study, the Interlinear, Meanings and the Concordance.
         </p>
       </Group>
 
