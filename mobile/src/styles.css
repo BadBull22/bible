@@ -1218,6 +1218,42 @@ mark.used {
   font-weight: 600;
 }
 
+/* the Bibles screen (since 3.2.1): the language list and its tick on one row, a closed "About" on a card, and the small print at the bottom */
+.finder-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.8rem;
+}
+
+.finder-row .select-field {
+  flex: 1 1 12rem;
+  width: auto;
+}
+
+.finder-row .toggle {
+  margin: 0 0 0.7rem;
+}
+
+.offer-about summary {
+  min-height: 2.2rem;
+  display: flex;
+  align-items: center;
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.offer-about p {
+  white-space: pre-line;
+}
+
+.small-print {
+  font-size: 0.75rem;
+  margin: 0.3rem 0 0.6rem;
+}
+
 .select-field {
   width: 100%;
   height: 2.8rem;

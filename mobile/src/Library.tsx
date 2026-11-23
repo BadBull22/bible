@@ -7,10 +7,16 @@ import { listen } from "@tauri-apps/api/event";
 import { api, CatalogItem, CommentaryOn, LibEntry, LibInstalled, LibSection, phone, TocEntry } from "./api";
 import { InstalledFold } from "./Downloads";
 import { commentariesOnVerse } from "./commentaryFor";
+import { Translations } from "./Translations";
 
-const KIND_LABEL: Record<string, string> = { commentary: "Commentaries", dictionary: "Dictionaries", book: "Books", devotional: "Devotionals" };
+const KIND_LABEL: Record<string, string> = { bible: "Bibles", commentary: "Commentaries", dictionary: "Dictionaries", book: "Books", devotional: "Devotionals" };
 const KIND_ONE: Record<string, string> = { commentary: "Commentary", dictionary: "Dictionary", book: "Book", devotional: "Devotional", bible: "Bible" };
+/** what the Library holds itself (Bibles go to the translations) */
 const KINDS = ["commentary", "dictionary", "book", "devotional"];
+/** what Get more offers: Bibles first (since 3.2.1; they open the Bibles screen), then what the Library holds */
+const GET_KINDS = ["bible", ...KINDS];
+/** the libraries the phone downloads from (`library::PHONE_SOURCES`) */
+const SOURCE_NAME: Record<string, string> = { crosswire: "CrossWire", wycliffe: "Wycliffe", netbible: "NET Bible (bible.org)", attic: "CrossWire Attic" };
 
 type Go = (book: string, chapter: number, verse: number | null) => void;
 
@@ -99,7 +105,7 @@ export function Library({ book, chapter, start, onGo, onBibles, ask, say }: Prop
     </button>
   );
 
-  if (view.at === "get") return <GetMore onBack={() => (setView({ at: "home" }), void load())} say={say} />;
+  if (view.at === "get") return <GetMore onBack={() => (setView({ at: "home" }), void load())} onBibles={onBibles} ask={ask} say={say} />;
   if (view.at === "commentary") return <Commentaries book={book} chapter={chapter} onGo={onGo} head={back({ at: "home" })} />;
   if (view.at === "dictionary") return <Dictionary onOpen={(id) => setView({ at: "entry", id, back: view })} head={back({ at: "home" })} />;
   if (view.at === "entry") return <EntryView id={view.id} onGo={onGo} head={back(view.back)} />;
@@ -111,7 +117,7 @@ export function Library({ book, chapter, start, onGo, onBibles, ask, say }: Prop
   return (
     <>
       <h3>Library</h3>
-      <p className="hint">Commentaries, dictionaries, books and devotionals to read offline. Download free ones from CrossWire, or add files you have (SWORD, e-Sword, MySword, MyBible).</p>
+      <p className="hint">Bibles, commentaries, dictionaries, books and devotionals to read offline. Download free ones from CrossWire's libraries, or add files you have (SWORD, e-Sword, MySword, MyBible).</p>
       {error && <p className="hint status">{error}</p>}
       <div className="actions">
         <button onClick={() => setView({ at: "get" })}>Get more</button>
@@ -188,12 +194,13 @@ export function Library({ book, chapter, start, onGo, onBibles, ask, say }: Prop
   );
 }
 
-/** What CrossWire offers: by kind, with a search, each downloaded with one tap. */
-function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void }) {
+/** What CrossWire's libraries offer (CrossWire, Wycliffe, the NET Bible, CrossWire's Attic): by kind, with a search and a language, each downloaded
+ *  with one tap. "Bibles" (first) shows the Bibles screen itself, the same one as More > Bible translations. */
+function GetMore({ onBack, onBibles, ask, say }: { onBack: () => void; onBibles: () => void; ask: (message: string, yes: string, then: () => void) => void; say: (m: string) => void }) {
   const [items, setItems] = useState<CatalogItem[] | null>(null);
   const [kind, setKind] = useState("commentary");
   const [q, setQ] = useState("");
-  const [english, setEnglish] = useState(true);
+  const [language, setLanguage] = useState("English");
   const [busy, setBusy] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const [foldOpen, setFoldOpen] = useState(false);
@@ -212,9 +219,10 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
   const shown = useMemo(() => {
     const s = q.trim().toLowerCase();
     return (items ?? []).filter(
-      (i) => i.kind === kind && !i.questionable && (!english || i.lang === "en" || i.lang.startsWith("en-")) && (!s || `${i.title} ${i.name} ${i.about}`.toLowerCase().includes(s)),
+      (i) => i.kind === kind && !i.questionable && (language === "" || i.language === language) && (!s || `${i.title} ${i.name} ${i.about} ${i.language}`.toLowerCase().includes(s)),
     );
-  }, [items, kind, q, english]);
+  }, [items, kind, q, language]);
+  const languages = useMemo(() => [...new Set((items ?? []).filter((i) => i.kind === kind && !i.questionable).map((i) => i.language))].sort((a, b) => a.localeCompare(b)), [items, kind]);
   // what can still be downloaded first; what is already in the library is in one closed "Installed" row
   const inLibrary = (i: CatalogItem) => i.installed && !i.note;
   const have = shown.filter(inLibrary);
@@ -222,7 +230,7 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
   async function install(i: CatalogItem) {
     setBusy((b) => ({ ...b, [i.name]: 0 }));
     try {
-      const r = await api.libraryInstall(i.name);
+      const r = await api.libraryInstall(i.name, i.source || "crosswire");
       say(`${r.title}: added`);
       setItems((all) => all?.map((x) => (x.name === i.name ? { ...x, installed: true } : x)) ?? all);
     } catch (e) {
@@ -240,7 +248,7 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
         <strong>{i.title}</strong>
       </div>
       <p>
-        {[i.language, i.size_kb ? `${Math.max(1, Math.round(i.size_kb / 1024))} MB` : "", i.licence].filter(Boolean).join(" · ")}
+        {[i.language, SOURCE_NAME[i.source] ? `from ${SOURCE_NAME[i.source]}` : "", i.size_kb ? `${Math.max(1, Math.round(i.size_kb / 1024))} MB` : "", i.licence].filter(Boolean).join(" · ")}
       </p>
       {i.note ? (
         <p className="hint">{i.note}</p>
@@ -260,21 +268,39 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
       <button className="link back" onClick={onBack}>
         ‹ Back
       </button>
-      <h3>Get more from CrossWire</h3>
-      <p className="hint">Free works the CrossWire Bible Society shares. Each is a one-time download; then it reads offline.</p>
+      <h3>Get more</h3>
       <div className="chips">
-        {KINDS.map((k) => (
+        {GET_KINDS.map((k) => (
           <button key={k} className={kind === k ? "on" : undefined} onClick={() => setKind(k)}>
             {KIND_LABEL[k]}
           </button>
         ))}
       </div>
+      {kind === "bible" ? (
+        <Translations onChanged={onBibles} ask={ask} say={say} />
+      ) : (
+        getWorks()
+      )}
+    </>
+  );
+
+  // the list of works, as a plain function (not a component of its own, which would be made anew on every key typed and lose the search box)
+  function getWorks() {
+    return (
+      <>
       <input className="lib-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search: Spurgeon, Greek, Matthew Henry…" />
-      <label className="hint">
-        <input type="checkbox" checked={english} onChange={(e) => setEnglish(e.target.checked)} /> English only
-      </label>
+      {items && (
+        <select className="select-field" value={language} onChange={(e) => setLanguage(e.target.value)} aria-label="Language">
+          <option value="">Every language</option>
+          {languages.map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+        </select>
+      )}
       {error && <p className="hint status">{error}</p>}
-      {!items && !error && <p className="hint">Loading the list from CrossWire…</p>}
+      {!items && !error && <p className="hint">Loading the lists from CrossWire's libraries…</p>}
       <InstalledFold count={have.length} open={foldOpen} onToggle={setFoldOpen}>
         <ul className="hits plain">{have.map(offerRow)}</ul>
       </InstalledFold>
@@ -285,8 +311,9 @@ function GetMore({ onBack, say }: { onBack: () => void; say: (m: string) => void
           <button onClick={() => load(true)}>Refresh the list</button>
         </div>
       )}
-    </>
-  );
+      </>
+    );
+  }
 }
 
 /** Every installed commentary on the chapter being read, with ‹ › to move chapters. */

@@ -126,6 +126,8 @@ pub struct SearchResult {
     pub corrected: Vec<(String, String)>,
     /// whether the Advanced search upgrade took part
     pub by_meaning: bool,
+    /// the translation the verses were found in: the one asked for, or the BSB when a downloaded Bible had nothing (since 3.2.1)
+    pub searched: String,
 }
 
 /// Where to look: everywhere, one testament ("OT" / "NT"), or one book.
@@ -184,7 +186,7 @@ fn found_text(db: &Connection, version: &str, f: &find::Found) -> String {
 pub fn search(db: &Connection, study: &Connection, query: &str, version: &str, scope: Scope, limit: usize, meaning: Option<&Meaning>) -> Result<SearchResult, String> {
     let query = query.trim();
     if !query.chars().any(char::is_alphanumeric) {
-        return Ok(SearchResult { hits: Vec::new(), exact: 0, topics: Vec::new(), articles: Vec::new(), corrected: Vec::new(), by_meaning: false });
+        return Ok(SearchResult { hits: Vec::new(), exact: 0, topics: Vec::new(), articles: Vec::new(), corrected: Vec::new(), by_meaning: false, searched: version.to_string() });
     }
     let understood = find::understand(db, vocab(db), query);
     let near: Vec<VerseKey> = match meaning {
@@ -225,6 +227,7 @@ pub fn search(db: &Connection, study: &Connection, query: &str, version: &str, s
         articles: articles(study, &subject, 6)?,
         corrected: understood.corrected,
         by_meaning: meaning.is_some(),
+        searched: version.to_string(),
     })
 }
 

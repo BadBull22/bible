@@ -1,8 +1,10 @@
 //! The Library on the phone (since 2.9.0): commentaries, dictionaries and lexicons, books and
-//! devotionals, downloaded from CrossWire or added from a file the reader has (SWORD, e-Sword,
-//! MySword). Installing is the desktop app's own code (`bible_core::library`); the library is
-//! a database of its own (`library/library.db`), so a new version of the app keeps it. Bibles
-//! are not kept here: they go into `my-bibles.db` (see `bibles.rs` and `modules.rs`).
+//! devotionals, downloaded from CrossWire's libraries (since 3.2.1 also Wycliffe, the NET Bible
+//! and CrossWire's Attic) or added from a file the reader has (SWORD, e-Sword, MySword).
+//! Installing is the desktop app's own code (`bible_core::library`); the library is a database
+//! of its own (`library/library.db`), so a new version of the app keeps it. Bibles are not kept
+//! here: they go into `my-bibles.db` (see `bibles.rs` and `modules.rs`), and since 3.2.1 the
+//! Bibles these sources offer are listed on the Bibles screen (`bible_items`).
 
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -10,6 +12,7 @@ use std::time::{Duration, SystemTime};
 
 use bible_core::library::{self as lib, CatalogItem, InstallOptions, InstallReport, InstalledModule};
 use bible_core::esword;
+use bible_core::sword::Conf;
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::Serialize;
 
@@ -49,26 +52,35 @@ pub fn open(app_dir: &Path) -> Result<Connection, String> {
     Ok(conn)
 }
 
-fn get(url: &str) -> Result<ureq::Response, String> {
+fn get(url: &str, who: &str) -> Result<ureq::Response, String> {
     ureq::get(url)
         .set("User-Agent", USER_AGENT)
         .timeout(Duration::from_secs(300))
         .call()
         .map_err(|e| match e {
-            ureq::Error::Status(code, _) => format!("CrossWire answered {code}."),
-            _ => "Couldn't reach CrossWire. Check the phone's internet connection and try again.".to_string(),
+            ureq::Error::Status(code, _) => format!("{who} answered {code}."),
+            _ => format!("Couldn't reach {who}. Check the phone's internet connection and try again."),
         })
 }
 
-fn crosswire() -> &'static lib::Source {
-    lib::source("crosswire").expect("the CrossWire source")
+/// The SWORD repositories the phone uses (since 3.2.1), in the order they win when two hold a module of the same name: CrossWire's main library,
+/// Wycliffe's Bibles in minority languages, the NET Bible's free edition (bible.org) and CrossWire's Attic of older works. They are the computer
+/// app's sources (`bible_core::library::SOURCES`) minus eBible.org's SWORD copies (the phone takes eBible.org's own list instead, in `bibles.rs`)
+/// and CrossWire Beta (unfinished works). Before 3.2.1 the phone used CrossWire's main library only, and left its Bibles out.
+pub const PHONE_SOURCES: &[&str] = &["crosswire", "wycliffe", "netbible", "attic"];
+
+fn source_of(id: &str) -> Result<&'static lib::Source, String> {
+    if !PHONE_SOURCES.contains(&id) {
+        return Err("That isn't a library the app downloads from.".into());
+    }
+    lib::source(id).ok_or_else(|| "That isn't a library the app downloads from.".to_string())
 }
 
-/// Everything CrossWire offers that the phone's Library holds (not Bibles: those are in
-/// More translations), newest catalogue at most two weeks old.
-pub fn catalog(conn: &Connection, app_dir: &Path, refresh: bool) -> Result<Vec<CatalogItem>, String> {
-    let source = crosswire();
-    let cache = lib::catalog_cache(&dir_of(app_dir), source);
+/// One source's catalogue (`mods.d.tar.gz`), at most two weeks old unless `refresh`; the last copy when the phone is offline.
+fn source_confs(app_dir: &Path, source: &lib::Source, refresh: bool) -> Result<Vec<Conf>, String> {
+    let dir = dir_of(app_dir);
+    std::fs::create_dir_all(&dir).map_err(err)?;
+    let cache = lib::catalog_cache(&dir, source);
     let fresh = std::fs::metadata(&cache)
         .and_then(|m| m.modified())
         .ok()
@@ -77,22 +89,88 @@ pub fn catalog(conn: &Connection, app_dir: &Path, refresh: bool) -> Result<Vec<C
     let bytes = if fresh && !refresh {
         std::fs::read(&cache).map_err(err)?
     } else {
-        let mut bytes = Vec::new();
-        get(source.catalog_url)?.into_reader().take(50 * 1024 * 1024).read_to_end(&mut bytes).map_err(err)?;
-        let _ = std::fs::write(&cache, &bytes);
-        bytes
+        let mut fetched = Vec::new();
+        match get(source.catalog_url, source.name).and_then(|r| r.into_reader().take(50 * 1024 * 1024).read_to_end(&mut fetched).map_err(err)) {
+            Ok(_) => {
+                let _ = std::fs::write(&cache, &fetched);
+                fetched
+            }
+            // offline: the last copy will do
+            Err(e) => std::fs::read(&cache).map_err(|_| e)?,
+        }
     };
-    let confs = lib::parse_catalog(&bytes)?;
-    Ok(lib::catalog_items(&confs, conn, source.id, BUILT_IN)?.into_iter().filter(|c| c.kind != "bible" && c.kind != "other").collect())
+    lib::parse_catalog(&bytes)
 }
 
-/// Downloads a module from CrossWire and installs it (`progress`: percent downloaded, then
-/// 100 while it is put in place).
-pub fn install(conn: &mut Connection, app_dir: &Path, name: &str, progress: &dyn Fn(u8)) -> Result<InstallReport, String> {
+/// The catalogues of all the phone's sources, fetched (or read from the cache) without touching the library's database, so that reading it is
+/// not held up while a slow network answers. A source that can't be reached is left out; only when none can be is it an error.
+pub fn source_catalogs(app_dir: &Path, refresh: bool) -> Result<Vec<(&'static lib::Source, Vec<Conf>)>, String> {
+    let mut out = Vec::new();
+    let mut first_error: Option<String> = None;
+    for id in PHONE_SOURCES {
+        let source = source_of(id)?;
+        match source_confs(app_dir, source, refresh) {
+            Ok(confs) => out.push((source, confs)),
+            Err(e) => {
+                first_error.get_or_insert(e);
+            }
+        }
+    }
+    if out.is_empty() {
+        return Err(first_error.unwrap_or_else(|| "Couldn't reach CrossWire. Check the phone's internet connection and try again.".into()));
+    }
+    Ok(out)
+}
+
+/// The catalogue items of every source (`keep` decides which), one entry per module name (the first source in `PHONE_SOURCES` wins).
+fn items_of(conn: &Connection, catalogs: &[(&'static lib::Source, Vec<Conf>)], keep: &dyn Fn(&CatalogItem) -> bool) -> Result<Vec<(CatalogItem, Conf)>, String> {
+    let mut out: Vec<(CatalogItem, Conf)> = Vec::new();
+    for (source, confs) in catalogs {
+        let by_name: std::collections::HashMap<&str, &Conf> = confs.iter().map(|c| (c.name.as_str(), c)).collect();
+        for item in lib::catalog_items(confs, conn, source.id, BUILT_IN)? {
+            if !keep(&item) || out.iter().any(|(o, _)| o.name.eq_ignore_ascii_case(&item.name)) {
+                continue;
+            }
+            if let Some(conf) = by_name.get(item.name.as_str()) {
+                out.push((item, (*conf).clone()));
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// Everything the phone's Library holds that its sources offer: commentaries, dictionaries, books and devotionals (Bibles are offered on the
+/// Bibles screen, `bible_items`, and go into the translations).
+pub fn catalog(conn: &Connection, catalogs: &[(&'static lib::Source, Vec<Conf>)]) -> Result<Vec<CatalogItem>, String> {
+    let mut items: Vec<CatalogItem> = items_of(conn, catalogs, &|c| c.kind != "bible" && c.kind != "other")?.into_iter().map(|(i, _)| i).collect();
+    items.sort_by(|a, b| a.language.cmp(&b.language).then(a.title.to_lowercase().cmp(&b.title.to_lowercase())));
+    Ok(items)
+}
+
+/// A Bible a SWORD source offers, with what the Bibles screen needs beyond the catalogue item.
+pub struct SwordBible {
+    pub item: CatalogItem,
+    /// written right to left (Hebrew, Arabic, ...)
+    pub rtl: bool,
+}
+
+/// The Bibles the phone's sources offer that the app can read and does not have built in (since 3.2.1). The questionable ones (CrossWire's
+/// "Cults / Unorthodox / Questionable Material") are left out, as in the Library.
+pub fn bible_items(conn: &Connection, catalogs: &[(&'static lib::Source, Vec<Conf>)]) -> Result<Vec<SwordBible>, String> {
+    let found = items_of(conn, catalogs, &|c| c.kind == "bible" && c.supported && c.note.is_none() && !c.questionable)?;
+    Ok(found
+        .into_iter()
+        .map(|(item, conf)| SwordBible { rtl: conf.get("Direction").is_some_and(|d| d.eq_ignore_ascii_case("RtoL")), item })
+        .collect())
+}
+
+/// Downloads a module's zip from one of the phone's sources (`progress`: percent downloaded, up to 99).
+pub fn download(source_id: &str, name: &str, progress: &dyn Fn(u8)) -> Result<Vec<u8>, String> {
     if !lib::valid_name(name) {
         return Err("That isn't a module name.".into());
     }
-    let resp = get(&format!("{}{name}.zip", crosswire().zip_url))?;
+    let source = source_of(source_id)?;
+    let resp = get(&format!("{}{name}.zip", source.zip_url), source.name)?;
     let total: u64 = resp.header("Content-Length").and_then(|n| n.parse().ok()).unwrap_or(0);
     let mut reader = resp.into_reader().take(lib::MAX_UNPACKED_BYTES);
     let mut bytes = Vec::new();
@@ -112,12 +190,22 @@ pub fn install(conn: &mut Connection, app_dir: &Path, name: &str, progress: &dyn
             }
         }
     }
+    if !bytes.starts_with(b"PK") {
+        return Err(format!("{} sent something that isn't a module. Try again later.", source.name));
+    }
+    Ok(bytes)
+}
+
+/// Downloads a module from one of the phone's sources and installs it (`progress`: percent downloaded, then 100 while it is put in place).
+pub fn install(conn: &mut Connection, app_dir: &Path, source_id: &str, name: &str, progress: &dyn Fn(u8)) -> Result<InstallReport, String> {
+    let source = source_of(source_id)?;
+    let bytes = download(source.id, name, progress)?;
     progress(100);
     let tmp = dir_of(app_dir).join("tmp").join(name);
     let _ = std::fs::remove_dir_all(&tmp);
     std::fs::create_dir_all(&tmp).map_err(err)?;
     let result = lib::unzip(&bytes, &tmp, false)
-        .and_then(|_| lib::install_unpacked(conn, &tmp, name, InstallOptions { source: "crosswire", strict: false, commit: true, built_in: BUILT_IN }, &|_| {}));
+        .and_then(|_| lib::install_unpacked(conn, &tmp, name, InstallOptions { source: source.id, strict: false, commit: true, built_in: BUILT_IN }, &|_| {}));
     let _ = std::fs::remove_dir_all(&tmp);
     result
 }
@@ -355,6 +443,29 @@ mod tests {
     use super::*;
     use bible_core::sword;
 
+    /// The phone must not quietly offer less than the computer (in 3.2.0 it left every Bible out and used one source of six): it uses every source
+    /// the computer's Library has, except eBible.org's SWORD copies (the Bibles screen reads eBible.org's own list) and CrossWire Beta (unfinished).
+    #[test]
+    fn the_phone_uses_the_computers_sources() {
+        let computer: Vec<&str> = lib::SOURCES.iter().map(|s| s.id).collect();
+        for id in PHONE_SOURCES {
+            assert!(computer.contains(id), "{id} is one of the computer's sources");
+            assert!(source_of(id).is_ok());
+        }
+        for id in computer {
+            assert!(PHONE_SOURCES.contains(&id) || id == "ebible" || id == "beta", "the computer's source {id} is missing on the phone");
+        }
+        assert!(source_of("beta").is_err() && source_of("elsewhere").is_err(), "nothing outside the list is downloaded from");
+        assert_eq!(PHONE_SOURCES[0], "crosswire", "CrossWire's main library wins when two hold a module of the same name");
+    }
+
+    #[test]
+    fn a_bad_module_name_is_refused_before_anything_is_fetched() {
+        assert!(download("crosswire", "../x", &|_| {}).is_err());
+        assert!(download("crosswire", "", &|_| {}).is_err());
+        assert!(download("beta", "KJV", &|_| {}).is_err());
+    }
+
     #[test]
     fn the_installed_lexicons_answer_for_a_strongs_number() {
         let dir = std::env::temp_dir().join(format!("bc-phone-lex-{}", std::process::id()));
@@ -443,17 +554,58 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// The real CrossWire catalogue (needs the internet): `cargo test --lib library -- --ignored`.
+    /// The real catalogues of the phone's four sources (needs the internet): `cargo test --lib library -- --ignored`. The Library gets
+    /// commentaries, dictionaries, books and devotionals from them; the Bibles screen gets their Bibles, the Afrikaans 1933/1953 among them, and
+    /// that Bible's zip really is there to download.
     #[test]
     #[ignore]
-    fn the_crosswire_catalogue() {
+    fn the_sources_catalogues_and_the_afrikaans_bible() {
         let dir = std::env::temp_dir().join(format!("bc-phone-cat-{}", std::process::id()));
         let conn = open(&dir).unwrap();
-        let items = catalog(&conn, &dir, true).unwrap();
+        let catalogs = source_catalogs(&dir, true).unwrap();
+        println!("sources reached: {:?}", catalogs.iter().map(|(s, c)| (s.id, c.len())).collect::<Vec<_>>());
+        assert_eq!(catalogs.len(), PHONE_SOURCES.len(), "all four sources answer");
+        let items = catalog(&conn, &catalogs).unwrap();
         let kinds = ["commentary", "dictionary", "book", "devotional"].map(|k| items.iter().filter(|i| i.kind == k && i.supported).count());
         println!("{} items; supported commentaries {}, dictionaries {}, books {}, devotionals {}", items.len(), kinds[0], kinds[1], kinds[2], kinds[3]);
         assert!(kinds.iter().all(|n| *n > 0));
+        assert!(items.iter().all(|i| i.kind != "bible"), "Bibles are on the Bibles screen");
+        let bibles = bible_items(&conn, &catalogs).unwrap();
+        let langs: std::collections::HashSet<&str> = bibles.iter().map(|b| b.item.lang.as_str()).collect();
+        println!("{} Bibles in {} language codes", bibles.len(), langs.len());
+        let afr = bibles.iter().find(|b| b.item.name == "Afr1953").expect("the Afrikaans 1933/1953 is offered");
+        assert_eq!(afr.item.source, "crosswire");
+        assert!(bibles.iter().all(|b| b.item.name != "KJV"), "a Bible built into the app is not offered again");
+        let zip = download("crosswire", "Afr1953", &|_| {}).unwrap();
+        assert!(zip.len() > 500_000, "the Afrikaans zip downloads ({} bytes)", zip.len());
         let _ = sword::canon("kjv");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// The whole way a Bible from CrossWire takes on the phone (needs the internet): downloaded, added to the translations as a SWORD file is,
+    /// then read and searched. `cargo test --lib afrikaans_end_to_end -- --ignored --nocapture`.
+    #[test]
+    #[ignore]
+    fn afrikaans_end_to_end() {
+        let dir = std::env::temp_dir().join(format!("bc-phone-afr-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let zip = download("crosswire", "Afr1953", &|_| {}).unwrap();
+        let file = dir.join("Afr1953.zip");
+        std::fs::write(&file, &zip).unwrap();
+        let mut bibles = Connection::open_in_memory().unwrap();
+        crate::bibles::init(&bibles).unwrap();
+        let added = crate::modules::add_file(&mut bibles, &file, "Afr1953.zip", &dir.join("work"), &["BSB".to_string(), "KJV".to_string()]).unwrap();
+        println!("{} ({}): {} verses, {} books, {} · {:?}", added.name, added.code, added.verses, added.books, added.language, added.warnings);
+        assert_eq!(added.code, "AFR1953");
+        assert_eq!(added.language, "Afrikaans");
+        assert!(added.verses > 30_000 && added.books == 66);
+        let john = crate::bibles::chapter(&bibles, "AFR1953", "John", 3).unwrap();
+        let v16 = john.iter().find(|v| v.verse == 16).unwrap();
+        println!("John 3:16: {}", v16.text);
+        assert!(v16.text.contains("God"));
+        let (hits, exact) = crate::bibles::search(&bibles, "AFR1953", "eniggebore Seun", None, None, 50).unwrap();
+        println!("\"eniggebore Seun\": {} verses, {} word for word; first {} {}:{}", hits.len(), exact, hits[0].book, hits[0].chapter, hits[0].verse);
+        assert!(hits.iter().any(|h| h.book == "John" && h.chapter == 3 && h.verse == 16));
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

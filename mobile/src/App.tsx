@@ -906,13 +906,15 @@ export function App() {
       }
     }
   }
-  async function startListenMode() {
+  /** `startVerse`: where in this chapter to begin ("Listen from here" on a verse's menu, since 3.2.1; the Listen button begins at verse 1) */
+  async function startListenMode(startVerse = 1) {
     try {
       stopListening();
+      setChosen(null);
       const list = chaptersFrom(books, place.book, place.chapter, 10);
       if (list.length === 0) return;
       const chapters = await Promise.all(list.map(async (c) => ({ ...c, verses: await api.chapter(version, c.book, c.chapter) })));
-      const q = buildQueue(chapters);
+      const q = buildQueue(chapters, startVerse);
       const token = String(Date.now());
       await phone.listenStart(JSON.stringify({ pieces: q.pieces, start: 0, rate, voice, sleepMin: Number(sleep) > 0 ? Number(sleep) : 0, token }));
       try {
@@ -1370,7 +1372,8 @@ export function App() {
                 )}
                 {query && result && (
                   <p className="summary">
-                    <strong>“{query}”</strong>: {result.exact === 0 ? "not found word for word" : `word for word in ${result.exact} verse${result.exact === 1 ? "" : "s"}`} ({version}).
+                    <strong>“{query}”</strong>: {result.exact === 0 ? "not found word for word" : `word for word in ${result.exact} verse${result.exact === 1 ? "" : "s"}`} ({result.searched || version}).
+                    {result.searched && result.searched !== version && ` Nothing was found in the ${version}, so these are from the ${result.searched}.`}
                     {result.hits.length > 0 && ` ${result.hits.length} passages, the most relevant first.`}
                     {result.corrected.length > 0 && (
                       <>
@@ -1732,8 +1735,8 @@ export function App() {
             <details className="fold" open>
               <summary>Downloads</summary>
               <div className="dl-list">
-                <LinkRow title="Bible translations" note={`${versions.length} on this phone · more languages`} onClick={() => setShowTranslations(true)} />
-                <LinkRow title="Library" note="Commentaries, dictionaries, books" onClick={() => setLibrary("home")} />
+                <LinkRow title="Bible translations" note={`${versions.length} on this phone · search Bibles in hundreds of languages`} onClick={() => setShowTranslations(true)} />
+                <LinkRow title="Library" note="Bibles, commentaries, dictionaries, books" onClick={() => setLibrary("home")} />
                 <LinkRow title="Other links" note="Where to find e-Sword, MySword and MyBible files" onClick={() => setShowLinks(true)} />
                 <LinkRow title="Make a picture" note="A verse or your own words, to keep or share" onClick={() => setMakingPicture(true)} />
                 <PicturesRow onOpen={() => setShowPictures(true)} />
@@ -2052,7 +2055,9 @@ export function App() {
             void highlight(place.book, place.chapter, chosenVerse.verse, c);
             setChosen(null);
           }}
-          onListen={() => void listenFrom(chosenVerse.verse)}
+          // with the phone's background Listen (Android), "Listen from here" keeps reading with the screen off, as the Listen button does (since 3.2.1);
+          // without it, the page reads the verses itself
+          onListen={() => void (canRemind ? startListenMode(chosenVerse.verse) : listenFrom(chosenVerse.verse))}
           onGo={go}
           onChanged={changed}
           originalPack={originalPack}
@@ -2182,7 +2187,7 @@ export function App() {
 
       {showTranslations && (
         <Sheet tall onClose={() => setShowTranslations(false)}>
-          <h3>More translations</h3>
+          <h3>Bible translations</h3>
           <Translations onChanged={() => void loadVersions()} ask={ask} say={say} />
         </Sheet>
       )}

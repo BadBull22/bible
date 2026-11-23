@@ -109,6 +109,8 @@ export interface SearchResult {
   corrected: [string, string][];
   /** whether the Advanced search upgrade took part */
   by_meaning: boolean;
+  /** the translation the verses were found in: the one asked for, or the BSB when a downloaded Bible had nothing (since 3.2.1) */
+  searched: string;
 }
 
 export interface ChapterMarks {
@@ -260,7 +262,14 @@ export interface CommentaryAbout {
 
 /** A translation eBible.org offers for download. */
 export interface Offer {
+  /** eBible.org's id ("engwebp"), or "source/Module" for a Bible from CrossWire's libraries ("crosswire/Afr1953") */
   id: string;
+  /** the translation's code once it is on the phone ("AFR1953") */
+  code: string;
+  /** "ebible", "crosswire", "wycliffe", "netbible" or "attic" */
+  source: string;
+  /** "eBible.org", "CrossWire", ... */
+  source_name: string;
   language: string;
   language_own: string;
   title: string;
@@ -268,6 +277,9 @@ export interface Offer {
   copyright: string;
   ot_books: number;
   nt_books: number;
+  /** false when the source does not say which books a Bible has */
+  books_known: boolean;
+  size_kb: number;
   rtl: boolean;
   installed: boolean;
 }
@@ -513,7 +525,7 @@ export const api = {
   lanPair: (address: string, code: string) => invoke<SyncStatus>("lan_pair", { address, code }),
   lanForget: () => invoke<SyncStatus>("lan_forget"),
   libraryCatalog: (refresh: boolean) => invoke<CatalogItem[]>("library_catalog", { refresh }),
-  libraryInstall: (name: string) => invoke<LibReport>("library_install", { name }),
+  libraryInstall: (name: string, source: string) => invoke<LibReport>("library_install", { name, source }),
   /** a module `phone.openFile` copied into the app: to the Library, or a Bible to the translations */
   libraryAddFile: (path: string, name: string) => invoke<LibReport>("library_add_file", { path, name }),
   libraryInstalled: () => invoke<LibInstalled[]>("library_installed"),
@@ -545,6 +557,8 @@ export interface CatalogItem {
   /** why it can't be added, or that it is built in */
   note: string | null;
   installed: boolean;
+  /** the library it comes from: "crosswire", "wycliffe", "netbible" or "attic" (since 3.2.1) */
+  source: string;
 }
 
 export interface LibReport {

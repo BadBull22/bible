@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 // already had the app (a fresh install has nothing "new" to be told about), and that can be read again from More > About. The notes are plain
 // sentences for people who are not developers.
 
-export const WHATS_NEW_VERSION = "3.2.0";
+export const WHATS_NEW_VERSION = "3.2.1";
 
 const SEEN_KEY = "pocket:whats-new-seen";
 const SAVED_KEY = "pocket:state"; // the app's saved settings: there from the second start of any install
@@ -30,6 +30,10 @@ if (read(SEEN_KEY) !== WHATS_NEW_VERSION) write(SEEN_KEY, WHATS_NEW_VERSION);
 
 /** The notes, the newest first: a short title and one or two plain sentences. */
 export const WHATS_NEW: { title: string; text: string }[] = [
+  { title: "Find a Bible in your language", text: "More > Bible translations now begins with a search: type a language or a name (Afrikaans, Greek, Luther) and the Bibles that fit come first. It now also lists the Bibles of CrossWire's libraries, so hundreds more can be downloaded, an Afrikaans Bible among them. Library > Get more has a Bibles choice that opens the same list." },
+  { title: "Search inside any Bible you add", text: "When you read a Bible you downloaded or added from a file, the search looks for your words in that Bible itself. If nothing is found there, it shows the verses from the BSB and says so." },
+  { title: "Listen from a verse with the screen off", text: "Tap a verse, then Listen from here: the reading now keeps going with the screen off and goes on into the next chapters, with Pause, Previous and Next on the lock screen, just like the Listen button." },
+  { title: "More in the Library", text: "Library > Get more now also lists the works of Wycliffe, the NET Bible and CrossWire's Attic, and you can choose any language instead of English only." },
   { title: "What a Hebrew or Greek word means", text: "Tap a verse, then Word study, then a word: its page now has Overview, Meanings, Where used and Library. Meanings shows every meaning the word has as a ring sized by how often each is used, with the one used in your verse chosen, what it is called in everyday English, example verses with the word marked, and the other words that share the meaning (tap one to open it). The phone's Back button steps back through the words you opened one from another." },
   { title: "Colouring pages to print", text: "On a children's page, Outline to colour in shows the drawing as an outline, and Print or share the outline opens your phone's share list: choose Print for a printer, or send it by WhatsApp or e-mail to print elsewhere." },
   { title: "36 more Bible stories, each with a children's page", text: "The app now comes with 67 Bible stories and 56 children's pages: Cain and Abel, the Ten Plagues, Samson, Esther, Elijah, the Fiery Furnace, the Last Supper, the Crucifixion and many more, each with a painting and, for the children's page, an outline to colour in. The Story pictures and Children's pictures downloads (More > Downloads) bring the pictures; download them again to get the new ones." },

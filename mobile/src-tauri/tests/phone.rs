@@ -122,7 +122,7 @@ fn added_bible(code: &str) -> Connection {
 #[test]
 fn the_backup_carries_the_settings_and_a_default_bible_the_reader_added() {
     use bible_pocket_lib::bibles;
-    let mut phone = Connection::open_in_memory().unwrap();
+    let phone = Connection::open_in_memory().unwrap();
     userdata::init(&phone).unwrap();
     userdata::set_note(&phone, "John", 3, 16, "A note.").unwrap();
     let more = added_bible("TST");

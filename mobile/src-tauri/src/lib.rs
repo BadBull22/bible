@@ -239,11 +239,31 @@ fn chapter(core: State<Core>, version: String, book: String, chapter: i64) -> Re
 #[tauri::command(async)]
 fn search_bible(core: State<Core>, query: String, version: String, testament: Option<String>, book: Option<String>, limit: Option<usize>) -> Result<search::SearchResult, String> {
     let core = core.get()?;
+    let limit = limit.unwrap_or(200).min(500);
+    // a downloaded Bible is searched itself (since 3.2.1); when nothing is found in it, the search goes on in the BSB and says so
+    if !core.is_bundled(&version) {
+        let found = {
+            let more = core.bibles.lock().map_err(err)?;
+            bibles::is_installed(&more, &version).then(|| bibles::search(&more, &version, &query, testament.as_deref(), book.as_deref(), limit)).transpose()?
+        };
+        if let Some((hits, exact)) = found.filter(|(hits, _)| !hits.is_empty()) {
+            let s = core.study.lock().map_err(err)?;
+            return Ok(search::SearchResult {
+                hits,
+                exact,
+                topics: search::topics(&s, &query)?,
+                articles: search::articles(&s, &query, 6)?,
+                corrected: Vec::new(),
+                by_meaning: false,
+                searched: version,
+            });
+        }
+    }
     let d = core.db.lock().map_err(err)?;
     let s = core.study.lock().map_err(err)?;
     let scope = search::Scope { testament: testament.as_deref(), book: book.as_deref() };
     let meaning = meaning_pack::get(&core.dir);
-    search::search(&d, &s, &query, core.searchable(&version), scope, limit.unwrap_or(200).min(500), meaning.as_deref())
+    search::search(&d, &s, &query, core.searchable(&version), scope, limit, meaning.as_deref())
 }
 
 /// An answer above the search results, when what was typed is a question the app can answer.
@@ -571,9 +591,31 @@ fn commentary_about(core: State<Core>) -> Result<study_extra::About, String> {
 
 // ---------------------------------------------------------------- more translations
 
+/// Every Bible that can be downloaded: eBible.org's list and, since 3.2.1, the Bibles of the phone's SWORD sources (CrossWire, Wycliffe, the NET
+/// Bible, CrossWire's Attic). If one side can't be reached (and was never fetched), the other is still shown; only when neither can is it an error.
 #[tauri::command(async)]
 fn bible_catalog(core: State<Core>, today: String, refresh: bool) -> Result<Vec<bibles::Offer>, String> {
-    bibles::catalog(&*core.get()?.bibles.lock().map_err(err)?, &today, refresh)
+    let opened = core.get()?;
+    // eBible.org's file (fetched with the translations' database held only for the cache)
+    let (ebible, csv, installed) = {
+        let more = opened.bibles.lock().map_err(err)?;
+        let csv = bibles::catalog_csv(&more, &today, refresh);
+        let ebible = csv.as_ref().map_err(|e| e.clone()).and_then(|_| bibles::catalog(&more, &today, false));
+        let installed: Vec<String> = bibles::installed(&more)?.into_iter().map(|b| b.code).collect();
+        (ebible, csv.unwrap_or_default(), installed)
+    };
+    // the SWORD sources' catalogues (fetched without holding the translations' database)
+    let names = bibles::language_names(&csv);
+    let sword = library::source_catalogs(&opened.dir, refresh).and_then(|cats| library::bible_items(&*opened.library.lock().map_err(err)?, &cats));
+    let sword_offers: Vec<bibles::Offer> = match &sword {
+        Ok(items) => items.iter().map(|b| bibles::sword_offer(&b.item, b.rtl, &names, &installed)).collect(),
+        Err(_) => Vec::new(),
+    };
+    match (ebible, sword) {
+        (Err(e), Err(_)) => Err(e),
+        (Ok(e), _) => Ok(bibles::merge(e, sword_offers)),
+        (Err(_), Ok(_)) => Ok(bibles::merge(Vec::new(), sword_offers)),
+    }
 }
 
 #[derive(Serialize, Clone)]
@@ -586,6 +628,10 @@ struct DownloadProgress<'a> {
 /// Returns how many verses it has.
 #[tauri::command(async)]
 fn bible_install(app: AppHandle, core: State<Core>, id: String, today: String) -> Result<i64, String> {
+    // a Bible from one of the SWORD sources: "crosswire/Afr1953"
+    if let Some((source, name)) = id.split_once('/') {
+        return install_sword_bible(&app, &core, &id, source, name);
+    }
     let core = core.get()?;
     let offer = bibles::find_offer(&*core.bibles.lock().map_err(err)?, &today, &id)?;
     // the connection is held only for storing, not during the download
@@ -614,6 +660,41 @@ fn bible_install(app: AppHandle, core: State<Core>, id: String, today: String) -
     }
     tx.commit().map_err(err)?;
     Ok(n)
+}
+
+/// Downloads a Bible from a SWORD source (since 3.2.1) and adds it to the translations the same way a SWORD file the reader chose is added
+/// (`modules::add_file`). The download happens without holding the translations' database. Returns how many verses it has.
+fn install_sword_bible(app: &AppHandle, core: &State<Core>, id: &str, source: &str, name: &str) -> Result<i64, String> {
+    let opened = core.get()?;
+    let bytes = library::download(source, name, &|pct| {
+        let _ = app.emit("bible-progress", DownloadProgress { id, pct });
+    })?;
+    let _ = app.emit("bible-progress", DownloadProgress { id, pct: 100 });
+    let folder = opened.dir.join("bible-download");
+    fs::create_dir_all(&folder).map_err(err)?;
+    let file = folder.join(format!("{name}.zip"));
+    fs::write(&file, &bytes).map_err(err)?;
+    // the direction of its writing, from the source's catalogue (cached: it was just shown)
+    let rtl = library::source_catalogs(&opened.dir, false)
+        .and_then(|cats| library::bible_items(&*opened.library.lock().map_err(err)?, &cats))
+        .ok()
+        .and_then(|items| items.into_iter().find(|b| b.item.source == source && b.item.name == name).map(|b| b.rtl))
+        .unwrap_or(false);
+    let added = {
+        let mut more = opened.bibles.lock().map_err(err)?;
+        let added = modules::add_file(&mut more, &file, &format!("{name}.zip"), &opened.dir.join("import-work"), &opened.bundled);
+        if let Ok(a) = &added {
+            // where it came from, instead of "Your own copy"
+            let source_name = bible_core::library::source(source).map(|s| s.name).unwrap_or("CrossWire");
+            let licence: String = more.query_row("SELECT copyright FROM bibles WHERE code = ?1", [&a.code], |r| r.get(0)).unwrap_or_default();
+            let licence = licence.trim_start_matches("Your own copy").trim_start_matches(" · ").trim().to_string();
+            let note: String = if licence.is_empty() { format!("From {source_name}") } else { format!("From {source_name} · {licence}") }.chars().take(300).collect();
+            more.execute("UPDATE bibles SET copyright = ?1, rtl = ?2 WHERE code = ?3", rusqlite::params![note, rtl as i64, a.code]).map_err(err)?;
+        }
+        added
+    };
+    let _ = fs::remove_file(&file);
+    added.map(|a| a.verses)
 }
 
 /// Adds the Bible in a file the reader chose (the phone plugin's `open_file` copied it to
@@ -835,14 +916,17 @@ fn lan_forget(core: State<Core>) -> Result<SyncStatus, String> {
 #[tauri::command(async)]
 fn library_catalog(core: State<Core>, refresh: bool) -> Result<Vec<bible_core::library::CatalogItem>, String> {
     let opened = core.get()?;
-    library::catalog(&*opened.library.lock().map_err(err)?, &opened.dir, refresh)
+    // the catalogues are fetched first, without holding the library (a reader of a commentary is not kept waiting on the network)
+    let catalogs = library::source_catalogs(&opened.dir, refresh)?;
+    library::catalog(&*opened.library.lock().map_err(err)?, &catalogs)
 }
 
 /// Downloads and installs a module; "library-progress" events report { name, pct }.
 #[tauri::command(async)]
-fn library_install(app: AppHandle, core: State<Core>, name: String) -> Result<bible_core::library::InstallReport, String> {
+fn library_install(app: AppHandle, core: State<Core>, name: String, source: Option<String>) -> Result<bible_core::library::InstallReport, String> {
     let opened = core.get()?;
-    library::install(&mut *opened.library.lock().map_err(err)?, &opened.dir, &name, &|pct| {
+    let source = source.unwrap_or_else(|| "crosswire".into());
+    library::install(&mut *opened.library.lock().map_err(err)?, &opened.dir, &source, &name, &|pct| {
         let _ = app.emit("library-progress", serde_json::json!({ "name": name, "pct": pct }));
     })
 }

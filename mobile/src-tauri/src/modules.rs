@@ -83,7 +83,7 @@ fn plain(text: &str) -> String {
 }
 
 /// A version code the app can use: the module's own abbreviation, cleaned.
-fn code_of(abbr: &str, fallback: &str) -> String {
+pub(crate) fn code_of(abbr: &str, fallback: &str) -> String {
     let clean = |s: &str| s.chars().filter(|c| c.is_ascii_alphanumeric() || *c == '-').take(16).collect::<String>().to_uppercase();
     let c = clean(abbr);
     if c.is_empty() {
