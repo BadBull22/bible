@@ -416,6 +416,7 @@ pub fn answer(conn: &Connection, query: &str) -> Result<Option<AskCuratedEntry>,
         answer: text,
         citations: citations(conn, &person.id, &relatives),
         note: Some(note),
+        details: None,
     }))
 }
 

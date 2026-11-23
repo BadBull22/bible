@@ -71,6 +71,14 @@ fn yes() -> bool {
     true
 }
 
+/// A longer part of an answer that is shown folded under it, opened with a tap (for example the list of the 16 verses in
+/// the answer about verses missing from modern Bibles; owner, 2026-11-23).
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct QaDetails {
+    pub label: String,
+    pub text: String,
+}
+
 #[derive(Deserialize, Serialize, Clone)]
 pub struct QaEntry {
     pub id: String,
@@ -93,6 +101,9 @@ pub struct QaEntry {
     /// More than one viewpoint on the subject, each under its own label; the answer itself says what Scripture says.
     #[serde(default)]
     pub views: Vec<QaView>,
+    /// shown folded under the answer, opened with a tap
+    #[serde(default)]
+    pub details: Option<QaDetails>,
 }
 
 #[derive(Deserialize)]

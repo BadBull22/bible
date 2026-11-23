@@ -147,6 +147,7 @@ button {
 
 .top {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
   padding: calc(0.5rem + var(--sat)) 0.6rem 0.5rem;
@@ -193,6 +194,92 @@ button {
   font-weight: 600;
 }
 
+/* the Bible chosen: its own line under the search box */
+.top-version {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.top-version span { color: rgba(255, 255, 255, 0.75); font-size: 0.85rem; }
+/* the Bible chooser: a button on its own line, and a small scrolling list of the app's own */
+.bible-pick {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  max-width: 100%;
+  height: 2.2rem;
+  padding: 0 0.7rem;
+  border-radius: 0.6rem;
+  font: inherit;
+  cursor: pointer;
+}
+.bible-pick strong { flex: none; font-weight: 700; }
+.bible-pick-name { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; opacity: 0.8; font-size: 0.9rem; }
+.bible-pick svg { flex: none; opacity: 0.8; }
+.bible-pick-bar { flex: 1; border: 1px solid rgba(255, 255, 255, 0.25); background: transparent; color: #fff; }
+.bible-pick-home { border: 1px solid var(--border); background: var(--paper); color: var(--text); }
+.bible-pick-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: calc(6.2rem + var(--sat)) 0.8rem 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+.bible-pick-panel {
+  width: 100%;
+  max-width: 24rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--paper);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.bible-pick-list { max-height: min(19rem, 45vh); overflow-y: auto; overscroll-behavior: contain; padding: 0.25rem 0; }
+.bible-pick-group { padding: 0.45rem 0.9rem 0.2rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.bible-pick-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.9rem;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.bible-pick-row strong { flex: none; min-width: 3.6rem; font-weight: 700; }
+.bible-pick-row span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--muted); font-size: 0.9rem; }
+.bible-pick-row.on { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.bible-pick-row.on strong { color: var(--accent); }
+.home-version {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 0.6rem;
+}
+.home-version span { color: var(--muted); font-size: 0.85rem; }
+.home-version select {
+  min-width: 0;
+  max-width: 85%;
+  height: 2.3rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--paper);
+  color: var(--text);
+  font-weight: 600;
+  text-overflow: ellipsis;
+}
 .top select option {
   color: #1b1d22;
   background: #fff;
@@ -1450,6 +1537,11 @@ details.hl-group > .hits li { background: transparent; }
 .card.answer { margin: 0 0 12px; border-left: 4px solid var(--accent); }
 .card.answer h3 { margin: 6px 0 4px; }
 .answer-text { margin: 6px 0; line-height: 1.5; white-space: pre-line; }
+/* a longer part of an answer, folded: tap to open (the 16 verses) */
+.answer-details { margin: 0.5rem 0; border: 1px solid var(--border); border-radius: 0.7rem; background: var(--raised); }
+.answer-details summary { padding: 0.65rem 0.85rem; font-weight: 600; color: var(--accent); cursor: pointer; list-style-position: inside; }
+.answer-details[open] summary { border-bottom: 1px solid var(--border); }
+.answer-details .answer-text { margin: 0; padding: 0.6rem 0.85rem 0.8rem; font-size: 0.92rem; }
 .card.answer .badge {
   display: inline-block;
   font-size: 0.78rem;
@@ -1833,6 +1925,11 @@ details.hl-all > summary {
 .browse-card-title { display: block; font-weight: 700; }
 .browse-card-title small { color: var(--muted); font-weight: 400; }
 .browse-card-blurb { display: block; margin-top: 0.15rem; color: var(--muted); font-size: 0.88rem; line-height: 1.4; }
+/* "Verses for…": an emoji in a soft round badge on the left of each page, and on each subject chip (owner, 2026-11-23) */
+.browse-card.with-emoji { display: flex; align-items: center; gap: 0.75rem; }
+.browse-card-text { display: block; min-width: 0; flex: 1; }
+.browse-emoji { flex: none; width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; font-size: 1.45rem; line-height: 1; background: color-mix(in srgb, var(--accent) 13%, transparent); }
+.chip-emoji { margin-right: 0.3rem; font-size: 1.02em; line-height: 1; }
 .browse-page h2 { margin: 0.2rem 0 0.3rem; }
 .browse-also { margin: 0 0 0.7rem; color: var(--muted); font-size: 0.88rem; }
 .browse-summary, .browse-retelling p { margin: 0 0 0.8rem; line-height: 1.55; }
@@ -2470,3 +2567,71 @@ html[data-occasion][data-theme="dark"] { --accent: #a3c2f2; }
   color: var(--accent);
   font-weight: 700;
 }
+
+/* ---------- the app's own menus (owner, 2026-11-23): a button, then a small scrolling panel instead of Android's large list ---------- */
+.menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-width: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.menu-btn.select-field { display: flex; font-size: 0.95rem; }
+.menu-btn-text { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.menu-btn svg { flex: none; opacity: 0.75; }
+.playing .menu-btn { height: 2.3rem; padding: 0 0.6rem; border: 1px solid currentColor; border-radius: 999px; background: none; color: inherit; font-size: 0.82rem; }
+.menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(1rem + var(--sat)) 0.9rem 1rem;
+  background: rgba(0, 0, 0, 0.35);
+}
+.menu-panel {
+  width: 100%;
+  max-width: 22rem;
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--paper);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+.menu-title { padding: 0.75rem 0.95rem 0.35rem; font-weight: 700; color: var(--text); }
+.menu-find {
+  display: block;
+  width: calc(100% - 1.4rem);
+  margin: 0.4rem 0.7rem 0.2rem;
+  height: 2.3rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: var(--raised);
+  color: var(--text);
+  font: inherit;
+}
+.menu-list { max-height: min(20rem, 50vh); overflow-y: auto; overscroll-behavior: contain; padding: 0.25rem 0; }
+.menu-group { padding: 0.45rem 0.95rem 0.2rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.95rem;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.menu-row span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.menu-row small { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--muted); font-size: 0.85rem; }
+.menu-row svg { flex: none; margin-left: auto; color: var(--accent); }
+.menu-row.on { background: color-mix(in srgb, var(--accent) 14%, transparent); font-weight: 600; }
+.menu-none { padding: 0.8rem 0.95rem; color: var(--muted); font-size: 0.9rem; }

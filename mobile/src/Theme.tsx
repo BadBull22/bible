@@ -9,6 +9,8 @@ import { LOOK_GROUPS, LOOKS, lookBySlug } from "../../src/themes/occasions";
 import { declineSeason, effectiveLook, keepSeason, setAppColour, setBackgroundFrom, setChosen, setFlag, setWordmarkFrom, useThemeState } from "../../src/themes/themeStore";
 import { hslToRgb, isHexColour, PALETTE, STANDARD, toHex, toHsl, parseHex } from "../../src/themes/palette";
 import { backgroundCss } from "./themeBackgrounds";
+import { api, Book } from "./api";
+import { parseReference } from "./refs";
 import "../../src/themes/themes.css";
 
 // The phone's theme backgrounds (two colours that run into each other behind every page; see themeBackgrounds.ts), as style rules put on the page once
@@ -80,6 +82,8 @@ export function HomeScreen({
   onLook,
   resume,
   enterHint,
+  version,
+  books,
 }: {
   typed: string;
   setTyped: (v: string) => void;
@@ -93,10 +97,30 @@ export function HomeScreen({
   /** "Continue reading: John 2": back to the reader where the reader left off */
   resume: { label: string; go: () => void };
   enterHint: "go" | "search";
+  /** the reader's Bible: the season's verse is shown in it (owner, 2026-11-23), the BSB when it lacks the verse */
+  version: string;
+  books: Book[];
 }) {
   const look = useLook();
   const box = useRef<HTMLInputElement>(null);
-  const verse = look.screenLook?.verse ?? null;
+  const bsbVerse = look.screenLook?.verse ?? null;
+  const [own, setOwn] = useState<{ key: string; text: string } | null>(null);
+  const key = `${version}|${bsbVerse?.ref ?? ""}`;
+  useEffect(() => {
+    if (!bsbVerse || version === "BSB" || books.length === 0) return;
+    const r = parseReference(bsbVerse.ref, books);
+    if (!r || r.verse == null) return;
+    const end = /[-–]\s*(\d{1,3})\s*$/.exec(bsbVerse.ref);
+    let live = true;
+    api
+      .passage(version, r.book, r.chapter, r.verse, end ? Number(end[1]) : null)
+      .then((t) => live && t.trim() && setOwn({ key, text: t.trim() }))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [key, books.length]);
+  const verse = bsbVerse && (own?.key === key ? { ref: bsbVerse.ref, text: own.text, in: version } : { ...bsbVerse, in: "BSB" });
   return (
     <div className="home-screen" data-occasion={look.screenLook?.slug} data-screen={look.screenOn ? "on" : undefined} data-glow={look.defaultGlow ? "default" : undefined}>
       <div className="home-box">
@@ -126,12 +150,16 @@ export function HomeScreen({
               ×
             </button>
           )}
-          {select}
         </form>
+        {/* the Bible on a line of its own under the search box (owner, 2026-11-23: never on the search line) */}
+        <div className="home-version">
+          <span>Bible</span>
+          {select}
+        </div>
         <SeasonPrompt />
         {verse && (
           <p className="occ-verse">
-            “{verse.text}”<cite>{verse.ref} (BSB)</cite>
+            “{verse.text}”<cite>{verse.ref} ({verse.in})</cite>
           </p>
         )}
         <p className="home-look-line">

@@ -1,3 +1,4 @@
+import { Menu } from "./Menu";
 // The Library on the phone: commentaries, dictionaries and lexicons, books and devotionals --
 // downloaded from CrossWire, or added from a file the reader has -- and the screens to read
 // them. Bible references in the text are links that open the passage.
@@ -288,16 +289,9 @@ function GetMore({ onBack, onBibles, ask, say }: { onBack: () => void; onBibles:
   function getWorks() {
     return (
       <>
-      <input className="lib-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search: Spurgeon, Greek, Matthew Henry…" />
+      <input className="field lib-search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search: Spurgeon, Greek, Matthew Henry…" aria-label="Search the Library" autoCapitalize="none" />
       {items && (
-        <select className="select-field" value={language} onChange={(e) => setLanguage(e.target.value)} aria-label="Language">
-          <option value="">Every language</option>
-          {languages.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
+        <Menu className="select-field" label="Language" title="Choose a language" value={language} onChange={setLanguage} shown={language || "Every language"} items={[{ value: "", label: "Every language" }, ...languages.map((l) => ({ value: l, label: l }))]} />
       )}
       {error && <p className="hint status">{error}</p>}
       {!items && !error && <p className="hint">Loading the lists from CrossWire's libraries…</p>}

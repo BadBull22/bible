@@ -14292,6 +14292,67 @@
         }
       ],
       "note": null
+    },
+    {
+      "id": "faq_bible_verses_missing",
+      "question": "Has the Bible been changed, or were verses removed from modern Bibles?",
+      "alt_phrasings": [
+        "why are verses missing from my bible",
+        "were verses removed from the bible",
+        "has the bible been altered",
+        "has the bible been changed",
+        "is the bible corrupted",
+        "why does the niv leave out verses",
+        "why does the bsb skip verses",
+        "why is a verse number missing",
+        "missing verses in the bible",
+        "why is matthew 17:21 missing",
+        "where is acts 8:37",
+        "why is 1 john 5:7 different",
+        "kjv vs niv missing verses",
+        "textus receptus",
+        "why does my bible skip from verse 20 to 22"
+      ],
+      "confidence": "traditional",
+      "answer": "Scripture first: God says His word does not fail. “The grass withers and the flowers fall, but the word of our God stands forever” (Isaiah 40:8). Jesus said, “Heaven and earth will pass away, but My words will never pass away” (Matthew 24:35). And Scripture warns against changing it: “You must not add to or subtract from what I command you” (Deuteronomy 4:2; also Revelation 22:18-19).\n\nNo verse was removed to change what the Bible teaches. Every truth in the verses people ask about is still taught elsewhere in Scripture, often in the same words (see the list below). The differences come from the Greek copies each translation was made from:\n• The KJV, NKJV and the Afrikaans 1933/1953 follow the Textus Receptus, a Greek text first printed in 1516 from a small number of later copies.\n• Most modern Bibles (the BSB in this app, NIV, ESV, NASB, the Afrikaans 1983 and 2020) follow much older copies found or studied since then, some from the 200s and 300s.\nWhere the oldest copies do not have a line, it is thought a copyist added it later, often words carried over from a parallel Gospel or a note in the margin. Modern Bibles keep the old verse numbers (set in 1551, before the KJV) so everyone can find the same verse, and put those words in a footnote or in [brackets].\n\nIn this app: the BSB goes from Matthew 17:20 to 17:22; choose the KJV at the top to read verse 21, or open a verse's menu and use Compare to see it in every Bible you have.\n\nAlso asked about: Mark 16:9-20 and John 7:53-8:11 are kept in almost every Bible with a note; the closing words of the Lord's Prayer (“For thine is the kingdom…”, Matthew 6:13 KJV) and part of 1 John 5:7-8 are in footnotes. The Trinity is still taught plainly: “in the name of the Father, and of the Son, and of the Holy Spirit” (Matthew 28:19; also 2 Corinthians 13:14).",
+      "details": {
+        "label": "The 16 verses, and where their teaching is still found",
+        "text": "Matthew 17:21: “Howbeit this kind goeth not out but by prayer and fasting.” Taught also in Mark 9:29 (prayer); fasting: Matthew 6:16-18.\n\nMatthew 18:11: “For the Son of man is come to save that which was lost.” Taught also in Luke 19:10.\n\nMatthew 23:14: “Woe unto you, scribes and Pharisees, hypocrites! for ye devour widows’ houses, and for a pretence make…” Taught also in Mark 12:40; Luke 20:47.\n\nMark 7:16: “If any man have ears to hear, let him hear.” Taught also in Mark 4:9; Matthew 11:15.\n\nMark 9:44: “Where their worm dieth not, and the fire is not quenched.” Taught also in Mark 9:48.\n\nMark 9:46: “Where their worm dieth not, and the fire is not quenched.” Taught also in Mark 9:48.\n\nMark 11:26: “But if ye do not forgive, neither will your Father which is in heaven forgive your trespasses.” Taught also in Matthew 6:15.\n\nMark 15:28: “And the scripture was fulfilled, which saith, And he was numbered with the transgressors.” Taught also in Luke 22:37 (Isaiah 53:12).\n\nLuke 17:36: “Two men shall be in the field; the one shall be taken, and the other left.” Taught also in Matthew 24:40.\n\nLuke 23:17: “( For of necessity he must release one unto them at the feast.)” Taught also in Matthew 27:15; Mark 15:6.\n\nJohn 5:4: “For an angel went down at a certain season into the pool, and troubled the water: whosoever then first…” Taught also in John 5:7 (the stirred water).\n\nActs 8:37: “And Philip said, If thou believest with all thine heart, thou mayest. And he answered and said, I believe…” Taught also in Romans 10:9; 1 John 4:15.\n\nActs 15:34: “Notwithstanding it pleased Silas to abide there still.” Taught also in Acts 15:40.\n\nActs 24:7: “But the chief captain Lysias came upon us, and with great violence took him away out of our hands,” Taught also in Acts 21:31-33; 23:27.\n\nActs 28:29: “And when he had said these words, the Jews departed, and had great reasoning among themselves.” Taught also in Acts 28:25.\n\nRomans 16:24: “The grace of our Lord Jesus Christ be with you all. Amen.” Taught also in Romans 16:20."
+      },
+      "citations": [
+        {
+          "reference": "Isaiah 40:8",
+          "role": "stated: the word of our God stands forever"
+        },
+        {
+          "reference": "Matthew 24:35",
+          "role": "stated: My words will never pass away"
+        },
+        {
+          "reference": "Deuteronomy 4:2",
+          "role": "stated: do not add or subtract"
+        },
+        {
+          "reference": "Revelation 22:18-19",
+          "role": "stated (warning)"
+        },
+        {
+          "reference": "Matthew 28:19",
+          "role": "stated: the Father, the Son and the Holy Spirit"
+        }
+      ],
+      "views": [
+        {
+          "label": "Those who keep to the KJV / Textus Receptus",
+          "text": "many believers read the KJV or the Afrikaans 1953 and hold that the Textus Receptus is the text God preserved, so these verses belong in the Bible.",
+          "publish": true
+        },
+        {
+          "label": "Most translators today",
+          "text": "the oldest copies are the closest to what was first written, so the later additions are shown in footnotes; nothing the Bible teaches is lost either way.",
+          "publish": true
+        }
+      ]
     }
   ]
 }

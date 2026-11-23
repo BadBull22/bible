@@ -991,6 +991,7 @@ pub(crate) fn build_curated_entry(entry: &QaEntry, conn: &rusqlite::Connection, 
         answer,
         citations: entry.citations.iter().map(|c| AskCitation { reference: c.reference.clone(), role: c.role.clone() }).collect(),
         note: entry.note.clone(),
+        details: entry.details.clone(),
     })
 }
 
@@ -1012,6 +1013,7 @@ pub(crate) fn build_curated_entry_from_firsts(entry: &FirstsEntry) -> AskCurated
             answer: format!("Foretold in {foretold} -- fulfilled in {fulfilled}."),
             citations,
             note: entry.note.clone(),
+            details: None,
         }
     } else {
         AskCuratedEntry {
@@ -1020,6 +1022,7 @@ pub(crate) fn build_curated_entry_from_firsts(entry: &FirstsEntry) -> AskCurated
             answer: entry.answer.clone(),
             citations: entry.citations.iter().map(|c| AskCitation { reference: c.clone(), role: "supporting".to_string() }).collect(),
             note: entry.note.clone(),
+            details: None,
         }
     }
 }

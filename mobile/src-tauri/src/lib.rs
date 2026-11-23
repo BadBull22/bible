@@ -68,6 +68,7 @@ pub mod models {
         pub answer: String,
         pub citations: Vec<AskCitation>,
         pub note: Option<String>,
+        pub details: Option<crate::qa::QaDetails>,
     }
 }
 #[path = "../../../src-tauri/src/people_qa.rs"]

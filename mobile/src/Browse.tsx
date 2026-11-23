@@ -9,6 +9,7 @@ import { useBack } from "./back";
 import { AGE_BANDS, ageLabel, bookOf, parseRef, searchEntries, tagCounts, testamentGroups, withTag, type BrowseEntry } from "../../src/browse/browseLogic";
 import { markAllUnread, useMarkRead, useReadMarks } from "../../src/browse/readMarks";
 import { ENTRIES, childPage, findBrowse, story, topic } from "../../src/browse/data";
+import { ALL_SUBJECTS_EMOJI, pageEmoji, subjectEmoji } from "../../src/browse/topicEmoji";
 import type { BrowseKind, ChildPage, Story, Topic } from "../../src/browse/types";
 import { KidFigure, PictureOffer, StoryFigure, sharePicture, usePicturePack, type SharePicture } from "./Pictures";
 import { linkRefs } from "./scriptureLinks";
@@ -498,7 +499,14 @@ function List({ list, onOpen, tag, book }: { list: BrowseEntry[]; onOpen: (e: Br
         return (
           <li key={e.kind + e.id}>
             {label && <div className="browse-book">{label}</div>}
-            <button className={"browse-card" + (isRead ? " read" : "")} onClick={() => onOpen(e)}>
+            <button className={"browse-card" + (isRead ? " read" : "") + (e.kind === "topics" ? " with-emoji" : "")} onClick={() => onOpen(e)}>
+              {/* a "Verses for…" page has its own emoji, to find it by its picture (owner, 2026-11-23) */}
+              {e.kind === "topics" && (
+                <span className="browse-emoji" aria-hidden="true">
+                  {pageEmoji(e.id, topic(e.id)?.tags ?? [])}
+                </span>
+              )}
+              <span className="browse-card-text">
               <span className="browse-card-title">
                 {e.title}
                 {isRead && (
@@ -510,6 +518,7 @@ function List({ list, onOpen, tag, book }: { list: BrowseEntry[]; onOpen: (e: Br
                 {tag && st && <small className="browse-testament"> · {st.testament === "OT" ? "Old Testament" : "New Testament"}</small>}
               </span>
               <span className="browse-card-blurb">{blurb(e.kind, e.id)}</span>
+              </span>
             </button>
           </li>
         );
@@ -645,10 +654,16 @@ export function BrowseScreen({ open, setOpen, version, backLabel, onJump, onSear
       {tab !== "children" && tags.length > 1 && (
         <div className="chips" role="group" aria-label="Narrow by subject">
           <button className={tag === null ? "on" : ""} aria-pressed={tag === null} onClick={() => setTag(null)}>
+            {tab === "topics" && <span className="chip-emoji" aria-hidden="true">{ALL_SUBJECTS_EMOJI}</span>}
             All
           </button>
           {(moreTags ? tags : tags.slice(0, TAGS_SHOWN)).map((t) => (
             <button key={t.tag} className={tag === t.tag ? "on" : ""} aria-pressed={tag === t.tag} onClick={() => setTag(tag === t.tag ? null : t.tag)}>
+              {tab === "topics" && subjectEmoji(t.tag) && (
+                <span className="chip-emoji" aria-hidden="true">
+                  {subjectEmoji(t.tag)}
+                </span>
+              )}
               {t.tag} <small>{t.count}</small>
             </button>
           ))}

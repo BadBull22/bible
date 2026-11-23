@@ -458,6 +458,8 @@ export interface AskCuratedEntry {
   answer: string;
   citations: AskCitation[];
   note: string | null;
+  /** a longer part shown folded under the answer, opened with a click */
+  details: { label: string; text: string } | null;
 }
 
 /** The tagged result of `askQuestion`, in the order its three layers are tried: an exact

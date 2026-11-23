@@ -31,6 +31,10 @@ if (read(SEEN_KEY) !== WHATS_NEW_VERSION) write(SEEN_KEY, WHATS_NEW_VERSION);
 /** The notes, the newest first: a short title and one or two plain sentences. */
 export const WHATS_NEW: { title: string; text: string }[] = [
   { title: "Find a Bible in your language", text: "More > Bible translations now begins with a search: type a language or a name (Afrikaans, Greek, Luther) and the Bibles that fit come first. It now also lists the Bibles of CrossWire's libraries, so hundreds more can be downloaded, an Afrikaans Bible among them. Library > Get more has a Bibles choice that opens the same list." },
+  { title: "Your Bible, in your language", text: "The Bible you read is now on its own line under the search box, with its full name. Choose a Bible in another language, and the verse for the day and the season's verse on the start page are shown in it too." },
+  { title: "Neater menus", text: "Every list you choose from (the Bible, side by side, light or dark, the font, the voice, the sleep timer, the languages) now opens as a small list that scrolls, instead of a large one that fills the screen. Long lists, like the languages, have a box to find one by typing." },
+  { title: "Verses for…, at a glance", text: "Extras > Verses for… now shows a small picture beside every subject and page (a dove for peace, an anchor for trust, praying hands for prayer), so you find the one you need at a glance." },
+  { title: "Were verses removed from the Bible?", text: "Ask it in the search box: a careful answer from Scripture explains why some Bibles leave out verses the KJV has (for example Matthew 17:21), with all 16 verses and where their teaching is still found, one tap away." },
   { title: "Search inside any Bible you add", text: "When you read a Bible you downloaded or added from a file, the search looks for your words in that Bible itself. If nothing is found there, it shows the verses from the BSB and says so." },
   { title: "Listen from a verse with the screen off", text: "Tap a verse, then Listen from here: the reading now keeps going with the screen off and goes on into the next chapters, with Pause, Previous and Next on the lock screen, just like the Listen button." },
   { title: "More in the Library", text: "Library > Get more now also lists the works of Wycliffe, the NET Bible and CrossWire's Attic, and you can choose any language instead of English only." },
@@ -82,7 +86,7 @@ export function WhatsNewBanner({ mode, showAll, close }: { mode: "banner" | "all
       </div>
       {mode === "banner" ? (
         <>
-          <p>What every Hebrew and Greek word means, with a ring of its meanings and example verses; a Daily Scroll of verse cards, your own verse pictures, a prayer list and memory verses, Listen with the screen off, and 36 more Bible stories with children's pages.</p>
+          <p>Hundreds more Bibles to download, in many languages, and a cleaner, simpler look.</p>
           <div className="actions">
             <button onClick={showAll}>See everything new</button>
             <button className="primary" onClick={close}>

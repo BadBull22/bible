@@ -64,6 +64,12 @@ export function AskAnswer({
         </>
       )}
       <p className="answer-text">{answer.answer}</p>
+      {answer.kind === "curated" && answer.details && (
+        <details className="answer-details">
+          <summary>{answer.details.label}</summary>
+          <p className="answer-text">{answer.details.text}</p>
+        </details>
+      )}
       {answer.note && <p className="hint">{answer.note}</p>}
       {answer.citations.length > 0 && (
         <div className="chips">

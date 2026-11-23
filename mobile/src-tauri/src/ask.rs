@@ -96,6 +96,8 @@ pub enum Answer {
         citations: Vec<Citation>,
         note: Option<String>,
         by_meaning: bool,
+        /// a longer part shown folded under the answer, opened with a tap
+        details: Option<crate::qa::QaDetails>,
     },
     /// a Bible dictionary's entry (`id`: to open it whole)
     Dictionary { id: i64, headword: String, source: String, preview: String },
@@ -198,6 +200,7 @@ fn curated(db: &Connection, firsts: &FirstsData, e: &QaEntry, by_meaning: bool) 
         citations: e.citations.iter().map(|c| Citation { reference: c.reference.clone(), role: c.role.clone() }).collect(),
         note: e.note.clone(),
         by_meaning,
+        details: e.details.clone(),
     })
 }
 
@@ -213,6 +216,7 @@ fn from_firsts(e: &FirstsEntry) -> Answer {
             citations,
             note: e.note.clone(),
             by_meaning: true,
+            details: None,
         }
     } else {
         Answer::Curated {
@@ -222,6 +226,7 @@ fn from_firsts(e: &FirstsEntry) -> Answer {
             citations: e.citations.iter().map(|c| Citation { reference: c.clone(), role: "supporting".into() }).collect(),
             note: e.note.clone(),
             by_meaning: true,
+            details: None,
         }
     }
 }
@@ -335,6 +340,7 @@ pub fn ask(db: &Connection, study: &Connection, query: &str, meaning: Option<&Me
             citations: e.citations.into_iter().map(|c| Citation { reference: c.reference, role: c.role }).collect(),
             note: e.note,
             by_meaning: false,
+            details: e.details,
         }));
     }
     let question = looks_like_question(query);
@@ -553,6 +559,7 @@ mod tests {
             citations: vec![],
             note: Some("n".into()),
             by_meaning: true,
+            details: None,
         };
         match into_related(curated) {
             Answer::Related { question, answer, note, .. } => {

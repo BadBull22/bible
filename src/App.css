@@ -11191,3 +11191,9 @@ body.show-body {
 .voice-note { margin: 0.3rem 0 0.6rem; font-size: 0.85rem; line-height: 1.45; color: var(--text-secondary, inherit); }
 .voice-download.voice-old { border-left: 4px solid var(--accent-500); }
 .voice-download.voice-ok { border-left: 4px solid var(--accent-500); }
+
+/* a longer part of a curated answer, folded: click to open (owner, 2026-11-23: the 16 verses) */
+.curated-answer-details { margin: 8px 0; border: 1px solid var(--border, #d9d4c7); border-radius: 8px; }
+.curated-answer-details summary { padding: 8px 12px; font-weight: 600; cursor: pointer; }
+.curated-answer-details[open] summary { border-bottom: 1px solid var(--border, #d9d4c7); }
+.curated-answer-details .curated-answer-text { margin: 0; padding: 8px 12px 10px; }

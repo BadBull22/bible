@@ -103,6 +103,12 @@ function AskAnswerBody({
           />
         </div>
         <p className="curated-answer-text">{answer.entry.answer}</p>
+        {answer.entry.details && (
+          <details className="curated-answer-details">
+            <summary>{answer.entry.details.label}</summary>
+            <p className="curated-answer-text">{answer.entry.details.text}</p>
+          </details>
+        )}
         {answer.entry.note && <p className="snippet note">{answer.entry.note}</p>}
         <AskRefRow citations={answer.entry.citations} onJump={onJump} />
         {answer.matched_by === "semantic" && (

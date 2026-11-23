@@ -205,6 +205,8 @@ pub struct AskCuratedEntry {
     pub answer: String,
     pub citations: Vec<AskCitation>,
     pub note: Option<String>,
+    /// a longer part shown folded under the answer
+    pub details: Option<crate::qa::QaDetails>,
 }
 
 /// The tagged result of `ask_question`, in the fixed order its three layers are tried:

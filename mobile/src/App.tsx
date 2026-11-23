@@ -1,3 +1,5 @@
+import { Menu } from "./Menu";
+import { BiblePicker } from "./BiblePicker";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { stepBack, useBack } from "./back";
 import {
@@ -1114,30 +1116,8 @@ export function App() {
   const secondName = versions.find((v) => v.code === second);
   const shownList = tagFilter ? list.filter((m) => m.tags.some((t) => t.toLowerCase() === tagFilter.toLowerCase())) : list;
 
-  const versionPicker = (
-    <select value={version} onChange={(e) => setVersion(e.target.value)} aria-label="Translation">
-      <optgroup label="Built in">
-        {versions
-          .filter((v) => !v.downloaded)
-          .map((v) => (
-            <option key={v.code} value={v.code}>
-              {v.code}
-            </option>
-          ))}
-      </optgroup>
-      {versions.some((v) => v.downloaded) && (
-        <optgroup label="Downloaded">
-          {versions
-            .filter((v) => v.downloaded)
-            .map((v) => (
-              <option key={v.code} value={v.code}>
-                {v.name.length > 14 ? v.code : v.name}
-              </option>
-            ))}
-        </optgroup>
-      )}
-    </select>
-  );
+  const versionPicker = <BiblePicker versions={versions} value={version} onChange={setVersion} tone="bar" />;
+  const homePicker = <BiblePicker versions={versions} value={version} onChange={setVersion} tone="home" />;
   // the Search page before a search is made: the Gospel wordmark with the search box under it (the top bar is not shown then)
   const homeMode = tab === "search" && !query && !browse;
   const browseLabel = browse ? (browse.id ? pageTitle(browse.kind, browse.id) ?? listName(browse.kind) : listName(browse.kind)) : "";
@@ -1176,7 +1156,11 @@ export function App() {
             </svg>
           </button>
         )}
-        {versionPicker}
+        {/* the Bible on a line of its own under the search box (owner, 2026-11-23: never on the search line) */}
+        <div className="top-version">
+          <span>Bible</span>
+          {versionPicker}
+        </div>
       </header>
       {!homeMode && typed.trim() && typed.trim() !== query && (
         <button className="suggest" onClick={() => submit()}>
@@ -1220,21 +1204,18 @@ export function App() {
               <button onClick={() => void openChapterNotes()}>Study notes</button>
               {hasCommentary && <button onClick={() => setLibrary("commentary")}>Commentaries</button>}
               {canRemind && !listen?.running && <button onClick={() => void startListenMode()}>Listen</button>}
-              <select
+              <Menu
                 className={second ? "on" : ""}
                 value={second ?? ""}
-                onChange={(e) => setSecond(e.target.value || null)}
-                aria-label="A second translation under each verse"
-              >
-                <option value="">Side by side…</option>
-                {versions
-                  .filter((v) => v.code !== version)
-                  .map((v) => (
-                    <option key={v.code} value={v.code}>
-                      + {v.downloaded ? v.name : v.code}
-                    </option>
-                  ))}
-              </select>
+                onChange={(v) => setSecond(v || null)}
+                label="A second translation under each verse"
+                title="Side by side with…"
+                shown={second ? `+ ${second}` : "Side by side…"}
+                items={[
+                  { value: "", label: "Just one translation" },
+                  ...versions.filter((v) => v.code !== version).map((v) => ({ value: v.code, label: v.code, note: v.name, group: v.downloaded ? "Downloaded" : "Built in" })),
+                ]}
+              />
             </div>
             {today && (
               <aside className="today">
@@ -1321,7 +1302,7 @@ export function App() {
             typed={typed}
             setTyped={setTyped}
             onSubmit={() => submit()}
-            select={versionPicker}
+            select={homePicker}
             recent={recent}
             onRecent={(q) => submit(q)}
             onClearRecent={() => {
@@ -1340,6 +1321,8 @@ export function App() {
             }}
             resume={{ label: `${place.book} ${place.chapter}`, go: () => setTab("read") }}
             enterHint={reference ? "go" : "search"}
+            version={version}
+            books={books}
           />
         )}
 
@@ -1771,38 +1754,22 @@ export function App() {
             </div>
             <label className="row">
               <span>Light or dark</span>
-              <select className="select-field" value={theme} onChange={(e) => setTheme(e.target.value as Theme)}>
-                <option value="system">Same as phone</option>
-                <option value="light">Light</option>
-                <option value="sepia">Sepia</option>
-                <option value="dark">Dark</option>
-              </select>
+              <Menu className="select-field" label="Light or dark" value={theme} onChange={(v) => setTheme(v as Theme)} items={[{ value: "system", label: "Same as phone" }, { value: "light", label: "Light" }, { value: "sepia", label: "Sepia" }, { value: "dark", label: "Dark" }]} />
             </label>
             <label className="row">
               <span>Font</span>
-              <select className="select-field" value={font} onChange={(e) => setFont(e.target.value as Font)}>
-                <option value="serif">Classic</option>
-                <option value="sans">Modern</option>
-              </select>
+              <Menu className="select-field" label="Font" value={font} onChange={(v) => setFont(v as Font)} items={[{ value: "serif", label: "Classic" }, { value: "sans", label: "Modern" }]} />
             </label>
               <details className="fold inner" id="theme-settings">
                 <summary>Theme and colours</summary>
                 <ThemeSettings />
             <label className="row">
               <span>Text colour</span>
-              <select className="select-field" value={textColor} onChange={(e) => setTextColor(e.target.value as TextColor)}>
-                <option value="default">Standard</option>
-                <option value="strong">Strongest</option>
-                <option value="sepia">Warm</option>
-                <option value="blue">Blue-black</option>
-              </select>
+              <Menu className="select-field" label="Text colour" value={textColor} onChange={(v) => setTextColor(v as TextColor)} items={[{ value: "default", label: "Standard" }, { value: "strong", label: "Strongest" }, { value: "sepia", label: "Warm" }, { value: "blue", label: "Blue-black" }]} />
             </label>
             <label className="row">
               <span>Contrast</span>
-              <select className="select-field" value={contrast} onChange={(e) => setContrast(e.target.value as Contrast)}>
-                <option value="standard">Standard</option>
-                <option value="high">High</option>
-              </select>
+              <Menu className="select-field" label="Contrast" value={contrast} onChange={(v) => setContrast(v as Contrast)} items={[{ value: "standard", label: "Standard" }, { value: "high", label: "High" }]} />
             </label>
               </details>
             </details>
@@ -1824,15 +1791,13 @@ export function App() {
             {voices && voices.length > 0 ? (
               <label className="row">
                 <span>Voice</span>
-                <select className="select-field" value={voice ?? ""} onChange={(e) => setVoice(e.target.value || null)} aria-label="Voice">
-                <option value="">The phone's default voice</option>
-                {voices.map((v) => (
-                  <option key={v.name} value={v.name}>
-                    {v.label}
-                    {v.local ? "" : " (needs internet)"}
-                  </option>
-                ))}
-                </select>
+                <Menu
+                  className="select-field"
+                  label="Voice"
+                  value={voice ?? ""}
+                  onChange={(v) => setVoice(v || null)}
+                  items={[{ value: "", label: "The phone's default voice" }, ...voices.map((v) => ({ value: v.name, label: v.label, note: v.local ? undefined : "needs internet" }))]}
+                />
               </label>
             ) : null}
             <div className="actions">
@@ -1914,13 +1879,7 @@ export function App() {
           <span>
             Reading {place.book} {place.chapter}:{speaking}
           </span>
-          <select value={sleep} onChange={(e) => setSleep(e.target.value)} aria-label="Sleep timer">
-            {SLEEP.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <Menu label="Sleep timer" value={sleep} onChange={setSleep} items={SLEEP.map(([value, label]) => ({ value, label }))} />
           <button onClick={stopListening}>Stop</button>
         </div>
       )}

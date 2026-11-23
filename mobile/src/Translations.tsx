@@ -1,3 +1,4 @@
+import { Menu } from "./Menu";
 import { useEffect, useMemo, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { api, Offer, phone, Version } from "./api";
@@ -208,14 +209,7 @@ export function Translations({ onChanged, ask, say }: Props) {
       />
       <div className="finder-row">
         {offers && (
-          <select className="select-field" value={language} onChange={(e) => setLanguage(e.target.value)} aria-label="Language">
-            <option value="">Or choose a language…</option>
-            {languages.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
+          <Menu className="select-field" label="Language" title="Choose a language" value={language} onChange={setLanguage} shown={language || "Or choose a language…"} items={[{ value: "", label: "Every language" }, ...languages.map((l) => ({ value: l, label: l }))]} />
         )}
         {language !== "" && q === "" && (
           <label className="toggle">

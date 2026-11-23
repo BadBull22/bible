@@ -81,6 +81,8 @@ export type Answer =
       note: string | null;
       /** the closest question on file, not the words typed */
       by_meaning: boolean;
+      /** a longer part shown folded under the answer, opened with a tap */
+      details: { label: string; text: string } | null;
     }
   | { kind: "dictionary"; id: number; headword: string; source: string; preview: string }
   | {
