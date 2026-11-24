@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Video guides | Bible Concordance</title>
-<meta name="description" content="Short narrated videos that show how to use Bible Concordance: getting started, adding Bibles, highlights and notes, word study in Hebrew and Greek, the Daily Scroll, reading plans, stories and backup.">
+<meta name="description" content="Short narrated videos that show how to use Bible Concordance for Android and Windows: getting started, adding Bibles, word study in Hebrew and Greek, stories, building a sermon, Sunday slides and the Content Factory.">
 <meta name="theme-color" content="#1c2440">
 <link rel="canonical" href="https://bible4me.org/videos.html">
 <link rel="icon" type="image/png" href="assets/favicon-32.png">
@@ -19,6 +19,11 @@
 .vplay:hover .pb, .vplay:focus-visible .pb { transform: scale(1.08); }
 .vplay .len { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,.72); color: #fff; font: 600 .78rem var(--sans); padding: 2px 7px; border-radius: 6px; }
 .vcard iframe { width: 100%; aspect-ratio: 9/16; border: 0; display: block; background: #000; }
+/* the Windows guides are ordinary landscape videos (16:9), three to a row */
+.vgrid.wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vgrid.wide .vplay, .vgrid.wide iframe { aspect-ratio: 16/9; }
+.vgrid.wide .vplay .pb { top: auto; bottom: 10px; left: 12px; margin: 0; width: 48px; height: 48px; }
+.vgrid.wide .vplay .pb svg { width: 22px; height: 22px; margin-left: 3px; }
 .vcard .cap { padding: 12px 14px 14px; }
 .vcard .cap small { display: block; color: var(--faint); font-weight: 600; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
 .vcard .cap b { display: block; font-size: 1rem; line-height: 1.3; margin: 2px 0 4px; }
@@ -27,8 +32,8 @@
 .vhead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 18px; margin: 34px 0 8px; }
 .vhead h2 { margin: 0; }
 .vsoon { background: var(--bg-2); border: 1px dashed var(--line); border-radius: var(--r); padding: 18px 20px; color: var(--muted); margin-bottom: 56px; }
-@media (max-width: 1000px) { .vgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 720px) { .vgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .vcard .cap span { display: none; } .vplay .pb { width: 54px; height: 54px; margin: -27px 0 0 -27px; } }
+@media (max-width: 1000px) { .vgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .vgrid.wide { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .vgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .vgrid.wide { grid-template-columns: minmax(0, 1fr); } .vcard .cap span { display: none; } .vplay .pb { width: 54px; height: 54px; margin: -27px 0 0 -27px; } }
 </style>
 </head>
 <body data-page="videos">
@@ -47,8 +52,12 @@
   <p class="vnote">A video loads from YouTube only when you press it. See the <a href="privacy/index.html">privacy policy</a>.</p>
   <div class="vgrid" id="vgrid"></div>
 
-  <div class="vhead"><h2>Bible Concordance for Windows</h2></div>
-  <div class="vsoon">Video guides for the Windows app are being made and will appear here.</div>
+  <div class="vhead">
+    <h2>Bible Concordance for Windows</h2>
+    <a href="https://www.youtube.com/playlist?list=PLM4gbVUleS5E" target="_blank" rel="noopener">All ten on YouTube &rarr;</a>
+  </div>
+  <div class="vgrid wide" id="wgrid"></div>
+  <p class="vnote" style="margin-bottom:56px">A longer video on the Sunday service, with the projector beside the computer, is coming soon.</p>
 </div>
 </main>
 <script src="assets/new.js"></script>
@@ -64,9 +73,22 @@
     ["ht2lMYn0vOY", "1:56", "Stories, children's pages and maps", "Sixty-seven Bible stories, children's pages with an outline to colour in, Verses for a need, Bible maps, and asking a question."],
     ["OPbDLgdiMmQ", "1:40", "Backup, keeping in step and settings", "Backing up and restoring, keeping the phone in step with the Windows app, text size, light, dark or sepia, and the church-year themes."]
   ];
+  var W = [
+    ["jRNtRhzAJEM", "2:11", "Getting started", "Install it from the Microsoft Store, find your way around, open a verse, turn the chapters, change the translation, search and listen."],
+    ["aW2ImbRTeNg", "2:12", "Adding Bibles, commentaries, books and pictures", "Free Bibles in other languages, commentaries, dictionaries and books from the Library, your own e-Sword, MySword, MyBible, SWORD, EPUB or PDF files, and the Bible pictures."],
+    ["-x5pvetnaPo", "1:48", "Reading and searching", "Any reference, a question, an exact phrase, a search by meaning, the concordance, side by side, a verse in every translation, cross-references and Focus mode."],
+    ["GUOqHE2zhCA", "1:56", "Word study: Hebrew and Greek", "The word behind the English, how it sounds, all its meanings, every verse that uses it, the interlinear and searching the original languages."],
+    ["Z9_YgHLk1VI", "1:47", "Understanding a passage", "Ask a question, search every commentary, the cross-reference web, people and places, the maps, the timeline, the genealogies and the 40 authors."],
+    ["PW3_2HM80ac", "1:27", "Bible stories, Verses for and children's pages", "Sixty-seven stories with their paintings and passages, children's pages with an activity sheet to print, Verses for every need, and new stories."],
+    ["craLEkNAdxU", "1:58", "Your study and keeping in step", "Notes with tags, highlights in eleven colours, bookmarks, My Study, reading plans, backup, keeping your phone in step, and the themes."],
+    ["nORJoQKs7Do", "1:44", "Building a sermon", "Eight steps from a passage or Sunday's readings to a finished sermon: the storyline, commentaries, the original words, stories and quotes."],
+    ["wqyrhfKcAXk", "1:53", "Sunday: slides, songs, notices and preaching", "Notices, slides with Scripture, pictures and countdowns, songs saved once for every Sunday, and presenting the service on the projector."],
+    ["BuA2Hjo5SS4", "1:47", "The Content Factory", "Verse pictures in one click, a photo or a painting behind the words, square or story size, a whole week at once, and short videos to share."]
+  ];
   var PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
-  var grid = document.getElementById("vgrid");
-  V.forEach(function (v, i) {
+  function fill(list, gridId, picture) {
+  var grid = document.getElementById(gridId);
+  list.forEach(function (v, i) {
     var n = i + 1;
     var card = document.createElement("article");
     card.className = "vcard";
@@ -74,7 +96,7 @@
     b.type = "button";
     b.className = "vplay";
     b.setAttribute("aria-label", "Play video " + n + ": " + v[2] + " (" + v[1] + ")");
-    b.innerHTML = '<img loading="lazy" alt="" src="assets/videos/android-0' + n + '.jpg"><span class="pb">' + PLAY + '</span><span class="len">' + v[1] + "</span>";
+    b.innerHTML = '<img loading="lazy" alt="" src="assets/videos/' + picture(n) + '"><span class="pb">' + PLAY + '</span><span class="len">' + v[1] + "</span>";
     b.onclick = function () {
       var f = document.createElement("iframe");
       f.src = "https://www.youtube-nocookie.com/embed/" + v[0] + "?autoplay=1&rel=0&playsinline=1";
@@ -93,6 +115,9 @@
     card.appendChild(cap);
     grid.appendChild(card);
   });
+  }
+  fill(V, "vgrid", function (n) { return "android-0" + n + ".jpg"; });
+  fill(W, "wgrid", function (n) { return "windows-" + (n < 10 ? "0" : "") + n + ".jpg"; });
 })();
 </script>
 </body>

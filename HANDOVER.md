@@ -4,6 +4,10 @@ Saved here (not in a per-machine memory) because this project lives on `V:\Code\
 a network share, and the next session may run from a different PC. Read this file first when
 resuming.
 
+**NEWEST (2026-11-24 afternoon): HANDOVER_2026-11-24_WINDOWS_VIDEOS_ON_SITE_START_HERE.md (Android 3.2.1 live on Google Play; the 10 Windows videos on the website's Video guides page; everything committed and pushed).**
+
+**Earlier 2026-11-24: HANDOVER_2026-11-24_SUNDAY_PACK_LIVE_START_HERE.md (free Sunday backgrounds pack live on the website and GitHub; videos waiting for his YouTube upload).**
+
 **VIDEO WORK (2026-11-23 late night): HANDOVER_2026-11-23_ADVANCED_SUNDAY_VIDEO.md (the Advanced Sunday service video, made, not uploaded).**
 
 **NEWEST app state (2026-11-23 night): read HANDOVER_2026-11-23_ANDROID_3_2_1_SUBMITTED.md first (Android 3.2.1 submitted to Google Play, all source pushed).**
