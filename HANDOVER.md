@@ -4,7 +4,10 @@ Saved here (not in a per-machine memory) because this project lives on `V:\Code\
 a network share, and the next session may run from a different PC. Read this file first when
 resuming.
 
-**NEWEST (2026-11-23): read HANDOVER_2026-11-23_ANDROID_3_2_1_BIBLES.md first (Android 3.2.1 coded and tested: Bibles from CrossWire, search first, search inside added Bibles; git history rewritten without AI co-author lines).**
+**VIDEO WORK (2026-11-23 late night): HANDOVER_2026-11-23_ADVANCED_SUNDAY_VIDEO.md (the Advanced Sunday service video, made, not uploaded).**
+
+**NEWEST app state (2026-11-23 night): read HANDOVER_2026-11-23_ANDROID_3_2_1_SUBMITTED.md first (Android 3.2.1 submitted to Google Play, all source pushed).**
+Before that: read HANDOVER_2026-11-23_ANDROID_3_2_1_BIBLES.md (Android 3.2.1 coded and tested: Bibles from CrossWire, search first, search inside added Bibles; git history rewritten without AI co-author lines).**
 
 Before that (2026-11-21): read HANDOVER_2026-11-21_ALL_DONE_START_HERE.md first (Android 3.2.0 live on Google Play, Windows 3.1.4 Store package ready, website points to Google Play, no installers left on GitHub).**
 
