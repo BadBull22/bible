@@ -39,7 +39,7 @@
   var header =
     '<a class="skip" href="#main">Skip to the content</a>' +
     '<header class="hdr"><div class="wrap hdr-in">' +
-    '<a class="brand" href="index.html"><img src="assets/icon.png" alt=""><span>Bible Concordance</span></a>' +
+    '<a class="brand" href="HOME"><img src="assets/icon.png" alt=""><span>Bible Concordance</span></a>' +
     '<button class="burger" aria-expanded="false" aria-controls="nav" aria-label="Menu">' + IC.menu + "</button>" +
     '<nav class="nav" id="nav" aria-label="Main">' +
     '<div class="dd"><button class="dd-btn" aria-expanded="false"' + (page === "features" ? ' aria-current="true"' : "") + ">Features " + IC.chev + '</button><div class="dd-menu mega">' +
@@ -50,25 +50,26 @@
     '<a href="' + MUSIC + '" target="_blank" rel="noopener" title="Southern Cross Music on YouTube Music">' + IC.music + "Music</a>" +
     '<div class="dd"><button class="dd-btn" aria-expanded="false">Help ' + IC.chev + '</button><div class="dd-menu plain right">' +
     '<a href="download.html#faq"><span><b>Questions and answers</b></span></a>' +
-    '<a href="privacy/index.html"><span><b>Privacy policy</b></span></a>' +
-    '<a href="terms/index.html"><span><b>Licence and terms</b></span></a>' +
-    '<a href="credits/index.html"><span><b>Credits and attribution</b></span></a>' +
-    '<a href="disclaimer/index.html"><span><b>Disclaimer</b></span></a>' +
-    '<a href="refunds/index.html"><span><b>Refund policy</b></span></a>' +
+    '<a href="privacy/"><span><b>Privacy policy</b></span></a>' +
+    '<a href="terms/"><span><b>Licence and terms</b></span></a>' +
+    '<a href="credits/"><span><b>Credits and attribution</b></span></a>' +
+    '<a href="disclaimer/"><span><b>Disclaimer</b></span></a>' +
+    '<a href="refunds/"><span><b>Refund policy</b></span></a>' +
     "</div></div>" +
     '<a class="btn nav-dl" href="download.html"' + cur("download") + ">Download</a>" +
     "</nav></div></header>";
   var footer =
     '<footer class="ftr"><div class="wrap"><div class="ftr-grid">' +
-    '<div><a class="brand" href="index.html"><img src="assets/icon.png" alt=""><span>Bible Concordance</span></a>' +
+    '<div><a class="brand" href="HOME"><img src="assets/icon.png" alt=""><span>Bible Concordance</span></a>' +
     '<p style="margin-top:10px">Free Bible study that works without the internet. No account, no adverts, no tracking. Free, always.</p>' +
     '<div class="thanks"><img src="assets/south-point-church.png" alt="South Point Church"><span>With thanks to Pastor Mike and South Point Church, who inspired this app. &ldquo;Freely you received; freely give.&rdquo; Matthew 10:8</span></div></div>' +
     '<div><h4>Explore</h4><ul><li><a href="features.html">Features</a></li><li><a href="screenshots.html">Screenshots</a></li><li><a href="videos.html">Video guides</a></li><li><a href="download.html">Download</a></li><li><a href="' + MUSIC + '" target="_blank" rel="noopener">&#9835; Southern Cross Music</a></li></ul></div>' +
     '<div><h4>Get the app</h4><ul><li><a href="download.html#windows">For Windows</a></li><li><a href="download.html#android">For Android</a></li><li><a href="download.html#faq">Questions</a></li></ul></div>' +
-    '<div><h4>Good to know</h4><ul><li><a href="privacy/index.html">Privacy policy</a></li><li><a href="terms/index.html">Licence &amp; terms</a></li><li><a href="credits/index.html">Credits &amp; attribution</a></li><li><a href="disclaimer/index.html">Disclaimer</a></li><li><a href="refunds/index.html">Refund policy</a></li></ul></div>' +
+    '<div><h4>Good to know</h4><ul><li><a href="privacy/">Privacy policy</a></li><li><a href="terms/">Licence &amp; terms</a></li><li><a href="credits/">Credits &amp; attribution</a></li><li><a href="disclaimer/">Disclaimer</a></li><li><a href="refunds/">Refund policy</a></li></ul></div>' +
     '</div><div class="fine">&copy; Bible Concordance. Built-in Bibles and data are public domain or openly licensed.</div></div></footer>';
   var fix = (h) => h.replace(/(href|src)="(?!https?:|#|mailto:)/g, "$1=\"" + R);
   header = fix(header); footer = fix(footer);
+  header = header.replace(/href="(?:\.\.\/)?HOME"/g, 'href="' + (R || "./") + '"'); footer = footer.replace(/href="(?:\.\.\/)?HOME"/g, 'href="' + (R || "./") + '"');
   document.body.insertAdjacentHTML("afterbegin", header);
   document.body.insertAdjacentHTML("beforeend", footer);
   document.querySelectorAll("[data-ic]").forEach((el) => { el.innerHTML = IC[el.getAttribute("data-ic")] + el.innerHTML; });
