@@ -22,7 +22,7 @@
 /* the Windows guides are ordinary landscape videos (16:9), three to a row */
 .vgrid.wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .vgrid.wide .vplay, .vgrid.wide iframe { aspect-ratio: 16/9; }
-.vgrid.wide .vplay .pb { top: auto; bottom: 10px; left: 12px; margin: 0; width: 48px; height: 48px; }
+.vgrid.wide .vplay .pb { top: 10px; bottom: auto; left: auto; right: 10px; margin: 0; width: 48px; height: 48px; }
 .vgrid.wide .vplay .pb svg { width: 22px; height: 22px; margin-left: 3px; }
 .vcard .cap { padding: 12px 14px 14px; }
 .vcard .cap small { display: block; color: var(--faint); font-weight: 600; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; }
@@ -54,10 +54,10 @@
 
   <div class="vhead">
     <h2>Bible Concordance for Windows</h2>
-    <a href="https://www.youtube.com/playlist?list=PLM4gbVUleS5E" target="_blank" rel="noopener">All ten on YouTube &rarr;</a>
+    <a href="https://www.youtube.com/playlist?list=PLM4gbVUleS5E" target="_blank" rel="noopener">All eleven on YouTube &rarr;</a>
   </div>
   <div class="vgrid wide" id="wgrid"></div>
-  <p class="vnote" style="margin-bottom:56px">A longer video on the Sunday service, with the projector beside the computer, is coming soon.</p>
+  <p class="vnote" style="margin-bottom:56px">Video 11 is longer: a whole Sunday service from start to finish, with the presenter's computer and the projector side by side.</p>
 </div>
 </main>
 <script src="assets/new.js"></script>
@@ -83,7 +83,8 @@
     ["craLEkNAdxU", "1:58", "Your study and keeping in step", "Notes with tags, highlights in eleven colours, bookmarks, My Study, reading plans, backup, keeping your phone in step, and the themes."],
     ["nORJoQKs7Do", "1:44", "Building a sermon", "Eight steps from a passage or Sunday's readings to a finished sermon: the storyline, commentaries, the original words, stories and quotes."],
     ["wqyrhfKcAXk", "1:53", "Sunday: slides, songs, notices and preaching", "Notices, slides with Scripture, pictures and countdowns, songs saved once for every Sunday, and presenting the service on the projector."],
-    ["BuA2Hjo5SS4", "1:47", "The Content Factory", "Verse pictures in one click, a photo or a painting behind the words, square or story size, a whole week at once, and short videos to share."]
+    ["BuA2Hjo5SS4", "1:47", "The Content Factory", "Verse pictures in one click, a photo or a painting behind the words, square or story size, a whole week at once, and short videos to share."],
+    ["MoTmf7ibYAY", "5:10", "Advanced Sunday service", "A whole service from start to finish: moving backgrounds and script headings for the notices, songs, a sermon with Scripture and photographs, and a split screen of the presenter's PC and the projector."]
   ];
   var PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
   function fill(list, gridId, picture) {
